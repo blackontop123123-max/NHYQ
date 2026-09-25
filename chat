@@ -1,0 +1,209 @@
+--==================================================
+-- NHYQ CLEAN CHAT - CLIENT (FIXED ZOOM SCALE BUBBLES)
+--==================================================
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local TextService = game:GetService("TextService")
+local TweenService = game:GetService("TweenService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local chatEvent = ReplicatedStorage:WaitForChild("AutoChatEvent")
+
+-- جدول لتخزين الرسائل النشطة فوق رأس كل لاعب
+local playerMessageQueues = {}
+
+--==================================================
+-- إزالة الواجهة القديمة إن وجدت
+--==================================================
+
+local oldGui = playerGui:FindFirstChild("AutoChatGUI")
+if oldGui then
+    oldGui:Destroy()
+end
+
+--==================================================
+-- ScreenGui (مستطيل الكتابة في الزاوية اليسرى)
+--==================================================
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "AutoChatGUI"
+screenGui.ResetOnSpawn = false
+screenGui.IgnoreGuiInset = false
+screenGui.Parent = playerGui
+
+local box = Instance.new("TextBox")
+box.Name = "MessageBox"
+box.Size = UDim2.new(0, 220, 0, 34)
+box.Position = UDim2.new(0, 15, 0, 95)
+box.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+box.BackgroundTransparency = 0.2
+box.BorderSizePixel = 0
+box.Text = ""
+box.PlaceholderText = "اكتب هنا..."
+box.PlaceholderColor3 = Color3.fromRGB(180, 180, 180)
+box.TextColor3 = Color3.fromRGB(255, 255, 255)
+box.TextSize = 15
+box.Font = Enum.Font.GothamBold
+box.ClearTextOnFocus = false
+box.TextXAlignment = Enum.TextXAlignment.Center
+box.Parent = screenGui
+
+local boxCorner = Instance.new("UICorner")
+boxCorner.CornerRadius = UDim.new(0, 6)
+boxCorner.Parent = box
+
+--==================================================
+-- نظام عرض الرسائل (بحجم ثابت لا يتأثر بتقريب وإبعاد الكاميرا)
+--==================================================
+
+local function renderHeadBubbles(userId)
+    local targetPlayer = Players:GetPlayerByUserId(userId)
+    if not targetPlayer or not targetPlayer.Character then return end
+
+    local head = targetPlayer.Character:FindFirstChild("Head")
+    if not head then return end
+
+    local oldBillboard = head:FindFirstChild("NHYQ_ChatBillboard")
+    if oldBillboard then
+        oldBillboard:Destroy()
+    end
+
+    local queue = playerMessageQueues[userId]
+    if not queue or #queue == 0 then return end
+
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "NHYQ_ChatBillboard"
+    billboard.Adornee = head
+    -- استخدام نظام المقاسات المطلقة (Scale = 0) لضمان عدم تغير الحجم نهائياً مع التقريب والإبعاد
+    billboard.Size = UDim2.new(0, 250, 0, 120)
+    billboard.StudsOffset = Vector3.new(0, 3.2, 0)
+    billboard.AlwaysOnTop = true
+    billboard.MaxDistance = 150
+    billboard.Parent = head
+
+    local listLayout = Instance.new("UIListLayout")
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+    listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    listLayout.Padding = UDim.new(0, 6)
+    listLayout.Parent = billboard
+
+    for _, msgData in ipairs(queue) do
+        local messageText = tostring(msgData.text)
+
+        local measuredSize = TextService:GetTextSize(
+            messageText,
+            16,
+            Enum.Font.GothamBold,
+            Vector2.new(2000, 50)
+        )
+
+        local bubbleWidth = math.clamp(measuredSize.X + 30, 80, 400)
+        local bubbleHeight = 36
+
+        local bubbleContainer = Instance.new("Frame")
+        bubbleContainer.Size = UDim2.new(0, bubbleWidth, 0, bubbleHeight)
+        bubbleContainer.BackgroundTransparency = 1
+        bubbleContainer.ClipsDescendants = true
+        bubbleContainer.Parent = billboard
+
+        local bubble = Instance.new("Frame")
+        bubble.Size = UDim2.new(1, 0, 1, 0)
+        bubble.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        bubble.BackgroundTransparency = 0.1
+        bubble.BorderSizePixel = 0
+        bubble.Parent = bubbleContainer
+
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 6)
+        corner.Parent = bubble
+
+        local text = Instance.new("TextLabel")
+        text.Size = UDim2.new(1, -12, 1, 0)
+        text.BackgroundTransparency = 1
+        text.Text = messageText
+        text.TextColor3 = Color3.fromRGB(255, 255, 255)
+        text.Font = Enum.Font.GothamBold
+        text.TextSize = 16
+        text.TextXAlignment = Enum.TextXAlignment.Center
+        text.TextYAlignment = Enum.TextYAlignment.Center
+        text.Parent = bubble
+
+        -- ظهور تدريجي للمستطيل من الأسفل للأعلى
+        if msgData.isNew then
+            msgData.isNew = false
+            bubble.Position = UDim2.new(0, 0, 1, 0)
+            text.TextTransparency = 1
+
+            TweenService:Create(
+                bubble,
+                TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                {Position = UDim2.new(0, 0, 0, 0)}
+            ):Play()
+
+            TweenService:Create(
+                text,
+                TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                {TextTransparency = 0}
+            ):Play()
+        else
+            bubble.Position = UDim2.new(0, 0, 0, 0)
+            text.TextTransparency = 0
+        end
+    end
+end
+
+local function showMessageAboveHead(userId, message)
+    if not playerMessageQueues[userId] then
+        playerMessageQueues[userId] = {}
+    end
+
+    local queue = playerMessageQueues[userId]
+
+    table.insert(queue, {text = message, isNew = true})
+
+    if #queue > 3 then
+        table.remove(queue, 1)
+    end
+
+    renderHeadBubbles(userId)
+
+    -- تبقى الرسالة ظاهرة لمدة 7 ثوانٍ ثم تختفي
+    task.delay(7, function()
+        if playerMessageQueues[userId] then
+            table.remove(playerMessageQueues[userId], 1)
+            renderHeadBubbles(userId)
+        end
+    end)
+end
+
+--==================================================
+-- استقبال الرسائل من السيرفر
+--==================================================
+
+chatEvent.OnClientEvent:Connect(function(userId, name, message)
+    if typeof(userId) == "number" and typeof(message) == "string" then
+        showMessageAboveHead(userId, message)
+    end
+end)
+
+--==================================================
+-- إرسال الرسالة وإغلاق الكيبورد
+--==================================================
+
+local function send()
+    local message = box.Text
+    if typeof(message) == "string" and message:gsub("%s+", "") ~= "" then
+        chatEvent:FireServer(message)
+        box.Text = ""
+        box:ReleaseFocus()
+    end
+end
+
+box.FocusLost:Connect(function(enterPressed)
+    if enterPressed then
+        send()
+    end
+end)
