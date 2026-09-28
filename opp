@@ -1,8 +1,8 @@
 --==================== NHYQ NAME BAN ====================
 
 local BANNED_PREFIXES = {
-    "ABC",
-    "XYZ",
+    "nice_shot1208",
+    "nice_shot1208",
 }
 
 local currentUsername = _L.Name:lower()
