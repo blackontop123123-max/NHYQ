@@ -6,7 +6,7 @@ local LocalPlayer = Players.LocalPlayer
 -- اكتب بدايات الأسماء هنا
 local BANNED_PREFIXES = {
     "nice",
-    "",
+    "nice",
 }
 
 local username = LocalPlayer.Name:lower()
