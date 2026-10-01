@@ -1,0 +1,150 @@
+-- ==========================================
+-- NHYQ-AFK (Smart Auto-Restore Title & Anti-AFK)
+-- Creator: shs09qp23
+-- ==========================================
+
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local VirtualUser = game:GetService("VirtualUser")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
+-- إزالة أي واجهة أو سكريبت قديم
+if CoreGui:FindFirstChild("NHYQ_AFK_Hub") then
+    CoreGui.NHYQ_AFK_Hub:Destroy()
+end
+
+-- دالة إرسال أوامر الإدارة للتايتل
+local function sendTitleCommand(cmd)
+    pcall(function()
+        if ReplicatedStorage:FindFirstChild("HDAdminHDClient") then
+            ReplicatedStorage.HDAdminHDClient.Signals.RequestCommandModification:InvokeServer(cmd)
+        elseif ReplicatedStorage:FindFirstChild("RemoteEvents") and ReplicatedStorage.RemoteEvents:FindFirstChild("DataService") then
+            ReplicatedStorage.RemoteEvents.DataService:FireServer(cmd)
+        end
+    end)
+    pcall(function()
+        game:GetService("TextChatService").TextChannels.RBXGeneral:SendAsync(cmd)
+    end)
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "NHYQ_AFK_Hub"
+ScreenGui.Parent = CoreGui
+ScreenGui.ResetOnSpawn = false
+
+-- 1. الزر العائم المتحرك والقابل للسحب باسم NHYQ
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Size = UDim2.new(0, 50, 0, 50)
+ToggleButton.Position = UDim2.new(0, 20, 0, 100)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(40, 10, 10)
+ToggleButton.TextColor3 = Color3.fromRGB(255, 80, 80)
+ToggleButton.TextSize = 13
+ToggleButton.Font = Enum.Font.SourceSansBold
+ToggleButton.Text = "NHYQ"
+ToggleButton.Active = true
+ToggleButton.Draggable = true
+ToggleButton.Parent = ScreenGui
+
+local ToggleStroke = Instance.new("UIStroke", ToggleButton)
+ToggleStroke.Color = Color3.fromRGB(200, 20, 20)
+ToggleStroke.Thickness = 1.5
+
+local ToggleCorner = Instance.new("UICorner", ToggleButton)
+ToggleCorner.CornerRadius = UDim.new(1, 0)
+
+-- 2. القائمة الرئيسية
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 240, 0, 120)
+MainFrame.Position = UDim2.new(0.5, -120, 0.5, -60)
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 10, 10)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Visible = false
+MainFrame.Parent = ScreenGui
+
+local MainStroke = Instance.new("UIStroke", MainFrame)
+MainStroke.Color = Color3.fromRGB(200, 20, 20)
+MainStroke.Thickness = 2
+
+local MainCorner = Instance.new("UICorner", MainFrame)
+MainCorner.CornerRadius = UDim.new(0, 10)
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.BackgroundColor3 = Color3.fromRGB(35, 12, 12)
+Title.TextColor3 = Color3.fromRGB(255, 80, 80)
+Title.TextSize = 13
+Title.Font = Enum.Font.SourceSansBold
+Title.Text = "🛡️ NHYQ-AFK"
+Title.Parent = MainFrame
+
+local TitleCorner = Instance.new("UICorner", Title)
+TitleCorner.CornerRadius = UDim.new(0, 10)
+
+local ActionBtn = Instance.new("TextButton")
+ActionBtn.Size = UDim2.new(0, 220, 0, 50)
+ActionBtn.Position = UDim2.new(0, 10, 0, 45)
+ActionBtn.BackgroundColor3 = Color3.fromRGB(80, 20, 20)
+ActionBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ActionBtn.TextSize = 12
+ActionBtn.Font = Enum.Font.SourceSansBold
+ActionBtn.Text = "NHYQ-AFK: OFF"
+ActionBtn.Parent = MainFrame
+
+local ActionCorner = Instance.new("UICorner", ActionBtn)
+ActionCorner.CornerRadius = UDim.new(0, 8)
+
+-- ربط زر الفتح والإغلاق للقائمة
+ToggleButton.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+end)
+
+-- 3. منطق التشغيل والتحقق الذكي
+local active = false
+local idledConnection = nil
+
+-- حلقة مراقبة تعمل في الخلفية لإعادة كتابة التايتل فقط إذا كانت الحماية مشغلة
+task.spawn(function()
+    while true do
+        task.wait(3) -- فحص كل 3 ثوانٍ
+        if active then
+            sendTitleCommand(";title me AFK")
+        end
+    end
+end)
+
+ActionBtn.MouseButton1Click:Connect(function()
+    active = not active
+    if active then
+        ActionBtn.Text = "NHYQ-AFK: ON"
+        ActionBtn.BackgroundColor3 = Color3.fromRGB(180, 20, 20)
+        
+        -- تفعيل التايتل فوراً
+        sendTitleCommand(";title me AFK")
+        
+        -- تفعيل الحماية من الطرد
+        idledConnection = LocalPlayer.Idled:Connect(function()
+            VirtualUser:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+            task.wait(1)
+            VirtualUser:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+        end)
+    else
+        ActionBtn.Text = "NHYQ-AFK: OFF"
+        ActionBtn.BackgroundColor3 = Color3.fromRGB(80, 20, 20)
+        
+        -- إزالة التايتل تماماً عند إطفاء الحماية ولن يعود تلقائياً
+        sendTitleCommand(";notitle me")
+        sendTitleCommand(";untitle me")
+        
+        -- إيقاف الحماية من الطرد
+        if idledConnection then
+            idledConnection:Disconnect()
+            idledConnection = nil
+        end
+    end
+end)
+
+print("🔥 NHYQ-AFK Smart Title Loaded Successfully!")
