@@ -1,209 +1,943 @@
 --==================================================
--- NHYQ CLEAN CHAT - CLIENT (FIXED ZOOM SCALE BUBBLES)
+-- NHYQ ADVANCED ماب نسخ-shs09qp23 & COPY GUI
+-- COMBINED DESIGN, ULTRA-FAST EXECUTION & PUBLIC BUBBLE CHAT
 --==================================================
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
-local TextService = game:GetService("TextService")
-local TweenService = game:GetService("TweenService")
+local players = game:GetService("Players")
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local userInputService = game:GetService("UserInputService")
+local tweenService = game:GetService("TweenService")
+local coreGui = game:GetService("CoreGui")
+local soundService = game:GetService("SoundService")
+local textChatService = game:GetService("TextChatService")
+local chatService = game:GetService("Chat")
+local httpService = game:GetService("HttpService")
+local localPlayer = players.LocalPlayer
 
-local player = Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
-local chatEvent = ReplicatedStorage:WaitForChild("AutoChatEvent")
+print("==================================================")
+print("NHYQ SCRIPT - FASTEST PUBLIC BUBBLE CHAT (3 BUBBLES)")
+print("==================================================")
 
--- جدول لتخزين الرسائل النشطة فوق رأس كل لاعب
-local playerMessageQueues = {}
-
---==================================================
--- إزالة الواجهة القديمة إن وجدت
---==================================================
-
-local oldGui = playerGui:FindFirstChild("AutoChatGUI")
-if oldGui then
-    oldGui:Destroy()
+-- نظام حفظ وتخزين التبويبات في ملفات اللعبة (يبقى محفوظاً بعد إعادة التشغيل)
+local fileName = "NHYQ_CustomTabs.json"
+local function saveCustomTabs(tabsTable)
+  pcall(function()
+    if writefile then
+      local encoded = httpService:JSONEncode(tabsTable)
+      writefile(fileName, encoded)
+    end
+  end)
 end
 
---==================================================
--- ScreenGui (مستطيل الكتابة في الزاوية اليسرى)
---==================================================
-
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "AutoChatGUI"
-screenGui.ResetOnSpawn = false
-screenGui.IgnoreGuiInset = false
-screenGui.Parent = playerGui
-
-local box = Instance.new("TextBox")
-box.Name = "MessageBox"
-box.Size = UDim2.new(0, 220, 0, 34)
-box.Position = UDim2.new(0, 15, 0, 95)
-box.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-box.BackgroundTransparency = 0.2
-box.BorderSizePixel = 0
-box.Text = ""
-box.PlaceholderText = "اكتب هنا..."
-box.PlaceholderColor3 = Color3.fromRGB(180, 180, 180)
-box.TextColor3 = Color3.fromRGB(255, 255, 255)
-box.TextSize = 15
-box.Font = Enum.Font.GothamBold
-box.ClearTextOnFocus = false
-box.TextXAlignment = Enum.TextXAlignment.Center
-box.Parent = screenGui
-
-local boxCorner = Instance.new("UICorner")
-boxCorner.CornerRadius = UDim.new(0, 6)
-boxCorner.Parent = box
-
---==================================================
--- نظام عرض الرسائل (بحجم ثابت لا يتأثر بتقريب وإبعاد الكاميرا)
---==================================================
-
-local function renderHeadBubbles(userId)
-    local targetPlayer = Players:GetPlayerByUserId(userId)
-    if not targetPlayer or not targetPlayer.Character then return end
-
-    local head = targetPlayer.Character:FindFirstChild("Head")
-    if not head then return end
-
-    local oldBillboard = head:FindFirstChild("NHYQ_ChatBillboard")
-    if oldBillboard then
-        oldBillboard:Destroy()
+local function loadCustomTabs()
+  local success, result = pcall(function()
+    if readfile and isfile and isfile(fileName) then
+      local content = readfile(fileName)
+      return httpService:JSONDecode(content)
     end
-
-    local queue = playerMessageQueues[userId]
-    if not queue or #queue == 0 then return end
-
-    local billboard = Instance.new("BillboardGui")
-    billboard.Name = "NHYQ_ChatBillboard"
-    billboard.Adornee = head
-    -- استخدام نظام المقاسات المطلقة (Scale = 0) لضمان عدم تغير الحجم نهائياً مع التقريب والإبعاد
-    billboard.Size = UDim2.new(0, 250, 0, 120)
-    billboard.StudsOffset = Vector3.new(0, 3.2, 0)
-    billboard.AlwaysOnTop = true
-    billboard.MaxDistance = 150
-    billboard.Parent = head
-
-    local listLayout = Instance.new("UIListLayout")
-    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    listLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
-    listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    listLayout.Padding = UDim.new(0, 6)
-    listLayout.Parent = billboard
-
-    for _, msgData in ipairs(queue) do
-        local messageText = tostring(msgData.text)
-
-        local measuredSize = TextService:GetTextSize(
-            messageText,
-            16,
-            Enum.Font.GothamBold,
-            Vector2.new(2000, 50)
-        )
-
-        local bubbleWidth = math.clamp(measuredSize.X + 30, 80, 400)
-        local bubbleHeight = 36
-
-        local bubbleContainer = Instance.new("Frame")
-        bubbleContainer.Size = UDim2.new(0, bubbleWidth, 0, bubbleHeight)
-        bubbleContainer.BackgroundTransparency = 1
-        bubbleContainer.ClipsDescendants = true
-        bubbleContainer.Parent = billboard
-
-        local bubble = Instance.new("Frame")
-        bubble.Size = UDim2.new(1, 0, 1, 0)
-        bubble.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        bubble.BackgroundTransparency = 0.1
-        bubble.BorderSizePixel = 0
-        bubble.Parent = bubbleContainer
-
-        local corner = Instance.new("UICorner")
-        corner.CornerRadius = UDim.new(0, 6)
-        corner.Parent = bubble
-
-        local text = Instance.new("TextLabel")
-        text.Size = UDim2.new(1, -12, 1, 0)
-        text.BackgroundTransparency = 1
-        text.Text = messageText
-        text.TextColor3 = Color3.fromRGB(255, 255, 255)
-        text.Font = Enum.Font.GothamBold
-        text.TextSize = 16
-        text.TextXAlignment = Enum.TextXAlignment.Center
-        text.TextYAlignment = Enum.TextYAlignment.Center
-        text.Parent = bubble
-
-        -- ظهور تدريجي للمستطيل من الأسفل للأعلى
-        if msgData.isNew then
-            msgData.isNew = false
-            bubble.Position = UDim2.new(0, 0, 1, 0)
-            text.TextTransparency = 1
-
-            TweenService:Create(
-                bubble,
-                TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-                {Position = UDim2.new(0, 0, 0, 0)}
-            ):Play()
-
-            TweenService:Create(
-                text,
-                TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-                {TextTransparency = 0}
-            ):Play()
-        else
-            bubble.Position = UDim2.new(0, 0, 0, 0)
-            text.TextTransparency = 0
-        end
-    end
+  end)
+  if success and type(result) == "table" then
+    return result
+  end
+  return {}
 end
 
-local function showMessageAboveHead(userId, message)
-    if not playerMessageQueues[userId] then
-        playerMessageQueues[userId] = {}
-    end
+-- ضبط إعدادات الشات الأصلي لإظهار 3 رسائل فوق بعضها
+pcall(function()
+  local bubbleConfig = textChatService:FindFirstChild("BubbleChatConfiguration")
+  if bubbleConfig then
+    bubbleConfig.Enabled = true
+    bubbleConfig.MaxBubbles = 3
+  end
+end)
 
-    local queue = playerMessageQueues[userId]
+-- الصوت
+local clickSound = Instance.new("Sound")
+clickSound.Name = "ClickSound"
+clickSound.SoundId = "rbxassetid://121950888274883"
+clickSound.Volume = 0.6
+clickSound.Parent = soundService
 
-    table.insert(queue, {text = message, isNew = true})
+-- وظيفة إظهار الشات لأعلى سرعة ولجميع اللاعبين في السيرفر
+local function showNativeChatBubble(msgText)
+  local char = localPlayer.Character
+  if not char then return end
+  local head = char:FindFirstChild("Head")
+  if not head then return end
 
-    if #queue > 3 then
-        table.remove(queue, 1)
-    end
+  pcall(function()
+    chatService:Chat(head, msgText, Enum.ChatColor.White)
+  end)
 
-    renderHeadBubbles(userId)
-
-    -- تبقى الرسالة ظاهرة لمدة 7 ثوانٍ ثم تختفي
-    task.delay(7, function()
-        if playerMessageQueues[userId] then
-            table.remove(playerMessageQueues[userId], 1)
-            renderHeadBubbles(userId)
+  task.spawn(function()
+    pcall(function()
+      if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+        local textChannels = textChatService:FindFirstChild("TextChannels")
+        local generalChannel = textChannels and textChannels:FindFirstChild("RBXGeneral")
+        if generalChannel then
+          generalChannel:SendAsync(msgText)
         end
+      else
+        local defaultChatEvents = replicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
+        if defaultChatEvents then
+          local sayMessageRequest = defaultChatEvents:FindFirstChild("SayMessageRequest")
+          if sayMessageRequest then
+            sayMessageRequest:FireServer(msgText, "All")
+          end
+        end
+      end
     end)
+  end)
 end
 
---==================================================
--- استقبال الرسائل من السيرفر
---==================================================
+local function f1(p1)
+  return (pcall(function()
+    local dataService = replicatedStorage:FindFirstChild("RemoteEvents")
+      and replicatedStorage.RemoteEvents:FindFirstChild("DataService")
 
-chatEvent.OnClientEvent:Connect(function(userId, name, message)
-    if typeof(userId) == "number" and typeof(message) == "string" then
-        showMessageAboveHead(userId, message)
+    if dataService and dataService:IsA("RemoteEvent") then
+      dataService:FireServer(unpack({ [1] = p1 }))
     end
-end)
-
---==================================================
--- إرسال الرسالة وإغلاق الكيبورد
---==================================================
-
-local function send()
-    local message = box.Text
-    if typeof(message) == "string" and message:gsub("%s+", "") ~= "" then
-        chatEvent:FireServer(message)
-        box.Text = ""
-        box:ReleaseFocus()
-    end
+  end))
 end
 
-box.FocusLost:Connect(function(enterPressed)
-    if enterPressed then
-        send()
+local hdAdminHDClient = replicatedStorage:FindFirstChild("HDAdminHDClient")
+  or replicatedStorage:FindFirstChild("Remotes")
+
+local requestCommandSilent
+
+if hdAdminHDClient then
+  local signals = hdAdminHDClient:FindFirstChild("Signals") or hdAdminHDClient
+  if signals then
+    requestCommandSilent = signals:FindFirstChild("RequestCommandSilent")
+  end
+end
+
+local function f2(p2)
+  if not requestCommandSilent then
+    return false
+  end
+  return (pcall(function() requestCommandSilent:InvokeServer(p2) end))
+end
+
+local function f3(p3)
+  showNativeChatBubble(p3)
+
+  task.spawn(function()
+    f2(p3)
+  end)
+
+  task.spawn(function()
+    f1(p3)
+  end)
+
+  return true
+end
+
+local v2 = {}
+local v3 = {}
+local v4 = false
+local v5 = "normal"
+local v6 = true 
+local v7 = false
+local selectedDelay = 0
+
+local baseTabs = {
+  { name = "عادي", commands = "/logs sa /re sa /nv sa /clogs sa /logs sa /re sa /nv sa /clogs sa" },
+  { name = "قوي", commands = "/logs sa /re sa /logs sa /re sa /logs sa /re sa /logs sa /re sa" },
+  { name = "اهانه", commands = "/char sa miri /dog sa /sit sa /jp sa /tp sa /titlepk sa فحبه" },
+  { name = "حمايه قويه", commands = "/logs sa /re sa /res sa /nv sa /logs sa /re sa /res sa" },
+  { name = "حمايه", commands = "/logs sa /re sa /logs sa /re sa /logs sa /re sa /logs sa /re sa" },
+  { name = "هيد", commands = "/explode sa /re sa /logs sa /explode sa /re sa /logs sa" },
+  { name = "غامض", commands = "/logs sa /nv sa /res sa /clogs sa /loopwarp sa /explode sa" },
+  { name = "هيد قوي", commands = "/explode sa /re sa /res sa /logs sa /nv sa /re sa" },
+  { name = "غامض قوي", commands = "/nv sa /re sa /res sa /blur sa /logs sa /clogs sa" },
+}
+
+-- دمج التبويبات الأساسية مع المحفوظة مسبقاً
+local v8 = {}
+for _, t in ipairs(baseTabs) do table.insert(v8, t) end
+local savedTabs = loadCustomTabs()
+for _, t in ipairs(savedTabs) do table.insert(v8, t) end
+
+--==================================================
+-- SCREEN GUI & INTERFACE
+--==================================================
+
+local evilHubCustomGui = Instance.new("ScreenGui")
+evilHubCustomGui.Name = "NHYQ_COPY_MAP_GUI"
+evilHubCustomGui.Parent = coreGui
+evilHubCustomGui.ResetOnSpawn = false
+
+local Main = Instance.new("Frame")
+Main.Name = "Main"
+Main.Size = UDim2.new(0, 340, 0, 520)
+Main.Position = UDim2.new(0.5, -170, 0.5, -260)
+Main.BackgroundColor3 = Color3.fromRGB(8, 8, 8)
+Main.BorderSizePixel = 0
+Main.ClipsDescendants = true
+Main.Active = true
+Main.Draggable = true
+Main.Parent = evilHubCustomGui
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 10)
+MainCorner.Parent = Main
+
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Color = Color3.fromRGB(150, 0, 0)
+MainStroke.Thickness = 1.5
+MainStroke.Parent = Main
+
+local TopBar = Instance.new("Frame")
+TopBar.Name = "TopBar"
+TopBar.Size = UDim2.new(1, 0, 0, 38)
+TopBar.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+TopBar.BorderSizePixel = 0
+TopBar.Parent = Main
+
+local LogoFrame = Instance.new("Frame")
+LogoFrame.Size = UDim2.new(0, 48, 0, 26)
+LogoFrame.Position = UDim2.new(0, 8, 0.5, -13)
+LogoFrame.BackgroundColor3 = Color3.fromRGB(20, 0, 0)
+LogoFrame.BorderSizePixel = 0
+LogoFrame.Parent = TopBar
+
+local LogoCorner = Instance.new("UICorner")
+LogoCorner.CornerRadius = UDim.new(0, 4)
+LogoCorner.Parent = LogoFrame
+
+local LogoStroke = Instance.new("UIStroke")
+LogoStroke.Color = Color3.fromRGB(180, 0, 0)
+LogoStroke.Thickness = 1
+LogoStroke.Parent = LogoFrame
+
+local LogoText = Instance.new("TextLabel")
+LogoText.Size = UDim2.new(1, 0, 1, 0)
+LogoText.BackgroundTransparency = 1
+LogoText.Text = "NHYQ"
+LogoText.TextColor3 = Color3.fromRGB(255, 50, 50)
+LogoText.TextSize = 11
+LogoText.Font = Enum.Font.GothamBold
+LogoText.Parent = LogoFrame
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(0, 190, 1, 0)
+Title.Position = UDim2.new(0, 62, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "ماب نسخ-shs09qp23"
+Title.TextColor3 = Color3.fromRGB(240, 240, 240)
+Title.TextSize = 12
+Title.Font = Enum.Font.GothamBold
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = TopBar
+
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0, 22, 0, 22)
+CloseBtn.Position = UDim2.new(1, -28, 0.5, -11)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+CloseBtn.BorderSizePixel = 0
+CloseBtn.Text = "🗙"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.TextSize = 10
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.Parent = TopBar
+
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(0, 3)
+CloseCorner.Parent = CloseBtn
+
+local scrollingFrame = Instance.new("ScrollingFrame")
+scrollingFrame.Size = UDim2.new(1, -10, 1, -48)
+scrollingFrame.Position = UDim2.new(0, 5, 0, 42)
+scrollingFrame.BackgroundTransparency = 1
+scrollingFrame.BorderSizePixel = 0
+scrollingFrame.ScrollBarThickness = 3
+scrollingFrame.ScrollBarImageColor3 = Color3.fromRGB(200, 0, 0)
+scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 650)
+scrollingFrame.Parent = Main
+
+local InputBox = Instance.new("TextBox")
+InputBox.Name = "InputBox"
+InputBox.Size = UDim2.new(1, -14, 0, 42)
+InputBox.Position = UDim2.new(0, 7, 0, 5)
+InputBox.BackgroundColor3 = Color3.fromRGB(18, 5, 5)
+InputBox.BorderSizePixel = 0
+InputBox.ClearTextOnFocus = false
+InputBox.PlaceholderText = "...اكتب الأمر هنا"
+InputBox.PlaceholderColor3 = Color3.fromRGB(150, 60, 60)
+InputBox.Text = "/logs sa /re sa /nv sa /clogs sa"
+InputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+InputBox.TextSize = 11
+InputBox.Font = Enum.Font.GothamMedium
+InputBox.TextWrapped = true
+InputBox.Parent = scrollingFrame
+
+local InputCorner = Instance.new("UICorner")
+InputCorner.CornerRadius = UDim.new(0, 6)
+InputCorner.Parent = InputBox
+
+local SpeedContainer = Instance.new("Frame")
+SpeedContainer.Size = UDim2.new(1, -14, 0, 32)
+SpeedContainer.Position = UDim2.new(0, 7, 0, 53)
+SpeedContainer.BackgroundTransparency = 1
+SpeedContainer.Parent = scrollingFrame
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.FillDirection = Enum.FillDirection.Horizontal
+UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+UIListLayout.Padding = UDim.new(0, 5)
+UIListLayout.Parent = SpeedContainer
+
+local speedOptions = {
+  ["Max Speed"] = 0,
+  ["0.0001"] = 0.0001,
+  ["0.001"] = 0.001,
+  ["0.01"] = 0.01
+}
+
+local speedBtnList = {"Max Speed", "0.0001", "0.001", "0.01"}
+
+for idx, valText in ipairs(speedBtnList) do
+  local Btn = Instance.new("TextButton")
+  Btn.Size = UDim2.new(0.23, 0, 1, 0)
+  Btn.BackgroundColor3 = (valText == "Max Speed") and Color3.fromRGB(200, 0, 0) or Color3.fromRGB(120, 0, 0)
+  Btn.BorderSizePixel = 0
+  Btn.Text = valText
+  Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+  Btn.TextSize = 8.5
+  Btn.Font = Enum.Font.GothamBold
+  Btn.Parent = SpeedContainer
+
+  local BtnCorner = Instance.new("UICorner")
+  BtnCorner.CornerRadius = UDim.new(0, 5)
+  BtnCorner.Parent = Btn
+
+  Btn.MouseButton1Click:Connect(function()
+    selectedDelay = speedOptions[valText]
+    for _, child in ipairs(SpeedContainer:GetChildren()) do
+      if child:IsA("TextButton") then
+        child.BackgroundColor3 = Color3.fromRGB(120, 0, 0)
+      end
     end
+    Btn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+  end)
+end
+
+local StartBtn = Instance.new("TextButton")
+StartBtn.Name = "StartBtn"
+StartBtn.Size = UDim2.new(0.6, -4, 0, 38)
+StartBtn.Position = UDim2.new(0.4, 0, 0, 92)
+StartBtn.BackgroundColor3 = Color3.fromRGB(130, 0, 0)
+StartBtn.BorderSizePixel = 0
+StartBtn.Text = "بدأ تفعيل"
+StartBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+StartBtn.TextSize = 12
+StartBtn.Font = Enum.Font.GothamBold
+StartBtn.Parent = scrollingFrame
+
+local StartCorner = Instance.new("UICorner")
+StartCorner.CornerRadius = UDim.new(0, 6)
+StartCorner.Parent = StartBtn
+
+local SaveBtn = Instance.new("TextButton")
+SaveBtn.Name = "SaveBtn"
+SaveBtn.Size = UDim2.new(0.38, -4, 0, 38)
+SaveBtn.Position = UDim2.new(0, 7, 0, 92)
+SaveBtn.BackgroundColor3 = Color3.fromRGB(100, 0, 0)
+SaveBtn.BorderSizePixel = 0
+SaveBtn.Text = "حفظ ⚙️"
+SaveBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+SaveBtn.TextSize = 11
+SaveBtn.Font = Enum.Font.GothamBold
+SaveBtn.Parent = scrollingFrame
+
+local SaveCorner = Instance.new("UICorner")
+SaveCorner.CornerRadius = UDim.new(0, 6)
+SaveCorner.Parent = SaveBtn
+
+-- Matrix Grid / Tabs Container
+local MatrixGrid = Instance.new("Frame")
+MatrixGrid.Size = UDim2.new(1, -14, 0, 95)
+MatrixGrid.Position = UDim2.new(0, 7, 0, 136)
+MatrixGrid.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+MatrixGrid.Parent = scrollingFrame
+
+local MatrixGridCorner = Instance.new("UICorner")
+MatrixGridCorner.CornerRadius = UDim.new(0, 6)
+MatrixGridCorner.Parent = MatrixGrid
+
+local uiGridLayout = Instance.new("UIGridLayout")
+uiGridLayout.Parent = MatrixGrid
+uiGridLayout.CellSize = UDim2.new(0, 50, 0, 24)
+uiGridLayout.CellPadding = UDim2.new(0, 4, 0, 4)
+uiGridLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+-- نافذة منبثقة بخانتين (اسم التبويب + إضافة الأوامر)
+local function showAddTabPrompt()
+  local promptGui = Instance.new("ScreenGui")
+  promptGui.Name = "NHYQ_Prompt"
+  promptGui.Parent = coreGui
+
+  local pFrame = Instance.new("Frame")
+  pFrame.Size = UDim2.new(0, 280, 0, 185)
+  pFrame.Position = UDim2.new(0.5, -140, 0.5, -92)
+  pFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+  pFrame.BorderSizePixel = 0
+  pFrame.Parent = promptGui
+
+  local pCorner = Instance.new("UICorner")
+  pCorner.CornerRadius = UDim.new(0, 8)
+  pCorner.Parent = pFrame
+
+  local pStroke = Instance.new("UIStroke")
+  pStroke.Color = Color3.fromRGB(200, 0, 0)
+  pStroke.Thickness = 1.5
+  pStroke.Parent = pFrame
+
+  -- خانة اسم التبويب
+  local pLabel1 = Instance.new("TextLabel")
+  pLabel1.Size = UDim2.new(1, -20, 0, 20)
+  pLabel1.Position = UDim2.new(0, 10, 0, 10)
+  pLabel1.BackgroundTransparency = 1
+  pLabel1.Text = "اسم التبويب:"
+  pLabel1.TextColor3 = Color3.fromRGB(255, 255, 255)
+  pLabel1.Font = Enum.Font.GothamBold
+  pLabel1.TextSize = 10
+  pLabel1.TextXAlignment = Enum.TextXAlignment.Left
+  pLabel1.Parent = pFrame
+
+  local pBoxName = Instance.new("TextBox")
+  pBoxName.Size = UDim2.new(1, -20, 0, 28)
+  pBoxName.Position = UDim2.new(0, 10, 0, 30)
+  pBoxName.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+  pBoxName.BorderSizePixel = 0
+  pBoxName.PlaceholderText = "مثال: هجوم سريع"
+  pBoxName.Text = ""
+  pBoxName.TextColor3 = Color3.fromRGB(255, 255, 255)
+  pBoxName.Font = Enum.Font.Gotham
+  pBoxName.TextSize = 10
+  pBoxName.Parent = pFrame
+
+  local bCorner1 = Instance.new("UICorner")
+  bCorner1.CornerRadius = UDim.new(0, 5)
+  bCorner1.Parent = pBoxName
+
+  -- خانة إضافة الأوامر
+  local pLabel2 = Instance.new("TextLabel")
+  pLabel2.Size = UDim2.new(1, -20, 0, 20)
+  pLabel2.Position = UDim2.new(0, 10, 0, 62)
+  pLabel2.BackgroundTransparency = 1
+  pLabel2.Text = "اظافة الاوامر:"
+  pLabel2.TextColor3 = Color3.fromRGB(255, 255, 255)
+  pLabel2.Font = Enum.Font.GothamBold
+  pLabel2.TextSize = 10
+  pLabel2.TextXAlignment = Enum.TextXAlignment.Left
+  pLabel2.Parent = pFrame
+
+  local pBoxCmds = Instance.new("TextBox")
+  pBoxCmds.Size = UDim2.new(1, -20, 0, 35)
+  pBoxCmds.Position = UDim2.new(0, 10, 0, 82)
+  pBoxCmds.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+  pBoxCmds.BorderSizePixel = 0
+  pBoxCmds.PlaceholderText = "/re sa /nv sa"
+  pBoxCmds.Text = ""
+  pBoxCmds.TextColor3 = Color3.fromRGB(255, 255, 255)
+  pBoxCmds.Font = Enum.Font.Gotham
+  pBoxCmds.TextSize = 10
+  pBoxCmds.TextWrapped = true
+  pBoxCmds.Parent = pFrame
+
+  local bCorner2 = Instance.new("UICorner")
+  bCorner2.CornerRadius = UDim.new(0, 5)
+  bCorner2.Parent = pBoxCmds
+
+  local confirmBtn = Instance.new("TextButton")
+  confirmBtn.Size = UDim2.new(0.45, 0, 0, 28)
+  confirmBtn.Position = UDim2.new(0.05, 0, 0, 138)
+  confirmBtn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+  confirmBtn.Text = "إضافة"
+  confirmBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+  confirmBtn.Font = Enum.Font.GothamBold
+  confirmBtn.TextSize = 10
+  confirmBtn.Parent = pFrame
+
+  local cCorner = Instance.new("UICorner")
+  cCorner.CornerRadius = UDim.new(0, 5)
+  cCorner.Parent = confirmBtn
+
+  local cancelBtn = Instance.new("TextButton")
+  cancelBtn.Size = UDim2.new(0.45, 0, 0, 28)
+  cancelBtn.Position = UDim2.new(0.52, 0, 0, 138)
+  cancelBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+  cancelBtn.Text = "إلغاء"
+  cancelBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+  cancelBtn.Font = Enum.Font.GothamBold
+  cancelBtn.TextSize = 10
+  cancelBtn.Parent = pFrame
+
+  local cnCorner = Instance.new("UICorner")
+  cnCorner.CornerRadius = UDim.new(0, 5)
+  cnCorner.Parent = cancelBtn
+
+  confirmBtn.MouseButton1Click:Connect(function()
+    local nameVal = pBoxName.Text
+    local cmdsVal = pBoxCmds.Text
+    if nameVal ~= "" and cmdsVal ~= "" then
+      local newTab = { name = nameVal, commands = cmdsVal }
+      table.insert(v8, newTab)
+      
+      -- استخراج التبويبات المخصصة وحدها وحفظها
+      local toSave = {}
+      for i = #baseTabs + 1, #v8 do
+        table.insert(toSave, v8[i])
+      end
+      saveCustomTabs(toSave)
+
+      rebuildTabs()
+    end
+    promptGui:Destroy()
+  end)
+
+  cancelBtn.MouseButton1Click:Connect(function()
+    promptGui:Destroy()
+  end)
+end
+
+function rebuildTabs()
+  for _, child in ipairs(MatrixGrid:GetChildren()) do
+    if child:IsA("TextButton") then
+      child:Destroy()
+    end
+  end
+
+  for i = 1, #v8 do
+    local v12 = i
+    local textButton9 = Instance.new("TextButton")
+    textButton9.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    textButton9.Text = v8[v12].name
+    textButton9.TextColor3 = Color3.fromRGB(220, 220, 220)
+    textButton9.Font = Enum.Font.GothamBold
+    textButton9.TextSize = 9
+    textButton9.LayoutOrder = v12
+    textButton9.Parent = MatrixGrid
+
+    local uiCorner23 = Instance.new("UICorner")
+    uiCorner23.CornerRadius = UDim.new(0, 4)
+    uiCorner23.Parent = textButton9
+
+    textButton9.MouseButton1Click:Connect(function()
+      InputBox.Text = v8[v12].commands
+    end)
+  end
+
+  -- زر إضافة تبويب جديد
+  local addTabBtn = Instance.new("TextButton")
+  addTabBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+  addTabBtn.Text = "+ إضافة"
+  addTabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+  addTabBtn.Font = Enum.Font.GothamBold
+  addTabBtn.TextSize = 9
+  addTabBtn.LayoutOrder = 999
+  addTabBtn.Parent = MatrixGrid
+
+  local addCorner = Instance.new("UICorner")
+  addCorner.CornerRadius = UDim.new(0, 4)
+  addCorner.Parent = addTabBtn
+
+  addTabBtn.MouseButton1Click:Connect(function()
+    showAddTabPrompt()
+  end)
+end
+
+rebuildTabs()
+
+-- Copy Mode Buttons
+local ModeFrame = Instance.new("Frame")
+ModeFrame.Size = UDim2.new(1, -14, 0, 32)
+ModeFrame.Position = UDim2.new(0, 7, 0, 240)
+ModeFrame.BackgroundTransparency = 1
+ModeFrame.Parent = scrollingFrame
+
+local textButton4 = Instance.new("TextButton")
+textButton4.Size = UDim2.new(0.31, 0, 1, 0)
+textButton4.Position = UDim2.new(0, 0, 0, 0)
+textButton4.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+textButton4.Text = "وهمي"
+textButton4.TextColor3 = Color3.fromRGB(200, 200, 200)
+textButton4.Font = Enum.Font.GothamBold
+textButton4.TextSize = 10
+textButton4.Parent = ModeFrame
+
+local uiCorner10 = Instance.new("UICorner")
+uiCorner10.CornerRadius = UDim.new(0, 6)
+uiCorner10.Parent = textButton4
+
+local textButton5 = Instance.new("TextButton")
+textButton5.Size = UDim2.new(0.34, 0, 1, 0)
+textButton5.Position = UDim2.new(0.33, 0, 0, 0)
+textButton5.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+textButton5.Text = "غامض"
+textButton5.TextColor3 = Color3.fromRGB(200, 200, 200)
+textButton5.Font = Enum.Font.GothamBold
+textButton5.TextSize = 10
+textButton5.Parent = ModeFrame
+
+local uiCorner11 = Instance.new("UICorner")
+uiCorner11.CornerRadius = UDim.new(0, 6)
+uiCorner11.Parent = textButton5
+
+local textButton6 = Instance.new("TextButton")
+textButton6.Size = UDim2.new(0.31, 0, 1, 0)
+textButton6.Position = UDim2.new(0.69, 0, 0, 0)
+textButton6.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+textButton6.Text = "عادي"
+textButton6.TextColor3 = Color3.fromRGB(255, 255, 255)
+textButton6.Font = Enum.Font.GothamBold
+textButton6.TextSize = 10
+textButton6.Parent = ModeFrame
+
+local uiCorner12 = Instance.new("UICorner")
+uiCorner12.CornerRadius = UDim.new(0, 6)
+uiCorner12.Parent = textButton6
+
+local function f4()
+  textButton4.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+  textButton4.TextColor3 = Color3.fromRGB(200, 200, 200)
+
+  textButton5.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+  textButton5.TextColor3 = Color3.fromRGB(200, 200, 200)
+
+  textButton6.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+  textButton6.TextColor3 = Color3.fromRGB(200, 200, 200)
+
+  if v5 == "virtual" then
+    textButton4.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+    textButton4.TextColor3 = Color3.fromRGB(255, 255, 255)
+  elseif v5 == "mystic" then
+    textButton5.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+    textButton5.TextColor3 = Color3.fromRGB(255, 255, 255)
+  else
+    textButton6.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+    textButton6.TextColor3 = Color3.fromRGB(255, 255, 255)
+  end
+end
+
+textButton4.MouseButton1Click:Connect(function() v5 = "virtual" f4() end)
+textButton5.MouseButton1Click:Connect(function() v5 = "mystic" f4() end)
+textButton6.MouseButton1Click:Connect(function() v5 = "normal" f4() end)
+
+-- Victim Selector Container
+local TargetContainer = Instance.new("Frame")
+TargetContainer.Size = UDim2.new(1, -14, 0, 110)
+TargetContainer.Position = UDim2.new(0, 7, 0, 278)
+TargetContainer.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+TargetContainer.Parent = scrollingFrame
+
+local TargetCorner = Instance.new("UICorner")
+TargetCorner.CornerRadius = UDim.new(0, 6)
+TargetCorner.Parent = TargetContainer
+
+local TargetTitle = Instance.new("TextLabel")
+TargetTitle.Size = UDim2.new(1, -10, 0, 20)
+TargetTitle.Position = UDim2.new(0, 5, 0, 2)
+TargetTitle.BackgroundTransparency = 1
+TargetTitle.Text = "👥 اختيار الضحية:"
+TargetTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+TargetTitle.Font = Enum.Font.GothamBold
+TargetTitle.TextSize = 11
+TargetTitle.TextXAlignment = Enum.TextXAlignment.Left
+TargetTitle.Parent = TargetContainer
+
+local scrollingFrame2 = Instance.new("ScrollingFrame")
+scrollingFrame2.Size = UDim2.new(1, -10, 0, 80)
+scrollingFrame2.Position = UDim2.new(0, 5, 0, 24)
+scrollingFrame2.BackgroundTransparency = 1
+scrollingFrame2.BorderSizePixel = 0
+scrollingFrame2.ScrollBarThickness = 2
+scrollingFrame2.ScrollBarImageColor3 = Color3.fromRGB(200, 0, 0)
+scrollingFrame2.CanvasSize = UDim2.new(0, 0, 0, 0)
+scrollingFrame2.Parent = TargetContainer
+
+local TargetStatus = Instance.new("TextLabel")
+TargetStatus.Size = UDim2.new(1, -14, 0, 24)
+TargetStatus.Position = UDim2.new(0, 7, 0, 394)
+TargetStatus.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+TargetStatus.Text = "الهدف النشط: خامل"
+TargetStatus.TextColor3 = Color3.fromRGB(200, 200, 200)
+TargetStatus.Font = Enum.Font.GothamBold
+TargetStatus.TextSize = 10
+TargetStatus.Parent = scrollingFrame
+
+local StatusCorner = Instance.new("UICorner")
+StatusCorner.CornerRadius = UDim.new(0, 5)
+StatusCorner.Parent = TargetStatus
+
+local ToggleBtn = Instance.new("ImageButton")
+ToggleBtn.Name = "NHYQ_SideToggle"
+ToggleBtn.Size = UDim2.new(0, 45, 0, 45)
+ToggleBtn.Position = UDim2.new(0, 15, 0.5, -22)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+ToggleBtn.BorderSizePixel = 0
+ToggleBtn.Parent = evilHubCustomGui
+
+local ToggleCorner = Instance.new("UICorner")
+ToggleCorner.CornerRadius = UDim.new(1, 0)
+ToggleCorner.Parent = ToggleBtn
+
+local ToggleStroke = Instance.new("UIStroke")
+ToggleStroke.Color = Color3.fromRGB(220, 0, 0)
+ToggleStroke.Thickness = 2
+ToggleStroke.Parent = ToggleBtn
+
+local ToggleLabel = Instance.new("TextLabel")
+ToggleLabel.Size = UDim2.new(1, 0, 1, 0)
+ToggleLabel.BackgroundTransparency = 1
+ToggleLabel.Text = "NHYQ"
+ToggleLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+ToggleLabel.TextSize = 10
+ToggleLabel.Font = Enum.Font.GothamBold
+ToggleLabel.Parent = ToggleBtn
+
+ToggleBtn.MouseButton1Click:Connect(function()
+  Main.Visible = not Main.Visible
 end)
+
+CloseBtn.MouseButton1Click:Connect(function()
+  Main.Visible = false
+end)
+
+local function f5()
+  local count = 0
+  for key, value in pairs(v2) do count = count + 1 end
+  if count == 0 then
+    TargetTitle.Text = "👥 اختيار الضحية: (لا يوجد)"
+  else
+    TargetTitle.Text = "👥 اختيار الضحية: (" .. count .. ")"
+  end
+end
+
+local function f6()
+  for key2, value2 in pairs(v3) do
+    if players:FindFirstChild(key2) then return key2 end
+  end
+  for key3, value3 in pairs(v2) do
+    if players:FindFirstChild(key3) then return key3 end
+  end
+  return nil
+end
+
+local function f8()
+  for index2, value6 in ipairs(scrollingFrame2:GetChildren()) do
+    if value6:IsA("TextButton") then value6:Destroy() end
+  end
+
+  local count3 = 0
+  for index3, value7 in ipairs(players:GetPlayers()) do
+    local v14 = value7
+    if v14 ~= localPlayer then
+      local textButton12 = Instance.new("TextButton")
+      textButton12.Size = UDim2.new(1, -5, 0, 22)
+      textButton12.Position = UDim2.new(0, 2, 0, count3 * 24 + 2)
+
+      if v2[v14.Name] then
+        textButton12.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+        textButton12.TextColor3 = Color3.fromRGB(255, 255, 255)
+        textButton12.Text = "✓ " .. v14.Name
+      else
+        textButton12.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        textButton12.TextColor3 = Color3.fromRGB(200, 200, 200)
+        textButton12.Text = v14.Name
+      end
+
+      textButton12.Font = Enum.Font.Gotham
+      textButton12.TextSize = 10
+      textButton12.Parent = scrollingFrame2
+
+      local uiCorner27 = Instance.new("UICorner")
+      uiCorner27.CornerRadius = UDim.new(0, 4)
+      uiCorner27.Parent = textButton12
+
+      textButton12.MouseButton1Click:Connect(function()
+        if v2[v14.Name] then
+          v2[v14.Name] = nil
+        else
+          v2[v14.Name] = true
+        end
+        f8()
+        f5()
+      end)
+
+      count3 = count3 + 1
+    end
+  end
+  scrollingFrame2.CanvasSize = UDim2.new(0, 0, 0, count3 * 24 + 5)
+end
+
+SaveBtn.MouseButton1Click:Connect(function()
+  for key8, value12 in pairs(v2) do
+    v3[key8] = true
+  end
+  SaveBtn.Text = "تم الحفظ ✓"
+  task.wait(0.5)
+  SaveBtn.Text = "حفظ ⚙️"
+end)
+
+local v15
+
+local function f9()
+  local v16 = {}
+  for key5, value8 in pairs(v2) do
+    if not players:FindFirstChild(key5) then
+      table.insert(v16, key5)
+    end
+  end
+
+  for index4, value9 in ipairs(v16) do
+    v2[value9] = nil
+    if v15 == value9 then
+      v15 = nil
+      TargetStatus.Text = "الهدف غادر اللعبة"
+    end
+  end
+
+  if #v16 > 0 then
+    f8()
+    f5()
+  end
+end
+
+local function f10()
+  if v5 == "virtual" then
+    return f6() or ""
+  elseif v5 == "mystic" then
+    local v17 = {}
+    for key6, value10 in pairs(v3) do
+      if players:FindFirstChild(key6) then
+        table.insert(v17, key6:sub(1, 1))
+      end
+    end
+    if #v17 == 0 then
+      for key7, value11 in pairs(v2) do
+        if players:FindFirstChild(key7) then
+          table.insert(v17, key7:sub(1, 1))
+        end
+      end
+    end
+    if #v17 > 0 then
+      return table.concat(v17, ",")
+    end
+    return ""
+  else
+    return (f6() or ""):sub(1, 3)
+  end
+end
+
+local function f11(p4)
+  f3(p4)
+end
+
+local v19
+
+StartBtn.MouseButton1Click:Connect(function()
+  local v20
+
+  if v4 then
+    v4 = false
+    if v19 then task.cancel(v19) end
+
+    StartBtn.Text = "بدأ تفعيل"
+    StartBtn.BackgroundColor3 = Color3.fromRGB(130, 0, 0)
+
+    v15 = nil
+    TargetStatus.Text = "الوضع الحالي: خامل"
+    return
+  else
+    f9()
+    local v21 = f6()
+
+    if not v21 and v5 ~= "mystic" then
+      TargetStatus.Text = "يرجى تحديد ضحية أولاً!"
+      return
+    else
+      local text = InputBox.Text
+      v20 = {}
+
+      for match in text:gmatch("[^\r\n]+") do
+        if match ~= "" then
+          table.insert(v20, match)
+        end
+      end
+
+      v4 = true
+
+      StartBtn.Text = "إيقاف التفعيل"
+      StartBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+
+      v15 = v21 or "وضع غامض متعدد"
+      TargetStatus.Text = "الهدف النشط: " .. v15
+
+      v19 = task.spawn(function()
+        while v4 do
+          if v5 ~= "mystic" and not players:FindFirstChild(v15) then
+            f9()
+            local v22 = f6()
+
+            if not v22 then
+              v4 = false
+              StartBtn.Text = "بدأ تفعيل"
+              StartBtn.BackgroundColor3 = Color3.fromRGB(130, 0, 0)
+              break
+            end
+
+            v15 = v22
+            TargetStatus.Text = "الهدف النشط: " .. v15
+          end
+
+          local v23 = f10()
+
+          for index5, value13 in ipairs(v20) do
+            if not v4 then break end
+
+            local formattedMsg = (value13:gsub(" sa", " " .. v23))
+            f11(formattedMsg)
+
+            if selectedDelay > 0 then
+              task.wait(selectedDelay)
+            else
+              task.wait()
+            end
+          end
+
+          if not v6 then
+            v4 = false
+            StartBtn.Text = "بدأ تفعيل"
+            StartBtn.BackgroundColor3 = Color3.fromRGB(130, 0, 0)
+            break
+          end
+
+          if selectedDelay > 0 then
+            task.wait(selectedDelay)
+          else
+            task.wait()
+          end
+        end
+      end)
+
+      return
+    end
+  end
+end)
+
+task.spawn(function()
+  while true do
+    task.wait(2)
+    f9()
+    if Main.Visible then
+      f8()
+    end
+  end
+end)
+
+f4()
+f8()
