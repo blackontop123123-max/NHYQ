@@ -1,1 +1,23 @@
+const express = require('express');
+const app = express();
 
+// حط مكان الكود أدناه (داخل علامتي التنصيص المائلة) رابط السكريبت أو كودك الحقيقي
+const mySecretScript = `Loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/NHYQ776'))()`; 
+
+app.get('/myscript', (req, res) => {
+    // نفحص نوع الجهاز أو المتصفح اللي يفتح الرابط (User-Agent)
+    const userAgent = req.headers['user-agent'] || '';
+    
+    // نتأكد إذا كان الطلب جاي من لعبة روبلوكس (Executor) أو متصفح عادي
+    if (userAgent.includes('Roblox') || userAgent.includes('Executor') || userAgent.includes('Lua')) {
+        // إذا كان الطلب من اللعبة، ندز له السكريبت الحقيقي بالخفاء
+        res.send(mySecretScript);
+    } else {
+        // إذا شخص فتحه من متصفح جوجل كروم العادي، نظهر له صفحة 404 وهمية!
+        res.status(404).send("Error 404: Page not found or does not exist.");
+    }
+});
+
+app.listen(3000, () => {
+    console.log('Server is running');
+});
