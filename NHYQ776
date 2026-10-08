@@ -664,6 +664,7 @@ local afCorner = Instance.new("UICorner", atfConfirm)
 afCorner.CornerRadius = UDim.new(0, 6)
 
 local refreshTabs
+local refreshSavedPlayers
 
 atfConfirm.MouseButton1Click:Connect(function()
     local name = tabNameBox.Text
@@ -715,26 +716,6 @@ stCorner.CornerRadius = UDim.new(0, 6)
 local selectedTabIndex = nil
 local tabButtons = {}
 
-local function getTargetName(playerName, mode)
-    if mode == "normal" then
-        return playerName
-    elseif mode == "gamed" then
-        return playerName:sub(1, math.min(3, #playerName))
-    end
-    return playerName
-end
-
-local function getActivePlayer()
-    for name in pairs(selectedPlayers) do
-        for _, player in ipairs(Players:GetPlayers()) do
-            if player.Name == name then
-                return name
-            end
-        end
-    end
-    return nil
-end
-
 local function updateSelectedLabel()
     local count = 0
     for _ in pairs(selectedPlayers) do count = count + 1 end
@@ -746,6 +727,42 @@ local function updateSelectedLabel()
     else
         selectedPlayersLabel.Text = count .. " لاعبين مختارين"
     end
+end
+
+refreshSavedPlayers = function()
+    for _, child in pairs(savedPlayersScroll:GetChildren()) do
+        if child:IsA("TextButton") then child:Destroy() end
+    end
+    
+    local y = 0
+    for name in pairs(savedPlayers) do
+        local btn = Instance.new("TextButton")
+        btn.Size = UDim2.new(1, -5, 0, 20)
+        btn.Position = UDim2.new(0, 2, 0, y * 22 + 2)
+        btn.BackgroundColor3 = colorPalette.accentDark
+        btn.Text = name
+        btn.TextColor3 = Color3.new(1, 1, 1)
+        btn.Font = Enum.Font.Gotham
+        btn.TextSize = 10
+        btn.Parent = savedPlayersScroll
+        
+        local btnCorner = Instance.new("UICorner", btn)
+        btnCorner.CornerRadius = UDim.new(0, 4)
+        
+        btn.MouseButton1Click:Connect(function()
+            selectedPlayers[name] = true
+            updateSelectedLabel()
+        end)
+        
+        btn.MouseButton2Click:Connect(function()
+            savedPlayers[name] = nil
+            refreshSavedPlayers()
+        end)
+        
+        y = y + 1
+    end
+    
+    savedPlayersScroll.CanvasSize = UDim2.new(0, 0, 0, y * 22 + 5)
 end
 
 local function refreshCurrentPlayers()
@@ -890,16 +907,30 @@ local spamTask = nil
 local function startCopy()
     cleanSelectedPlayers()
     
-    local target = getActivePlayer()
-    if not target then
+    local targetsList = {}
+    for name in pairs(selectedPlayers) do
+        table.insert(targetsList, name)
+    end
+    
+    if #targetsList == 0 then
         startCopyBtn.Text = "اختر لاعب أولاً!"
         task.wait(1)
         startCopyBtn.Text = "تفعيل النسخ"
         return
     end
     
-    local targetName = getTargetName(target, copyType)
-    activePlayerLabel.Text = "اللاعب النشط: " .. targetName
+    local targetText = ""
+    if copyType == "normal" then
+        targetText = targetsList[1]
+    elseif copyType == "gamed" then
+        local parts = {}
+        for _, name in ipairs(targetsList) do
+            table.insert(parts, name:sub(1, math.min(3, #name)))
+        end
+        targetText = table.concat(parts, ",")
+    end
+    
+    activePlayerLabel.Text = "الهدف: " .. targetText
     
     local commandLines = {}
     for line in commandsTextBox.Text:gmatch("[^\r\n]+") do
@@ -914,32 +945,9 @@ local function startCopy()
     
     spamTask = task.spawn(function()
         while isCopyingActive do
-            local found = false
-            for _, player in ipairs(Players:GetPlayers()) do
-                if player.Name == target then
-                    found = true
-                    break
-                end
-            end
-            
-            if not found then
-                local newTarget = getActivePlayer()
-                if newTarget then
-                    target = newTarget
-                    targetName = getTargetName(target, copyType)
-                    activePlayerLabel.Text = "اللاعب النشط: " .. targetName
-                else
-                    isCopyingActive = false
-                    startCopyBtn.Text = "تفعيل النسخ"
-                    startCopyBtn.BackgroundColor3 = colorPalette.accentDark
-                    activePlayerLabel.Text = "اللاعب النشط: انتهى الجميع"
-                    break
-                end
-            end
-            
             for _, cmd in ipairs(commandLines) do
                 if not isCopyingActive then break end
-                local finalCmd = cmd:gsub(" sa", " " .. targetName)
+                local finalCmd = cmd:gsub(" sa", " " .. targetText)
                 executeCommand(finalCmd)
                 task.wait(0.001)
             end
@@ -971,6 +979,18 @@ stopCopyBtn.MouseButton1Click:Connect(function()
     stopAll()
 end)
 
+savePlayersBtn.MouseButton1Click:Connect(function()
+    for name in pairs(selectedPlayers) do
+        savedPlayers[name] = true
+    end
+    refreshSavedPlayers()
+end)
+
+clearPlayersBtn.MouseButton1Click:Connect(function()
+    savedPlayers = {}
+    refreshSavedPlayers()
+end)
+
 -- فتح وإغلاق القائمة بالزر العائم
 local isOpen = false
 
@@ -979,6 +999,7 @@ toggleButton.MouseButton1Click:Connect(function()
     mainFrame.Visible = isOpen
     if isOpen then
         refreshCurrentPlayers()
+        refreshSavedPlayers()
         refreshTabs()
     end
 end)
