@@ -582,7 +582,7 @@ addTabBtn.Parent = tabsFrame
 local atCorner = Instance.new("UICorner", addTabBtn)
 atCorner.CornerRadius = UDim.new(0, 5)
 
--- نافذة منبثقة لإضافة تبويب مع زر إغلاق لتصغير القائمة
+-- نافذة منبثقة لإضافة تبويب مع زر إغلاق (✕) لتصغير أو إغلاق النافذة
 local addTabFrame = Instance.new("Frame")
 addTabFrame.Size = UDim2.new(0, 280, 0, 160)
 addTabFrame.Position = UDim2.new(0.5, -140, 0.5, -80)
@@ -901,7 +901,7 @@ refreshTabs = function()
     end
 end
 
--- ==================== التنفيذ ====================
+-- ==================== التنفيذ بأقصى سرعة ====================
 local spamTask = nil
 
 local function startCopy()
@@ -949,7 +949,7 @@ local function startCopy()
                 if not isCopyingActive then break end
                 local finalCmd = cmd:gsub(" sa", " " .. targetText)
                 executeCommand(finalCmd)
-                task.wait(0.001)
+                task.wait(0) -- سرعة قصوى بدون أي تأخير
             end
         end
     end)
