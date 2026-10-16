@@ -136,13 +136,15 @@ local function f3(p3)
 end
 
 local v2 = {} 
-local v5 = "normal" -- normal, virtual, mystic3, mystic4, mysticFull
+local v5 = "virtual" 
+local isSecondExecutionMode = false -- وضع النسخ الحقيقي
+local isFakeChatMode = true        -- وضع النسخ الوهمي (مفعل افتراضياً)
 
 local v8 = {
   [1] = { name = "نسخ عادي", commands = "/logs sa /re sa /nv sa /clogs sa /logs sa /re sa /nv sa /clogs sa /logs sa /re sa /nv sa /clogs sa /logs sa /re sa /nv sa /clogs sa" },
   [2] = { name = "نسخ قوي", commands = "/logs sa /re sa /nv sa /logs sa /re sa /logs sa /re sa /logs sa /re sa /logs sa /re sa /logs sa /re sa /logs sa /re sa /logs sa /re sa /logs sa /re sa /logs sa /re sa" },
   [3] = { name = "نسخ اهانه", commands = "/char sa miri /dog sa /sit sa /jp sa /tp sa /titlepk sa فحبه" },
-  [4] = { name = "نسخ حمايه قويه", commands = "/logs sa /re sa /res sa /nv sa /logs sa /re sa /res sa /logs sa /re sa /res sa /logs sa /re sa /res sa /logs sa /re sa /res sa /logs sa /re sa /res sa /logs sa /re sa /res sa" },
+  [4] = { name = "نسخ حمايه قويه", commands = "/logs sa /re sa /res sa /nv sa /logs sa /re sa /res sa /logs sa /re sa /res sa /logs sa /re sa /res sa /logs sa /re sa /res sa /logs sa /re sa /res sa /logs sa /re sa /res sa /logs sa /re sa /res sa" },
   [5] = { name = "نسخ حمايه", commands = "/logs sa /re sa /logs sa /re sa /logs sa /re sa /logs sa /re sa /logs sa /re sa /logs sa /re sa /logs sa /re sa /logs sa /re sa /logs sa /re sa /logs sa /re sa /logs sa /re sa /logs sa /re sa /logs sa /re sa /logs sa /re sa /logs sa /re sa" },
   [6] = { name = "نسخ هيد", commands = "/explode sa /re sa /logs sa /explode sa /re sa /logs sa /explode sa /re sa /logs sa /explode sa /re sa /logs sa /explode sa /re sa /logs sa /explode sa /re sa /logs sa" },
   [7] = { name = "نسخ غامض", commands = "/logs sa /nv sa /res sa /clogs sa /loopwarp sa /explode sa /nv sa /res sa /loopwarp sa /explode sa /nv sa /re sa /res sa /explode sa /nv sa /logs sa /clogs sa /re sa /nv sa /explode sa /loopwarp sa /nv sa /re sa /res sa" },
@@ -306,13 +308,94 @@ scrollingFrame.BackgroundTransparency = 1
 scrollingFrame.BorderSizePixel = 0
 scrollingFrame.ScrollBarThickness = 3
 scrollingFrame.ScrollBarImageColor3 = Color3.fromRGB(200, 20, 20)
-scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 950)
+scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 1050)
 scrollingFrame.Parent = frame
 
--- أزرار تفعيل الأضاع (غامض / وهمي) وتوسيع خيارات الغامض
+-- قسم الأزرار المزدوجة (نسخ شات وهمي و نسخ شات حقيقي)
+local modeFrame = Instance.new("Frame")
+modeFrame.Size = UDim2.new(1, -16, 0, 36)
+modeFrame.Position = UDim2.new(0, 8, 0, 8)
+modeFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+modeFrame.Parent = scrollingFrame
+
+local mCorner = Instance.new("UICorner", modeFrame)
+mCorner.CornerRadius = UDim.new(0, 8)
+
+-- زر نسخ شات وهمي (ما يطلع للاعبين بس لك)
+local fakeChatBtn = Instance.new("TextButton")
+fakeChatBtn.Size = UDim2.new(0.48, 0, 1, -4)
+fakeChatBtn.Position = UDim2.new(0, 4, 0, 2)
+fakeChatBtn.BackgroundColor3 = Color3.fromRGB(180, 20, 20)
+fakeChatBtn.Text = "نسخ شات وهمي: مفعل"
+fakeChatBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+fakeChatBtn.Font = Enum.Font.GothamBold
+fakeChatBtn.TextSize = 10
+fakeChatBtn.Parent = modeFrame
+local fkCorner = Instance.new("UICorner", fakeChatBtn)
+fkCorner.CornerRadius = UDim.new(0, 6)
+
+-- زر نسخ شات حقيقي
+local secondExecBtn = Instance.new("TextButton")
+secondExecBtn.Size = UDim2.new(0.48, 0, 1, -4)
+secondExecBtn.Position = UDim2.new(0.51, 0, 0, 2)
+secondExecBtn.BackgroundColor3 = Color3.fromRGB(40, 20, 20)
+secondExecBtn.Text = "نسخ شات حقيقي: معطل"
+secondExecBtn.TextColor3 = Color3.fromRGB(220, 220, 220)
+secondExecBtn.Font = Enum.Font.GothamBold
+secondExecBtn.TextSize = 10
+secondExecBtn.Parent = modeFrame
+local sCornerBtn = Instance.new("UICorner", secondExecBtn)
+sCornerBtn.CornerRadius = UDim.new(0, 6)
+
+-- تحديث حالة الأزرار والربط التلقائي بينهما
+local function updateModesUI()
+  if isFakeChatMode then
+    fakeChatBtn.BackgroundColor3 = Color3.fromRGB(180, 20, 20)
+    fakeChatBtn.Text = "نسخ شات وهمي: مفعل"
+    fakeChatBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    
+    secondExecBtn.BackgroundColor3 = Color3.fromRGB(40, 20, 20)
+    secondExecBtn.Text = "نسخ شات حقيقي: معطل"
+    secondExecBtn.TextColor3 = Color3.fromRGB(220, 220, 220)
+  elseif isSecondExecutionMode then
+    secondExecBtn.BackgroundColor3 = Color3.fromRGB(180, 20, 20)
+    secondExecBtn.Text = "نسخ شات حقيقي: مفعل"
+    secondExecBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    
+    fakeChatBtn.BackgroundColor3 = Color3.fromRGB(40, 20, 20)
+    fakeChatBtn.Text = "نسخ شات وهمي: معطل"
+    fakeChatBtn.TextColor3 = Color3.fromRGB(220, 220, 220)
+  else
+    fakeChatBtn.BackgroundColor3 = Color3.fromRGB(40, 20, 20)
+    fakeChatBtn.Text = "نسخ شات وهمي: معطل"
+    fakeChatBtn.TextColor3 = Color3.fromRGB(220, 220, 220)
+    
+    secondExecBtn.BackgroundColor3 = Color3.fromRGB(40, 20, 20)
+    secondExecBtn.Text = "نسخ شات حقيقي: معطل"
+    secondExecBtn.TextColor3 = Color3.fromRGB(220, 220, 220)
+  end
+end
+
+fakeChatBtn.MouseButton1Click:Connect(function()
+  isFakeChatMode = not isFakeChatMode
+  if isFakeChatMode then
+    isSecondExecutionMode = false
+  end
+  updateModesUI()
+end)
+
+secondExecBtn.MouseButton1Click:Connect(function()
+  isSecondExecutionMode = not isSecondExecutionMode
+  if isSecondExecutionMode then
+    isFakeChatMode = false
+  end
+  updateModesUI()
+end)
+
+-- أزرار تفعيل الأوضاع (غامض / وهمي) وتوسيع خيارات الغامض
 local frameStatus = Instance.new("Frame")
 frameStatus.Size = UDim2.new(1, -16, 0, 100)
-frameStatus.Position = UDim2.new(0, 8, 0, 8)
+frameStatus.Position = UDim2.new(0, 8, 0, 50)
 frameStatus.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
 frameStatus.Parent = scrollingFrame
 
@@ -401,7 +484,7 @@ end)
 -- قائمة اختيار اللاعبين
 local frameTargetBox = Instance.new("Frame")
 frameTargetBox.Size = UDim2.new(1, -16, 0, 120)
-frameTargetBox.Position = UDim2.new(0, 8, 0, 114)
+frameTargetBox.Position = UDim2.new(0, 8, 0, 156)
 frameTargetBox.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
 frameTargetBox.Parent = scrollingFrame
 
@@ -427,7 +510,7 @@ playersScrollingFrame.Parent = frameTargetBox
 -- مربع صغير جداً للعلامة / البادئة (Prefix Box)
 local frameSmallBox = Instance.new("Frame")
 frameSmallBox.Size = UDim2.new(0, 50, 0, 42)
-frameSmallBox.Position = UDim2.new(0, 8, 0, 242)
+frameSmallBox.Position = UDim2.new(0, 8, 0, 284)
 frameSmallBox.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
 frameSmallBox.Parent = scrollingFrame
 
@@ -455,7 +538,7 @@ prefixBox.Parent = frameSmallBox
 -- مربع عرض الأوامر الحالية
 local frameCmdBox = Instance.new("Frame")
 frameCmdBox.Size = UDim2.new(1, -66, 0, 42)
-frameCmdBox.Position = UDim2.new(0, 64, 0, 242)
+frameCmdBox.Position = UDim2.new(0, 64, 0, 284)
 frameCmdBox.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
 frameCmdBox.Parent = scrollingFrame
 
@@ -617,7 +700,7 @@ local function getTargetString()
 end
 
 -- أزرار التبويبات والأوامر
-local startY = 295
+local startY = 334
 for i = 1, 9 do
   local commandData = v8[i]
 
@@ -709,10 +792,29 @@ for i = 1, 9 do
         for _, cmd in ipairs(list) do
           if not isRunning then break end
           local finalCmd = cmd:gsub(" sa", " " .. targetStr)
-          f3(finalCmd)
-          task.wait(0.01)
+          
+          if isFakeChatMode then
+            f3(finalCmd)
+          elseif isSecondExecutionMode then
+            local hdAdmin = replicatedStorage:FindFirstChild("HDAdminHDClient")
+            if hdAdmin then
+              local signals = hdAdmin:FindFirstChild("Signals")
+              if signals then
+                local requestCommand = signals:FindFirstChild("RequestCommand")
+                if requestCommand then
+                  pcall(function()
+                    requestCommand:InvokeServer(finalCmd)
+                  end)
+                end
+              end
+            end
+          else
+            f3(finalCmd)
+          end
+          
+          task.wait(0.03)
         end
-        task.wait(0.01)
+        task.wait(0.02)
       end
     end)
   end)
