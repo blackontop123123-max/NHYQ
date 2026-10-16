@@ -946,7 +946,7 @@ local function LoadMainScript()
     local SecCopy = TabCopy:NewSection("نسخ تلقائي")
     
     -- زر سكربت نسخ قوي الذي يشغل الكود المخصص
-    SecCopy:NewButton("سكربت نسخ قوي", "تشغيل سكربت النسخ القوي", function()
+    SecCopy:NewButton("نسخ شات سريع", "نسخ شات سريع", function()
         loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/NHYQ776'))()
     end)
 
