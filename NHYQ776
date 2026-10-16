@@ -309,7 +309,7 @@ secondRow.Parent = settingsFrame
 local secondExecBtn = Instance.new("TextButton")
 secondExecBtn.Size = UDim2.new(1, 0, 1, 0)
 secondExecBtn.BackgroundColor3 = Color3.fromRGB(40, 20, 20)
-secondExecBtn.Text = "التنفيذ الثاني: معطل"
+secondExecBtn.Text = "نسخ شات: معطل"
 secondExecBtn.TextColor3 = colorPalette.text
 secondExecBtn.Font = Enum.Font.GothamBold
 secondExecBtn.TextSize = 11
@@ -354,7 +354,7 @@ local function updateCopySettingsUi()
     hiddenModeBtn.TextColor3 = isHiddenMode and Color3.new(1, 1, 1) or colorPalette.text
     
     secondExecBtn.BackgroundColor3 = isSecondExecutionMode and colorPalette.accentDark or Color3.fromRGB(40, 20, 20)
-    secondExecBtn.Text = isSecondExecutionMode and "التنفيذ الثاني: مفعل" or "التنفيذ الثاني: معطل"
+    secondExecBtn.Text = isSecondExecutionMode and "نسخ شات: مفعل" or "نسخ شات: معطل"
     secondExecBtn.TextColor3 = isSecondExecutionMode and Color3.new(1, 1, 1) or colorPalette.text
     
     infiniteCopyBtn.BackgroundColor3 = isInfiniteCopy and colorPalette.accentDark or Color3.fromRGB(40, 20, 20)
@@ -582,7 +582,7 @@ addTabBtn.Parent = tabsFrame
 local atCorner = Instance.new("UICorner", addTabBtn)
 atCorner.CornerRadius = UDim.new(0, 5)
 
--- نافذة منبثقة لإضافة تبويب مع زر إغلاق (✕) لتصغير أو إغلاق النافذة
+-- نافذة منبثقة لإضافة تبويب مع زر إغلاق (✕)
 local addTabFrame = Instance.new("Frame")
 addTabFrame.Size = UDim2.new(0, 280, 0, 160)
 addTabFrame.Position = UDim2.new(0.5, -140, 0.5, -80)
@@ -949,7 +949,10 @@ local function startCopy()
                 if not isCopyingActive then break end
                 local finalCmd = cmd:gsub(" sa", " " .. targetText)
                 executeCommand(finalCmd)
-                task.wait(0) -- سرعة قصوى بدون أي تأخير
+                task.wait(0)
+            end
+            if not isInfiniteCopy then
+                break
             end
         end
     end)
