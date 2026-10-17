@@ -171,8 +171,8 @@ evilHubCustomGui.ResetOnSpawn = false
 
 local Main = Instance.new("Frame")
 Main.Name = "Main"
-Main.Size = UDim2.new(0, 340, 0, 520)
-Main.Position = UDim2.new(0.5, -170, 0.5, -260)
+Main.Size = UDim2.new(0, 340, 0, 560)
+Main.Position = UDim2.new(0.5, -170, 0.5, -280)
 Main.BackgroundColor3 = Color3.fromRGB(8, 8, 8)
 Main.BorderSizePixel = 0
 Main.ClipsDescendants = true
@@ -254,7 +254,7 @@ scrollingFrame.BackgroundTransparency = 1
 scrollingFrame.BorderSizePixel = 0
 scrollingFrame.ScrollBarThickness = 3
 scrollingFrame.ScrollBarImageColor3 = Color3.fromRGB(200, 0, 0)
-scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 650)
+scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 750)
 scrollingFrame.Parent = Main
 
 local InputBox = Instance.new("TextBox")
@@ -277,9 +277,128 @@ local InputCorner = Instance.new("UICorner")
 InputCorner.CornerRadius = UDim.new(0, 6)
 InputCorner.Parent = InputBox
 
+-- نظام تكرار الأسطر الجديد (أزرار 10، 40، 100 + الإدخال المخصص حتى 150)
+local RepeaterContainer = Instance.new("Frame")
+RepeaterContainer.Size = UDim2.new(1, -14, 0, 68)
+RepeaterContainer.Position = UDim2.new(0, 7, 0, 52)
+RepeaterContainer.BackgroundColor3 = Color3.fromRGB(13, 13, 13)
+RepeaterContainer.BorderSizePixel = 0
+RepeaterContainer.Parent = scrollingFrame
+
+local RepContainerCorner = Instance.new("UICorner")
+RepContainerCorner.CornerRadius = UDim.new(0, 6)
+RepContainerCorner.Parent = RepeaterContainer
+
+-- أزرار سريعة للأسطر (10، 40، 100)
+local Btn10 = Instance.new("TextButton")
+Btn10.Size = UDim2.new(0.31, 0, 0, 24)
+Btn10.Position = UDim2.new(0, 5, 0, 6)
+Btn10.BackgroundColor3 = Color3.fromRGB(120, 0, 0)
+Btn10.Text = "10 أسطر"
+Btn10.TextColor3 = Color3.fromRGB(255, 255, 255)
+Btn10.Font = Enum.Font.GothamBold
+Btn10.TextSize = 9.5
+Btn10.Parent = RepeaterContainer
+Instance.new("UICorner", Btn10).CornerRadius = UDim.new(0, 4)
+
+local Btn40 = Instance.new("TextButton")
+Btn40.Size = UDim2.new(0.31, 0, 0, 24)
+Btn40.Position = UDim2.new(0.345, 0, 0, 6)
+Btn40.BackgroundColor3 = Color3.fromRGB(120, 0, 0)
+Btn40.Text = "40 سطر"
+Btn40.TextColor3 = Color3.fromRGB(255, 255, 255)
+Btn40.Font = Enum.Font.GothamBold
+Btn40.TextSize = 9.5
+Btn40.Parent = RepeaterContainer
+Instance.new("UICorner", Btn40).CornerRadius = UDim.new(0, 4)
+
+local Btn100 = Instance.new("TextButton")
+Btn100.Size = UDim2.new(0.31, 0, 0, 24)
+Btn100.Position = UDim2.new(0.69, 0, 0, 6)
+Btn100.BackgroundColor3 = Color3.fromRGB(120, 0, 0)
+Btn100.Text = "100 سطر"
+Btn100.TextColor3 = Color3.fromRGB(255, 255, 255)
+Btn100.Font = Enum.Font.GothamBold
+Btn100.TextSize = 9.5
+Btn100.Parent = RepeaterContainer
+Instance.new("UICorner", Btn100).CornerRadius = UDim.new(0, 4)
+
+-- حقل إدخال عدد الاسطر المخصص + زر التنفيذ
+local LineCountBox = Instance.new("TextBox")
+LineCountBox.Size = UDim2.new(0.55, 0, 0, 28)
+LineCountBox.Position = UDim2.new(0, 5, 0, 34)
+LineCountBox.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+LineCountBox.BorderSizePixel = 0
+LineCountBox.PlaceholderText = "اكتب عدد الاسطر (اقصى حد 150)"
+LineCountBox.Text = "10"
+LineCountBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+LineCountBox.Font = Enum.Font.GothamMedium
+LineCountBox.TextSize = 9.5
+LineCountBox.Parent = RepeaterContainer
+Instance.new("UICorner", LineCountBox).CornerRadius = UDim.new(0, 4)
+
+local ExecuteLinesBtn = Instance.new("TextButton")
+ExecuteLinesBtn.Size = UDim2.new(0.41, 0, 0, 28)
+ExecuteLinesBtn.Position = UDim2.new(0.575, 0, 0, 34)
+ExecuteLinesBtn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+ExecuteLinesBtn.Text = "تنفيذ عدد الاسطر"
+ExecuteLinesBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ExecuteLinesBtn.Font = Enum.Font.GothamBold
+ExecuteLinesBtn.TextSize = 9.5
+ExecuteLinesBtn.Parent = RepeaterContainer
+Instance.new("UICorner", ExecuteLinesBtn).CornerRadius = UDim.new(0, 4)
+
+-- دالة لتطبيق التكرار على السكربت حسب العدد المحدد
+local function applyLineMultiplication(targetCount)
+  local currentText = InputBox.Text
+  if currentText == "" then return end
+  
+  -- تنظيف النص من أي تكرارات سابقة أو أخذ السطر الأساسي الأول لتجنب التضخم التراكمي
+  local lines = {}
+  for line in currentText:gmatch("[^\r\n]+") do
+    table.insert(lines, line)
+  end
+  
+  if #lines == 0 then return end
+  local baseCommand = lines[1] -- أخذ أول سطر كمرجع للتكرار
+  
+  local repeatedLines = {}
+  for i = 1, targetCount do
+    table.insert(repeatedLines, baseCommand)
+  end
+  
+  InputBox.Text = table.concat(repeatedLines, "\n")
+end
+
+Btn10.MouseButton1Click:Connect(function()
+  LineCountBox.Text = "10"
+  applyLineMultiplication(10)
+end)
+
+Btn40.MouseButton1Click:Connect(function()
+  LineCountBox.Text = "40"
+  applyLineMultiplication(40)
+end)
+
+Btn100.MouseButton1Click:Connect(function()
+  LineCountBox.Text = "100"
+  applyLineMultiplication(100)
+end)
+
+ExecuteLinesBtn.MouseButton1Click:Connect(function()
+  local num = tonumber(LineCountBox.Text)
+  if not num or num < 1 then
+    num = 1
+  elseif num > 150 then
+    num = 150 -- أقصى حد مسموح به
+  end
+  LineCountBox.Text = tostring(num)
+  applyLineMultiplication(num)
+end)
+
 local SpeedContainer = Instance.new("Frame")
 SpeedContainer.Size = UDim2.new(1, -14, 0, 32)
-SpeedContainer.Position = UDim2.new(0, 7, 0, 53)
+SpeedContainer.Position = UDim2.new(0, 7, 0, 124)
 SpeedContainer.BackgroundTransparency = 1
 SpeedContainer.Parent = scrollingFrame
 
@@ -327,7 +446,7 @@ end
 local StartBtn = Instance.new("TextButton")
 StartBtn.Name = "StartBtn"
 StartBtn.Size = UDim2.new(0.6, -4, 0, 38)
-StartBtn.Position = UDim2.new(0.4, 0, 0, 92)
+StartBtn.Position = UDim2.new(0.4, 0, 0, 163)
 StartBtn.BackgroundColor3 = Color3.fromRGB(130, 0, 0)
 StartBtn.BorderSizePixel = 0
 StartBtn.Text = "بدأ تفعيل"
@@ -343,7 +462,7 @@ StartCorner.Parent = StartBtn
 local SaveBtn = Instance.new("TextButton")
 SaveBtn.Name = "SaveBtn"
 SaveBtn.Size = UDim2.new(0.38, -4, 0, 38)
-SaveBtn.Position = UDim2.new(0, 7, 0, 92)
+SaveBtn.Position = UDim2.new(0, 7, 0, 163)
 SaveBtn.BackgroundColor3 = Color3.fromRGB(100, 0, 0)
 SaveBtn.BorderSizePixel = 0
 SaveBtn.Text = "حفظ ⚙️"
@@ -359,7 +478,7 @@ SaveCorner.Parent = SaveBtn
 -- Matrix Grid / Tabs Container
 local MatrixGrid = Instance.new("Frame")
 MatrixGrid.Size = UDim2.new(1, -14, 0, 95)
-MatrixGrid.Position = UDim2.new(0, 7, 0, 136)
+MatrixGrid.Position = UDim2.new(0, 7, 0, 207)
 MatrixGrid.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 MatrixGrid.Parent = scrollingFrame
 
@@ -487,7 +606,6 @@ local function showAddTabPrompt()
       local newTab = { name = nameVal, commands = cmdsVal }
       table.insert(v8, newTab)
       
-      -- استخراج التبويبات المخصصة وحدها وحفظها
       local toSave = {}
       for i = #baseTabs + 1, #v8 do
         table.insert(toSave, v8[i])
@@ -531,7 +649,6 @@ function rebuildTabs()
     end)
   end
 
-  -- زر إضافة تبويب جديد
   local addTabBtn = Instance.new("TextButton")
   addTabBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
   addTabBtn.Text = "+ إضافة"
@@ -555,7 +672,7 @@ rebuildTabs()
 -- Copy Mode Buttons
 local ModeFrame = Instance.new("Frame")
 ModeFrame.Size = UDim2.new(1, -14, 0, 32)
-ModeFrame.Position = UDim2.new(0, 7, 0, 240)
+ModeFrame.Position = UDim2.new(0, 7, 0, 311)
 ModeFrame.BackgroundTransparency = 1
 ModeFrame.Parent = scrollingFrame
 
@@ -630,7 +747,7 @@ textButton6.MouseButton1Click:Connect(function() v5 = "normal" f4() end)
 -- Victim Selector Container
 local TargetContainer = Instance.new("Frame")
 TargetContainer.Size = UDim2.new(1, -14, 0, 110)
-TargetContainer.Position = UDim2.new(0, 7, 0, 278)
+TargetContainer.Position = UDim2.new(0, 7, 0, 349)
 TargetContainer.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 TargetContainer.Parent = scrollingFrame
 
@@ -661,7 +778,7 @@ scrollingFrame2.Parent = TargetContainer
 
 local TargetStatus = Instance.new("TextLabel")
 TargetStatus.Size = UDim2.new(1, -14, 0, 24)
-TargetStatus.Position = UDim2.new(0, 7, 0, 394)
+TargetStatus.Position = UDim2.new(0, 7, 0, 465)
 TargetStatus.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 TargetStatus.Text = "الهدف النشط: خامل"
 TargetStatus.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -885,7 +1002,7 @@ StartBtn.MouseButton1Click:Connect(function()
 
             if not v22 then
               v4 = false
-              StartBtn.Text = "بدأ تفعيل"
+              StartBtn.Test = "بدأ تفعيل"
               StartBtn.BackgroundColor3 = Color3.fromRGB(130, 0, 0)
               break
             end
