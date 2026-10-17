@@ -1,0 +1,303 @@
+--==================================================
+-- NHYQ ADVANCED PROTECTION GUI - by shs09qp23
+-- SCRIPTABLE HYBRID CAMERA (DISCONNECTED YET PERFECT 3RD PERSON)
+-- COLOR THEME: DARK RED & BLACK
+--==================================================
+
+local players = game:GetService("Players")
+local coreGui = game:GetService("CoreGui")
+local lighting = game:GetService("Lighting")
+local runService = game:GetService("RunService")
+local workspace = game:GetService("Workspace")
+local userInputService = game:GetService("UserInputService")
+local localPlayer = players.LocalPlayer
+
+-- إنشاء الشاشة الرئيسية
+local protectGui = Instance.new("ScreenGui")
+protectGui.Name = "NHYQ_PROTECTION_GUI"
+protectGui.Parent = coreGui
+protectGui.ResetOnSpawn = false
+
+-- الإطار الرئيسي
+local Main = Instance.new("Frame")
+Main.Name = "Main"
+Main.Size = UDim2.new(0, 310, 0, 285) -- تصغير الارتفاع قليلاً ليتناسب مع الثلاث أزرار
+Main.Position = UDim2.new(0.5, -155, 0.5, -142)
+Main.BackgroundColor3 = Color3.fromRGB(8, 8, 8)
+Main.BorderSizePixel = 0
+Main.ClipsDescendants = true
+Main.Active = true
+Main.Draggable = true
+Main.Parent = protectGui
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 12)
+MainCorner.Parent = Main
+
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Color = Color3.fromRGB(180, 0, 0)
+MainStroke.Thickness = 2
+MainStroke.Parent = Main
+
+-- الشريط العلوي (TopBar)
+local TopBar = Instance.new("Frame")
+TopBar.Name = "TopBar"
+TopBar.Size = UDim2.new(1, 0, 0, 42)
+TopBar.BackgroundColor3 = Color3.fromRGB(15, 5, 5)
+TopBar.BorderSizePixel = 0
+TopBar.Parent = Main
+
+local LogoFrame = Instance.new("Frame")
+LogoFrame.Size = UDim2.new(0, 52, 0, 26)
+LogoFrame.Position = UDim2.new(0, 8, 0.5, -13)
+LogoFrame.BackgroundColor3 = Color3.fromRGB(25, 0, 0)
+LogoFrame.BorderSizePixel = 0
+LogoFrame.Parent = TopBar
+
+local LogoCorner = Instance.new("UICorner")
+LogoCorner.CornerRadius = UDim.new(0, 5)
+LogoCorner.Parent = LogoFrame
+
+local LogoStroke = Instance.new("UIStroke")
+LogoStroke.Color = Color3.fromRGB(220, 0, 0)
+LogoStroke.Thickness = 1
+LogoStroke.Parent = LogoFrame
+
+local LogoText = Instance.new("TextLabel")
+LogoText.Size = UDim2.new(1, 0, 1, 0)
+LogoText.BackgroundTransparency = 1
+LogoText.Text = "NHYQ"
+LogoText.TextColor3 = Color3.fromRGB(255, 50, 50)
+LogoText.TextSize = 11
+LogoText.Font = Enum.Font.GothamBold
+LogoText.Parent = LogoFrame
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(0, 170, 1, 0)
+Title.Position = UDim2.new(0, 68, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "by shs09qp23"
+Title.TextColor3 = Color3.fromRGB(200, 200, 200)
+Title.TextSize = 10
+Title.Font = Enum.Font.GothamBold
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = TopBar
+
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0, 24, 0, 24)
+CloseBtn.Position = UDim2.new(1, -30, 0.5, -12)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+CloseBtn.BorderSizePixel = 0
+CloseBtn.Text = "🗙"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.TextSize = 10
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.Parent = TopBar
+
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(0, 4)
+CloseCorner.Parent = CloseBtn
+
+-- حاوية الأزرار
+local Container = Instance.new("Frame")
+Container.Size = UDim2.new(1, -16, 1, -52)
+Container.Position = UDim2.new(0, 8, 0, 46)
+Container.BackgroundTransparency = 1
+Container.Parent = Main
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 8)
+UIListLayout.Parent = Container
+
+-- حالة الحمايات (بدون CmdBar)
+local protections = {
+  Blur = false,
+  Warp = false,
+  LoopWarp = false
+}
+
+-- متغيرات الكاميرا المستقلة المحاكاة
+local cameraAngleX = 0
+local cameraAngleY = -15
+local cameraDistance = 12
+
+local function createProtectBtn(titleText, protectionKey)
+  local Btn = Instance.new("TextButton")
+  Btn.Size = UDim2.new(1, 0, 0, 55)
+  Btn.BackgroundColor3 = Color3.fromRGB(20, 10, 10)
+  Btn.BorderSizePixel = 0
+  Btn.Text = ""
+  Btn.Parent = Container
+
+  local BtnCorner = Instance.new("UICorner")
+  BtnCorner.CornerRadius = UDim.new(0, 8)
+  BtnCorner.Parent = Btn
+
+  local BtnStroke = Instance.new("UIStroke")
+  BtnStroke.Color = Color3.fromRGB(80, 0, 0)
+  BtnStroke.Thickness = 1.2
+  BtnStroke.Parent = Btn
+
+  local Label = Instance.new("TextLabel")
+  Label.Size = UDim2.new(0.65, 0, 1, 0)
+  Label.Position = UDim2.new(0, 12, 0, 0)
+  Label.BackgroundTransparency = 1
+  Label.Text = titleText
+  Label.TextColor3 = Color3.fromRGB(240, 240, 240)
+  Label.TextSize = 12
+  Label.Font = Enum.Font.GothamBold
+  Label.TextXAlignment = Enum.TextXAlignment.Left
+  Label.Parent = Btn
+
+  local StatusLabel = Instance.new("TextLabel")
+  StatusLabel.Size = UDim2.new(0.3, 0, 0, 26)
+  StatusLabel.Position = UDim2.new(0.67, 0, 0.5, -13)
+  StatusLabel.BackgroundColor3 = Color3.fromRGB(35, 10, 10)
+  StatusLabel.Text = "معطل ❌"
+  StatusLabel.TextColor3 = Color3.fromRGB(200, 70, 70)
+  StatusLabel.TextSize = 10
+  StatusLabel.Font = Enum.Font.GothamBold
+  StatusLabel.Parent = Btn
+
+  local StatusCorner = Instance.new("UICorner")
+  StatusCorner.CornerRadius = UDim.new(0, 5)
+  StatusCorner.Parent = StatusLabel
+
+  Btn.MouseButton1Click:Connect(function()
+    protections[protectionKey] = not protections[protectionKey]
+    if protections[protectionKey] then
+      StatusLabel.Text = "مفعل ✔"
+      StatusLabel.TextColor3 = Color3.fromRGB(80, 255, 80)
+      StatusLabel.BackgroundColor3 = Color3.fromRGB(10, 40, 10)
+      BtnStroke.Color = Color3.fromRGB(220, 0, 0)
+      Btn.BackgroundColor3 = Color3.fromRGB(35, 8, 8)
+    else
+      StatusLabel.Text = "معطل ❌"
+      StatusLabel.TextColor3 = Color3.fromRGB(200, 70, 70)
+      StatusLabel.BackgroundColor3 = Color3.fromRGB(35, 10, 10)
+      BtnStroke.Color = Color3.fromRGB(80, 0, 0)
+      Btn.BackgroundColor3 = Color3.fromRGB(20, 10, 10)
+
+      if not protections.Warp and not protections.LoopWarp then
+        local camera = workspace.CurrentCamera
+        if camera then
+          camera.CameraType = Enum.CameraType.Custom
+        end
+      end
+    end
+  end)
+end
+
+-- إضافة أزرار الحماية الثلاثة فقط
+createProtectBtn("🛡️ حماية Blur", "Blur")
+createProtectBtn("🛡️ حماية Warp", "Warp")
+createProtectBtn("🛡️ حماية LoopWarp", "LoopWarp")
+
+-- الزر الجانبي
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Name = "NHYQ_SideToggle_New"
+ToggleBtn.Size = UDim2.new(0, 55, 0, 55)
+ToggleBtn.Position = UDim2.new(0, 15, 0.5, -27)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(12, 4, 4)
+ToggleBtn.BorderSizePixel = 0
+ToggleBtn.Draggable = true
+ToggleBtn.Text = ""
+ToggleBtn.Parent = protectGui
+
+local ToggleCorner = Instance.new("UICorner")
+ToggleCorner.CornerRadius = UDim.new(1, 0)
+ToggleCorner.Parent = ToggleBtn
+
+local ToggleStroke = Instance.new("UIStroke")
+ToggleStroke.Color = Color3.fromRGB(255, 0, 0)
+ToggleStroke.Thickness = 2.5
+ToggleStroke.Parent = ToggleBtn
+
+local ShieldIcon = Instance.new("TextLabel")
+ShieldIcon.Size = UDim2.new(1, 0, 0.5, 0)
+ShieldIcon.Position = UDim2.new(0, 0, 0, 6)
+ShieldIcon.BackgroundTransparency = 1
+ShieldIcon.Text = "🛡️"
+ShieldIcon.TextSize = 16
+ShieldIcon.Parent = ToggleBtn
+
+local ToggleText = Instance.new("TextLabel")
+ToggleText.Size = UDim2.new(1, 0, 0.4, 0)
+ToggleText.Position = UDim2.new(0, 0, 0.55, 0)
+ToggleText.BackgroundTransparency = 1
+ToggleText.Text = "NHYQ"
+ToggleText.TextColor3 = Color3.fromRGB(255, 60, 60)
+ToggleText.TextSize = 9
+ToggleText.Font = Enum.Font.GothamBold
+ToggleText.Parent = ToggleBtn
+
+ToggleBtn.MouseButton1Click:Connect(function()
+  Main.Visible = not Main.Visible
+end)
+
+CloseBtn.MouseButton1Click:Connect(function()
+  Main.Visible = false
+end)
+
+-- التقاط تحريك أصبع اللاعب على الشاشة لتدوير الكاميرا بنفس حرية المنظور الطبيعي
+userInputService.InputChanged:Connect(function(input, gameProcessed)
+  if gameProcessed then return end
+  if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement then
+    if protections.Warp or protections.LoopWarp then
+      local delta = input.Delta
+      cameraAngleX = cameraAngleX - (delta.X * 0.4)
+      cameraAngleY = math.clamp(cameraAngleY - (delta.Y * 0.4), -75, 75)
+    end
+  end
+end)
+
+--==================================================
+-- أنظمة الحماية الفورية
+--==================================================
+
+-- 1. حماية BLUR
+runService.RenderStepped:Connect(function()
+  if protections.Blur then
+    for _, v in ipairs(lighting:GetChildren()) do
+      if v:IsA("BlurEffect") or v:IsA("DepthOfFieldEffect") or v.Name:lower():find("blur") then
+        v:Destroy()
+      end
+    end
+    local camera = workspace.CurrentCamera
+    if camera then
+      for _, v in ipairs(camera:GetChildren()) do
+        if v:IsA("BlurEffect") or v:IsA("DepthOfFieldEffect") or v.Name:lower():find("blur") then
+          v:Destroy()
+        end
+      end
+    end
+  end
+end)
+
+-- 2. حماية WARP & LOOPWARP (الكاميرا منفصلة تماماً ومستقلة + محاكاة المنظور الطبيعي 100%)
+runService.RenderStepped:Connect(function()
+  if protections.Warp or protections.LoopWarp then
+    pcall(function()
+      local char = localPlayer.Character
+      local camera = workspace.CurrentCamera
+      if char and camera then
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        local head = char:FindFirstChild("Head")
+        
+        if hrp and head then
+          -- فصل الكاميرا كلياً عن السيرفر وتفعيل نوع التحكم اليدوي المباشر
+          camera.CameraType = Enum.CameraType.Scriptable
+          
+          -- حساب اتجاه الكاميرا بالزوايا
+          local focusPosition = head.Position
+          local rotationCFrame = CFrame.Angles(0, math.rad(cameraAngleX), 0) * CFrame.Angles(math.rad(cameraAngleY), 0, 0)
+          local targetCFrame = CFrame.new(focusPosition) * rotationCFrame * CFrame.new(0, 0, cameraDistance)
+          
+          -- تثبيت الكاميرا بالمنظور المحاكي مع النظر إلى الشخصية مباشرة
+          camera.CFrame = CFrame.new(targetCFrame.Position, focusPosition)
+        end
+      end
+    end)
+  end
+end)
