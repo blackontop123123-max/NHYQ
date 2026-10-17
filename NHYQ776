@@ -1,7 +1,18 @@
---[=[ NHYQ - Advanced Copy System (Ultra Speed) ]=]
+--[=[ NHYQ - Advanced Copy System (Auto 6 Lines Repeater & Fix Self-Target) ]=]
 --[=[ by shs09qp23 ]=]
 
-if getgenv().__NHYQ_LOADED__ then return end
+-- الإغلاق التلقائي للنسخة القديمة
+if getgenv().__NHYQ_GUI_OBJ__ then
+    pcall(function()
+        getgenv().__NHYQ_GUI_OBJ__:Destroy()
+    end)
+end
+if getgenv().__NHYQ_CONNECTION__ then
+    pcall(function()
+        getgenv().__NHYQ_CONNECTION__:Disconnect()
+    end)
+end
+
 getgenv().__NHYQ_LOADED__ = true
 
 repeat task.wait() until game:IsLoaded()
@@ -9,14 +20,74 @@ repeat task.wait() until game:IsLoaded()
 -- ==================== الخدمات الأساسية ====================
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
+local HttpService = game:GetService("HttpService")
+
+-- ==================== دالة سحب العناصر بلمس الشاشة الجوال ====================
+local function makeDraggable(gui)
+    local dragging, dragInput, dragStart, startPos
+
+    local function update(input)
+        local delta = input.Position - dragStart
+        gui.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+
+    gui.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = gui.Position
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    gui.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            update(input)
+        end
+    end)
+end
 
 -- ==================== الإعدادات العامة ====================
 local isHiddenMode = false
 local isSecondExecutionMode = false
-local isInfiniteCopy = false
+local isInfiniteCopy = true
 local isGamedMode = false
+
+-- ==================== دالة تكرار الأوامر 6 أسطر بدقة ====================
+local function repeatTo6Lines(text)
+    if not text or text == "" then return "" end
+    
+    local cleanCmds = {}
+    for line in text:gmatch("[^\r\n]+") do
+        -- تجاهل الأوامر المنفردة الخاطئة مثل /re المطلقة بدون sa
+        if line:match("%S") and not (line:gsub("%s+", "") == "/re") then
+            table.insert(cleanCmds, line)
+        end
+    end
+    
+    local singleLine = table.concat(cleanCmds, " ")
+    if singleLine == "" then return "" end
+    
+    -- التكرار 6 مرات فقط كحد أقصى لكل التبويبات
+    local lines6 = {}
+    for i = 1, 6 do
+        table.insert(lines6, singleLine)
+    end
+    return table.concat(lines6, "\n")
+end
 
 -- ==================== تنفيذ الأوامر ====================
 local function getDataService()
@@ -39,7 +110,7 @@ local function getRequestCommandModification()
 end
 
 local function executeCommand(commandText)
-    if commandText == "" then return false end
+    if not commandText or commandText == "" then return false end
     
     local dataService = getDataService()
     local requestCommandModification = getRequestCommandModification()
@@ -83,20 +154,79 @@ local savedPlayers = {}
 local isCopyingActive = false
 local copyType = "normal"
 
-local copyPresets = {
-    [1] = {name = "نسخ كامل", commands = "/logs sa /re sa /nv sa /clogs sa /logs sa /re sa /nv sa /clogs sa"},
-    [2] = {name = "نسخ قوي", commands = "/logs sa /re sa /nv sa /logs sa /re sa /logs sa /re sa /logs sa"},
-    [3] = {name = "نسخ إهانة", commands = "/char sa miri !dog sa /sit sa /jp sa /tp sa /Titlepk sa فحبحه"},
-    [4] = {name = "نسخ قوي 2", commands = "/logs sa /re sa /res sa /nv sa /logs sa /re sa /res sa /logs sa"},
-    [5] = {name = "نسخ حماية", commands = "/logs sa /re sa /logs sa /re sa /logs sa /re sa /logs sa /re sa"},
-    [6] = {name = "نسخ هيد قوي", commands = "/explode sa /re sa /logs sa /explode sa /re sa /logs sa"},
-    [7] = {name = "حماية قوية", commands = "/re sa /res sa /logs sa /re sa /res sa /logs sa /re sa /res sa"},
-    [8] = {name = "نسخ غامض", commands = "/clogs sa /explode sa /re sa /loopwarp sa /logs sa /explode sa"},
-    [9] = {name = "نسخ غامض قوي", commands = "/explode sa /clogs sa /re sa /logs sa /nv sa /explode sa"},
-    [10] = {name = "نسخ عادي", commands = "/logs sa /re sa /res sa /nv sa /logs sa /re sa /res sa"}
+local rawBaseCommands = {
+    [1] = "/re sa /logs sa /res sa /clogs sa /nv sa /kill sa",
+    [2] = "/logs sa /re sa /nv sa /logs sa /re sa /logs sa /re sa /logs sa",
+    [3] = "/char sa miri !dog sa /sit sa /jp sa /tp sa /Titlepk sa فحبحه",
+    [4] = "/logs sa /re sa /res sa /nv sa /logs sa /re sa /res sa /logs sa",
+    [5] = "/logs sa /re sa /logs sa /re sa /logs sa /logs sa /re sa /re sa",
+    [6] = "/explode sa /re sa /logs sa",
+    [7] = "/re sa /res sa /logs sa",
+    [8] = "/clogs sa /explode sa /re sa /loopwarp sa /logs sa /explode sa",
+    [9] = "/explode sa /clogs sa /re sa /logs sa /nv sa /explode sa",
+    [10] = "/logs sa /re sa /res sa /nv sa /logs sa /re sa /res sa"
 }
 
+local copyPresets = {}
 local customTabs = {}
+local saveFileName = "NHYQ_CustomTabs.json"
+
+local function loadSavedTabsFromFile()
+    if pcall(function() readfile(saveFileName) end) then
+        local success, decoded = pcall(function()
+            return HttpService:JSONDecode(readfile(saveFileName))
+        end)
+        if success and type(decoded) == "table" then
+            for _, tab in ipairs(decoded) do
+                if tab.name and tab.rawCommands then
+                    table.insert(customTabs, {
+                        name = tab.name,
+                        rawCommands = tab.rawCommands,
+                        commands = repeatTo6Lines(tab.rawCommands)
+                    })
+                end
+            end
+        end
+    end
+end
+
+local function saveTabsToFile()
+    local serializable = {}
+    for _, tab in ipairs(customTabs) do
+        table.insert(serializable, {
+            name = tab.name,
+            rawCommands = tab.rawCommands
+        })
+    end
+    pcall(function()
+        writefile(saveFileName, HttpService:JSONEncode(serializable))
+    end)
+end
+
+loadSavedTabsFromFile()
+
+local function updatePresets()
+    local presetNames = {
+        [1] = "نسخ حماية قوي جدا",
+        [2] = "نسخ قوي",
+        [3] = "نسخ إهانة",
+        [4] = "نسخ قوي 2",
+        [5] = "نسخ حماية",
+        [6] = "نسخ هيد قوي",
+        [7] = "نسخ حماية قوي",
+        [8] = "نسخ غامض",
+        [9] = "نسخ غامض قوي",
+        [10] = "نسخ عادي"
+    }
+    for i = 1, 10 do
+        copyPresets[i] = {
+            name = presetNames[i],
+            commands = repeatTo6Lines(rawBaseCommands[i])
+        }
+    end
+end
+
+updatePresets()
 
 -- ==================== نظام الألوان (أسود وأحمر) ====================
 local colorPalette = {
@@ -115,7 +245,8 @@ ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- الزر العائم (قابل للسحب)
+getgenv().__NHYQ_GUI_OBJ__ = ScreenGui
+
 local toggleButton = Instance.new("TextButton")
 toggleButton.Size = UDim2.new(0, 65, 0, 65)
 toggleButton.Position = UDim2.new(0, 18, 0, 50)
@@ -128,7 +259,8 @@ toggleButton.TextSize = 14
 toggleButton.BorderSizePixel = 0
 toggleButton.Parent = ScreenGui
 toggleButton.Active = true
-toggleButton.Draggable = true
+
+makeDraggable(toggleButton)
 
 local toggleCorner = Instance.new("UICorner", toggleButton)
 toggleCorner.CornerRadius = UDim.new(0, 12)
@@ -149,17 +281,14 @@ buttonText.TextSize = 9
 buttonText.TextXAlignment = Enum.TextXAlignment.Center
 buttonText.Parent = toggleButton
 
--- القائمة الرئيسية (قابلة للسحب)
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 350, 0, 620)
+mainFrame.Size = UDim2.new(0, 350, 0, 580)
 mainFrame.Position = UDim2.new(0, 100, 0, 50)
 mainFrame.BackgroundColor3 = colorPalette.bg
 mainFrame.BackgroundTransparency = 0.05
 mainFrame.BorderSizePixel = 0
 mainFrame.Visible = false
 mainFrame.ClipsDescendants = true
-mainFrame.Active = true
-mainFrame.Draggable = true
 mainFrame.Parent = ScreenGui
 
 local mainCorner = Instance.new("UICorner", mainFrame)
@@ -170,13 +299,14 @@ mainStroke.Color = colorPalette.accent
 mainStroke.Thickness = 2
 mainStroke.Transparency = 0.2
 
--- شريط العنوان
 local titleBar = Instance.new("Frame")
 titleBar.Size = UDim2.new(1, 0, 0, 42)
 titleBar.BackgroundColor3 = colorPalette.bgLight
 titleBar.BorderSizePixel = 0
 titleBar.Active = true
 titleBar.Parent = mainFrame
+
+makeDraggable(mainFrame)
 
 local titleCorner = Instance.new("UICorner", titleBar)
 titleCorner.CornerRadius = UDim.new(0, 14)
@@ -220,7 +350,6 @@ closeButton.MouseButton1Click:Connect(function()
     mainFrame.Visible = false
 end)
 
--- محتوى القائمة الرئيسية
 local scrollFrame = Instance.new("ScrollingFrame")
 scrollFrame.Size = UDim2.new(1, -10, 1, -48)
 scrollFrame.Position = UDim2.new(0, 5, 0, 46)
@@ -228,12 +357,11 @@ scrollFrame.BackgroundTransparency = 1
 scrollFrame.BorderSizePixel = 0
 scrollFrame.ScrollBarThickness = 3
 scrollFrame.ScrollBarImageColor3 = colorPalette.accent
-scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 1100)
+scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 1000)
 scrollFrame.Parent = mainFrame
 
--- إعدادات النسخ
 local settingsFrame = Instance.new("Frame")
-settingsFrame.Size = UDim2.new(1, -20, 0, 150)
+settingsFrame.Size = UDim2.new(1, -20, 0, 175)
 settingsFrame.Position = UDim2.new(0, 10, 0, 5)
 settingsFrame.BackgroundColor3 = colorPalette.bgLight
 settingsFrame.BackgroundTransparency = 0.3
@@ -282,7 +410,6 @@ gamedCopyBtn.Parent = copyTypeRow
 local gCorner = Instance.new("UICorner", gamedCopyBtn)
 gCorner.CornerRadius = UDim.new(0, 6)
 
--- أزرار التحكم الإضافية
 local hiddenRow = Instance.new("Frame")
 hiddenRow.Size = UDim2.new(1, -10, 0, 24)
 hiddenRow.Position = UDim2.new(0, 5, 0, 56)
@@ -325,14 +452,17 @@ infiniteRow.Parent = settingsFrame
 
 local infiniteCopyBtn = Instance.new("TextButton")
 infiniteCopyBtn.Size = UDim2.new(1, 0, 1, 0)
-infiniteCopyBtn.BackgroundColor3 = Color3.fromRGB(40, 20, 20)
-infiniteCopyBtn.Text = "النسخ اللانهائي: معطل"
-infiniteCopyBtn.TextColor3 = colorPalette.text
+infiniteCopyBtn.BackgroundColor3 = colorPalette.accentDark
+infiniteCopyBtn.Text = "النسخ المستمر: مفعل"
+infiniteCopyBtn.TextColor3 = Color3.new(1, 1, 1)
 infiniteCopyBtn.Font = Enum.Font.GothamBold
 infiniteCopyBtn.TextSize = 11
 infiniteCopyBtn.Parent = infiniteRow
 local iCorner = Instance.new("UICorner", infiniteCopyBtn)
 iCorner.CornerRadius = UDim.new(0, 6)
+
+local refreshTabs
+local commandsTextBox
 
 local function updateCopySettingsUi()
     if copyType == "normal" then
@@ -358,20 +488,30 @@ local function updateCopySettingsUi()
     secondExecBtn.TextColor3 = isSecondExecutionMode and Color3.new(1, 1, 1) or colorPalette.text
     
     infiniteCopyBtn.BackgroundColor3 = isInfiniteCopy and colorPalette.accentDark or Color3.fromRGB(40, 20, 20)
-    infiniteCopyBtn.Text = isInfiniteCopy and "النسخ اللانهائي: مفعل" or "النسخ اللانهائي: معطل"
+    infiniteCopyBtn.Text = isInfiniteCopy and "النسخ المستمر: مفعل" or "النسخ المستمر: معطل"
     infiniteCopyBtn.TextColor3 = isInfiniteCopy and Color3.new(1, 1, 1) or colorPalette.text
 end
 
 normalCopyBtn.MouseButton1Click:Connect(function() copyType = "normal"; updateCopySettingsUi() end)
 gamedCopyBtn.MouseButton1Click:Connect(function() copyType = "gamed"; updateCopySettingsUi() end)
-hiddenModeBtn.MouseButton1Click:Connect(function() isHiddenMode = not isHiddenMode; updateCopySettingsUi() end)
-secondExecBtn.MouseButton1Click:Connect(function() isSecondExecutionMode = not isSecondExecutionMode; updateCopySettingsUi() end)
+
+hiddenModeBtn.MouseButton1Click:Connect(function()
+    isHiddenMode = not isHiddenMode
+    if isHiddenMode then isSecondExecutionMode = false end
+    updateCopySettingsUi()
+end)
+
+secondExecBtn.MouseButton1Click:Connect(function()
+    isSecondExecutionMode = not isSecondExecutionMode
+    if isSecondExecutionMode then isHiddenMode = false end
+    updateCopySettingsUi()
+end)
+
 infiniteCopyBtn.MouseButton1Click:Connect(function() isInfiniteCopy = not isInfiniteCopy; updateCopySettingsUi() end)
 
--- قسم اللاعبين المحفوظين
 local savedFrame = Instance.new("Frame")
 savedFrame.Size = UDim2.new(1, -20, 0, 90)
-savedFrame.Position = UDim2.new(0, 10, 0, 163)
+savedFrame.Position = UDim2.new(0, 10, 0, 188)
 savedFrame.BackgroundColor3 = colorPalette.bgLight
 savedFrame.BackgroundTransparency = 0.3
 savedFrame.Parent = scrollFrame
@@ -437,10 +577,9 @@ clearPlayersBtn.Parent = savedBtnRow
 local cpCorner = Instance.new("UICorner", clearPlayersBtn)
 cpCorner.CornerRadius = UDim.new(0, 5)
 
--- قسم اللاعبين الحاليين
 local currentFrame = Instance.new("Frame")
 currentFrame.Size = UDim2.new(1, -20, 0, 140)
-currentFrame.Position = UDim2.new(0, 10, 0, 263)
+currentFrame.Position = UDim2.new(0, 10, 0, 286)
 currentFrame.BackgroundColor3 = colorPalette.bgLight
 currentFrame.BackgroundTransparency = 0.3
 currentFrame.Parent = scrollFrame
@@ -494,10 +633,9 @@ selectedPlayersLabel.Font = Enum.Font.GothamBold
 selectedPlayersLabel.TextSize = 10
 selectedPlayersLabel.Parent = selectedDisplay
 
--- حالة اللاعب النشط
 local activeFrame = Instance.new("Frame")
 activeFrame.Size = UDim2.new(1, -20, 0, 24)
-activeFrame.Position = UDim2.new(0, 10, 0, 413)
+activeFrame.Position = UDim2.new(0, 10, 0, 434)
 activeFrame.BackgroundColor3 = Color3.fromRGB(80, 20, 20)
 activeFrame.Parent = scrollFrame
 
@@ -514,10 +652,9 @@ activePlayerLabel.TextSize = 10
 activePlayerLabel.TextXAlignment = Enum.TextXAlignment.Left
 activePlayerLabel.Parent = activeFrame
 
--- قسم التبويبات المخصصة
 local tabsFrame = Instance.new("Frame")
 tabsFrame.Size = UDim2.new(1, -20, 0, 155)
-tabsFrame.Position = UDim2.new(0, 10, 0, 447)
+tabsFrame.Position = UDim2.new(0, 10, 0, 466)
 tabsFrame.BackgroundColor3 = colorPalette.bgLight
 tabsFrame.BackgroundTransparency = 0.3
 tabsFrame.Parent = scrollFrame
@@ -554,8 +691,7 @@ tabsLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
     tabsScrollFrame.CanvasSize = UDim2.new(0, tabsLayout.AbsoluteContentSize.X + 10, 0, 0)
 end)
 
--- صندوق كتابة الأوامر
-local commandsTextBox = Instance.new("TextBox")
+commandsTextBox = Instance.new("TextBox")
 commandsTextBox.Size = UDim2.new(1, -10, 0, 48)
 commandsTextBox.Position = UDim2.new(0, 5, 0, 68)
 commandsTextBox.BackgroundColor3 = Color3.fromRGB(25, 10, 10)
@@ -569,10 +705,9 @@ commandsTextBox.Parent = tabsFrame
 local cmdCorner = Instance.new("UICorner", commandsTextBox)
 cmdCorner.CornerRadius = UDim.new(0, 6)
 
--- زر فتح نافذة إضافة تبويب جديد
 local addTabBtn = Instance.new("TextButton")
-addTabBtn.Size = UDim2.new(0, 100, 0, 24)
-addTabBtn.Position = UDim2.new(0.5, -50, 0, 120)
+addTabBtn.Size = UDim2.new(0, 95, 0, 24)
+addTabBtn.Position = UDim2.new(0, 5, 0, 120)
 addTabBtn.BackgroundColor3 = colorPalette.accentDark
 addTabBtn.Text = "+ تبويب جديد"
 addTabBtn.TextColor3 = Color3.new(1, 1, 1)
@@ -582,7 +717,25 @@ addTabBtn.Parent = tabsFrame
 local atCorner = Instance.new("UICorner", addTabBtn)
 atCorner.CornerRadius = UDim.new(0, 5)
 
--- نافذة منبثقة لإضافة تبويب مع زر إغلاق (✕)
+local saveTabBtn = Instance.new("TextButton")
+saveTabBtn.Size = UDim2.new(0, 95, 0, 24)
+saveTabBtn.Position = UDim2.new(0, 108, 0, 120)
+saveTabBtn.BackgroundColor3 = Color3.fromRGB(40, 80, 40)
+saveTabBtn.Text = "💾 حفظ التبويب"
+saveTabBtn.TextColor3 = Color3.new(1, 1, 1)
+saveTabBtn.Font = Enum.Font.GothamBold
+saveTabBtn.TextSize = 10
+saveTabBtn.Parent = tabsFrame
+local stBtnCorner = Instance.new("UICorner", saveTabBtn)
+stBtnCorner.CornerRadius = UDim.new(0, 5)
+
+saveTabBtn.MouseButton1Click:Connect(function()
+    saveTabsToFile()
+    saveTabBtn.Text = "✓ تم الحفظ"
+    task.wait(1)
+    saveTabBtn.Text = "💾 حفظ التبويب"
+end)
+
 local addTabFrame = Instance.new("Frame")
 addTabFrame.Size = UDim2.new(0, 280, 0, 160)
 addTabFrame.Position = UDim2.new(0.5, -140, 0.5, -80)
@@ -590,8 +743,9 @@ addTabFrame.BackgroundColor3 = colorPalette.bg
 addTabFrame.Visible = false
 addTabFrame.ClipsDescendants = true
 addTabFrame.Active = true
-addTabFrame.Draggable = true
 addTabFrame.Parent = ScreenGui
+
+makeDraggable(addTabFrame)
 
 local atfCorner = Instance.new("UICorner", addTabFrame)
 atfCorner.CornerRadius = UDim.new(0, 12)
@@ -642,7 +796,7 @@ local tabCmdBox = Instance.new("TextBox")
 tabCmdBox.Size = UDim2.new(1, -20, 0, 30)
 tabCmdBox.Position = UDim2.new(0, 10, 0, 80)
 tabCmdBox.BackgroundColor3 = Color3.fromRGB(25, 10, 10)
-tabCmdBox.PlaceholderText = "الأوامر (مفصولة بمسافة)"
+tabCmdBox.PlaceholderText = "الأوامر (مثال: /re sa)"
 tabCmdBox.Text = ""
 tabCmdBox.TextColor3 = Color3.new(1, 1, 1)
 tabCmdBox.Font = Enum.Font.Gotham
@@ -663,15 +817,19 @@ atfConfirm.Parent = addTabFrame
 local afCorner = Instance.new("UICorner", atfConfirm)
 afCorner.CornerRadius = UDim.new(0, 6)
 
-local refreshTabs
 local refreshSavedPlayers
 
 atfConfirm.MouseButton1Click:Connect(function()
     local name = tabNameBox.Text
-    local cmds = tabCmdBox.Text
-    if name ~= "" and cmds ~= "" then
-        table.insert(customTabs, {name = name, commands = cmds})
+    local rawCmds = tabCmdBox.Text
+    if name ~= "" and rawCmds ~= "" then
+        table.insert(customTabs, {
+            name = name,
+            rawCommands = rawCmds,
+            commands = repeatTo6Lines(rawCmds)
+        })
         refreshTabs()
+        saveTabsToFile()
         tabNameBox.Text = ""
         tabCmdBox.Text = ""
         addTabFrame.Visible = false
@@ -682,10 +840,9 @@ addTabBtn.MouseButton1Click:Connect(function()
     addTabFrame.Visible = true
 end)
 
--- أزرار تفعيل النسخ والإيقاف
 local controlFrame = Instance.new("Frame")
 controlFrame.Size = UDim2.new(1, -20, 0, 34)
-controlFrame.Position = UDim2.new(0, 10, 0, 610)
+controlFrame.Position = UDim2.new(0, 10, 0, 628)
 controlFrame.BackgroundTransparency = 1
 controlFrame.Parent = scrollFrame
 
@@ -712,8 +869,6 @@ stopCopyBtn.Parent = controlFrame
 local stCorner = Instance.new("UICorner", stopCopyBtn)
 stCorner.CornerRadius = UDim.new(0, 6)
 
--- ==================== الوظائف والبرمجة ====================
-local selectedTabIndex = nil
 local tabButtons = {}
 
 local function updateSelectedLabel()
@@ -835,7 +990,6 @@ refreshTabs = function()
         btn:Destroy()
     end
     tabButtons = {}
-    selectedTabIndex = nil
     
     for i = 1, 10 do
         local btn = Instance.new("TextButton")
@@ -852,8 +1006,8 @@ refreshTabs = function()
         
         local index = i
         btn.MouseButton1Click:Connect(function()
+            _G.selectedTabIndex = index
             commandsTextBox.Text = copyPresets[index].commands
-            selectedTabIndex = index
         end)
         
         table.insert(tabButtons, btn)
@@ -890,18 +1044,19 @@ refreshTabs = function()
         deleteBtn.MouseButton1Click:Connect(function()
             table.remove(customTabs, idx)
             refreshTabs()
+            saveTabsToFile()
         end)
         
         btn.MouseButton1Click:Connect(function()
+            _G.selectedTabIndex = combinedIndex
             commandsTextBox.Text = tab.commands
-            selectedTabIndex = combinedIndex
         end)
         
         table.insert(tabButtons, btn)
     end
 end
 
--- ==================== التنفيذ بأقصى سرعة ====================
+-- ==================== التنفيذ الفعلي للأوامر ====================
 local spamTask = nil
 
 local function startCopy()
@@ -930,13 +1085,29 @@ local function startCopy()
         targetText = table.concat(parts, ",")
     end
     
+    if not targetText or targetText == "" then
+        activePlayerLabel.Text = "خطأ: لم يتم تحديد الهدف!"
+        return
+    end
+    
     activePlayerLabel.Text = "الهدف: " .. targetText
     
+    local rawText = commandsTextBox.Text
+    local expandedText = repeatTo6Lines(rawText)
+    
     local commandLines = {}
-    for line in commandsTextBox.Text:gmatch("[^\r\n]+") do
-        if line ~= "" then
-            table.insert(commandLines, line)
+    for line in expandedText:gmatch("[^\r\n]+") do
+        if line:match("%S") then
+            local formattedLine = line:gsub("%f[%a]sa%f[%A]", targetText)
+            if not formattedLine:find(LocalPlayer.Name) and formattedLine:find(targetText) then
+                table.insert(commandLines, formattedLine)
+            end
         end
+    end
+    
+    if #commandLines == 0 then
+        activePlayerLabel.Text = "خطأ: الأوامر تحتاج إلى sa لتفادي الأخطاء!"
+        return
     end
     
     isCopyingActive = true
@@ -947,13 +1118,13 @@ local function startCopy()
         while isCopyingActive do
             for _, cmd in ipairs(commandLines) do
                 if not isCopyingActive then break end
-                local finalCmd = cmd:gsub(" sa", " " .. targetText)
-                executeCommand(finalCmd)
-                task.wait(0)
+                executeCommand(cmd)
+                task.wait(0.02)
             end
             if not isInfiniteCopy then
                 break
             end
+            task.wait()
         end
     end)
 end
@@ -994,7 +1165,6 @@ clearPlayersBtn.MouseButton1Click:Connect(function()
     refreshSavedPlayers()
 end)
 
--- فتح وإغلاق القائمة بالزر العائم
 local isOpen = false
 
 toggleButton.MouseButton1Click:Connect(function()
@@ -1006,3 +1176,5 @@ toggleButton.MouseButton1Click:Connect(function()
         refreshTabs()
     end
 end)
+
+refreshTabs()
