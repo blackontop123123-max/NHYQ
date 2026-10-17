@@ -1,121 +1,894 @@
--- ==========================================
--- NHYQ - Ninja Jitter (Draggable Toggle Button)
--- Creator: shs09qp23
--- ==========================================
+-- NHYQ-by shs09qp23
+--==================================================
+-- NHYQ ADVANCED ماب نسخ حقيقي & COPY GUI
+-- MODIFIED VERSION (Clean Command Formatting & Order)
+--==================================================
 
-local Players = game:GetService("Players")
-local CoreGui = game:GetService("CoreGui")
-local RunService = game:GetService("RunService")
-local LocalPlayer = Players.LocalPlayer
+local players = game:GetService("Players")
+local coreGui = game:GetService("CoreGui")
+local httpService = game:GetService("HttpService")
+local localPlayer = players.LocalPlayer
 
--- إزالة أي واجهة قديمة لنفس السكريبت
-if CoreGui:FindFirstChild("NHYQ_NinjaHub") then
-    CoreGui.NHYQ_NinjaHub:Destroy()
+print("==================================================")
+print("NHYQ SCRIPT - FORMATTED COMMAND ORDER MODE")
+print("==================================================")
+
+local fileName = "NHYQ_CustomTabs.json"
+local function saveCustomTabs(tabsTable)
+  pcall(function()
+    if writefile then
+      local encoded = httpService:JSONEncode(tabsTable)
+      writefile(fileName, encoded)
+    end
+  end)
 end
 
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "NHYQ_NinjaHub"
-ScreenGui.Parent = CoreGui
-ScreenGui.ResetOnSpawn = false
+local function loadCustomTabs()
+  local success, result = pcall(function()
+    if readfile and isfile and isfile(fileName) then
+      local content = readfile(fileName)
+      return httpService:JSONDecode(content)
+    end
+  end)
+  if success and type(result) == "table" then
+    return result
+  end
+  return {}
+end
 
--- 1. زر الفتح والإغلاق العائم (متحرك وقابل للسحب)
-local ToggleButton = Instance.new("TextButton")
-ToggleButton.Size = UDim2.new(0, 50, 0, 50)
-ToggleButton.Position = UDim2.new(0, 20, 0, 100)
-ToggleButton.BackgroundColor3 = Color3.fromRGB(40, 10, 10)
-ToggleButton.TextColor3 = Color3.fromRGB(255, 80, 80)
-ToggleButton.TextSize = 13
-ToggleButton.Font = Enum.Font.SourceSansBold
-ToggleButton.Text = "NHYQ"
-ToggleButton.Active = true
-ToggleButton.Draggable = true -- زر قابل للسحب والحركة في أي مكان
-ToggleButton.Parent = ScreenGui
+local v2 = {}
+local v3 = {}
+local v4 = false
+local v5 = "full"
+local selectedDelay = 0
 
-local ToggleStroke = Instance.new("UIStroke", ToggleButton)
-ToggleStroke.Color = Color3.fromRGB(200, 20, 20)
-ToggleStroke.Thickness = 1.5
+local baseTabs = {
+  { name = "قوي", commands = "/logs sa /re sa /logs sa /re sa /logs sa /re sa /logs sa /re sa", custom = false },
+  { name = "حمايه قويه", commands = "/logs sa /re sa /res sa /nv sa /logs sa /re sa /res sa", custom = false },
+  { name = "حمايه", commands = "/logs sa /re sa /logs sa /re sa /logs sa /re sa /logs sa /re sa", custom = false },
+  { name = "هيد", commands = "/explode sa /re sa /logs sa /explode sa /re sa /logs sa", custom = false },
+  { name = "غامض", commands = "/logs sa /nv sa /res sa /clogs sa /loopwarp sa /explode sa", custom = false },
+  { name = "هيد قوي", commands = "/explode sa /re sa /res sa /logs sa /nv sa /re sa", custom = false },
+  { name = "غامض قوي", commands = "/nv sa /re sa /res sa /blur sa /logs sa /clogs sa", custom = false },
+}
 
-local ToggleCorner = Instance.new("UICorner", ToggleButton)
-ToggleCorner.CornerRadius = UDim.new(1, 0) -- زر دائري شكل أنيق
+local v8 = {}
+for _, t in ipairs(baseTabs) do table.insert(v8, t) end
+local savedTabs = loadCustomTabs()
+for _, t in ipairs(savedTabs) do 
+  t.custom = true
+  table.insert(v8, t) 
+end
 
--- 2. القائمة الرئيسية (تفتح وتغلق عند الضغط على الزر)
-local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 220, 0, 110)
-MainFrame.Position = UDim2.new(0.5, -110, 0.5, -55)
-MainFrame.BackgroundColor3 = Color3.fromRGB(15, 10, 10)
-MainFrame.BorderSizePixel = 0
-MainFrame.Active = true
-MainFrame.Draggable = true
-MainFrame.Visible = false -- تبدأ مخفية
-MainFrame.Parent = ScreenGui
+local evilHubCustomGui = Instance.new("ScreenGui")
+evilHubCustomGui.Name = "NHYQ_COPY_MAP_GUI"
+evilHubCustomGui.Parent = coreGui
+evilHubCustomGui.ResetOnSpawn = false
 
-local MainStroke = Instance.new("UIStroke", MainFrame)
-MainStroke.Color = Color3.fromRGB(200, 20, 20)
-MainStroke.Thickness = 2
+local Main = Instance.new("Frame")
+Main.Name = "Main"
+Main.Size = UDim2.new(0, 340, 0, 580)
+Main.Position = UDim2.new(0.5, -170, 0.5, -290)
+Main.BackgroundColor3 = Color3.fromRGB(8, 8, 8)
+Main.BorderSizePixel = 0
+Main.ClipsDescendants = true
+Main.Active = true
+Main.Draggable = true
+Main.Parent = evilHubCustomGui
 
-local MainCorner = Instance.new("UICorner", MainFrame)
+local MainCorner = Instance.new("UICorner")
 MainCorner.CornerRadius = UDim.new(0, 10)
+MainCorner.Parent = Main
+
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Color = Color3.fromRGB(150, 0, 0)
+MainStroke.Thickness = 1.5
+MainStroke.Parent = Main
+
+local TopBar = Instance.new("Frame")
+TopBar.Name = "TopBar"
+TopBar.Size = UDim2.new(1, 0, 0, 38)
+TopBar.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+TopBar.BorderSizePixel = 0
+TopBar.Parent = Main
+
+local LogoFrame = Instance.new("Frame")
+LogoFrame.Size = UDim2.new(0, 40, 0, 22)
+LogoFrame.Position = UDim2.new(0, 6, 0.5, -11)
+LogoFrame.BackgroundColor3 = Color3.fromRGB(20, 0, 0)
+LogoFrame.BorderSizePixel = 0
+LogoFrame.Parent = TopBar
+
+local LogoCorner = Instance.new("UICorner")
+LogoCorner.CornerRadius = UDim.new(0, 4)
+LogoCorner.Parent = LogoFrame
+
+local LogoStroke = Instance.new("UIStroke")
+LogoStroke.Color = Color3.fromRGB(180, 0, 0)
+LogoStroke.Thickness = 1
+LogoStroke.Parent = LogoFrame
+
+local LogoText = Instance.new("TextLabel")
+LogoText.Size = UDim2.new(1, 0, 1, 0)
+LogoText.BackgroundTransparency = 1
+LogoText.Text = "NHYQ"
+LogoText.TextColor3 = Color3.fromRGB(255, 50, 50)
+LogoText.TextSize = 10
+LogoText.Font = Enum.Font.GothamBold
+LogoText.Parent = LogoFrame
 
 local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 0, 30)
-Title.BackgroundColor3 = Color3.fromRGB(35, 12, 12)
-Title.TextColor3 = Color3.fromRGB(255, 80, 80)
-Title.TextSize = 13
-Title.Font = Enum.Font.SourceSansBold
-Title.Text = "⚡ NHYQ - Ninja Jitter"
-Title.Parent = MainFrame
+Title.Size = UDim2.new(0, 225, 1, 0)
+Title.Position = UDim2.new(0, 50, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "NHYQ-by shs09qp23"
+Title.TextColor3 = Color3.fromRGB(240, 240, 240)
+Title.TextSize = 9.5
+Title.Font = Enum.Font.GothamBold
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = TopBar
 
-local TitleCorner = Instance.new("UICorner", Title)
-TitleCorner.CornerRadius = UDim.new(0, 10)
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0, 20, 0, 20)
+CloseBtn.Position = UDim2.new(1, -25, 0.5, -10)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+CloseBtn.BorderSizePixel = 0
+CloseBtn.Text = "🗙"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.TextSize = 9
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.Parent = TopBar
 
-local ActionBtn = Instance.new("TextButton")
-ActionBtn.Size = UDim2.new(0, 200, 0, 45)
-ActionBtn.Position = UDim2.new(0, 10, 0, 45)
-ActionBtn.BackgroundColor3 = Color3.fromRGB(80, 20, 20)
-ActionBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-ActionBtn.TextSize = 13
-ActionBtn.Font = Enum.Font.SourceSansBold
-ActionBtn.Text = "Ninja Movement: OFF"
-ActionBtn.Parent = MainFrame
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(0, 3)
+CloseCorner.Parent = CloseBtn
 
-local ActionCorner = Instance.new("UICorner", ActionBtn)
-ActionCorner.CornerRadius = UDim.new(0, 8)
+local scrollingFrame = Instance.new("ScrollingFrame")
+scrollingFrame.Size = UDim2.new(1, -10, 1, -48)
+scrollingFrame.Position = UDim2.new(0, 5, 0, 42)
+scrollingFrame.BackgroundTransparency = 1
+scrollingFrame.BorderSizePixel = 0
+scrollingFrame.ScrollBarThickness = 3
+scrollingFrame.ScrollBarImageColor3 = Color3.fromRGB(200, 0, 0)
+scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 750)
+scrollingFrame.Parent = Main
 
--- ربط زر الفتح والإغلاق العائم بإظهار وإخفاء القائمة
-ToggleButton.MouseButton1Click:Connect(function()
-    MainFrame.Visible = not MainFrame.Visible
+local InputBox = Instance.new("TextBox")
+InputBox.Name = "InputBox"
+InputBox.Size = UDim2.new(1, -14, 0, 42)
+InputBox.Position = UDim2.new(0, 7, 0, 5)
+InputBox.BackgroundColor3 = Color3.fromRGB(18, 5, 5)
+InputBox.BorderSizePixel = 0
+InputBox.ClearTextOnFocus = false
+InputBox.PlaceholderText = "...اكتب الأمر هنا"
+InputBox.PlaceholderColor3 = Color3.fromRGB(150, 60, 60)
+InputBox.Text = "/logs sa /re sa /nv sa /clogs sa"
+InputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+InputBox.TextSize = 11
+InputBox.Font = Enum.Font.GothamMedium
+InputBox.TextWrapped = true
+InputBox.Parent = scrollingFrame
+
+local InputCorner = Instance.new("UICorner")
+InputCorner.CornerRadius = UDim.new(0, 6)
+InputCorner.Parent = InputBox
+
+-- نظام تكرار الأسطر (10، 40، 100 سطر وإدخال مخصص)
+local RepeaterContainer = Instance.new("Frame")
+RepeaterContainer.Size = UDim2.new(1, -14, 0, 68)
+RepeaterContainer.Position = UDim2.new(0, 7, 0, 52)
+RepeaterContainer.BackgroundColor3 = Color3.fromRGB(13, 13, 13)
+RepeaterContainer.BorderSizePixel = 0
+RepeaterContainer.Parent = scrollingFrame
+
+local RepContainerCorner = Instance.new("UICorner")
+RepContainerCorner.CornerRadius = UDim.new(0, 6)
+RepContainerCorner.Parent = RepeaterContainer
+
+local Btn10 = Instance.new("TextButton")
+Btn10.Size = UDim2.new(0.31, 0, 0, 24)
+Btn10.Position = UDim2.new(0, 5, 0, 6)
+Btn10.BackgroundColor3 = Color3.fromRGB(120, 0, 0)
+Btn10.Text = "10 أسطر"
+Btn10.TextColor3 = Color3.fromRGB(255, 255, 255)
+Btn10.Font = Enum.Font.GothamBold
+Btn10.TextSize = 9.5
+Btn10.Parent = RepeaterContainer
+Instance.new("UICorner", Btn10).CornerRadius = UDim.new(0, 4)
+
+local Btn40 = Instance.new("TextButton")
+Btn40.Size = UDim2.new(0.31, 0, 0, 24)
+Btn40.Position = UDim2.new(0.345, 0, 0, 6)
+Btn40.BackgroundColor3 = Color3.fromRGB(120, 0, 0)
+Btn40.Text = "40 سطر"
+Btn40.TextColor3 = Color3.fromRGB(255, 255, 255)
+Btn40.Font = Enum.Font.GothamBold
+Btn40.TextSize = 9.5
+Btn40.Parent = RepeaterContainer
+Instance.new("UICorner", Btn40).CornerRadius = UDim.new(0, 4)
+
+local Btn100 = Instance.new("TextButton")
+Btn100.Size = UDim2.new(0.31, 0, 0, 24)
+Btn100.Position = UDim2.new(0.69, 0, 0, 6)
+Btn100.BackgroundColor3 = Color3.fromRGB(120, 0, 0)
+Btn100.Text = "100 سطر"
+Btn100.TextColor3 = Color3.fromRGB(255, 255, 255)
+Btn100.Font = Enum.Font.GothamBold
+Btn100.TextSize = 9.5
+Btn100.Parent = RepeaterContainer
+Instance.new("UICorner", Btn100).CornerRadius = UDim.new(0, 4)
+
+local LineCountBox = Instance.new("TextBox")
+LineCountBox.Size = UDim2.new(0.55, 0, 0, 28)
+LineCountBox.Position = UDim2.new(0, 5, 0, 34)
+LineCountBox.BackgroundColor3 = Color3.fromRGB(22, 22, 22)
+LineCountBox.BorderSizePixel = 0
+LineCountBox.PlaceholderText = "اكتب عدد الاسطر (اقصى حد 150)"
+LineCountBox.Text = "10"
+LineCountBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+LineCountBox.Font = Enum.Font.GothamMedium
+LineCountBox.TextSize = 9.5
+LineCountBox.Parent = RepeaterContainer
+Instance.new("UICorner", LineCountBox).CornerRadius = UDim.new(0, 4)
+
+local ExecuteLinesBtn = Instance.new("TextButton")
+ExecuteLinesBtn.Size = UDim2.new(0.41, 0, 0, 28)
+ExecuteLinesBtn.Position = UDim2.new(0.575, 0, 0, 34)
+ExecuteLinesBtn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+ExecuteLinesBtn.Text = "تنفيذ عدد الاسطر"
+ExecuteLinesBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ExecuteLinesBtn.Font = Enum.Font.GothamBold
+ExecuteLinesBtn.TextSize = 9.5
+ExecuteLinesBtn.Parent = RepeaterContainer
+Instance.new("UICorner", ExecuteLinesBtn).CornerRadius = UDim.new(0, 4)
+
+local function applyLineMultiplication(targetCount)
+  local currentText = InputBox.Text
+  if currentText == "" then return end
+  
+  local lines = {}
+  for line in currentText:gmatch("[^\r\n]+") do
+    table.insert(lines, line)
+  end
+  
+  if #lines == 0 then return end
+  local baseCommand = lines[1]
+  
+  local repeatedLines = {}
+  for i = 1, targetCount do
+    table.insert(repeatedLines, baseCommand)
+  end
+  
+  InputBox.Text = table.concat(repeatedLines, "\n")
+end
+
+Btn10.MouseButton1Click:Connect(function()
+  LineCountBox.Text = "10"
+  applyLineMultiplication(10)
 end)
 
--- 3. منطق الحركة السريعة (Ninja Jitter)
-local active = false
-local connection
+Btn40.MouseButton1Click:Connect(function()
+  LineCountBox.Text = "40"
+  applyLineMultiplication(40)
+end)
 
-ActionBtn.MouseButton1Click:Connect(function()
-    active = not active
-    if active then
-        ActionBtn.Text = "Ninja Movement: ON"
-        ActionBtn.BackgroundColor3 = Color3.fromRGB(180, 20, 20)
-        
-        connection = RunService.RenderStepped:Connect(function()
-            local char = LocalPlayer.Character
-            if char and char:FindFirstChild("HumanoidRootPart") then
-                local rootPart = char.HumanoidRootPart
-                -- حركات عشوائية سريعة تظهر للجميع
-                local offsetX = math.random(-3, 3)
-                local offsetY = math.random(-3, 3)
-                local offsetZ = math.random(-3, 3)
-                
-                rootPart.CFrame = rootPart.CFrame + Vector3.new(offsetX, offsetY, offsetZ)
-            end
-        end)
-    else
-        ActionBtn.Text = "Ninja Movement: OFF"
-        ActionBtn.BackgroundColor3 = Color3.fromRGB(80, 20, 20)
-        if connection then
-            connection:Disconnect()
-            connection = nil
-        end
+Btn100.MouseButton1Click:Connect(function()
+  LineCountBox.Text = "100"
+  applyLineMultiplication(100)
+end)
+
+ExecuteLinesBtn.MouseButton1Click:Connect(function()
+  local num = tonumber(LineCountBox.Text)
+  if not num or num < 1 then
+    num = 1
+  elseif num > 150 then
+    num = 150
+  end
+  LineCountBox.Text = tostring(num)
+  applyLineMultiplication(num)
+end)
+
+local PrefixBox = Instance.new("TextBox")
+PrefixBox.Name = "PrefixBox"
+PrefixBox.Size = UDim2.new(1, -14, 0, 30)
+PrefixBox.Position = UDim2.new(0, 7, 0, 125)
+PrefixBox.BackgroundColor3 = Color3.fromRGB(25, 10, 10)
+PrefixBox.BorderSizePixel = 0
+PrefixBox.PlaceholderText = "رمز الأوامر (مثلاً / أو !)"
+PrefixBox.Text = "/"
+PrefixBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+PrefixBox.TextSize = 10
+PrefixBox.Font = Enum.Font.GothamMedium
+PrefixBox.Parent = scrollingFrame
+
+local PrefixCorner = Instance.new("UICorner")
+PrefixCorner.CornerRadius = UDim.new(0, 5)
+PrefixCorner.Parent = PrefixBox
+
+local StartBtn = Instance.new("TextButton")
+StartBtn.Name = "StartBtn"
+StartBtn.Size = UDim2.new(0.6, -4, 0, 38)
+StartBtn.Position = UDim2.new(0.4, 0, 0, 161)
+StartBtn.BackgroundColor3 = Color3.fromRGB(130, 0, 0)
+StartBtn.BorderSizePixel = 0
+StartBtn.Text = "نسخ إلى الحافظة"
+StartBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+StartBtn.TextSize = 12
+StartBtn.Font = Enum.Font.GothamBold
+StartBtn.Parent = scrollingFrame
+
+local StartCorner = Instance.new("UICorner")
+StartCorner.CornerRadius = UDim.new(0, 6)
+StartCorner.Parent = StartBtn
+
+local SaveBtn = Instance.new("TextButton")
+SaveBtn.Name = "SaveBtn"
+SaveBtn.Size = UDim2.new(0.38, -4, 0, 38)
+SaveBtn.Position = UDim2.new(0, 7, 0, 161)
+SaveBtn.BackgroundColor3 = Color3.fromRGB(100, 0, 0)
+SaveBtn.BorderSizePixel = 0
+SaveBtn.Text = "حفظ ⚙️"
+SaveBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+SaveBtn.TextSize = 11
+SaveBtn.Font = Enum.Font.GothamBold
+SaveBtn.Parent = scrollingFrame
+
+local SaveCorner = Instance.new("UICorner")
+SaveCorner.CornerRadius = UDim.new(0, 6)
+SaveCorner.Parent = SaveBtn
+
+local MatrixGrid = Instance.new("Frame")
+MatrixGrid.Size = UDim2.new(1, -14, 0, 110)
+MatrixGrid.Position = UDim2.new(0, 7, 0, 205)
+MatrixGrid.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+MatrixGrid.Parent = scrollingFrame
+
+local MatrixGridCorner = Instance.new("UICorner")
+MatrixGridCorner.CornerRadius = UDim.new(0, 6)
+MatrixGridCorner.Parent = MatrixGrid
+
+local uiGridLayout = Instance.new("UIGridLayout")
+uiGridLayout.Parent = MatrixGrid
+uiGridLayout.CellSize = UDim2.new(0, 50, 0, 24)
+uiGridLayout.CellPadding = UDim2.new(0, 4, 0, 4)
+uiGridLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+local function showAddTabPrompt()
+  local promptGui = Instance.new("ScreenGui")
+  promptGui.Name = "NHYQ_Prompt"
+  promptGui.Parent = coreGui
+
+  local pFrame = Instance.new("Frame")
+  pFrame.Size = UDim2.new(0, 280, 0, 185)
+  pFrame.Position = UDim2.new(0.5, -140, 0.5, -92)
+  pFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+  pFrame.BorderSizePixel = 0
+  pFrame.Parent = promptGui
+
+  local pCorner = Instance.new("UICorner")
+  pCorner.CornerRadius = UDim.new(0, 8)
+  pCorner.Parent = pFrame
+
+  local pStroke = Instance.new("UIStroke")
+  pStroke.Color = Color3.fromRGB(200, 0, 0)
+  pStroke.Thickness = 1.5
+  pStroke.Parent = pFrame
+
+  local pLabel1 = Instance.new("TextLabel")
+  pLabel1.Size = UDim2.new(1, -20, 0, 20)
+  pLabel1.Position = UDim2.new(0, 10, 0, 10)
+  pLabel1.BackgroundTransparency = 1
+  pLabel1.Text = "اسم التبويب:"
+  pLabel1.TextColor3 = Color3.fromRGB(255, 255, 255)
+  pLabel1.Font = Enum.Font.GothamBold
+  pLabel1.TextSize = 10
+  pLabel1.TextXAlignment = Enum.TextXAlignment.Left
+  pLabel1.Parent = pFrame
+
+  local pBoxName = Instance.new("TextBox")
+  pBoxName.Size = UDim2.new(1, -20, 0, 28)
+  pBoxName.Position = UDim2.new(0, 10, 0, 30)
+  pBoxName.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+  pBoxName.BorderSizePixel = 0
+  pBoxName.PlaceholderText = "مثال: هجوم سريع"
+  pBoxName.Text = ""
+  pBoxName.TextColor3 = Color3.fromRGB(255, 255, 255)
+  pBoxName.Font = Enum.Font.Gotham
+  pBoxName.TextSize = 10
+  pBoxName.Parent = pFrame
+
+  local bCorner1 = Instance.new("UICorner")
+  bCorner1.CornerRadius = UDim.new(0, 5)
+  bCorner1.Parent = pBoxName
+
+  local pLabel2 = Instance.new("TextLabel")
+  pLabel2.Size = UDim2.new(1, -20, 0, 20)
+  pLabel2.Position = UDim2.new(0, 10, 0, 62)
+  pLabel2.BackgroundTransparency = 1
+  pLabel2.Text = "اظافة الاوامر:"
+  pLabel2.TextColor3 = Color3.fromRGB(255, 255, 255)
+  pLabel2.Font = Enum.Font.GothamBold
+  pLabel2.TextSize = 10
+  pLabel2.TextXAlignment = Enum.TextXAlignment.Left
+  pLabel2.Parent = pFrame
+
+  local pBoxCmds = Instance.new("TextBox")
+  pBoxCmds.Size = UDim2.new(1, -20, 0, 35)
+  pBoxCmds.Position = UDim2.new(0, 10, 0, 82)
+  pBoxCmds.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+  pBoxCmds.BorderSizePixel = 0
+  pBoxCmds.PlaceholderText = "/re sa /nv sa"
+  pBoxCmds.Text = ""
+  pBoxCmds.TextColor3 = Color3.fromRGB(255, 255, 255)
+  pBoxCmds.Font = Enum.Font.Gotham
+  pBoxCmds.TextSize = 10
+  pBoxCmds.TextWrapped = true
+  pBoxCmds.Parent = pFrame
+
+  local bCorner2 = Instance.new("UICorner")
+  bCorner2.CornerRadius = UDim.new(0, 5)
+  bCorner2.Parent = pBoxCmds
+
+  local confirmBtn = Instance.new("TextButton")
+  confirmBtn.Size = UDim2.new(0.45, 0, 0, 28)
+  confirmBtn.Position = UDim2.new(0.05, 0, 0, 138)
+  confirmBtn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+  confirmBtn.Text = "إضافة"
+  confirmBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+  confirmBtn.Font = Enum.Font.GothamBold
+  confirmBtn.TextSize = 10
+  confirmBtn.Parent = pFrame
+
+  local cCorner = Instance.new("UICorner")
+  cCorner.CornerRadius = UDim.new(0, 5)
+  cCorner.Parent = confirmBtn
+
+  local cancelBtn = Instance.new("TextButton")
+  cancelBtn.Size = UDim2.new(0.45, 0, 0, 28)
+  cancelBtn.Position = UDim2.new(0.52, 0, 0, 138)
+  cancelBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+  cancelBtn.Text = "إلغاء"
+  cancelBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+  cancelBtn.Font = Enum.Font.GothamBold
+  cancelBtn.TextSize = 10
+  cancelBtn.Parent = pFrame
+
+  local cnCorner = Instance.new("UICorner")
+  cnCorner.CornerRadius = UDim.new(0, 5)
+  cnCorner.Parent = cancelBtn
+
+  confirmBtn.MouseButton1Click:Connect(function()
+    local nameVal = pBoxName.Text
+    local cmdsVal = pBoxCmds.Text
+    if nameVal ~= "" and cmdsVal ~= "" then
+      local newTab = { name = nameVal, commands = cmdsVal, custom = true }
+      table.insert(v8, newTab)
+      
+      local toSave = {}
+      for i = #baseTabs + 1, #v8 do
+        table.insert(toSave, v8[i])
+      end
+      saveCustomTabs(toSave)
+      rebuildTabs()
     end
+    promptGui:Destroy()
+  end)
+
+  cancelBtn.MouseButton1Click:Connect(function()
+    promptGui:Destroy()
+  end)
+end
+
+function rebuildTabs()
+  for _, child in ipairs(MatrixGrid:GetChildren()) do
+    if child:IsA("GuiObject") then
+      child:Destroy()
+    end
+  end
+
+  for i = 1, #v8 do
+    local v12 = i
+    local tabInfo = v8[v12]
+    
+    local tabContainer = Instance.new("Frame")
+    tabContainer.Size = UDim2.new(0, 50, 0, 24)
+    tabContainer.BackgroundTransparency = 1
+    tabContainer.LayoutOrder = v12
+    tabContainer.Parent = MatrixGrid
+
+    local textButton9 = Instance.new("TextButton")
+    textButton9.Size = tabInfo.custom and UDim2.new(1, -12, 1, 0) or UDim2.new(1, 0, 1, 0)
+    textButton9.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    textButton9.Text = tabInfo.name
+    textButton9.TextColor3 = Color3.fromRGB(220, 220, 220)
+    textButton9.Font = Enum.Font.GothamBold
+    textButton9.TextSize = 9
+    textButton9.Parent = tabContainer
+
+    local uiCorner23 = Instance.new("UICorner")
+    uiCorner23.CornerRadius = UDim.new(0, 4)
+    uiCorner23.Parent = textButton9
+
+    textButton9.MouseButton1Click:Connect(function()
+      InputBox.Text = tabInfo.commands
+    end)
+
+    if tabInfo.custom then
+      local delBtn = Instance.new("TextButton")
+      delBtn.Size = UDim2.new(0, 10, 0, 10)
+      delBtn.Position = UDim2.new(1, -10, 0, 0)
+      delBtn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+      delBtn.Text = "×"
+      delBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+      delBtn.TextSize = 8
+      delBtn.Font = Enum.Font.GothamBold
+      delBtn.Parent = tabContainer
+
+      local delCorner = Instance.new("UICorner")
+      delCorner.CornerRadius = UDim.new(1, 0)
+      delCorner.Parent = delBtn
+
+      delBtn.MouseButton1Click:Connect(function()
+        table.remove(v8, v12)
+        
+        local toSave = {}
+        for idx = #baseTabs + 1, #v8 do
+          table.insert(toSave, v8[idx])
+        end
+        saveCustomTabs(toSave)
+        rebuildTabs()
+      end)
+    end
+  end
+
+  local addTabBtn = Instance.new("TextButton")
+  addTabBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+  addTabBtn.Text = "+ إضافة"
+  addTabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+  addTabBtn.Font = Enum.Font.GothamBold
+  addTabBtn.TextSize = 9
+  addTabBtn.LayoutOrder = 999
+  addTabBtn.Parent = MatrixGrid
+
+  local addCorner = Instance.new("UICorner")
+  addCorner.CornerRadius = UDim.new(0, 4)
+  addCorner.Parent = addTabBtn
+
+  addTabBtn.MouseButton1Click:Connect(function()
+    showAddTabPrompt()
+  end)
+end
+
+rebuildTabs()
+
+local ModeFrame = Instance.new("Frame")
+ModeFrame.Size = UDim2.new(1, -14, 0, 32)
+ModeFrame.Position = UDim2.new(0, 7, 0, 324)
+ModeFrame.BackgroundTransparency = 1
+ModeFrame.Parent = scrollingFrame
+
+local textButton4 = Instance.new("TextButton")
+textButton4.Size = UDim2.new(0.48, 0, 1, 0)
+textButton4.Position = UDim2.new(0, 0, 0, 0)
+textButton4.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+textButton4.Text = "كامل"
+textButton4.TextColor3 = Color3.fromRGB(255, 255, 255)
+textButton4.Font = Enum.Font.GothamBold
+textButton4.TextSize = 10
+textButton4.Parent = ModeFrame
+
+local uiCorner10 = Instance.new("UICorner")
+uiCorner10.CornerRadius = UDim.new(0, 6)
+uiCorner10.Parent = textButton4
+
+local textButton5 = Instance.new("TextButton")
+textButton5.Size = UDim2.new(0.48, 0, 1, 0)
+textButton5.Position = UDim2.new(0.52, 0, 0, 0)
+textButton5.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+textButton5.Text = "غامض"
+textButton5.TextColor3 = Color3.fromRGB(200, 200, 200)
+textButton5.Font = Enum.Font.GothamBold
+textButton5.TextSize = 10
+textButton5.Parent = ModeFrame
+
+local uiCorner11 = Instance.new("UICorner")
+uiCorner11.CornerRadius = UDim.new(0, 6)
+uiCorner11.Parent = textButton5
+
+local function f4()
+  textButton4.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+  textButton4.TextColor3 = Color3.fromRGB(200, 200, 200)
+  textButton5.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+  textButton5.TextColor3 = Color3.fromRGB(200, 200, 200)
+
+  if v5 == "full" then
+    textButton4.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+    textButton4.TextColor3 = Color3.fromRGB(255, 255, 255)
+  elseif v5 == "mystic" then
+    textButton5.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+    textButton5.TextColor3 = Color3.fromRGB(255, 255, 255)
+  end
+end
+
+textButton4.MouseButton1Click:Connect(function() v5 = "full" f4() end)
+textButton5.MouseButton1Click:Connect(function() v5 = "mystic" f4() end)
+
+local TargetContainer = Instance.new("Frame")
+TargetContainer.Size = UDim2.new(1, -14, 0, 110)
+TargetContainer.Position = UDim2.new(0, 7, 0, 362)
+TargetContainer.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+TargetContainer.Parent = scrollingFrame
+
+local TargetCorner = Instance.new("UICorner")
+TargetCorner.CornerRadius = UDim.new(0, 6)
+TargetCorner.Parent = TargetContainer
+
+local TargetTitle = Instance.new("TextLabel")
+TargetTitle.Size = UDim2.new(1, -10, 0, 20)
+TargetTitle.Position = UDim2.new(0, 5, 0, 2)
+TargetTitle.BackgroundTransparency = 1
+TargetTitle.Text = "👥 اللاعبين:"
+TargetTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+TargetTitle.Font = Enum.Font.GothamBold
+TargetTitle.TextSize = 11
+TargetTitle.TextXAlignment = Enum.TextXAlignment.Left
+TargetTitle.Parent = TargetContainer
+
+local scrollingFrame2 = Instance.new("ScrollingFrame")
+scrollingFrame2.Size = UDim2.new(1, -10, 0, 80)
+scrollingFrame2.Position = UDim2.new(0, 5, 0, 24)
+scrollingFrame2.BackgroundTransparency = 1
+scrollingFrame2.BorderSizePixel = 0
+scrollingFrame2.ScrollBarThickness = 2
+scrollingFrame2.ScrollBarImageColor3 = Color3.fromRGB(200, 0, 0)
+scrollingFrame2.CanvasSize = UDim2.new(0, 0, 0, 0)
+scrollingFrame2.Parent = TargetContainer
+
+local TargetStatus = Instance.new("TextLabel")
+TargetStatus.Size = UDim2.new(1, -14, 0, 24)
+TargetStatus.Position = UDim2.new(0, 7, 0, 478)
+TargetStatus.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+TargetStatus.Text = "الحالة: جاهز للنسخ"
+TargetStatus.TextColor3 = Color3.fromRGB(200, 200, 200)
+TargetStatus.Font = Enum.Font.GothamBold
+TargetStatus.TextSize = 10
+TargetStatus.Parent = scrollingFrame
+
+local StatusCorner = Instance.new("UICorner")
+StatusCorner.CornerRadius = UDim.new(0, 5)
+StatusCorner.Parent = TargetStatus
+
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Name = "NHYQ_SideToggle"
+ToggleBtn.Size = UDim2.new(0, 50, 0, 50)
+ToggleBtn.Position = UDim2.new(0, 20, 0.5, -25)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+ToggleBtn.BorderSizePixel = 0
+ToggleBtn.Draggable = true
+ToggleBtn.Text = ""
+ToggleBtn.Parent = evilHubCustomGui
+
+local ToggleCorner = Instance.new("UICorner")
+ToggleCorner.CornerRadius = UDim.new(1, 0)
+ToggleCorner.Parent = ToggleBtn
+
+local ToggleStroke = Instance.new("UIStroke")
+ToggleStroke.Color = Color3.fromRGB(220, 0, 0)
+ToggleStroke.Thickness = 2.5
+ToggleStroke.Parent = ToggleBtn
+
+local ToggleLabel = Instance.new("TextLabel")
+ToggleLabel.Size = UDim2.new(1, 0, 1, 0)
+ToggleLabel.BackgroundTransparency = 1
+ToggleLabel.Text = "NHYQ"
+ToggleLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
+ToggleLabel.TextSize = 11
+ToggleLabel.Font = Enum.Font.GothamBold
+ToggleLabel.Parent = ToggleBtn
+
+ToggleBtn.MouseButton1Click:Connect(function()
+  Main.Visible = not Main.Visible
 end)
 
-print("🔥 NHYQ Draggable Ninja Hub loaded successfully!")
+CloseBtn.MouseButton1Click:Connect(function()
+  Main.Visible = false
+end)
+
+local function f5()
+  local count = 0
+  for key, value in pairs(v2) do count = count + 1 end
+  if count == 0 then
+    TargetTitle.Text = "👥 اللاعبين: (لا يوجد تحديد)"
+  else
+    TargetTitle.Text = "👥 اللاعبين: (" .. count .. " محدد)"
+  end
+end
+
+local function f6()
+  for key2, value2 in pairs(v3) do
+    if players:FindFirstChild(key2) then return key2 end
+  end
+  for key3, value3 in pairs(v2) do
+    if players:FindFirstChild(key3) then return key3 end
+  end
+  return nil
+end
+
+local function f8()
+  for index2, value6 in ipairs(scrollingFrame2:GetChildren()) do
+    if value6:IsA("TextButton") then value6:Destroy() end
+  end
+
+  local count3 = 0
+  for index3, value7 in ipairs(players:GetPlayers()) do
+    local v14 = value7
+    if v14 ~= localPlayer then
+      local textButton12 = Instance.new("TextButton")
+      textButton12.Size = UDim2.new(1, -5, 0, 22)
+      textButton12.Position = UDim2.new(0, 2, 0, count3 * 24 + 2)
+
+      if v2[v14.Name] then
+        textButton12.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+        textButton12.TextColor3 = Color3.fromRGB(255, 255, 255)
+        textButton12.Text = "✓ " .. v14.Name
+      else
+        textButton12.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        textButton12.TextColor3 = Color3.fromRGB(200, 200, 200)
+        textButton12.Text = v14.Name
+      end
+
+      textButton12.Font = Enum.Font.Gotham
+      textButton12.TextSize = 10
+      textButton12.Parent = scrollingFrame2
+
+      local uiCorner27 = Instance.new("UICorner")
+      uiCorner27.CornerRadius = UDim.new(0, 4)
+      uiCorner27.Parent = textButton12
+
+      textButton12.MouseButton1Click:Connect(function()
+        if v2[v14.Name] then
+          v2[v14.Name] = nil
+        else
+          v2[v14.Name] = true
+        end
+        f8()
+        f5()
+      end)
+
+      count3 = count3 + 1
+    end
+  end
+  scrollingFrame2.CanvasSize = UDim2.new(0, 0, 0, count3 * 24 + 5)
+end
+
+SaveBtn.MouseButton1Click:Connect(function()
+  for key8, value12 in pairs(v2) do
+    v3[key8] = true
+  end
+  SaveBtn.Text = "تم الحفظ ✓"
+  task.wait(0.5)
+  SaveBtn.Text = "حفظ ⚙️"
+end)
+
+local function f9()
+  local v16 = {}
+  for key5, value8 in pairs(v2) do
+    if not players:FindFirstChild(key5) then
+      table.insert(v16, key5)
+    end
+  end
+
+  for index4, value9 in ipairs(v16) do
+    v2[value9] = nil
+  end
+
+  if #v16 > 0 then
+    f8()
+    f5()
+  end
+end
+
+local function f10()
+  if v5 == "mystic" then
+    local v17 = {}
+    for key6, value10 in pairs(v3) do
+      if players:FindFirstChild(key6) then
+        table.insert(v17, key6:sub(1, 3))
+      end
+    end
+    if #v17 == 0 then
+      for key7, value11 in pairs(v2) do
+        if players:FindFirstChild(key7) then
+          table.insert(v17, key7:sub(1, 3))
+        end
+      end
+    end
+    if #v17 > 0 then
+      return table.concat(v17, ",")
+    end
+    return ""
+  else
+    local v18 = {}
+    for key9, value14 in pairs(v3) do
+      if players:FindFirstChild(key9) then
+        table.insert(v18, key9)
+      end
+    end
+    if #v18 == 0 then
+      for key10, value15 in pairs(v2) do
+        if players:FindFirstChild(key10) then
+          table.insert(v18, key10)
+        end
+      end
+    end
+    if #v18 > 0 then
+      return table.concat(v18, ",")
+    end
+    return f6() or ""
+  end
+end
+
+local function copyToClipboard(textToCopy)
+  pcall(function()
+    setclipboard(textToCopy)
+  end)
+end
+
+StartBtn.MouseButton1Click:Connect(function()
+  f9()
+  local text = InputBox.Text
+  local customPrefix = PrefixBox.Text ~= "" and PrefixBox.Text or "/"
+  local targetPlayer = f10()
+  
+  if targetPlayer == "" then
+    TargetStatus.Text = "يرجى تحديد لاعب أولاً!"
+    return
+  end
+
+  local linesToProcess = {}
+  for line in text:gmatch("[^\r\n]+") do
+    table.insert(linesToProcess, line)
+  end
+
+  local allFormattedLines = {}
+
+  for _, lineText in ipairs(linesToProcess) do
+    local formattedCommands = {}
+    for word in lineText:gmatch("%S+") do
+      if word:lower() == "sa" then
+        if #formattedCommands > 0 then
+          formattedCommands[#formattedCommands] = formattedCommands[#formattedCommands] .. " " .. targetPlayer
+        end
+      else
+        local cleanCmd = word:gsub("^[%/%!%.#%?]+", "")
+        table.insert(formattedCommands, customPrefix .. cleanCmd)
+      end
+    end
+    if #formattedCommands > 0 then
+      table.insert(allFormattedLines, table.concat(formattedCommands, " "))
+    end
+  end
+
+  if #allFormattedLines > 0 then
+    local finalString = table.concat(allFormattedLines, "\n")
+    copyToClipboard(finalString)
+    TargetStatus.Text = "تم النسخ بنجاح ✓"
+    task.spawn(function()
+      task.wait(1.5)
+      TargetStatus.Text = "الحالة: جاهز للنسخ"
+    end)
+  end
+end)
+
+task.spawn(function()
+  while true do
+    task.wait(2)
+    f9()
+    if Main.Visible then
+      f8()
+    end
+  end
+end)
+
+f4()
+f8()
