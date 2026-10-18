@@ -1,0 +1,212 @@
+-- سكربت تثبيت الجسم والرأس بالكامل نهائياً وعدم طيرانهما عند الانفجار
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
+
+local LocalPlayer = Players.LocalPlayer
+
+-- 1. واجهة المستخدم والتصميم الأنيق (NHYQ & by shs09qp23)
+local ScreenGui = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local ToggleButton = Instance.new("TextButton")
+local TitleLabel = Instance.new("TextLabel")
+local CreditLabel = Instance.new("TextLabel")
+local MinimizeButton = Instance.new("TextButton")
+local UICornerMain = Instance.new("UICorner")
+local UICornerButton = Instance.new("UICorner")
+local UICornerMin = Instance.new("UICorner")
+local UIStrokeMin = Instance.new("UIStroke")
+
+ScreenGui.Name = "FullBodyLockUltimate"
+pcall(function() ScreenGui.Parent = CoreGui end)
+if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
+
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+MainFrame.BorderColor3 = Color3.fromRGB(150, 0, 0)
+MainFrame.BorderSizePixel = 2
+MainFrame.Position = UDim2.new(0.05, 0, 0.4, 0)
+MainFrame.Size = UDim2.new(0, 220, 0, 115)
+MainFrame.Active = true
+MainFrame.Draggable = true
+
+UICornerMain.CornerRadius = UDim.new(0, 10)
+UICornerMain.Parent = MainFrame
+
+TitleLabel.Parent = MainFrame
+TitleLabel.BackgroundTransparency = 1.00
+TitleLabel.Position = UDim2.new(0, 0, 0.05, 0)
+TitleLabel.Size = UDim2.new(1, 0, 0, 22)
+TitleLabel.Font = Enum.Font.SourceSansBold
+TitleLabel.Text = "NHYQ"
+TitleLabel.TextColor3 = Color3.fromRGB(220, 0, 0)
+TitleLabel.TextSize = 18.00
+
+ToggleButton.Name = "ToggleButton"
+ToggleButton.Parent = MainFrame
+ToggleButton.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+ToggleButton.Position = UDim2.new(0.1, 0, 0.36, 0)
+ToggleButton.Size = UDim2.new(0, 176, 0, 38)
+ToggleButton.Font = Enum.Font.SourceSansBold
+ToggleButton.Text = "حماية explode: OFF"
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.TextSize = 14.00
+ToggleButton.Active = true
+
+UICornerButton.CornerRadius = UDim.new(0, 8)
+UICornerButton.Parent = ToggleButton
+
+CreditLabel.Parent = MainFrame
+CreditLabel.BackgroundTransparency = 1.00
+CreditLabel.Position = UDim2.new(0, 0, 0.76, 0)
+CreditLabel.Size = UDim2.new(1, 0, 0, 20)
+CreditLabel.Font = Enum.Font.SourceSansItalic
+CreditLabel.Text = "by shs09qp23"
+CreditLabel.TextColor3 = Color3.fromRGB(170, 170, 170)
+CreditLabel.TextSize = 12.00
+
+-- زر فتح وإغلاق القائمة (زر دائري مميز مكتوب عليه NHYQ وقابل للسحب بالاصبع)
+MinimizeButton.Parent = ScreenGui
+MinimizeButton.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+MinimizeButton.Position = UDim2.new(0.05, -45, 0.4, 0)
+MinimizeButton.Size = UDim2.new(0, 42, 0, 42)
+MinimizeButton.Font = Enum.Font.GothamBold
+MinimizeButton.Text = "NHYQ"
+MinimizeButton.TextColor3 = Color3.fromRGB(255, 50, 50)
+MinimizeButton.TextSize = 11.00
+MinimizeButton.Active = true
+MinimizeButton.Draggable = true
+
+UICornerMin.CornerRadius = UDim.new(1, 0)
+UICornerMin.Parent = MinimizeButton
+
+UIStrokeMin.Parent = MinimizeButton
+UIStrokeMin.Color = Color3.fromRGB(200, 0, 0)
+UIStrokeMin.Thickness = 1.5
+
+local isGuiOpen = true
+MinimizeButton.MouseButton1Click:Connect(function()
+    isGuiOpen = not isGuiOpen
+    MainFrame.Visible = isGuiOpen
+end)
+
+local isEnabled = false
+
+ToggleButton.MouseButton1Click:Connect(function()
+    isEnabled = not isEnabled
+    if isEnabled then
+        ToggleButton.Text = "حماية explode: ON"
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 170, 80)
+    else
+        ToggleButton.Text = "حماية explode: OFF"
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+    end
+end)
+
+-- نظام حفظ مكان الموت والوقوف لإرجاعك إليه بالظبط عند الريسبون
+local deathSpawnCFrame = nil
+
+local function setupCharacter(char)
+    local humanoid = char:WaitForChild("Humanoid", 5)
+    local hrp = char:WaitForChild("HumanoidRootPart", 5)
+    
+    if humanoid and hrp then
+        -- حفظ آخر مكان يقف فيه اللاعب قبل موته
+        humanoid.Died:Connect(function()
+            if isEnabled and hrp then
+                deathSpawnCFrame = hrp.CFrame
+            end
+        end)
+    end
+end
+
+if LocalPlayer.Character then
+    setupCharacter(LocalPlayer.Character)
+end
+
+LocalPlayer.CharacterAdded:Connect(function(newChar)
+    setupCharacter(newChar)
+    if isEnabled and deathSpawnCFrame then
+        local hrp = newChar:WaitForChild("HumanoidRootPart", 5)
+        if hrp then
+            task.wait(0.15)
+            hrp.CFrame = deathSpawnCFrame
+        end
+    end
+end)
+
+-- 2. دالة التثبيت التام لكل أجزاء الجسم والرأس (نفس الكود الأصلي تماماً)
+local function lockFullBodyPermanently()
+    local char = LocalPlayer.Character
+    if not char then return end
+    
+    -- إيقاف أي مفاصل قديمة تسبب التطشير
+    for _, v in ipairs(char:GetDescendants()) do
+        if v:IsA("Motor6D") then
+            v:Destroy()
+        end
+    end
+
+    -- حفظ المواقع الأصلية لكل أجزاء الجسم لحظة الانفجار
+    local partsCFrames = {}
+    for _, part in ipairs(char:GetDescendants()) do
+        if part:IsA("BasePart") then
+            partsCFrames[part] = part.CFrame
+        end
+    end
+    
+    local connection
+    connection = RunService.RenderStepped:Connect(function()
+        if not isEnabled or not char or not char.Parent then
+            if connection then connection:Disconnect() end
+            return
+        end
+        
+        -- قفل جميع أجزاء الجسم في مكانها بدقة تامة وبشكل مستمر
+        for part, originalCFrame in pairs(partsCFrames) do
+            if part and part.Parent then
+                part.Anchored = true
+                part.CFrame = originalCFrame
+                part.AssemblyLinearVelocity = Vector3.zero
+                part.AssemblyAngularVelocity = Vector3.zero
+            end
+        end
+
+        -- إيقاف المراقبة لو مات اللاعب
+        if not char:FindFirstChild("Humanoid") or char.Humanoid.Health <= 0 then
+            connection:Disconnect()
+        end
+    end)
+end
+
+-- 3. مراقبة الانفجارات وإلغاؤها (نفس الكود الأصلي تماماً)
+local function handleExplosion(descendant)
+    if not isEnabled then return end
+    if descendant:IsA("Explosion") then
+        local char = LocalPlayer.Character
+        if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+        
+        local hrp = char.HumanoidRootPart
+        if (descendant.Position - hrp.Position).Magnitude <= (descendant.BlastRadius + 25) then
+            pcall(function()
+                descendant.BlastPressure = 0
+                descendant.BlastRadius = 0
+                descendant.DestroyJointRadiusPercent = 0
+            end)
+
+            lockFullBodyPermanently()
+        end
+        
+        task.defer(function()
+            descendant:Destroy()
+        end)
+    end
+end
+
+for _, descendant in ipairs(Workspace:GetDescendants()) do
+    if descendant:IsA("Explosion") then descendant:Destroy() end
+end
+
+Workspace.DescendantAdded:Connect(handleExplosion)
