@@ -995,7 +995,7 @@ local function LoadMainScript()
     local TabClipboard = Window:NewTab("نسخ الى الحافظة 📋")
     local SecClipboard = TabClipboard:NewSection("نسخ الى الحافظة 📋")
     SecClipboard:NewButton("تشغيل النسخ", "تشغيل سكربت النسخ الى الحافظة", function()
-        loadstring(game:HttpGet("https://cdn.luaprotect.dev/u/c73151/bshNU823r92VSp1O"))()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/NHYQ1234'))()
     end)
 
     local TabLogs = Window:NewTab("لوق دخول و خروج الاعبين")
