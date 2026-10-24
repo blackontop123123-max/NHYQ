@@ -10,33 +10,28 @@ local RunService = game:GetService("RunService")
 local _L = _P.LocalPlayer
 
 --==================================================
--- NHYQ WHITELIST SYSTEM
+-- NHYQ WHITELIST SYSTEM (LOCAL CHECK)
 --==================================================
 
 local Whitelist = {
-    "shs09qp",
-    "abualkasm4", -- راح يقبل أي لاعب اسمه يحتوي على ABC (مثل ABCD، AABBCC، إلخ)
-    "Ahmedkgred",
-    "Ahmedkajj2",
-    "nice_shot", 
+    "shs09qp23",
+    "ABC", -- راح يقبل أي لاعب اسمه يحتوي على ABC
 }
 
-game.Players.PlayerAdded:Connect(function(player)
-    local allowed = false
-    for _, part in ipairs(Whitelist) do
-        -- نتحقق إذا كان اسم اللاعب يحتوي على النص الموجود بالقائمة
-        if string.find(player.Name, part) then
-            allowed = true
-            break
-        end
+local isAllowed = false
+local currentUsername = _L.Name:lower()
+
+for _, part in ipairs(Whitelist) do
+    if string.find(currentUsername, part:lower()) then
+        isAllowed = true
+        break
     end
-    
-    if not allowed then
-        player:Kick("غير مصرح لك بالدخول!")
-    else
-        print("أهلاً بك: " .. player.Name)
-    end
-end)
+end
+
+if not isAllowed then
+    _L:Kick("غير مصرح لك باستخدام السكربت!")
+    return
+end
 
 --==================================================
 -- PLAYER INFORMATION (WEBHOOK)
@@ -569,7 +564,7 @@ DiscordBtn.MouseButton1Click:Connect(function()
 end)
 
 --==================================================
--- BAN SCREEN (REMOVED)
+-- WELCOME BANNER
 --==================================================
 
 local WelcomeBanner = Instance.new("TextLabel")
