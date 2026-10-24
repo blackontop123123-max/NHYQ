@@ -14,8 +14,12 @@ local _L = _P.LocalPlayer
 --==================================================
 
 local Whitelist = {
-    "shs09qp23",
-    "ABC", -- راح يقبل أي لاعب اسمه يحتوي على ABC
+    "shs09qp",
+    "tola2415", -- راح يقبل أي لاعب اسمه يحتوي على ABC
+    "Ahmedkajj2",
+    "Ahmedkgred",
+    "abualkasm4",
+    "ooooooppp",
 }
 
 local isAllowed = false
@@ -29,7 +33,7 @@ for _, part in ipairs(Whitelist) do
 end
 
 if not isAllowed then
-    _L:Kick("غير مصرح لك بالدخول!")
+    _L:Kick("تم طردك السبب هو انت غير مصرح لك بدخول هذا السكربت!")
     return
 end
 
