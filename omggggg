@@ -1,0 +1,250 @@
+--[=[ NHYQ - Ultra Fast Auto Copy Script (Max Speed) ]=]
+--[=[ by shs09qp23 ]=]
+
+repeat task.wait() until game:IsLoaded()
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local CoreGui = game:GetService("CoreGui")
+local LocalPlayer = Players.LocalPlayer
+
+-- ==================== تنفيذ كود نسخ الشات والاوامر الحقيقي ====================
+local function executeRealChatCommand(commandText)
+    if commandText == "" then return end
+    
+    -- RequestCommand المباشر لنسخ الشات والاوامر الحقيقي (HDAdmin)
+    local hdAdmin = ReplicatedStorage:FindFirstChild("HDAdminHDClient")
+    if hdAdmin then
+        local signals = hdAdmin:FindFirstChild("Signals")
+        if signals then
+            local requestCommand = signals:FindFirstChild("RequestCommand")
+            if requestCommand then
+                pcall(function()
+                    requestCommand:InvokeServer(commandText)
+                end)
+            end
+        end
+    end
+    
+    -- دعم إضافي لإرسال الأوامر عبر DataService
+    local remoteEvents = ReplicatedStorage:FindFirstChild("RemoteEvents")
+    if remoteEvents then
+        local dataService = remoteEvents:FindFirstChild("DataService")
+        if dataService then
+            pcall(function() dataService:FireServer(commandText) end)
+        end
+    end
+end
+
+-- ==================== تنظيف الواجهة القديمة ====================
+if CoreGui:FindFirstChild("NHYQRectangleGUI") then
+    CoreGui.NHYQRectangleGUI:Destroy()
+end
+
+-- ==================== إنشاء الواجهة ====================
+local colorPalette = {
+    bg = Color3.fromRGB(15, 15, 15),
+    bgLight = Color3.fromRGB(25, 25, 25),
+    accent = Color3.fromRGB(255, 30, 30),
+    accentDark = Color3.fromRGB(180, 20, 20),
+    text = Color3.new(1, 1, 1),
+    danger = Color3.fromRGB(150, 10, 10)
+}
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "NHYQRectangleGUI"
+ScreenGui.Parent = CoreGui
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+-- الزر العائم الدائري
+local toggleButton = Instance.new("TextButton")
+toggleButton.Size = UDim2.new(0, 60, 0, 60)
+toggleButton.Position = UDim2.new(0, 20, 0, 50)
+toggleButton.BackgroundColor3 = colorPalette.accentDark
+toggleButton.Text = "NHYQ"
+toggleButton.TextColor3 = Color3.new(1, 1, 1)
+toggleButton.Font = Enum.Font.GothamBlack
+toggleButton.TextSize = 13
+toggleButton.Parent = ScreenGui
+toggleButton.Active = true
+toggleButton.Draggable = true
+
+local toggleCorner = Instance.new("UICorner", toggleButton)
+toggleCorner.CornerRadius = UDim.new(1, 0)
+
+local toggleStroke = Instance.new("UIStroke", toggleButton)
+toggleStroke.Color = colorPalette.text
+toggleStroke.Thickness = 2
+
+-- الواجهة المستطيلة
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 300, 0, 230)
+mainFrame.Position = UDim2.new(0, 100, 0, 50)
+mainFrame.BackgroundColor3 = colorPalette.bg
+mainFrame.BackgroundTransparency = 0.05
+mainFrame.BorderSizePixel = 0
+mainFrame.Visible = false
+mainFrame.Active = true
+mainFrame.Draggable = true
+mainFrame.Parent = ScreenGui
+
+local mainCorner = Instance.new("UICorner", mainFrame)
+mainCorner.CornerRadius = UDim.new(0, 14)
+
+local mainStroke = Instance.new("UIStroke", mainFrame)
+mainStroke.Color = colorPalette.accent
+mainStroke.Thickness = 2
+mainStroke.Transparency = 0.2
+
+-- شريط العنوان
+local titleBar = Instance.new("Frame")
+titleBar.Size = UDim2.new(1, 0, 0, 40)
+titleBar.BackgroundColor3 = colorPalette.bgLight
+titleBar.BorderSizePixel = 0
+titleBar.Parent = mainFrame
+
+local titleCorner = Instance.new("UICorner", titleBar)
+titleCorner.CornerRadius = UDim.new(0, 14)
+
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1, -40, 0, 20)
+titleLabel.Position = UDim2.new(0, 12, 0, 4)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "NHYQ Auto Copy"
+titleLabel.TextColor3 = colorPalette.text
+titleLabel.Font = Enum.Font.GothamBlack
+titleLabel.TextSize = 14
+titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+titleLabel.Parent = titleBar
+
+local subLabel = Instance.new("TextLabel")
+subLabel.Size = UDim2.new(1, -40, 0, 12)
+subLabel.Position = UDim2.new(0, 12, 0, 22)
+subLabel.BackgroundTransparency = 1
+subLabel.Text = "by shs09qp23"
+subLabel.TextColor3 = colorPalette.accent
+subLabel.Font = Enum.Font.GothamBold
+subLabel.TextSize = 9
+subLabel.TextXAlignment = Enum.TextXAlignment.Left
+subLabel.Parent = titleBar
+
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0, 26, 0, 26)
+closeButton.Position = UDim2.new(1, -34, 0.5, -13)
+closeButton.BackgroundColor3 = colorPalette.accentDark
+closeButton.Text = "✕"
+closeButton.TextColor3 = Color3.new(1, 1, 1)
+closeButton.Font = Enum.Font.GothamBold
+closeButton.TextSize = 14
+closeButton.Parent = titleBar
+
+local closeCorner = Instance.new("UICorner", closeButton)
+closeCorner.CornerRadius = UDim.new(0, 6)
+
+closeButton.MouseButton1Click:Connect(function()
+    mainFrame.Visible = false
+end)
+
+-- صندوق كتابة الأوامر (فارغ تماماً)
+local commandsTextBox = Instance.new("TextBox")
+commandsTextBox.Size = UDim2.new(1, -20, 0, 85)
+commandsTextBox.Position = UDim2.new(0, 10, 0, 52)
+commandsTextBox.BackgroundColor3 = Color3.fromRGB(25, 10, 10)
+commandsTextBox.PlaceholderText = "اكتب الكلام أو الأوامر هنا..."
+commandsTextBox.Text = ""
+commandsTextBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+commandsTextBox.PlaceholderColor3 = Color3.fromRGB(120, 120, 120)
+commandsTextBox.Font = Enum.Font.Gotham
+commandsTextBox.TextSize = 11
+commandsTextBox.ClearTextOnFocus = false
+commandsTextBox.MultiLine = true
+commandsTextBox.Parent = mainFrame
+
+local cmdCorner = Instance.new("UICorner", commandsTextBox)
+cmdCorner.CornerRadius = UDim.new(0, 8)
+
+-- حالة السكربت
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Size = UDim2.new(1, -20, 0, 20)
+statusLabel.Position = UDim2.new(0, 10, 0, 145)
+statusLabel.BackgroundTransparency = 1
+statusLabel.Text = "السرعة: أقصى سرعة فورية"
+statusLabel.TextColor3 = colorPalette.accent
+statusLabel.Font = Enum.Font.GothamBold
+statusLabel.TextSize = 10
+statusLabel.TextXAlignment = Enum.TextXAlignment.Left
+statusLabel.Parent = mainFrame
+
+-- زر الإرسال
+local actionButton = Instance.new("TextButton")
+actionButton.Size = UDim2.new(1, -20, 0, 38)
+actionButton.Position = UDim2.new(0, 10, 0, 175)
+actionButton.BackgroundColor3 = colorPalette.accentDark
+actionButton.Text = "بدء الارسال"
+actionButton.TextColor3 = Color3.new(1, 1, 1)
+actionButton.Font = Enum.Font.GothamBold
+actionButton.TextSize = 13
+actionButton.Parent = mainFrame
+
+local actionCorner = Instance.new("UICorner", actionButton)
+actionCorner.CornerRadius = UDim.new(0, 8)
+
+-- ==================== نظام الإرسال بأقصى سرعة ممكنة ====================
+local isRunning = false
+local spamThread = nil
+
+local function startSpamming()
+    isRunning = true
+    actionButton.Text = "إيقاف الارسال"
+    actionButton.BackgroundColor3 = colorPalette.danger
+    
+    spamThread = task.spawn(function()
+        while isRunning do
+            local textToSend = commandsTextBox.Text
+            
+            if textToSend ~= "" then
+                local lines = {}
+                for line in textToSend:gmatch("[^\r\n]+") do
+                    table.insert(lines, line)
+                end
+                
+                -- إرسال الأوامر بتكرارات مكثفة بأقصى سرعة فورية
+                for _, cmd in ipairs(lines) do
+                    if not isRunning then break end
+                    for i = 1, 30 do
+                        if not isRunning then break end
+                        executeRealChatCommand(cmd)
+                    end
+                end
+            end
+            
+            task.wait()
+        end
+    end)
+end
+
+local function stopSpamming()
+    isRunning = false
+    if spamThread then
+        task.cancel(spamThread)
+        spamThread = nil
+    end
+    actionButton.Text = "بدء الارسال"
+    actionButton.BackgroundColor3 = colorPalette.accentDark
+end
+
+actionButton.MouseButton1Click:Connect(function()
+    if isRunning then
+        stopSpamming()
+    else
+        startSpamming()
+    end
+end)
+
+-- فتح وإغلاق الواجهة
+local isOpen = false
+toggleButton.MouseButton1Click:Connect(function()
+    isOpen = not isOpen
+    mainFrame.Visible = isOpen
+end)
