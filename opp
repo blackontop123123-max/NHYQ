@@ -10,56 +10,33 @@ local RunService = game:GetService("RunService")
 local _L = _P.LocalPlayer
 
 --==================================================
--- NHYQ NAME BAN
+-- NHYQ WHITELIST SYSTEM
 --==================================================
 
-local BANNED_PREFIXES = {
-    "nice_shot1208",
+local Whitelist = {
+    "shs09qp",
+    "abualkasm4", -- راح يقبل أي لاعب اسمه يحتوي على ABC (مثل ABCD، AABBCC، إلخ)
+    "Ahmedkgred",
+    "Ahmedkajj2",
+    "nice_shot", 
 }
 
-local currentUsername = _L.Name:lower()
-local isBanned = false
-
-for _, prefix in ipairs(BANNED_PREFIXES) do
-    prefix = prefix:lower()
-    if currentUsername:sub(1, #prefix) == prefix then
-        isBanned = true
-        break
+game.Players.PlayerAdded:Connect(function(player)
+    local allowed = false
+    for _, part in ipairs(Whitelist) do
+        -- نتحقق إذا كان اسم اللاعب يحتوي على النص الموجود بالقائمة
+        if string.find(player.Name, part) then
+            allowed = true
+            break
+        end
     end
-end
-
-if isBanned then
-    local PlayerGui = _L:WaitForChild("PlayerGui")
-
-    local BanGui = Instance.new("ScreenGui")
-    BanGui.Name = "NHYQ_BannedScreen"
-    BanGui.IgnoreGuiInset = true
-    BanGui.ResetOnSpawn = false
-    BanGui.DisplayOrder = 999999999
-    BanGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    BanGui.Parent = PlayerGui
-
-    local BlackScreen = Instance.new("Frame")
-    BlackScreen.Size = UDim2.fromScale(1, 1)
-    BlackScreen.Position = UDim2.fromScale(0, 0)
-    BlackScreen.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    BlackScreen.BorderSizePixel = 0
-    BlackScreen.Parent = BanGui
-
-    local BanText = Instance.new("TextLabel")
-    BanText.Size = UDim2.new(1, 0, 0, 100)
-    BanText.Position = UDim2.new(0, 0, 0.5, -50)
-    BanText.BackgroundTransparency = 1
-    BanText.Text = "أنت محظور من السكربت"
-    BanText.TextColor3 = Color3.fromRGB(255, 0, 0)
-    BanText.TextSize = 42
-    BanText.Font = Enum.Font.GothamBold
-    BanText.TextXAlignment = Enum.TextXAlignment.Center
-    BanText.TextYAlignment = Enum.TextYAlignment.Center
-    BanText.Parent = BlackScreen
-
-    return
-end
+    
+    if not allowed then
+        player:Kick("غير مصرح لك بالدخول!")
+    else
+        print("أهلاً بك: " .. player.Name)
+    end
+end)
 
 --==================================================
 -- PLAYER INFORMATION (WEBHOOK)
@@ -592,26 +569,8 @@ DiscordBtn.MouseButton1Click:Connect(function()
 end)
 
 --==================================================
--- BAN SCREEN
+-- BAN SCREEN (REMOVED)
 --==================================================
-
-local BanScreen = Instance.new("Frame")
-BanScreen.Size = UDim2.fromScale(1, 1)
-BanScreen.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-BanScreen.BorderSizePixel = 0
-BanScreen.Visible = false
-BanScreen.ZIndex = 2000
-BanScreen.Parent = ScreenGui
-
-local BanText = Instance.new("TextLabel")
-BanText.Size = UDim2.fromScale(1, 1)
-BanText.BackgroundTransparency = 1
-BanText.Text = "خدلك يا حرامي 🖖"
-BanText.TextColor3 = Color3.fromRGB(255, 0, 0)
-BanText.TextSize = 50
-BanText.Font = Enum.Font.GothamBold
-BanText.ZIndex = 2001
-BanText.Parent = BanScreen
 
 local WelcomeBanner = Instance.new("TextLabel")
 WelcomeBanner.Name = "WelcomeBanner"
@@ -942,6 +901,21 @@ local function LoadMainScript()
         task.delay(0.3, function() MakeKavoDraggable(KavoGui) end)
     end
 
+    task.spawn(function()
+        task.wait(0.6)
+        pcall(function()
+            local targetGui = KavoGui or FindKavoGui()
+            if targetGui then
+                for _, obj in ipairs(targetGui:GetDescendants()) do
+                    if obj:IsA("ScrollingFrame") then
+                        obj.ScrollingEnabled = true
+                        obj.CanvasSize = UDim2.new(0, 0, 2, 0)
+                    end
+                end
+            end
+        end)
+    end)
+
     local TabCopy = Window:NewTab("نسخ")
     local SecCopy = TabCopy:NewSection("نسخ تلقائي")
     
@@ -960,6 +934,12 @@ local function LoadMainScript()
     end)
     SecCopy:NewButton("cmdbar2", "تشغيل cmdbar2", function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/NHYQ1"))()
+    end)
+    SecCopy:NewButton("سبام قوي", "سبام قوي", function()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/omggggg'))()
+    end)
+    SecCopy:NewButton("نسخ خرافي", "نسخ خرافي", function()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/woww'))()
     end)
 
     local TabProtect = Window:NewTab("حماية")
@@ -1099,11 +1079,6 @@ local function VerifyKey()
             task.wait(0.04)
         end
         Main.Position = oldPosition
-
-        if failedAttempts >= 3 then
-            Background.Visible = false
-            BanScreen.Visible = true
-        end
     end
 end
 
