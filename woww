@@ -1,1 +1,819 @@
-EOE1.eyJ2IjoxLCJhbGciOiJBMjU2R0NNIiwia2RmIjoiUEJLREYyIiwiaGFzaCI6IlNIQS0yNTYiLCJpdGVyIjo2MDAwMDAsInNhbHQiOiJzVVk4LVJhZmFzWVlJd1ZhS3lPTDF3IiwiaXYiOiJmdy03X05lU09zY0NVTk5EIiwidGFnIjoxMjgsImVuYyI6IlVURi04IiwiY3QiOiIxUno5alBNX1lNVkhTU3E5a293MEpjNklsSkZLNjB1Vnlqa1lNbEd2a0ZZd0pzM2VFZzVrOFdZMS1RMUN2ZjhiSVFEeDdwNVg4Vk94R0FTMGcyUUpvUGE0eUhINlJZbkZ2OENuSjBkSW83b3ZoUkFUUGJJcFFNTkM0OEVzWGxWTGtfeFQ4UjNacTI1THhQeUpQRnNqa0g5ZmI1YkRZQ0Y5TmQ4TGJrSU1SUSJ9
+--[=[ NHYQ - Advanced Target System (Strict Interleaved Cycle Payload) ]=]
+--[=[ by shs09qp23 ]=]
+
+repeat task.wait() until game:IsLoaded()
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local CoreGui = game:GetService("CoreGui")
+local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
+
+-- ==================== تنظيف الواجهة القديمة ====================
+if CoreGui:FindFirstChild("NHYQTargetGUI") then
+    CoreGui.NHYQTargetGUI:Destroy()
+end
+
+-- ==================== الألوان والتصميم ====================
+local colorPalette = {
+    bg = Color3.fromRGB(15, 15, 15),
+    bgLight = Color3.fromRGB(25, 25, 25),
+    accent = Color3.fromRGB(255, 30, 30),
+    accentDark = Color3.fromRGB(180, 20, 20),
+    text = Color3.new(1, 1, 1),
+    danger = Color3.fromRGB(150, 10, 10),
+    btnOff = Color3.fromRGB(40, 20, 20)
+}
+
+-- ==================== متغيرات النمط والتشغيل ====================
+local isChatCopy = true  -- مفعل افتراضياً
+local isHiddenCopy = false
+
+local isWahmi = true     -- زر وهمي مفعل افتراضياً
+local isGhamid = false   -- زر غامض معطل افتراضياً
+
+local sendSingleMode = false
+local sendAllTogetherMode = true -- إرسال الأوامر مع بعض مفعل افتراضياً
+
+local targetQueue = {}   -- قائمة الأهداف المنتقاة (طابور الانتظار للوهمي)
+local isRunning = false
+local copyTask = nil
+
+-- ==================== دوال إرسال الأوامر ====================
+local function sendRealChat(cmdText)
+    local hdAdmin = ReplicatedStorage:FindFirstChild("HDAdminHDClient")
+    if hdAdmin then
+        local signals = hdAdmin:FindFirstChild("Signals")
+        if signals then
+            local requestCommand = signals:FindFirstChild("RequestCommand")
+            if requestCommand then
+                pcall(function() requestCommand:InvokeServer(cmdText) end)
+            end
+        end
+    end
+end
+
+local function sendHidden(cmdText)
+    if cmdText == "" then return end
+    
+    -- البحث السريع عن ريموت HD Admin وتفيذه فورا بشكل صامت (مخفي)
+    local hdClient = ReplicatedStorage:FindFirstChild("HDAdminHDClient") or ReplicatedStorage:FindFirstChild("Remotes")
+    if hdClient then
+        local signals = hdClient:FindFirstChild("Signals") or hdClient
+        local requestSilent = signals and signals:FindFirstChild("RequestCommandSilent")
+        if requestSilent then
+            task.spawn(function()
+                requestSilent:InvokeServer(cmdText)
+            end)
+            return
+        end
+    end
+
+    -- طريقة احتياطية سريعة عبر الشات المباشر إذا لم يوجد الريموت المخفي
+    task.spawn(function()
+        local chatMain = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
+        if chatMain then
+            local sayMessage = chatMain:FindFirstChild("SayMessageRequest")
+            if sayMessage then
+                sayMessage:FireServer(cmdText, "All")
+            end
+        end
+    end)
+end
+
+local function executeSingleCommand(cmdText)
+    if isChatCopy then
+        sendRealChat(cmdText)
+    elseif isHiddenCopy then
+        sendHidden(cmdText)
+    end
+end
+
+-- ==================== إنشاء الواجهة ====================
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "NHYQTargetGUI"
+ScreenGui.Parent = CoreGui
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+-- الزر العائم
+local toggleButton = Instance.new("TextButton")
+toggleButton.Size = UDim2.new(0, 75, 0, 45)
+toggleButton.Position = UDim2.new(0, 20, 0, 80)
+toggleButton.BackgroundColor3 = colorPalette.accentDark
+toggleButton.Text = "👑 NHYQ"
+toggleButton.TextColor3 = Color3.new(1, 1, 1)
+toggleButton.Font = Enum.Font.GothamBlack
+toggleButton.TextSize = 12
+toggleButton.Parent = ScreenGui
+toggleButton.Active = true
+toggleButton.Draggable = true
+
+local toggleCorner = Instance.new("UICorner", toggleButton)
+toggleCorner.CornerRadius = UDim.new(0, 12)
+
+local toggleStroke = Instance.new("UIStroke", toggleButton)
+toggleStroke.Color = colorPalette.accent
+toggleStroke.Thickness = 2
+
+-- النافذة الرئيسية
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 340, 0, 520)
+mainFrame.Position = UDim2.new(0, 100, 0, 40)
+mainFrame.BackgroundColor3 = colorPalette.bg
+mainFrame.BorderSizePixel = 0
+mainFrame.Visible = false
+mainFrame.Active = true
+mainFrame.Draggable = true
+mainFrame.Parent = ScreenGui
+
+local mainCorner = Instance.new("UICorner", mainFrame)
+mainCorner.CornerRadius = UDim.new(0, 14)
+
+local mainStroke = Instance.new("UIStroke", mainFrame)
+mainStroke.Color = colorPalette.accent
+mainStroke.Thickness = 2
+
+-- شريط العنوان
+local titleBar = Instance.new("Frame")
+titleBar.Size = UDim2.new(1, 0, 0, 40)
+titleBar.BackgroundColor3 = colorPalette.bgLight
+titleBar.BorderSizePixel = 0
+titleBar.Parent = mainFrame
+
+local titleCorner = Instance.new("UICorner", titleBar)
+titleCorner.CornerRadius = UDim.new(0, 14)
+
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1, -40, 0, 20)
+titleLabel.Position = UDim2.new(0, 12, 0, 4)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "NHYQ TARGET SYSTEM"
+titleLabel.TextColor3 = colorPalette.text
+titleLabel.Font = Enum.Font.GothamBlack
+titleLabel.TextSize = 12
+titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+titleLabel.Parent = titleBar
+
+local subLabel = Instance.new("TextLabel")
+subLabel.Size = UDim2.new(1, -40, 0, 12)
+subLabel.Position = UDim2.new(0, 12, 0, 22)
+subLabel.BackgroundTransparency = 1
+subLabel.Text = "by shs09qp23"
+subLabel.TextColor3 = colorPalette.accent
+subLabel.Font = Enum.Font.GothamBold
+subLabel.TextSize = 9
+subLabel.TextXAlignment = Enum.TextXAlignment.Left
+subLabel.Parent = titleBar
+
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0, 26, 0, 26)
+closeButton.Position = UDim2.new(1, -34, 0.5, -13)
+closeButton.BackgroundColor3 = colorPalette.accentDark
+closeButton.Text = "✕"
+closeButton.TextColor3 = Color3.new(1, 1, 1)
+closeButton.Font = Enum.Font.GothamBold
+closeButton.TextSize = 14
+closeButton.Parent = titleBar
+
+local closeCorner = Instance.new("UICorner", closeButton)
+closeCorner.CornerRadius = UDim.new(0, 6)
+
+closeButton.MouseButton1Click:Connect(function() mainFrame.Visible = false end)
+
+-- قائمة التمرير الرئيسية
+local scrollFrame = Instance.new("ScrollingFrame")
+scrollFrame.Size = UDim2.new(1, -10, 1, -50)
+scrollFrame.Position = UDim2.new(0, 5, 0, 45)
+scrollFrame.BackgroundTransparency = 1
+scrollFrame.BorderSizePixel = 0
+scrollFrame.ScrollBarThickness = 6
+scrollFrame.ScrollBarImageColor3 = colorPalette.accent
+scrollFrame.ScrollingDirection = Enum.ScrollingDirection.Y
+scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 750)
+scrollFrame.ElasticBehavior = Enum.ElasticBehavior.Never
+scrollFrame.Parent = mainFrame
+
+-- 1. أزرار وضع الاستهداف (وهمي / غامض)
+local modeTargetFrame = Instance.new("Frame")
+modeTargetFrame.Size = UDim2.new(1, -10, 0, 30)
+modeTargetFrame.Position = UDim2.new(0, 5, 0, 5)
+modeTargetFrame.BackgroundTransparency = 1
+modeTargetFrame.Parent = scrollFrame
+
+local wahmiBtn = Instance.new("TextButton")
+wahmiBtn.Size = UDim2.new(0.48, 0, 1, 0)
+wahmiBtn.BackgroundColor3 = colorPalette.accentDark
+wahmiBtn.Text = "وهمي (كامل)"
+wahmiBtn.TextColor3 = Color3.new(1, 1, 1)
+wahmiBtn.Font = Enum.Font.GothamBold
+wahmiBtn.TextSize = 10
+wahmiBtn.Parent = modeTargetFrame
+local wCorner = Instance.new("UICorner", wahmiBtn)
+wCorner.CornerRadius = UDim.new(0, 6)
+
+local ghamidBtn = Instance.new("TextButton")
+ghamidBtn.Size = UDim2.new(0.48, 0, 1, 0)
+ghamidBtn.Position = UDim2.new(0.52, 0, 0, 0)
+ghamidBtn.BackgroundColor3 = colorPalette.btnOff
+ghamidBtn.Text = "غامض (3 حروف)"
+ghamidBtn.TextColor3 = Color3.new(0.8, 0.8, 0.8)
+ghamidBtn.Font = Enum.Font.GothamBold
+ghamidBtn.TextSize = 10
+ghamidBtn.Parent = modeTargetFrame
+local gCorner = Instance.new("UICorner", ghamidBtn)
+gCorner.CornerRadius = UDim.new(0, 6)
+
+local function updateWahmiGhamidUI()
+    wahmiBtn.BackgroundColor3 = isWahmi and colorPalette.accentDark or colorPalette.btnOff
+    wahmiBtn.TextColor3 = isWahmi and Color3.new(1, 1, 1) or Color3.new(0.8, 0.8, 0.8)
+    
+    ghamidBtn.BackgroundColor3 = isGhamid and colorPalette.accentDark or colorPalette.btnOff
+    ghamidBtn.TextColor3 = isGhamid and Color3.new(1, 1, 1) or Color3.new(0.8, 0.8, 0.8)
+end
+
+wahmiBtn.MouseButton1Click:Connect(function()
+    isWahmi = true
+    isGhamid = false
+    updateWahmiGhamidUI()
+end)
+
+ghamidBtn.MouseButton1Click:Connect(function()
+    isGhamid = true
+    isWahmi = false
+    updateWahmiGhamidUI()
+end)
+
+-- 2. مستطيل اسم اللاعب (الهدف الحالي)
+local targetLabel = Instance.new("TextLabel")
+targetLabel.Size = UDim2.new(1, -10, 0, 18)
+targetLabel.Position = UDim2.new(0, 5, 0, 40)
+targetLabel.BackgroundTransparency = 1
+targetLabel.Text = "اسم اللاعب المستهدف:"
+targetLabel.TextColor3 = colorPalette.text
+targetLabel.Font = Enum.Font.GothamBold
+targetLabel.TextSize = 10
+targetLabel.TextXAlignment = Enum.TextXAlignment.Left
+targetLabel.Parent = scrollFrame
+
+local targetInput = Instance.new("TextBox")
+targetInput.Size = UDim2.new(1, -10, 0, 30)
+targetInput.Position = UDim2.new(0, 5, 0, 60)
+targetInput.BackgroundColor3 = Color3.fromRGB(25, 10, 10)
+targetInput.PlaceholderText = "اكتب الاسم هنا..."
+targetInput.Text = ""
+targetInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+targetInput.Font = Enum.Font.GothamBold
+targetInput.TextSize = 11
+targetInput.ClearTextOnFocus = false
+targetInput.Parent = scrollFrame
+local tiCorner = Instance.new("UICorner", targetInput)
+tiCorner.CornerRadius = UDim.new(0, 6)
+
+-- زر حذف اسم اللاعب المستهدف
+local clearTargetBtn = Instance.new("TextButton")
+clearTargetBtn.Size = UDim2.new(1, -10, 0, 22)
+clearTargetBtn.Position = UDim2.new(0, 5, 0, 93)
+clearTargetBtn.BackgroundColor3 = colorPalette.btnOff
+clearTargetBtn.Text = "حذف اسم اللاعب المستهدف"
+clearTargetBtn.TextColor3 = Color3.new(1, 0.7, 0.7)
+clearTargetBtn.Font = Enum.Font.GothamBold
+clearTargetBtn.TextSize = 10
+clearTargetBtn.Parent = scrollFrame
+local ctbCorner = Instance.new("UICorner", clearTargetBtn)
+ctbCorner.CornerRadius = UDim.new(0, 5)
+
+clearTargetBtn.MouseButton1Click:Connect(function()
+    targetInput.Text = ""
+end)
+
+-- 2.1 مستطيل قيد الانتظار
+local waitingLabel = Instance.new("TextLabel")
+waitingLabel.Size = UDim2.new(1, -10, 0, 18)
+waitingLabel.Position = UDim2.new(0, 5, 0, 120)
+waitingLabel.BackgroundTransparency = 1
+waitingLabel.Text = "قيد الانتظار (اللاعبون التاليون):"
+waitingLabel.TextColor3 = colorPalette.text
+waitingLabel.Font = Enum.Font.GothamBold
+waitingLabel.TextSize = 10
+waitingLabel.TextXAlignment = Enum.TextXAlignment.Left
+waitingLabel.Parent = scrollFrame
+
+local waitingInput = Instance.new("TextBox")
+waitingInput.Size = UDim2.new(1, -10, 0, 26)
+waitingInput.Position = UDim2.new(0, 5, 0, 140)
+waitingInput.BackgroundColor3 = Color3.fromRGB(20, 12, 12)
+waitingInput.PlaceholderText = "قيد الانتظار..."
+waitingInput.Text = ""
+waitingInput.TextColor3 = Color3.fromRGB(200, 150, 150)
+waitingInput.Font = Enum.Font.Gotham
+waitingInput.TextSize = 10
+waitingInput.ClearTextOnFocus = false
+waitingInput.Parent = scrollFrame
+local wiCorner = Instance.new("UICorner", waitingInput)
+wiCorner.CornerRadius = UDim.new(0, 6)
+
+-- زر حذف أسماء قيد الانتظار (مضاف حديثاً تحت مربع قيد الانتظار)
+local clearWaitingBtn = Instance.new("TextButton")
+clearWaitingBtn.Size = UDim2.new(1, -10, 0, 22)
+clearWaitingBtn.Position = UDim2.new(0, 5, 0, 170)
+clearWaitingBtn.BackgroundColor3 = colorPalette.btnOff
+clearWaitingBtn.Text = "حذف اسماء قيد الانتظار"
+clearWaitingBtn.TextColor3 = Color3.new(1, 0.7, 0.7)
+clearWaitingBtn.Font = Enum.Font.GothamBold
+clearWaitingBtn.TextSize = 10
+clearWaitingBtn.Parent = scrollFrame
+local cwbCorner = Instance.new("UICorner", clearWaitingBtn)
+cwbCorner.CornerRadius = UDim.new(0, 5)
+
+clearWaitingBtn.MouseButton1Click:Connect(function()
+    waitingInput.Text = ""
+end)
+
+-- 3. قائمة لاعبين السيرفر
+local playersLabel = Instance.new("TextLabel")
+playersLabel.Size = UDim2.new(1, -10, 0, 18)
+playersLabel.Position = UDim2.new(0, 5, 0, 197)
+playersLabel.BackgroundTransparency = 1
+playersLabel.Text = "لاعبين الماب (اضغط للاختيار):"
+playersLabel.TextColor3 = colorPalette.text
+playersLabel.Font = Enum.Font.GothamBold
+playersLabel.TextSize = 10
+playersLabel.TextXAlignment = Enum.TextXAlignment.Left
+playersLabel.Parent = scrollFrame
+
+local playersScroll = Instance.new("ScrollingFrame")
+playersScroll.Size = UDim2.new(1, -10, 0, 70)
+playersScroll.Position = UDim2.new(0, 5, 0, 217)
+playersScroll.BackgroundColor3 = Color3.fromRGB(25, 10, 10)
+playersScroll.BorderSizePixel = 0
+playersScroll.ScrollBarThickness = 3
+playersScroll.ScrollBarImageColor3 = colorPalette.accent
+playersScroll.ElasticBehavior = Enum.ElasticBehavior.Never
+playersScroll.Parent = scrollFrame
+local psCorner = Instance.new("UICorner", playersScroll)
+psCorner.CornerRadius = UDim.new(0, 6)
+
+local function refreshPlayersList()
+    for _, c in ipairs(playersScroll:GetChildren()) do
+        if c:IsA("TextButton") then c:Destroy() end
+    end
+    local count = 0
+    for _, plr in ipairs(Players:GetPlayers()) do
+        local btn = Instance.new("TextButton")
+        btn.Size = UDim2.new(1, -6, 0, 20)
+        btn.Position = UDim2.new(0, 3, 0, count * 22 + 2)
+        btn.BackgroundColor3 = (plr == LocalPlayer) and colorPalette.accentDark or Color3.fromRGB(40, 20, 20)
+        btn.Text = plr.Name .. (plr == LocalPlayer and " (أنت)" or "")
+        btn.TextColor3 = Color3.new(1, 1, 1)
+        btn.Font = Enum.Font.Gotham
+        btn.TextSize = 10
+        btn.Parent = playersScroll
+        
+        local bCorner = Instance.new("UICorner", btn)
+        bCorner.CornerRadius = UDim.new(0, 4)
+        
+        btn.MouseButton1Click:Connect(function()
+            if isWahmi then
+                if targetInput.Text == "" then
+                    targetInput.Text = plr.Name
+                else
+                    if waitingInput.Text == "" then
+                        waitingInput.Text = plr.Name
+                    else
+                        waitingInput.Text = waitingInput.Text .. "," .. plr.Name
+                    end
+                end
+            elseif isGhamid then
+                local shortName = string.sub(plr.Name, 1, 3)
+                if targetInput.Text == "" then
+                    targetInput.Text = shortName
+                else
+                    targetInput.Text = targetInput.Text .. "," .. shortName
+                end
+            end
+        end)
+        count = count + 1
+    end
+    playersScroll.CanvasSize = UDim2.new(0, 0, 0, count * 22 + 4)
+end
+
+refreshPlayersList()
+Players.PlayerAdded:Connect(refreshPlayersList)
+Players.PlayerRemoving:Connect(refreshPlayersList)
+
+-- 4. أنماط النسخ (نسخ شات / نسخ مخفي)
+local modeFrame = Instance.new("Frame")
+modeFrame.Size = UDim2.new(1, -10, 0, 32)
+modeFrame.Position = UDim2.new(0, 5, 0, 293)
+modeFrame.BackgroundTransparency = 1
+modeFrame.Parent = scrollFrame
+
+local chatModeBtn = Instance.new("TextButton")
+chatModeBtn.Size = UDim2.new(0.48, 0, 1, 0)
+chatModeBtn.BackgroundColor3 = colorPalette.accentDark
+chatModeBtn.Text = "نسخ شات: مفعل"
+chatModeBtn.TextColor3 = Color3.new(1, 1, 1)
+chatModeBtn.Font = Enum.Font.GothamBold
+chatModeBtn.TextSize = 10
+chatModeBtn.Parent = modeFrame
+local cmCorner = Instance.new("UICorner", chatModeBtn)
+cmCorner.CornerRadius = UDim.new(0, 6)
+
+local hiddenModeBtn = Instance.new("TextButton")
+hiddenModeBtn.Size = UDim2.new(0.48, 0, 1, 0)
+hiddenModeBtn.Position = UDim2.new(0.52, 0, 0, 0)
+hiddenModeBtn.BackgroundColor3 = colorPalette.btnOff
+hiddenModeBtn.Text = "نسخ مخفي: معطل"
+hiddenModeBtn.TextColor3 = Color3.new(0.8, 0.8, 0.8)
+hiddenModeBtn.Font = Enum.Font.GothamBold
+hiddenModeBtn.TextSize = 10
+hiddenModeBtn.Parent = modeFrame
+local hmCorner = Instance.new("UICorner", hiddenModeBtn)
+hmCorner.CornerRadius = UDim.new(0, 6)
+
+local function updateModeButtonsUI()
+    chatModeBtn.BackgroundColor3 = isChatCopy and colorPalette.accentDark or colorPalette.btnOff
+    chatModeBtn.Text = isChatCopy and "نسخ شات: مفعل" or "نسخ شات: معطل"
+    chatModeBtn.TextColor3 = isChatCopy and Color3.new(1, 1, 1) or Color3.new(0.8, 0.8, 0.8)
+    
+    hiddenModeBtn.BackgroundColor3 = isHiddenCopy and colorPalette.accentDark or colorPalette.btnOff
+    hiddenModeBtn.Text = isHiddenCopy and "نسخ مخفي: مفعل" or "نسخ مخفي: معطل"
+    hiddenModeBtn.TextColor3 = isHiddenCopy and Color3.new(1, 1, 1) or Color3.new(0.8, 0.8, 0.8)
+end
+
+chatModeBtn.MouseButton1Click:Connect(function()
+    isChatCopy = true
+    isHiddenCopy = false
+    updateModeButtonsUI()
+end)
+
+hiddenModeBtn.MouseButton1Click:Connect(function()
+    isHiddenCopy = true
+    isChatCopy = false
+    updateModeButtonsUI()
+end)
+
+-- 5. إعداد حاوية الأوامر + الأزرار
+local cmdsContainer = Instance.new("Frame")
+cmdsContainer.Size = UDim2.new(1, -10, 0, 0)
+cmdsContainer.Position = UDim2.new(0, 5, 0, 331)
+cmdsContainer.BackgroundTransparency = 1
+cmdsContainer.Parent = scrollFrame
+
+local cmdLayout = Instance.new("UIListLayout")
+cmdLayout.Padding = UDim.new(0, 6)
+cmdLayout.SortOrder = Enum.SortOrder.LayoutOrder
+cmdLayout.Parent = cmdsContainer
+
+local commandItems = {}
+
+-- إطار إضافة أمر جديد
+local addCmdFrame = Instance.new("Frame")
+addCmdFrame.Size = UDim2.new(1, -10, 0, 32)
+addCmdFrame.Position = UDim2.new(0, 5, 0, 0)
+addCmdFrame.BackgroundTransparency = 1
+addCmdFrame.Parent = scrollFrame
+
+local newCmdInput = Instance.new("TextBox")
+newCmdInput.Size = UDim2.new(0.65, -5, 1, 0)
+newCmdInput.BackgroundColor3 = Color3.fromRGB(25, 10, 10)
+newCmdInput.PlaceholderText = "اكتب أمر جديد..."
+newCmdInput.Text = ""
+newCmdInput.TextColor3 = Color3.new(1, 1, 1)
+newCmdInput.Font = Enum.Font.Gotham
+newCmdInput.TextSize = 10
+newCmdInput.Parent = addCmdFrame
+local nciCorner = Instance.new("UICorner", newCmdInput)
+nciCorner.CornerRadius = UDim.new(0, 6)
+
+local addBtn = Instance.new("TextButton")
+addBtn.Size = UDim2.new(0.32, 0, 1, 0)
+addBtn.Position = UDim2.new(0.68, 0, 0, 0)
+addBtn.BackgroundColor3 = colorPalette.accentDark
+addBtn.Text = "+ إضافة"
+addBtn.TextColor3 = Color3.new(1, 1, 1)
+addBtn.Font = Enum.Font.GothamBold
+addBtn.TextSize = 11
+addBtn.Parent = addCmdFrame
+local abCorner = Instance.new("UICorner", addBtn)
+abCorner.CornerRadius = UDim.new(0, 6)
+
+-- 6. أزرار أسلوب التجميع
+local combineTypeFrame = Instance.new("Frame")
+combineTypeFrame.Size = UDim2.new(1, -10, 0, 32)
+combineTypeFrame.Position = UDim2.new(0, 5, 0, 0)
+combineTypeFrame.BackgroundTransparency = 1
+combineTypeFrame.Parent = scrollFrame
+
+local sendSingleBtn = Instance.new("TextButton")
+sendSingleBtn.Size = UDim2.new(0.48, 0, 1, 0)
+sendSingleBtn.BackgroundColor3 = colorPalette.btnOff
+sendSingleBtn.Text = "إرسال كل أمر لوحده"
+sendSingleBtn.TextColor3 = Color3.new(0.8, 0.8, 0.8)
+sendSingleBtn.Font = Enum.Font.GothamBold
+sendSingleBtn.TextSize = 9
+sendSingleBtn.Parent = combineTypeFrame
+local ssCorner = Instance.new("UICorner", sendSingleBtn)
+ssCorner.CornerRadius = UDim.new(0, 6)
+
+local sendTogetherBtn = Instance.new("TextButton")
+sendTogetherBtn.Size = UDim2.new(0.48, 0, 1, 0)
+sendTogetherBtn.Position = UDim2.new(0.52, 0, 0, 0)
+sendTogetherBtn.BackgroundColor3 = colorPalette.accentDark
+sendTogetherBtn.Text = "إرسال الأوامر مع بعض"
+sendTogetherBtn.TextColor3 = Color3.new(1, 1, 1)
+sendTogetherBtn.Font = Enum.Font.GothamBold
+sendTogetherBtn.TextSize = 9
+sendTogetherBtn.Parent = combineTypeFrame
+local stCorner = Instance.new("UICorner", sendTogetherBtn)
+stCorner.CornerRadius = UDim.new(0, 6)
+
+local function updateCombineTypeUI()
+    sendSingleBtn.BackgroundColor3 = sendSingleMode and colorPalette.accentDark or colorPalette.btnOff
+    sendSingleBtn.TextColor3 = sendSingleMode and Color3.new(1, 1, 1) or Color3.new(0.8, 0.8, 0.8)
+    
+    sendTogetherBtn.BackgroundColor3 = sendAllTogetherMode and colorPalette.accentDark or colorPalette.btnOff
+    sendTogetherBtn.TextColor3 = sendAllTogetherMode and Color3.new(1, 1, 1) or Color3.new(0.8, 0.8, 0.8)
+end
+
+sendSingleBtn.MouseButton1Click:Connect(function()
+    sendSingleMode = true
+    sendAllTogetherMode = false
+    updateCombineTypeUI()
+end)
+
+sendTogetherBtn.MouseButton1Click:Connect(function()
+    sendAllTogetherMode = true
+    sendSingleMode = false
+    updateCombineTypeUI()
+end)
+
+-- زر بدء/إيقاف النسخ الرئيسي
+local startCopyBtn = Instance.new("TextButton")
+startCopyBtn.Size = UDim2.new(1, -10, 0, 40)
+startCopyBtn.Position = UDim2.new(0, 5, 0, 0)
+startCopyBtn.BackgroundColor3 = colorPalette.accentDark
+startCopyBtn.Text = "بدأ النسخ"
+startCopyBtn.TextColor3 = Color3.new(1, 1, 1)
+startCopyBtn.Font = Enum.Font.GothamBold
+startCopyBtn.TextSize = 13
+startCopyBtn.Parent = scrollFrame
+local scbCorner = Instance.new("UICorner", startCopyBtn)
+scbCorner.CornerRadius = UDim.new(0, 8)
+
+-- دالة تمرير حر ومصححة
+local function scrollToStartButton()
+    task.spawn(function()
+        task.wait(0.05)
+        local relativeY = startCopyBtn.Position.Y.Offset
+        local maxCanvas = scrollFrame.AbsoluteSize.Y
+        local targetPos = math.clamp(relativeY - (maxCanvas / 2) + (startCopyBtn.AbsoluteSize.Y / 2), 0, scrollFrame.CanvasSize.Y.Offset)
+        
+        TweenService:Create(scrollFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            CanvasPosition = Vector2.new(0, targetPos)
+        }):Play()
+    end)
+end
+
+-- دالة لتحديث أبعاد القائمة تلقائياً
+local function repositionUI()
+    local savedCanvasY = scrollFrame.CanvasPosition.Y
+    local activeCount = 0
+    for _, item in ipairs(commandItems) do
+        if item.frame and item.frame.Parent then
+            activeCount = activeCount + 1
+        end
+    end
+    local cmdsHeight = activeCount * 34
+    cmdsContainer.Size = UDim2.new(1, -10, 0, cmdsHeight)
+    
+    local addY = 331 + cmdsHeight + 8
+    addCmdFrame.Position = UDim2.new(0, 5, 0, addY)
+    
+    local combineY = addY + 32 + 8
+    combineTypeFrame.Position = UDim2.new(0, 5, 0, combineY)
+    
+    local startY = combineY + 32 + 8
+    startCopyBtn.Position = UDim2.new(0, 5, 0, startY)
+    
+    local totalCanvasHeight = startY + 50 + 30
+    scrollFrame.CanvasSize = UDim2.new(0, 0, 0, math.max(totalCanvasHeight, 860))
+    scrollFrame.CanvasPosition = Vector2.new(0, savedCanvasY)
+end
+
+local function createCommandRow(cmdName, defaultRepeat)
+    local row = Instance.new("Frame")
+    row.Size = UDim2.new(1, 0, 0, 28)
+    row.BackgroundColor3 = Color3.fromRGB(25, 10, 10)
+    row.LayoutOrder = #commandItems + 1
+    row.Parent = cmdsContainer
+    
+    local rCorner = Instance.new("UICorner", row)
+    rCorner.CornerRadius = UDim.new(0, 6)
+    
+    local cmdTextLabel = Instance.new("TextLabel")
+    cmdTextLabel.Size = UDim2.new(0.5, -5, 1, 0)
+    cmdTextLabel.Position = UDim2.new(0, 8, 0, 0)
+    cmdTextLabel.BackgroundTransparency = 1
+    cmdTextLabel.Text = cmdName
+    cmdTextLabel.TextColor3 = Color3.new(1, 1, 1)
+    cmdTextLabel.Font = Enum.Font.GothamBold
+    cmdTextLabel.TextSize = 11
+    cmdTextLabel.TextXAlignment = Enum.TextXAlignment.Left
+    cmdTextLabel.Parent = row
+    
+    local repeatBox = Instance.new("TextBox")
+    repeatBox.Size = UDim2.new(0.25, -5, 1, -6)
+    repeatBox.Position = UDim2.new(0.52, 0, 0, 3)
+    repeatBox.BackgroundColor3 = Color3.fromRGB(40, 15, 15)
+    repeatBox.Text = tostring(math.min(defaultRepeat or 100, 100))
+    repeatBox.TextColor3 = colorPalette.accent
+    repeatBox.Font = Enum.Font.GothamBold
+    repeatBox.TextSize = 11
+    repeatBox.Parent = row
+    
+    local repCorner = Instance.new("UICorner", repeatBox)
+    repCorner.CornerRadius = UDim.new(0, 4)
+    
+    -- زر حذف الأمر (✕)
+    local delBtn = Instance.new("TextButton")
+    delBtn.Size = UDim2.new(0.2, 0, 1, -6)
+    delBtn.Position = UDim2.new(0.78, 0, 0, 3)
+    delBtn.BackgroundColor3 = colorPalette.danger
+    delBtn.Text = "✕"
+    delBtn.TextColor3 = Color3.new(1, 1, 1)
+    delBtn.Font = Enum.Font.GothamBold
+    delBtn.TextSize = 11
+    delBtn.Parent = row
+    
+    local delCorner = Instance.new("UICorner", delBtn)
+    delCorner.CornerRadius = UDim.new(0, 4)
+    
+    local itemData = {
+        command = cmdName,
+        box = repeatBox,
+        frame = row
+    }
+    
+    delBtn.MouseButton1Click:Connect(function()
+        for i = #commandItems, 1, -1 do
+            if commandItems[i] == itemData then
+                table.remove(commandItems, i)
+                break
+            end
+        end
+        row:Destroy()
+        repositionUI()
+    end)
+    
+    table.insert(commandItems, itemData)
+    repositionUI()
+end
+
+-- الأوامر الافتراضية
+createCommandRow("/re", 100)
+createCommandRow("/res", 100)
+createCommandRow("/logs", 100)
+
+addBtn.MouseButton1Click:Connect(function()
+    local text = newCmdInput.Text
+    if text ~= "" then
+        createCommandRow(text, 100)
+        newCmdInput.Text = ""
+        scrollToStartButton()
+    end
+end)
+
+-- ==================== حلقة الإرسال المتقدمة وتحديث الهدف التلقائي ====================
+local function getActiveTarget()
+    local rawText = targetInput.Text
+    if rawText == "" then return "" end
+    
+    if isWahmi then
+        local currentTarget = rawText:match("^%s*(.-)%s*$")
+        if currentTarget ~= "" and Players:FindFirstChild(currentTarget) then
+            return currentTarget
+        end
+        
+        local waitingText = waitingInput.Text
+        if waitingText ~= "" then
+            local nextTargets = {}
+            for name in string.gmatch(waitingText, "[^,]+") do
+                table.insert(nextTargets, name:match("^%s*(.-)%s*$"))
+            end
+            
+            if #nextTargets > 0 then
+                local newTarget = table.remove(nextTargets, 1)
+                targetInput.Text = newTarget
+                waitingInput.Text = table.concat(nextTargets, ",")
+                return newTarget
+            end
+        end
+        
+        targetInput.Text = ""
+        return ""
+    elseif isGhamid then
+        return rawText
+    end
+    return rawText
+end
+
+local function startCopying()
+    local targetName = getActiveTarget()
+    if targetName == "" then
+        startCopyBtn.Text = "اكتب اسم الهدف أولاً!"
+        task.wait(1)
+        startCopyBtn.Text = "بدأ النسخ"
+        return
+    end
+    
+    isRunning = true
+    startCopyBtn.Text = "إيقاف النسخ"
+    startCopyBtn.BackgroundColor3 = colorPalette.danger
+    
+    copyTask = task.spawn(function()
+        while isRunning do
+            local currentTarget = getActiveTarget()
+            if currentTarget == "" then
+                task.wait(0.5)
+                continue
+            end
+            
+            if sendSingleMode then
+                for _, item in ipairs(commandItems) do
+                    if not isRunning then break end
+                    
+                    local count = math.min(tonumber(item.box.Text) or 100, 100)
+                    local baseCmd = item.command:match("^%s*(.-)%s*$")
+                    
+                    local payloadTable = {}
+                    if isGhamid and string.find(currentTarget, ",") then
+                        local unit = baseCmd .. " " .. currentTarget
+                        for i = 1, count do table.insert(payloadTable, unit) end
+                    else
+                        local unit = baseCmd .. " " .. currentTarget
+                        for i = 1, count do table.insert(payloadTable, unit) end
+                    end
+                    
+                    local fullPayload = table.concat(payloadTable, " ")
+                    if fullPayload ~= "" then executeSingleCommand(fullPayload) end
+                end
+            elseif sendAllTogetherMode then
+                local maxRepeats = 0
+                for _, item in ipairs(commandItems) do
+                    local val = math.min(tonumber(item.box.Text) or 100, 100)
+                    if val > maxRepeats then maxRepeats = val end
+                end
+                
+                local masterPayloadTable = {}
+                
+                for cycle = 1, maxRepeats do
+                    for _, item in ipairs(commandItems) do
+                        local count = math.min(tonumber(item.box.Text) or 100, 100)
+                        if cycle <= count then
+                            local baseCmd = item.command:match("^%s*(.-)%s*$")
+                            if isGhamid and string.find(currentTarget, ",") then
+                                table.insert(masterPayloadTable, baseCmd .. " " .. currentTarget)
+                            else
+                                table.insert(masterPayloadTable, baseCmd .. " " .. currentTarget)
+                            end
+                        end
+                    end
+                end
+                
+                masterPayload = table.concat(masterPayloadTable, " ")
+                if masterPayload ~= "" then executeSingleCommand(masterPayload) end
+            end
+            
+            task.wait(0.05)
+        end
+    end)
+end
+
+local function stopCopying()
+    isRunning = false
+    if copyTask then
+        task.cancel(copyTask)
+        copyTask = nil
+    end
+    startCopyBtn.Text = "بدأ النسخ"
+    startCopyBtn.BackgroundColor3 = colorPalette.accentDark
+end
+
+startCopyBtn.MouseButton1Click:Connect(function()
+    if isRunning then
+        stopCopying()
+        scrollToStartButton()
+    else
+        startCopying()
+        scrollToStartButton()
+    end
+end)
+
+-- فتح وإغلاق النافذة بالزر العائم
+local isOpen = false
+toggleButton.MouseButton1Click:Connect(function()
+    isOpen = not isOpen
+    mainFrame.Visible = isOpen
+end)
