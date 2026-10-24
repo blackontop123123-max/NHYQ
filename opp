@@ -10,7 +10,7 @@ local RunService = game:GetService("RunService")
 local _L = _P.LocalPlayer
 
 --==================================================
--- NHYQ WHITELIST SYSTEM (LOCAL CHECK)
+-- NHYQ WHITELIST SYSTEM (STRICT CHECK)
 --==================================================
 
 local Whitelist = {
@@ -29,7 +29,7 @@ for _, part in ipairs(Whitelist) do
 end
 
 if not isAllowed then
-    _L:Kick("غير مصرح لك باستخدام السكربت!")
+    _L:Kick("غير مصرح لك بالدخول!")
     return
 end
 
