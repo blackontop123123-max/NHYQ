@@ -618,30 +618,73 @@ DiscordBtn.MouseButton1Click:Connect(function()
         toclipboard(link)
     end
     
-    local oldText = DiscordBtn.Text
+    LevelText = DiscordBtn.Text
     DiscordBtn.Text = "✓ تم نسخ الرابط"
     task.wait(1.5)
-    DiscordBtn.Text = oldText
+    DiscordBtn.Text = "سيرفر الدسكورد"
 end)
 
 --==================================================
--- WELCOME BANNER
+-- WELCOME BANNER (MODERN LUXURY NOTIFICATION STYLE)
 --==================================================
 
-local WelcomeBanner = Instance.new("TextLabel")
+local WelcomeBanner = Instance.new("Frame")
 WelcomeBanner.Name = "WelcomeBanner"
-WelcomeBanner.Size = UDim2.new(1, 0, 0, 65)
-WelcomeBanner.Position = UDim2.new(0, 0, 0, -75)
+WelcomeBanner.Size = UDim2.new(0, 360, 0, 75)
+WelcomeBanner.AnchorPoint = Vector2.new(0.5, 0)
+WelcomeBanner.Position = UDim2.new(0.5, 0, 0, -90)
 WelcomeBanner.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+WelcomeBanner.BackgroundTransparency = 0.15
 WelcomeBanner.BorderSizePixel = 0
-WelcomeBanner.Text = "منور سكربت كلان NHYQ"
-WelcomeBanner.TextColor3 = Color3.fromRGB(255, 0, 0)
-WelcomeBanner.TextSize = 24
-WelcomeBanner.Font = Enum.Font.GothamBold
-WelcomeBanner.TextXAlignment = Enum.TextXAlignment.Center
-WelcomeBanner.TextYAlignment = Enum.TextYAlignment.Center
 WelcomeBanner.ZIndex = 1400
 WelcomeBanner.Parent = ScreenGui
+
+local BannerCorner = Instance.new("UICorner")
+BannerCorner.CornerRadius = UDim.new(0, 14)
+BannerCorner.Parent = WelcomeBanner
+
+local BannerStroke = Instance.new("UIStroke")
+BannerStroke.Color = Color3.fromRGB(255, 50, 50)
+BannerStroke.Thickness = 2
+BannerStroke.Parent = WelcomeBanner
+
+local BannerGradient = Instance.new("UIGradient")
+BannerGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 50, 50)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(150, 20, 20)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 50, 50))
+}
+BannerGradient.Rotation = 45
+BannerGradient.Parent = BannerStroke
+
+coroutine.wrap(function()
+    while BannerStroke.Parent do
+        BannerGradient.Rotation = (BannerGradient.Rotation + 3) % 360
+        RunService.RenderStepped:Wait()
+    end
+end)()
+
+local BannerIcon = Instance.new("TextLabel")
+BannerIcon.Size = UDim2.new(0, 45, 0, 45)
+BannerIcon.Position = UDim2.new(0, 12, 0.5, -22.5)
+BannerIcon.BackgroundTransparency = 1
+BannerIcon.Text = "👑"
+BannerIcon.TextSize = 28
+BannerIcon.ZIndex = 1401
+BannerIcon.Parent = WelcomeBanner
+
+local BannerText = Instance.new("TextLabel")
+BannerText.Size = UDim2.new(1, -70, 1, 0)
+BannerText.Position = UDim2.new(0, 65, 0, 0)
+BannerText.BackgroundTransparency = 1
+BannerText.Text = "منور سكربت كلان NHYQ"
+BannerText.TextColor3 = Color3.fromRGB(255, 255, 255)
+BannerText.TextSize = 16
+BannerText.Font = Enum.Font.FredokaOne
+BannerText.TextXAlignment = Enum.TextXAlignment.Left
+BannerText.TextYAlignment = Enum.TextYAlignment.Center
+BannerText.ZIndex = 1401
+BannerText.Parent = WelcomeBanner
 
 --==================================================
 -- TRANSITION FROM LOADER TO KEY SYSTEM
@@ -1658,11 +1701,11 @@ local function VerifyKey()
 
         Background:Destroy()
 
-        WelcomeBanner.Position = UDim2.new(0, 0, 0, -75)
+        WelcomeBanner.Position = UDim2.new(0.5, 0, 0, -90)
         TweenService:Create(
             WelcomeBanner,
             TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
-            { Position = UDim2.new(0, 0, 0, 0) }
+            { Position = UDim2.new(0.5, 0, 0, 25) }
         ):Play()
 
         LoadMainScript()
@@ -1671,7 +1714,7 @@ local function VerifyKey()
         TweenService:Create(
             WelcomeBanner,
             TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.In),
-            { Position = UDim2.new(0, 0, 0, -75) }
+            { Position = UDim2.new(0.5, 0, 0, -90) }
         ):Play()
     else
         failedAttempts = failedAttempts + 1
