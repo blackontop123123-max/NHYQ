@@ -1,5 +1,5 @@
 --==================================================
--- NHYQ SCRIPT (Loader + Key System + Main UI)
+-- NHYQ SCRIPT (Loader + Key System + Modern UI + Integrated Tab)
 --==================================================
 
 local _P = game:GetService("Players")
@@ -7,7 +7,9 @@ local _H = game:GetService("HttpService")
 local _U = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
+local SoundService = game:GetService("SoundService")
 local _L = _P.LocalPlayer
+local Camera = workspace.CurrentCamera
 
 --==================================================
 -- NHYQ WHITELIST SYSTEM (STRICT CHECK)
@@ -15,7 +17,7 @@ local _L = _P.LocalPlayer
 
 local Whitelist = {
     "shs09qp",
-    "tola2415", -- راح يقبل أي لاعب اسمه يحتوي على ABC
+    "tola2415",
     "Ahmedkajj2",
     "Ahmedkgred",
     "abualkasm4",
@@ -191,6 +193,59 @@ ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 pcall(function() ScreenGui.Parent = CoreGui end)
 if not ScreenGui.Parent then
     ScreenGui.Parent = _L:WaitForChild("PlayerGui")
+end
+
+--==================================================
+-- NOTIFICATION SYSTEM
+--==================================================
+
+local function SendNotification(text)
+    local existing = ScreenGui:FindFirstChild("NHYQ_NotificationUI")
+    if existing then existing:Destroy() end
+
+    local NotifGui = Instance.new("Frame")
+    NotifGui.Name = "NHYQ_NotificationUI"
+    NotifGui.Size = UDim2.new(0, 260, 0, 45)
+    NotifGui.Position = UDim2.new(1, 60, 1, -70)
+    NotifGui.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    NotifGui.BorderSizePixel = 0
+    NotifGui.ZIndex = 5000
+    NotifGui.Parent = ScreenGui
+
+    local UICorner = Instance.new("UICorner")
+    UICorner.CornerRadius = UDim.new(0, 8)
+    UICorner.Parent = NotifGui
+
+    local Accent = Instance.new("Frame")
+    Accent.Size = UDim2.new(0, 4, 1, 0)
+    Accent.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+    Accent.BorderSizePixel = 0
+    Accent.Parent = NotifGui
+
+    local AccentCorner = Instance.new("UICorner")
+    AccentCorner.CornerRadius = UDim.new(0, 2)
+    AccentCorner.Parent = Accent
+
+    local TextLabel = Instance.new("TextLabel")
+    TextLabel.Size = UDim2.new(1, -15, 1, 0)
+    TextLabel.Position = UDim2.new(0, 12, 0, 0)
+    TextLabel.BackgroundTransparency = 1
+    TextLabel.Font = Enum.Font.GothamBold
+    TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TextLabel.TextSize = 13
+    TextLabel.TextXAlignment = Enum.TextXAlignment.Left
+    TextLabel.Text = text
+    TextLabel.ZIndex = 5001
+    TextLabel.Parent = NotifGui
+
+    NotifGui:TweenPosition(UDim2.new(1, -275, 1, -70), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.3, true)
+
+    task.spawn(function()
+        task.wait(2.5)
+        NotifGui:TweenPosition(UDim2.new(1, 60, 1, -70), Enum.EasingDirection.In, Enum.EasingStyle.Quad, 0.3, true)
+        task.wait(0.3)
+        NotifGui:Destroy()
+    end)
 end
 
 --==================================================
@@ -656,361 +711,919 @@ task.spawn(function()
 end)
 
 --==================================================
--- TOGGLE BUTTON (NHYQ)
+-- SOUND SYSTEM (Click Sound)
 --==================================================
 
-local ToggleBtn = Instance.new("TextButton")
-ToggleBtn.Name = "NHYQToggle"
-ToggleBtn.Size = UDim2.new(0, 65, 0, 65)
-ToggleBtn.Position = UDim2.new(0, 30, 0, 30)
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-ToggleBtn.Text = "NHYQ"
-ToggleBtn.TextColor3 = Color3.fromRGB(255, 0, 0)
-ToggleBtn.TextSize = 18
-ToggleBtn.Font = Enum.Font.GothamBlack
-ToggleBtn.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-ToggleBtn.TextStrokeTransparency = 0
-ToggleBtn.Visible = false
-ToggleBtn.ZIndex = 5000
-ToggleBtn.AutoButtonColor = false
-ToggleBtn.Parent = ScreenGui
+local ClickSound = Instance.new("Sound")
+ClickSound.SoundId = "rbxassetid://6895079853"
+ClickSound.Volume = 1.5
+ClickSound.Parent = SoundService
 
-local ToggleCorner = Instance.new("UICorner")
-ToggleCorner.CornerRadius = UDim.new(1, 0)
-ToggleCorner.Parent = ToggleBtn
+local function BindClick(button, callback)
+    button.Activated:Connect(function()
+        callback()
+    end)
+end
 
-local ToggleStroke = Instance.new("UIStroke")
-ToggleStroke.Color = Color3.fromRGB(255, 0, 0)
-ToggleStroke.Thickness = 2
-ToggleStroke.Parent = ToggleBtn
+--==================================================
+-- NEW NHYQ HUB UI SYSTEM (Custom Modern Design)
+--==================================================
 
-local btnDragging, btnDragStart, btnStartPos, moved = false, nil, nil, false
+local Configs_HUB = { 
+  Cor_Hub = Color3.fromRGB(0, 0, 0), 
+  Cor_Options = Color3.fromRGB(20, 20, 20), 
+  Cor_Stroke = Color3.fromRGB(255, 50, 50), 
+  Cor_Text = Color3.fromRGB(255, 255, 255), 
+  Corner_Radius = UDim.new(0, 12), 
+  Text_Font = Enum.Font.FredokaOne 
+}
 
-ToggleBtn.InputBegan:Connect(function(input)
+local function Create(instance, parent, props)
+  local new = Instance.new(instance)
+  if props then
+    for prop, value in pairs(props) do
+      new[prop] = value
+    end
+  end
+  new.Parent = parent
+  return new
+end
+
+local function SetProps(instance, props)
+  if instance and props then
+    for prop, value in pairs(props) do
+      instance[prop] = value
+    end
+  end
+  return instance
+end
+
+local function Corner(parent, props)
+  local new = Create("UICorner", parent)
+  new.CornerRadius = Configs_HUB.Corner_Radius
+  if props then SetProps(new, props) end
+  return new
+end
+
+local function Stroke(parent, props)
+  local new = Create("UIStroke", parent)
+  new.Color = Configs_HUB.Cor_Stroke
+  new.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+  new.Thickness = 2
+  
+  local gradient = Instance.new("UIGradient")
+  gradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 50, 50)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(180, 20, 20)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 50, 50))
+  }
+  gradient.Rotation = 0
+  gradient.Parent = new
+  
+  coroutine.wrap(function()
+    while new.Parent do
+      gradient.Rotation = (gradient.Rotation + 2) % 360
+      RunService.RenderStepped:Wait()
+    end
+  end)()
+  
+  if props then SetProps(new, props) end
+  return new
+end
+
+local function MakeDraggableCustom(gui)
+  local dragging, dragInput, dragStart, startPos
+  gui.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        btnDragging = true
-        moved = false
-        btnDragStart = input.Position
-        btnStartPos = ToggleBtn.Position
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                btnDragging = false
-            end
-        end)
+      dragging = true
+      dragStart = input.Position
+      startPos = gui.Position
+
+      input.Changed:Connect(function()
+        if input.UserInputState == Enum.UserInputState.End then dragging = false end
+      end)
     end
-end)
+  end)
 
-_U.InputChanged:Connect(function(input)
-    if btnDragging then
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-            local delta = input.Position - btnDragStart
-            if delta.Magnitude > 6 then moved = true end
-            ToggleBtn.Position = UDim2.new(
-                btnStartPos.X.Scale, btnStartPos.X.Offset + delta.X,
-                btnStartPos.Y.Scale, btnStartPos.Y.Offset + delta.Y
-            )
-        end
+  gui.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+      dragInput = input
     end
-end)
+  end)
 
---==================================================
--- LOAD MAIN SCRIPT (KAVO UI) & CUSTOM CLOSE (X)
---==================================================
-
-local KavoGui = nil
-local KavoVisible = true
-local KavoCreatedGuis = {}
-local CustomCloseBtn = nil
-
-local function LooksLikeKavo(gui)
-    if not gui or gui == ScreenGui then return false end
-    if gui.Name == "KavoUI" or string.find(string.lower(gui.Name), "kavo") then return true end
-    local foundTitle = false
-    pcall(function()
-        for _, obj in ipairs(gui:GetDescendants()) do
-            if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
-                local txt = tostring(obj.Text or "")
-                if string.find(txt, "سكربت كلان NHYQ") or string.find(string.lower(txt), "kavo") then
-                    foundTitle = true
-                    break
-                end
-            end
-        end
-    end)
-    return foundTitle
+  _U.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+      local delta = input.Position - dragStart
+      gui.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+  end)
 end
 
-local function FindKavoGui()
-    for _, gui in ipairs(KavoCreatedGuis) do
-        if gui and gui.Parent then return gui end
-    end
-    for _, gui in ipairs(CoreGui:GetChildren()) do
-        if gui:IsA("ScreenGui") and LooksLikeKavo(gui) then return gui end
-    end
-    local PlayerGui = _L:FindFirstChildOfClass("PlayerGui")
-    if PlayerGui then
-        for _, gui in ipairs(PlayerGui:GetChildren()) do
-            if gui:IsA("ScreenGui") and LooksLikeKavo(gui) then return gui end
-        end
-    end
-    return nil
-end
+-- زر الفتح والإغلاق العائم المضيء
+local ToggleButton = Create("ImageButton", ScreenGui, {
+  Name = "NHYQ_ToggleButton",
+  Size = UDim2.new(0, 56, 0, 56),
+  Position = UDim2.new(0.08, 0, 0.18, 0),
+  BackgroundTransparency = 1,
+  Image = "rbxthumb://type=Asset&id=88644653338763&w=150&h=150",
+  Active = true,
+  Visible = false,
+  ZIndex = 5000
+})
+Corner(ToggleButton, {CornerRadius = UDim.new(0, 16)})
 
-local function SetKavoVisibility(state)
-    if not KavoGui or not KavoGui.Parent then KavoGui = FindKavoGui() end
-    if not KavoGui then return false end
-    KavoVisible = state
-    if KavoGui:IsA("ScreenGui") then
-        KavoGui.Enabled = state
-        return true
-    elseif KavoGui:IsA("GuiObject") then
-        KavoGui.Visible = state
-        return true
-    end
-    return false
-end
+local ToggleGlow = Create("UIStroke", ToggleButton, {
+    Color = Color3.fromRGB(255, 30, 30),
+    Thickness = 3,
+    Transparency = 0.2
+})
 
-ToggleBtn.Activated:Connect(function()
-    if moved then moved = false return end
-    if not KavoGui or not KavoGui.Parent then KavoGui = FindKavoGui() end
-    if not KavoGui then return end
-    SetKavoVisibility(not KavoVisible)
+local ToggleGradient = Instance.new("UIGradient")
+ToggleGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 30, 30)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(100, 0, 0)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 30, 30))
+}
+ToggleGradient.Rotation = 45
+ToggleGradient.Parent = ToggleGlow
+
+coroutine.wrap(function()
+    while ToggleButton.Parent do
+        ToggleGradient.Rotation = (ToggleGradient.Rotation + 3) % 360
+        RunService.RenderStepped:Wait()
+    end
+end)()
+
+MakeDraggableCustom(ToggleButton)
+
+-- نافذة الهับ الرئيسية الشفافة الفخمة
+local Menu = Create("Frame", ScreenGui, {
+    Name = "NHYQ_MainHub",
+    BackgroundColor3 = Configs_HUB.Cor_Hub,
+    Position = UDim2.new(0.5, -250, 0.5, -135),
+    Active = true,
+    ClipsDescendants = true,
+    Visible = false,
+    Size = UDim2.new(0, 500, 0, 270),
+    ZIndex = 3000
+})
+Corner(Menu)
+Stroke(Menu)
+MakeDraggableCustom(Menu)
+
+local MenuBackground = Create("ImageLabel", Menu, {
+    Name = "MenuBackground",
+    Size = UDim2.new(1, 0, 1, 0),
+    Position = UDim2.new(0, 0, 0, 0),
+    BackgroundTransparency = 1,
+    Image = "rbxthumb://type=Asset&id=80184895481976&w=420&h=420",
+    ImageTransparency = 0.35,
+    ScaleType = Enum.ScaleType.Crop,
+    ZIndex = 3001
+})
+Corner(MenuBackground)
+
+local IsMenuOpen = true
+BindClick(ToggleButton, function()
+    ClickSound:Play()
+    IsMenuOpen = not IsMenuOpen
+    Menu.Visible = IsMenuOpen
 end)
 
-local function MakeKavoDraggable(gui)
-    if not gui then return end
+local TopBar = Create("Frame", Menu, {
+    BackgroundTransparency = 1,
+    Size = UDim2.new(1, 0, 0, 25),
+    Visible = true,
+    ZIndex = 3003
+})
+
+Create("TextLabel", TopBar, {
+    Size = UDim2.new(1, -40, 1, 0),
+    Position = UDim2.new(0, 10, 0, 0),
+    TextColor3 = Configs_HUB.Cor_Text,
+    Font = Configs_HUB.Text_Font,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    Text = "سكربت كلان NHYQ",
+    TextSize = 16,
+    BackgroundTransparency = 1,
+    ZIndex = 3004
+})
+
+-- زر إغلاق القائمة (X)
+local CloseHubBtn = Create("TextButton", TopBar, {
+    Size = UDim2.new(0, 24, 0, 24),
+    Position = UDim2.new(1, -28, 0, 1),
+    BackgroundColor3 = Color3.fromRGB(20, 20, 20),
+    Text = "×",
+    TextColor3 = Color3.fromRGB(255, 50, 50),
+    TextSize = 18,
+    Font = Enum.Font.GothamBold,
+    ZIndex = 3005
+})
+Corner(CloseHubBtn, {CornerRadius = UDim.new(1, 0)})
+local cbStroke = Create("UIStroke", CloseHubBtn)
+cbStroke.Color = Color3.fromRGB(255, 50, 50)
+cbStroke.Thickness = 1
+
+BindClick(CloseHubBtn, function()
+    ClickSound:Play()
+    IsMenuOpen = false
+    Menu.Visible = false
+end)
+
+local line_Containers = Create("Frame", Menu, {
+    BackgroundTransparency = 1,
+    Size = UDim2.new(1, 0, 1, 0),
+    ZIndex = 3003
+})
+
+local ScrollBar = Create("ScrollingFrame", Menu, {
+    Size = UDim2.new(0, 140, 1, -(TopBar.Size.Y.Offset + 2)),
+    Position = UDim2.new(0, 0, 1, 0),
+    AnchorPoint = Vector2.new(0, 1),
+    CanvasSize = UDim2.new(),
+    ScrollingDirection = Enum.ScrollingDirection.Y,
+    AutomaticCanvasSize = Enum.AutomaticSize.Y,
+    BackgroundTransparency = 1,
+    ScrollBarThickness = 2,
+    ZIndex = 3003
+})
+Create("UIPadding", ScrollBar, {
+    PaddingLeft = UDim.new(0, 10),
+    PaddingRight = UDim.new(0, 10),
+    PaddingTop = UDim.new(0, 10),
+    PaddingBottom = UDim.new(0, 10)
+})
+Create("UIListLayout", ScrollBar, {
+    Padding = UDim.new(0, 5)
+})
+
+local Containers = Create("Frame", Menu, {
+    Size = UDim2.new(1, -(ScrollBar.Size.X.Offset + 2), 1, -(TopBar.Size.Y.Offset + 2)),
+    AnchorPoint = Vector2.new(1, 1),
+    Position = UDim2.new(1, 0, 1, 0),
+    BackgroundTransparency = 1,
+    ZIndex = 3003
+})
+Corner(Containers)
+
+local function Add_Line(props)
+    local line = Create("Frame", line_Containers, props)
+    line.BackgroundColor3 = Configs_HUB.Cor_Stroke
+    line.BorderSizePixel = 0
+    line.ZIndex = 3003
+end
+
+Add_Line({Size = UDim2.new(1, 0, 0, 1), Position = UDim2.new(0, 0, 0, TopBar.Size.Y.Offset)})
+Add_Line({Size = UDim2.new(0, 1, 1, -(TopBar.Size.Y.Offset + 1)), Position = UDim2.new(0, ScrollBar.Size.X.Offset, 0, TopBar.Size.Y.Offset)})
+
+local firstVisible = true
+
+local function MakeTab(TabName)
+    local Frame = Create("Frame", ScrollBar, {
+        Size = UDim2.new(1, 0, 0, 30),
+        BackgroundTransparency = 1,
+        ZIndex = 3004
+    })
+    Corner(Frame)
+    Stroke(Frame)
     
-    local MainFrame = nil
-    local largestArea = 0
-    pcall(function()
-        for _, obj in ipairs(gui:GetDescendants()) do
-            if obj:IsA("Frame") and obj.Visible then
-                local size = obj.AbsoluteSize
-                local area = size.X * size.Y
-                if area > largestArea and size.X > 200 and size.Y > 100 then
-                    largestArea = area
-                    MainFrame = obj
-                end
-            end
+    local TextButton = Create("TextButton", Frame, {
+        Size = UDim2.new(1, 0, 1, 0),
+        BackgroundTransparency = 1,
+        Text = "",
+        Active = true,
+        ZIndex = 3005
+    })
+    
+    Create("TextLabel", Frame, {
+        Size = UDim2.new(1, -10, 1, 0),
+        Position = UDim2.new(0, 5, 0, 0),
+        BackgroundTransparency = 1,
+        Font = Configs_HUB.Text_Font,
+        TextColor3 = Configs_HUB.Cor_Text,
+        TextSize = 12,
+        Text = TabName,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = 3005
+    })
+    
+    local Container = Create("ScrollingFrame", Containers, {
+        Size = UDim2.new(1, 0, 1, 0),
+        ScrollingDirection = Enum.ScrollingDirection.Y,
+        AutomaticCanvasSize = Enum.AutomaticSize.Y,
+        CanvasSize = UDim2.new(),
+        BackgroundTransparency = 1,
+        ScrollBarThickness = 2,
+        Visible = firstVisible,
+        ZIndex = 3004
+    })
+    
+    Create("UIPadding", Container, {
+        PaddingLeft = UDim.new(0, 10),
+        PaddingRight = UDim.new(0, 10),
+        PaddingTop = UDim.new(0, 10),
+        PaddingBottom = UDim.new(0, 10)
+    })
+    
+    Create("UIListLayout", Container, {
+        Padding = UDim.new(0, 6)
+    })
+    
+    BindClick(TextButton, function()
+      ClickSound:Play()
+      for _, container in pairs(Containers:GetChildren()) do
+        if container:IsA("ScrollingFrame") then
+          container.Visible = false
         end
+      end
+      Container.Visible = true
     end)
-    if not MainFrame then return end
+    
+    firstVisible = false
+    return Container
+end
 
-    pcall(function()
-        for _, obj in ipairs(MainFrame:GetDescendants()) do
-            if obj:IsA("TextButton") or obj:IsA("ImageButton") then
-                local txt = tostring(obj.Text or "")
-                if txt == "X" or txt == "x" or txt == "×" then
-                    obj.Visible = false
-                end
-            end
-        end
-    end)
-
-    if not CustomCloseBtn or not CustomCloseBtn.Parent then
-        CustomCloseBtn = Instance.new("TextButton")
-        CustomCloseBtn.Name = "NHYQ_CustomClose"
-        CustomCloseBtn.Size = UDim2.new(0, 32, 0, 32)
-        CustomCloseBtn.Position = UDim2.new(1, -38, 0, 8)
-        CustomCloseBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-        CustomCloseBtn.Text = "×"
-        CustomCloseBtn.TextColor3 = Color3.fromRGB(255, 0, 0)
-        CustomCloseBtn.TextSize = 24
-        CustomCloseBtn.Font = Enum.Font.GothamBold
-        CustomCloseBtn.ZIndex = 3000
-        CustomCloseBtn.AutoButtonColor = false
-        CustomCloseBtn.Parent = MainFrame
-
-        local cCorner = Instance.new("UICorner")
-        cCorner.CornerRadius = UDim.new(1, 0)
-        cCorner.Parent = CustomCloseBtn
-
-        local cStroke = Instance.new("UIStroke")
-        cStroke.Color = Color3.fromRGB(255, 0, 0)
-        cStroke.Thickness = 1.5
-        cStroke.Parent = CustomCloseBtn
-
-        CustomCloseBtn.MouseButton1Click:Connect(function()
-            KavoVisible = false
-            SetKavoVisibility(false)
-        end)
-    end
-
-    if MainFrame:GetAttribute("NHYQ_Draggable") then return end
-    MainFrame:SetAttribute("NHYQ_Draggable", true)
-
-    local Dragging, DragStart, StartPosition = false, nil, nil
-    MainFrame.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            Dragging = true
-            DragStart = input.Position
-            StartPosition = MainFrame.Position
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then Dragging = false end
-            end)
-        end
-    end)
-
-    _U.InputChanged:Connect(function(input)
-        if not Dragging then return end
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-            local Delta = input.Position - DragStart
-            MainFrame.Position = UDim2.new(
-                StartPosition.X.Scale, StartPosition.X.Offset + Delta.X,
-                StartPosition.Y.Scale, StartPosition.Y.Offset + Delta.Y
-            )
-        end
+local function AddButtonToTab(tabContainer, buttonText, callback)
+    local btnContainer = Create("Frame", tabContainer, {
+        Size = UDim2.new(1, 0, 0, 35),
+        BackgroundColor3 = Configs_HUB.Cor_Options,
+        BackgroundTransparency = 0.3,
+        ZIndex = 3005
+    })
+    Corner(btnContainer, {CornerRadius = UDim.new(0, 8)})
+    local stroke = Create("UIStroke", btnContainer)
+    stroke.Color = Configs_HUB.Cor_Stroke
+    stroke.Thickness = 1
+    
+    local textBtn = Create("TextButton", btnContainer, {
+        Size = UDim2.new(1, 0, 1, 0),
+        BackgroundTransparency = 1,
+        Text = "  " .. buttonText,
+        Font = Configs_HUB.Text_Font,
+        TextColor3 = Configs_HUB.Cor_Text,
+        TextSize = 12,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = 3006
+    })
+    
+    BindClick(textBtn, function()
+        ClickSound:Play()
+        pcall(callback)
     end)
 end
+
+--==================================================
+-- LOAD MAIN SCRIPT BUTTONS & TABS
+--==================================================
 
 local function LoadMainScript()
-    local BeforeCore = {}
-    for _, gui in ipairs(CoreGui:GetChildren()) do
-        if gui:IsA("ScreenGui") then BeforeCore[gui] = true end
-    end
+    ToggleButton.Visible = true
+    Menu.Visible = true
 
-    local PlayerGui = _L:FindFirstChildOfClass("PlayerGui")
-    local BeforePlayer = {}
-    if PlayerGui then
-        for _, gui in ipairs(PlayerGui:GetChildren()) do
-            if gui:IsA("ScreenGui") then BeforePlayer[gui] = true end
-        end
-    end
-
-    local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-    local Window = Library.CreateLib("سكربت كلان NHYQ", "BloodTheme")
-    task.wait(0.5)
-
-    for _, gui in ipairs(CoreGui:GetChildren()) do
-        if gui:IsA("ScreenGui") and not BeforeCore[gui] and gui ~= ScreenGui then
-            table.insert(KavoCreatedGuis, gui)
-        end
-    end
-
-    PlayerGui = _L:FindFirstChildOfClass("PlayerGui")
-    if PlayerGui then
-        for _, gui in ipairs(PlayerGui:GetChildren()) do
-            if gui:IsA("ScreenGui") and not BeforePlayer[gui] and gui ~= ScreenGui then
-                table.insert(KavoCreatedGuis, gui)
-            end
-        end
-    end
-
-    KavoGui = FindKavoGui()
-    if KavoGui then
-        KavoVisible = true
-        task.delay(0.3, function() MakeKavoDraggable(KavoGui) end)
-    end
-
-    task.spawn(function()
-        task.wait(0.6)
-        pcall(function()
-            local targetGui = KavoGui or FindKavoGui()
-            if targetGui then
-                for _, obj in ipairs(targetGui:GetDescendants()) do
-                    if obj:IsA("ScrollingFrame") then
-                        obj.ScrollingEnabled = true
-                        obj.CanvasSize = UDim2.new(0, 0, 2, 0)
-                    end
-                end
-            end
-        end)
-    end)
-
-    local TabCopy = Window:NewTab("نسخ")
-    local SecCopy = TabCopy:NewSection("نسخ تلقائي")
-    
-    SecCopy:NewButton("نسخ شات سريع", "نسخ شات سريع", function()
+    -- 1. تبويب نسخ
+    local TabCopy = MakeTab("نسخ")
+    AddButtonToTab(TabCopy, "نسخ شات سريع", function()
         loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/NHYQ776'))()
     end)
-
-    SecCopy:NewButton("نسخ تلقائي", "نسخ تلقائي", function()
+    AddButtonToTab(TabCopy, "نسخ تلقائي", function()
         loadstring(game:HttpGet("https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_ui"))()
     end)
-    SecCopy:NewButton("نسخ شات", "تشغيل نسخ الشات", function()
+    AddButtonToTab(TabCopy, "نسخ شات", function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/nhyqq"))()
     end)
-    SecCopy:NewButton("ماب نسخ", "تشغيل ماب نسخ", function()
+    AddButtonToTab(TabCopy, "ماب نسخ", function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/chat"))()
     end)
-    SecCopy:NewButton("cmdbar2", "تشغيل cmdbar2", function()
+    AddButtonToTab(TabCopy, "cmdbar2", function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/NHYQ1"))()
     end)
-    SecCopy:NewButton("سبام قوي", "سبام قوي", function()
+    AddButtonToTab(TabCopy, "سبام قوي", function()
         loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/omggggg'))()
     end)
-    SecCopy:NewButton("نسخ خرافي", "نسخ خرافي", function()
+    AddButtonToTab(TabCopy, "نسخ خرافي", function()
         loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/woww'))()
     end)
 
-    local TabProtect = Window:NewTab("حماية")
-    local SecProtect = TabProtect:NewSection("حماية")
-    SecProtect:NewButton("حماية", "حماية", function()
+    -- 2. تبويب حماية
+    local TabProtect = MakeTab("حماية")
+    AddButtonToTab(TabProtect, "حماية", function()
         loadstring(game:HttpGet("https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_hh"))()
     end)
-    SecProtect:NewButton("حماية explode", "تشغيل حماية explode", function()
+    AddButtonToTab(TabProtect, "حماية explode", function()
         loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/anti%20explode'))()
     end)
-    SecProtect:NewButton("حماية warp", "تشغيل حماية warp", function()
+    AddButtonToTab(TabProtect, "حماية warp", function()
         loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/anti%20warp'))()
     end)
-    SecProtect:NewButton("حماية فلنق", "حماية فلنق", function()
+    AddButtonToTab(TabProtect, "حماية فلنق", function()
         loadstring(game:HttpGet("https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_bn"))()
     end)
-    SecProtect:NewButton("حمايةice", "حمايةice", function()
+    AddButtonToTab(TabProtect, "حمايةice", function()
         loadstring(game:HttpGet("https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_jh"))()
     end)
-    SecProtect:NewButton("حمايةchar,title,dog", "حمايةchar,title,dog", function()
+    AddButtonToTab(TabProtect, "حمايةchar,title,dog", function()
         loadstring(game:HttpGet("https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_sh"))()
     end)
 
-    local TabAnti = Window:NewTab("مضادات")
-    local SecAnti = TabAnti:NewSection("مضادات")
-    SecAnti:NewButton("مضاد بانق", "تشغيل مضاد بانق", function()
+    -- 3. تبويب مضادات
+    local TabAnti = MakeTab("مضادات")
+    AddButtonToTab(TabAnti, "مضاد بانق", function()
         loadstring(game:HttpGet("https://cdn.luaprotect.dev/u/c73151/D4hpGi_RQfKoTZ3W"))()
     end)
-    SecAnti:NewButton("مضاد AFK", "تشغيل مضاد AFK", function()
+    AddButtonToTab(TabAnti, "مضاد AFK", function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/AFK"))()
     end)
 
-    local TabClipboard = Window:NewTab("نسخ الى الحافظة 📋")
-    local SecClipboard = TabClipboard:NewSection("نسخ الى الحافظة 📋")
-    SecClipboard:NewButton("تشغيل النسخ", "تشغيل سكربت النسخ الى الحافظة", function()
+    -- 4. تبويب "بانق اللاعبين"
+    local TabPlayerBang = MakeTab("بانق اللاعبين")
+    
+    local UnifiedBox = Create("Frame", TabPlayerBang, {
+        Size = UDim2.new(1, 0, 0, 210),
+        BackgroundColor3 = Configs_HUB.Cor_Options,
+        BackgroundTransparency = 0.3,
+        ZIndex = 3005
+    })
+    Corner(UnifiedBox, {CornerRadius = UDim.new(0, 8)})
+    local uStroke = Create("UIStroke", UnifiedBox)
+    uStroke.Color = Configs_HUB.Cor_Stroke
+    uStroke.Thickness = 1
+
+    local AvatarIcon = Create("ImageLabel", UnifiedBox, {
+        Size = UDim2.new(0, 80, 0, 80),
+        Position = UDim2.new(0, 10, 0, 8),
+        BackgroundTransparency = 1,
+        Image = "rbxthumb://type=Asset&id=87670900021703&w=150&h=150",
+        ZIndex = 3006
+    })
+    Corner(AvatarIcon, {CornerRadius = UDim.new(1, 0)})
+    local AvStroke = Create("UIStroke", AvatarIcon)
+    AvStroke.Color = Configs_HUB.Cor_Stroke
+    AvStroke.Thickness = 1
+
+    local isAvatarRotating = true
+    task.spawn(function()
+        local rot = 0
+        while AvatarIcon and AvatarIcon.Parent do
+            if isAvatarRotating then
+                rot = (rot + 0.8) % 360
+                AvatarIcon.Rotation = rot
+            else
+                AvatarIcon.Rotation = 0
+            end
+            task.wait(0.016)
+        end
+    end)
+
+    local TargetInfoLabel = Create("TextLabel", UnifiedBox, {
+        Size = UDim2.new(1, -105, 0, 48),
+        Position = UDim2.new(1, -10, 0, 8),
+        AnchorPoint = Vector2.new(1, 0),
+        BackgroundTransparency = 1,
+        Text = "👤 الاسم: لم يتم المحدد\n⚡ اليوزر: --\n🆔 الأيدي: --",
+        Font = Configs_HUB.Text_Font,
+        TextSize = 12,
+        TextColor3 = Configs_HUB.Cor_Text,
+        TextXAlignment = Enum.TextXAlignment.Right,
+        TextYAlignment = Enum.TextYAlignment.Center,
+        TextWrapped = true,
+        ZIndex = 3006
+    })
+
+    local TargetTextBox = Create("TextBox", UnifiedBox, {
+        Size = UDim2.new(1, -105, 0, 28),
+        Position = UDim2.new(1, -10, 0, 58),
+        AnchorPoint = Vector2.new(1, 0),
+        BackgroundColor3 = Color3.fromRGB(30, 30, 30),
+        Text = "",
+        PlaceholderText = "اكتب اسم اللاعب هنا...",
+        Font = Configs_HUB.Text_Font,
+        TextSize = 11,
+        TextColor3 = Color3.fromRGB(255, 255, 255),
+        PlaceholderColor3 = Color3.fromRGB(150, 150, 150),
+        ClearTextOnFocus = false,
+        ZIndex = 3006
+    })
+    Corner(TargetTextBox, {CornerRadius = UDim.new(0, 6)})
+    local TbStroke = Create("UIStroke", TargetTextBox)
+    TbStroke.Color = Configs_HUB.Cor_Stroke
+    TbStroke.Thickness = 1
+
+    TargetTextBox.Focused:Connect(function()
+        TargetTextBox.Text = ""
+    end)
+
+    local function GetPlayerByString(str)
+        if not str or str == "" then return nil end
+        str = str:match("^%s*(.-)%s*$"):lower()
+        for _, plr in ipairs(_P:GetPlayers()) do
+            local name = plr.Name:lower()
+            local displayName = plr.DisplayName:lower()
+            if string.find(name, str, 1, true) or string.find(displayName, str, 1, true) then
+                return plr
+            end
+        end
+        return nil
+    end
+
+    local function GetTargetPlayer()
+        local textInput = TargetTextBox.Text
+        local foundPlr = GetPlayerByString(textInput)
+        if foundPlr then
+            TargetTextBox.Text = foundPlr.Name
+            isAvatarRotating = false
+            AvatarIcon.Rotation = 0
+            pcall(function()
+                AvatarIcon.Image = _P:GetUserThumbnailAsync(foundPlr.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150)
+            end)
+            TargetInfoLabel.Text = "👤 الاسم: " .. foundPlr.DisplayName .. "\n⚡ اليوزر: " .. foundPlr.Name .. "\n🆔 الأيدي: " .. foundPlr.UserId
+            return foundPlr
+        end
+        return nil
+    end
+
+    TargetTextBox.FocusLost:Connect(function()
+        GetTargetPlayer()
+    end)
+
+    local function CreateiPhoneSwitch(parent, posY, labelText, activeColor)
+        local container = Create("Frame", parent, {
+            Size = UDim2.new(1, -16, 0, 28),
+            Position = UDim2.new(0, 8, 0, posY),
+            BackgroundTransparency = 1,
+            ZIndex = 3006
+        })
+        
+        local label = Create("TextLabel", container, {
+            Size = UDim2.new(1, -50, 1, 0),
+            Position = UDim2.new(0, 0, 0, 0),
+            BackgroundTransparency = 1,
+            Text = labelText,
+            Font = Configs_HUB.Text_Font,
+            TextSize = 11,
+            TextColor3 = Color3.fromRGB(255, 255, 255),
+            TextXAlignment = Enum.TextXAlignment.Left,
+            ZIndex = 3006
+        })
+        
+        local toggleBg = Create("TextButton", container, {
+            Size = UDim2.new(0, 40, 0, 22),
+            Position = UDim2.new(1, 0, 0.5, 0),
+            AnchorPoint = Vector2.new(1, 0.5),
+            BackgroundColor3 = Color3.fromRGB(50, 50, 50),
+            Text = "",
+            ZIndex = 3006,
+            Active = true
+        })
+        Corner(toggleBg, {CornerRadius = UDim.new(1, 0)})
+        
+        local toggleKnob = Create("Frame", toggleBg, {
+            Size = UDim2.new(0, 16, 0, 16),
+            Position = UDim2.new(0, 3, 0.5, 0),
+            AnchorPoint = Vector2.new(0, 0.5),
+            BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+            ZIndex = 3007
+        })
+        Corner(toggleKnob, {CornerRadius = UDim.new(1, 0)})
+        
+        local function SetVisual(state)
+            local targetPos = state and UDim2.new(1, -19, 0.5, 0) or UDim2.new(0, 3, 0.5, 0)
+            local targetColor = state and activeColor or Color3.fromRGB(50, 50, 50)
+            TweenService:Create(toggleKnob, TweenInfo.new(0.15), {Position = targetPos}):Play()
+            TweenService:Create(toggleBg, TweenInfo.new(0.15), {BackgroundColor3 = targetColor}):Play()
+        end
+        
+        return container, label, toggleBg, SetVisual
+    end
+
+    local function CreateiPhoneSwitchWithInput(parent, posY, labelText, activeColor, inputPlaceholder)
+        local container = Create("Frame", parent, {
+            Size = UDim2.new(1, -16, 0, 28),
+            Position = UDim2.new(0, 8, 0, posY),
+            BackgroundTransparency = 1,
+            ZIndex = 3006
+        })
+        
+        local label = Create("TextLabel", container, {
+            Size = UDim2.new(1, -130, 1, 0),
+            Position = UDim2.new(0, 0, 0, 0),
+            BackgroundTransparency = 1,
+            Text = labelText,
+            Font = Configs_HUB.Text_Font,
+            TextSize = 11,
+            TextColor3 = Color3.fromRGB(255, 255, 255),
+            TextXAlignment = Enum.TextXAlignment.Left,
+            ZIndex = 3006
+        })
+        
+        local speedInput = Create("TextBox", container, {
+            Size = UDim2.new(0, 45, 0, 22),
+            Position = UDim2.new(1, -95, 0.5, 0),
+            AnchorPoint = Vector2.new(0, 0.5),
+            BackgroundColor3 = Color3.fromRGB(30, 30, 30),
+            Text = "",
+            PlaceholderText = inputPlaceholder or "سرعة",
+            Font = Configs_HUB.Text_Font,
+            TextSize = 10,
+            TextColor3 = Color3.fromRGB(255, 255, 255),
+            PlaceholderColor3 = Color3.fromRGB(150, 150, 150),
+            ClearTextOnFocus = false,
+            ZIndex = 3006
+        })
+        Corner(speedInput, {CornerRadius = UDim.new(0, 4)})
+        local sStroke = Create("UIStroke", speedInput)
+        sStroke.Color = Configs_HUB.Cor_Stroke
+        sStroke.Thickness = 1
+        
+        local toggleBg = Create("TextButton", container, {
+            Size = UDim2.new(0, 40, 0, 22),
+            Position = UDim2.new(1, 0, 0.5, 0),
+            AnchorPoint = Vector2.new(1, 0.5),
+            BackgroundColor3 = Color3.fromRGB(50, 50, 50),
+            Text = "",
+            ZIndex = 3006,
+            Active = true
+        })
+        Corner(toggleBg, {CornerRadius = UDim.new(1, 0)})
+        
+        local toggleKnob = Create("Frame", toggleBg, {
+            Size = UDim2.new(0, 16, 0, 16),
+            Position = UDim2.new(0, 3, 0.5, 0),
+            AnchorPoint = Vector2.new(0, 0.5),
+            BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+            ZIndex = 3007
+        })
+        Corner(toggleKnob, {CornerRadius = UDim.new(1, 0)})
+        
+        local function SetVisual(state)
+            local targetPos = state and UDim2.new(1, -19, 0.5, 0) or UDim2.new(0, 3, 0.5, 0)
+            local targetColor = state and activeColor or Color3.fromRGB(50, 50, 50)
+            TweenService:Create(toggleKnob, TweenInfo.new(0.15), {Position = targetPos}):Play()
+            TweenService:Create(toggleBg, TweenInfo.new(0.15), {BackgroundColor3 = targetColor}):Play()
+        end
+        
+        return container, label, toggleBg, speedInput, SetVisual
+    end
+
+    -- زر المشاهدة
+    local _, SpecLabel, SpecToggleBg, SetSpecVisual = CreateiPhoneSwitch(UnifiedBox, 98, "👁️ تشغيل المشاهدة", Color3.fromRGB(40, 140, 200))
+    local isSpectating = false
+    local specConnection = nil
+
+    local function StopSpectate()
+        isSpectating = false
+        SetSpecVisual(false)
+        if specConnection then
+            specConnection:Disconnect()
+            specConnection = nil
+        end
+        if _L.Character and _L.Character:FindFirstChild("Humanoid") then
+            Camera.CameraSubject = _L.Character.Humanoid
+        end
+        SendNotification("تم إيقاف المشاهدة 👁️")
+    end
+
+    BindClick(SpecToggleBg, function()
+        ClickSound:Play()
+        if not isSpectating then
+            local targetPlayer = GetTargetPlayer()
+            if not targetPlayer then
+                SpecLabel.Text = "❌ اكتب اسم اللاعب بالأول!"
+                SendNotification("❌ اكتب اسم اللاعب بالأول!")
+                task.wait(1.5)
+                SpecLabel.Text = "👁️ تشغيل المشاهدة"
+                return
+            end
+            
+            isSpectating = true
+            SetSpecVisual(true)
+            SendNotification("تم تشغيل المشاهدة على " .. targetPlayer.Name .. " 👁️")
+            
+            specConnection = RunService.RenderStepped:Connect(function()
+                if not isSpectating then return end
+                if targetPlayer.Character and targetPlayer.Character:FindFirstChild("Humanoid") then
+                    Camera.CameraSubject = targetPlayer.Character.Humanoid
+                else
+                    StopSpectate()
+                end
+            end)
+        else
+            StopSpectate()
+        end
+    end)
+
+    -- زر البانك
+    local _, BangLabel, BangToggleBg, BangSpeedInput, SetBangVisual = CreateiPhoneSwitchWithInput(UnifiedBox, 132, "🔥 تشغيل البانك", Color3.fromRGB(180, 20, 20), "سرعة")
+    local isBanging = false
+    local bangLoop = nil
+    local currentAnimTrack = nil
+
+    local function StopBang()
+        isBanging = false
+        SetBangVisual(false)
+        if bangLoop then
+            bangLoop:Disconnect()
+            bangLoop = nil
+        end
+        if currentAnimTrack then
+            pcall(function() currentAnimTrack:Stop() end)
+            currentAnimTrack = nil
+        end
+        local char = _L.Character
+        if char then
+            for _, part in ipairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then part.CanCollide = true end
+            end
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                pcall(function() hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0) end)
+            end
+        end
+        SendNotification("تم إيقاف البانك ❌")
+    end
+
+    BindClick(BangToggleBg, function()
+        ClickSound:Play()
+        if not isBanging then
+            local targetPlayer = GetTargetPlayer()
+            if not targetPlayer then
+                BangLabel.Text = "❌ اكتب اسم اللاعب بالأول!"
+                SendNotification("❌ اكتب اسم اللاعب بالأول!")
+                task.wait(1.5)
+                BangLabel.Text = "🔥 تشغيل البانك"
+                return
+            end
+            
+            isBanging = true
+            SetBangVisual(true)
+            SendNotification("تم تفعيل بانك بنجاح 🔥")
+            
+            local char = _L.Character
+            if char and char:FindFirstChild("Humanoid") then
+                local hum = char.Humanoid
+                local animator = hum:FindFirstChildOfClass("Animator") or Instance.new("Animator", hum)
+                pcall(function()
+                    local anim = Instance.new("Animation")
+                    anim.AnimationId = hum.RigType == Enum.HumanoidRigType.R15 and "rbxassetid://5918726673" or "rbxassetid://148840371"
+                    currentAnimTrack = animator:LoadAnimation(anim)
+                    currentAnimTrack:Play(0.1, 1, 2)
+                end)
+            end
+            
+            local timePassed = 0
+            bangLoop = RunService.RenderStepped:Connect(function(dt)
+                if not isBanging then return end
+                local myChar = _L.Character
+                local tChar = targetPlayer.Character
+                if myChar and myChar:FindFirstChild("HumanoidRootPart") and tChar and tChar:FindFirstChild("HumanoidRootPart") then
+                    local hrp = myChar.HumanoidRootPart
+                    local tHrp = tChar.HumanoidRootPart
+                    for _, part in ipairs(myChar:GetDescendants()) do
+                        if part:IsA("BasePart") then part.CanCollide = false end
+                    end
+                    local customSpeed = tonumber(BangSpeedInput.Text) or 15
+                    timePassed = timePassed + (dt * customSpeed)
+                    local backOffset = 1.2 + math.sin(timePassed) * 0.5
+                    hrp.CFrame = tHrp.CFrame * CFrame.new(0, 0, backOffset)
+                    pcall(function() hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0) end)
+                else
+                    StopBang()
+                end
+            end)
+        else
+            StopBang()
+        end
+    end)
+
+    -- زر المص
+    local _, SuckLabel, SuckToggleBg, SuckSpeedInput, SetSuckVisual = CreateiPhoneSwitchWithInput(UnifiedBox, 166, "😈 تشغيل المص", Color3.fromRGB(180, 20, 120), "سرعة")
+    local isSucking = false
+    local suckLoop = nil
+    local currentSuckAnimTrack = nil
+
+    local function StopSuck()
+        isSucking = false
+        SetSuckVisual(false)
+        if suckLoop then
+            suckLoop:Disconnect()
+            suckLoop = nil
+        end
+        if currentSuckAnimTrack then
+            pcall(function() currentSuckAnimTrack:Stop() end)
+            currentSuckAnimTrack = nil
+        end
+        local char = _L.Character
+        if char then
+            for _, part in ipairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then part.CanCollide = true end
+            end
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                pcall(function() hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0) end)
+            end
+        end
+        SendNotification("تم إيقاف المص ❌")
+    end
+
+    BindClick(SuckToggleBg, function()
+        ClickSound:Play()
+        if not isSucking then
+            local targetPlayer = GetTargetPlayer()
+            if not targetPlayer then
+                SuckLabel.Text = "❌ اكتب اسم اللاعب بالأول!"
+                SendNotification("❌ اكتب اسم اللاعب بالأول!")
+                task.wait(1.5)
+                SuckLabel.Text = "😈 تشغيل المص"
+                return
+            end
+            
+            isSucking = true
+            SetSuckVisual(true)
+            SendNotification("تم تفعيل المص بنجاح 😈")
+            
+            local char = _L.Character
+            if char and char:FindFirstChild("Humanoid") then
+                local hum = char.Humanoid
+                local animator = hum:FindFirstChildOfClass("Animator") or Instance.new("Animator", hum)
+                pcall(function()
+                    local anim = Instance.new("Animation")
+                    anim.AnimationId = hum.RigType == Enum.HumanoidRigType.R15 and "rbxassetid://2506281703" or "rbxassetid://179224234"
+                    currentSuckAnimTrack = animator:LoadAnimation(anim)
+                    currentSuckAnimTrack:Play(0.1, 1, 1.5)
+                end)
+            end
+            
+            local timePassed = 0
+            suckLoop = RunService.RenderStepped:Connect(function(dt)
+                if not isSucking then return end
+                local myChar = _L.Character
+                local tChar = targetPlayer.Character
+                
+                if myChar and myChar:FindFirstChild("HumanoidRootPart") and tChar and tChar:FindFirstChild("HumanoidRootPart") then
+                    local hrp = myChar.HumanoidRootPart
+                    local tHrp = tChar.HumanoidRootPart
+                    
+                    for _, part in ipairs(myChar:GetDescendants()) do
+                        if part:IsA("BasePart") then part.CanCollide = false end
+                    end
+                    
+                    local customSpeed = tonumber(SuckSpeedInput.Text) or 15
+                    timePassed = timePassed + (dt * customSpeed)
+                    
+                    local frontOffset = 0.95 + (math.sin(timePassed) * 0.25)
+                    local targetHead = tChar:FindFirstChild("Head")
+                    local targetFacePos = targetHead and targetHead.Position or (tHrp.Position + Vector3.new(0, 1.5, 0))
+                    local myPelvis = myChar:FindFirstChild("LowerTorso") or myChar:FindFirstChild("Torso") or hrp
+                    local myPelvisOffset = myPelvis.Position - hrp.Position
+                    
+                    local targetRotation = (tHrp.CFrame - tHrp.Position) * CFrame.Angles(0, math.pi, 0)
+                    local desiredCFrame = CFrame.new(targetFacePos) * targetRotation * CFrame.new(0, 0, frontOffset) - myPelvisOffset
+                    
+                    hrp.CFrame = desiredCFrame
+                    pcall(function() hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0) end)
+                else
+                    StopSuck()
+                end
+            end)
+        else
+            StopSuck()
+        end
+    end)
+
+    -- 5. تبويب نسخ إلى الحافظة
+    local TabClipboard = MakeTab("نسخ الحافظة 📋")
+    AddButtonToTab(TabClipboard, "تشغيل النسخ", function()
         loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/NHYQ1234'))()
     end)
 
-    local TabLogs = Window:NewTab("لوق دخول و خروج الاعبين")
-    local SecLogs = TabLogs:NewSection("لوق دخول و خروج الاعبين")
-    SecLogs:NewButton("لوق دخول و خروج الاعبين", "لوق دخول و خروج الاعبين", function()
+    -- 6. تبويب لوق دخول وخروج
+    local TabLogs = MakeTab("لوق اللاعبين")
+    AddButtonToTab(TabLogs, "لوق دخول و خروج الاعبين", function()
         loadstring(game:HttpGet("https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_gh"))()
     end)
 
-    local TabAuto = Window:NewTab("اوتو كلكر")
-    local SecAuto = TabAuto:NewSection("اوتو كلكر")
-    SecAuto:NewButton("اوتو كلكر", "اوتو كلكر", function()
+    -- 7. تبويب اوتو كلكر
+    local TabAuto = MakeTab("اوتو كلكر")
+    AddButtonToTab(TabAuto, "اوتو كلكر", function()
         loadstring(game:HttpGet("https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_ah"))()
     end)
 
-    local TabLag = Window:NewTab("nvو ازالة الاق")
-    local SecLag = TabLag:NewSection("nvو ازالة الاق")
-    SecLag:NewButton("nv", "nv", function()
+    -- 8. تبويب nv وإزالة الاق
+    local TabLag = MakeTab("ازالة الاق و nv")
+    AddButtonToTab(TabLag, "nv", function()
         loadstring(game:HttpGet("https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_nv"))()
     end)
-    SecLag:NewButton("ازالة الاق", "ازالة الاق", function()
+    AddButtonToTab(TabLag, "ازالة الاق", function()
         loadstring(game:HttpGet("https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_jk"))()
     end)
 
-    local TabOldClan = Window:NewTab("السكربت القديم للكلان")
-    local SecOldClan = TabOldClan:NewSection("السكربت القديم للكلان")
-    SecOldClan:NewButton("السكربت القديم للكلان", "تشغيل السكربت القديم للكلان", function()
-        loadstring(game:HttpGet("https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_shshs"))()
+    -- 9. تبويب رقصات و انميشنات
+    local TabAnimations = MakeTab("رقصات و انميشنات")
+    AddButtonToTab(TabAnimations, "رقصات", function()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/emote'))()
     end)
-
-    task.delay(1, function()
-        KavoGui = FindKavoGui()
-        if KavoGui then 
-            MakeKavoDraggable(KavoGui) 
-        end
+    AddButtonToTab(TabAnimations, "انيمشنات", function()
+        loadstring(game:HttpGet("https://scriptblox.com/raw/Universal-Script-Animation-studio-233507"))()
     end)
 end
 
@@ -1044,7 +1657,6 @@ local function VerifyKey()
         task.wait(1)
 
         Background:Destroy()
-        ToggleBtn.Visible = true
 
         WelcomeBanner.Position = UDim2.new(0, 0, 0, -75)
         TweenService:Create(
@@ -1068,18 +1680,58 @@ local function VerifyKey()
         local remaining = 3 - failedAttempts
         if remaining > 0 then
             Status.Text = "✕ INVALID KEY! Remaining attempts: " .. remaining
-        else
-            Status.Text = "✕ INVALID KEY"
-        end
-        Status.TextColor3 = Color3.fromRGB(255, 40, 40)
-        KeyStroke.Color = Color3.fromRGB(255, 0, 0)
+            Status.TextColor3 = Color3.fromRGB(255, 40, 40)
+            KeyStroke.Color = Color3.fromRGB(255, 0, 0)
 
-        local oldPosition = Main.Position
-        for i = 1, 4 do
-            Main.Position = oldPosition + UDim2.fromOffset(math.random(-5, 5), 0)
-            task.wait(0.04)
+            local oldPosition = Main.Position
+            for i = 1, 4 do
+                Main.Position = oldPosition + UDim2.fromOffset(math.random(-5, 5), 0)
+                task.wait(0.04)
+            end
+            Main.Position = oldPosition
+        else
+            -- عند الوصول للخطأ الثالث (بعد 5 ثوانٍ من ظهور الشاشة السوداء مع رسالة الطرد وأغنية ماب سرقت البيض)
+            Status.Text = "✕ INVALID KEY! Banned."
+            Status.TextColor3 = Color3.fromRGB(255, 0, 0)
+            KeyStroke.Color = Color3.fromRGB(255, 0, 0)
+
+            -- تشغيل أغنية سرقت البيض
+            pcall(function()
+                local eggSong = Instance.new("Sound")
+                eggSong.SoundId = "rbxassetid://1845705355" -- أيدي أغنية/موسيقى ماب سرقت البيض
+                eggSong.Volume = 3
+                eggSong.Looped = true
+                eggSong.Parent = SoundService
+                eggSong:Play()
+            end)
+
+            -- إنشاء الشاشة السوداء ورسالة الطرد
+            local BlackScreen = Instance.new("Frame")
+            BlackScreen.Size = UDim2.fromScale(1, 1)
+            BlackScreen.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+            BlackScreen.BorderSizePixel = 0
+            BlackScreen.ZIndex = 99999
+            BlackScreen.Parent = ScreenGui
+
+            local KickMessage = Instance.new("TextLabel")
+            KickMessage.Size = UDim2.new(0, 600, 0, 150)
+            KickMessage.AnchorPoint = Vector2.new(0.5, 0.5)
+            KickMessage.Position = UDim2.fromScale(0.5, 0.5)
+            KickMessage.BackgroundTransparency = 1
+            KickMessage.TextColor3 = Color3.fromRGB(255, 0, 0)
+            KickMessage.TextSize = 26
+            KickMessage.Font = Enum.Font.GothamBold
+            KickMessage.Text = "لقد تجاوزت الحد المسموح للأخطاء (3 مرات).\nتم طردك من السكربت والماب!"
+            KickMessage.TextWrapped = true
+            KickMessage.ZIndex = 100000
+            KickMessage.Parent = BlackScreen
+
+            -- الانتظار 5 ثوانٍ ثم طرد اللاعب نهائياً من اللعبة
+            task.spawn(function()
+                task.wait(5)
+                _L:Kick("تم طردك بسبب إدخال الكีย์ خطأ 3 مرات!")
+            end)
         end
-        Main.Position = oldPosition
     end
 end
 
