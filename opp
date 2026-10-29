@@ -19,7 +19,8 @@ local Whitelist = {
     "Ahmedkajj2",
     "Ahmedkgred",
     "abualkasm4",
-    "nice_shot", 
+    "nice_shot",
+    "SVR_HKIRE9",
 }
 
 local isAllowed = false
