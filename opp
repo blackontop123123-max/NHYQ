@@ -1168,6 +1168,9 @@ local function LoadMainScript()
     AddButtonToTab(TabProtect, "حمايةchar,title,dog", function()
         loadstring(game:HttpGet("https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_sh"))()
     end)
+    AddButtonToTab(TabProtect, "حماية re", function()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/antire'))()
+    end)
 
     -- 3. تبويب مضادات
     local TabAnti = MakeTab("مضادات")
