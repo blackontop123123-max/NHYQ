@@ -619,7 +619,6 @@ DiscordBtn.MouseButton1Click:Connect(function()
         toclipboard(link)
     end
     
-    LevelText = DiscordBtn.Text
     DiscordBtn.Text = "✓ تم نسخ الرابط"
     task.wait(1.5)
     DiscordBtn.Text = "سيرفر الدسكورد"
@@ -1646,19 +1645,396 @@ local function LoadMainScript()
         loadstring(game:HttpGet("https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_gh"))()
     end)
 
-    -- 7. تبويب اوتو كلكر
+    -- 7. تبويب اوتو كلكر (تم إضافة أوتو كلكر V2 هنا)
     local TabAuto = MakeTab("اوتو كلكر")
-    AddButtonToTab(TabAuto, "اوتو كلكر", function()
-        loadstring(game:HttpGet("https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_ah"))()
+    AddButtonToTab(TabAuto, "اوتو كلكر V2", function()
+        local PlayersService = game:GetService("Players")
+        local UIS = game:GetService("UserInputService")
+        local VIM = game:GetService("VirtualInputManager")
+
+        local LP = PlayersService.LocalPlayer
+        local PGui = LP:WaitForChild("PlayerGui")
+
+        if PGui:FindFirstChild("NHYQ_AutoClickerGUI") then
+            PGui:FindFirstChild("NHYQ_AutoClickerGUI"):Destroy()
+        end
+
+        local ScreenGuiAuto = Instance.new("ScreenGui")
+        ScreenGuiAuto.Name = "NHYQ_AutoClickerGUI"
+        ScreenGuiAuto.ResetOnSpawn = false
+        ScreenGuiAuto.Parent = PGui
+
+        local targets = {}
+        local isRunning = false
+        local clickInterval = 0.1
+
+        local MainFrame = Instance.new("Frame")
+        MainFrame.Name = "MainFrame"
+        MainFrame.Size = UDim2.new(0, 230, 0, 195)
+        MainFrame.Position = UDim2.new(0.05, 0, 0.2, 0)
+        MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
+        MainFrame.BorderSizePixel = 0
+        MainFrame.Active = true
+        MainFrame.Draggable = true
+        MainFrame.Parent = ScreenGuiAuto
+
+        Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
+        local MainStroke = Instance.new("UIStroke", MainFrame)
+        MainStroke.Color = Color3.fromRGB(180, 20, 20)
+        MainStroke.Thickness = 2
+
+        local Title = Instance.new("TextLabel")
+        Title.Size = UDim2.new(1, -35, 0, 32)
+        Title.Position = UDim2.new(0, 10, 0, 5)
+        Title.Text = "⚡ NHYQ | AUTO CLICKER"
+        Title.TextColor3 = Color3.fromRGB(235, 35, 35)
+        Title.TextSize = 14
+        Title.Font = Enum.Font.GothamBold
+        Title.TextXAlignment = Enum.TextXAlignment.Left
+        Title.BackgroundTransparency = 1
+        Title.Parent = MainFrame
+
+        local HideBtn = Instance.new("TextButton")
+        HideBtn.Size = UDim2.new(0, 24, 0, 24)
+        HideBtn.Position = UDim2.new(1, -28, 0, 8)
+        HideBtn.Text = "-"
+        HideBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        HideBtn.TextSize = 18
+        HideBtn.Font = Enum.Font.GothamBold
+        HideBtn.BackgroundColor3 = Color3.fromRGB(35, 10, 10)
+        HideBtn.Parent = MainFrame
+        Instance.new("UICorner", HideBtn).CornerRadius = UDim.new(0, 6)
+        local HideStroke = Instance.new("UIStroke", HideBtn)
+        HideStroke.Color = Color3.fromRGB(180, 20, 20)
+
+        local Container = Instance.new("Frame")
+        Container.Size = UDim2.new(1, -20, 1, -50)
+        Container.Position = UDim2.new(0, 10, 0, 40)
+        Container.BackgroundTransparency = 1
+        Container.Parent = MainFrame
+
+        local SpeedBox = Instance.new("TextBox")
+        SpeedBox.Size = UDim2.new(1, 0, 0, 32)
+        SpeedBox.Position = UDim2.new(0, 0, 0, 0)
+        SpeedBox.PlaceholderText = "السرعة بـ ms (مثال: 100)"
+        SpeedBox.PlaceholderColor3 = Color3.fromRGB(120, 120, 120)
+        SpeedBox.Text = "100"
+        SpeedBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+        SpeedBox.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+        SpeedBox.Font = Enum.Font.GothamMedium
+        SpeedBox.TextSize = 13
+        SpeedBox.Parent = Container
+        Instance.new("UICorner", SpeedBox).CornerRadius = UDim.new(0, 6)
+        local SpeedStroke = Instance.new("UIStroke", SpeedBox)
+        SpeedStroke.Color = Color3.fromRGB(60, 20, 20)
+
+        SpeedBox.FocusLost:Connect(function()
+            local val = tonumber(SpeedBox.Text)
+            if val and val > 0 then
+                clickInterval = val / 1000
+            else
+                SpeedBox.Text = "100"
+                clickInterval = 0.1
+            end
+        end)
+
+        local AddBtn = Instance.new("TextButton")
+        AddBtn.Size = UDim2.new(0.48, 0, 0, 34)
+        AddBtn.Position = UDim2.new(0, 0, 0, 42)
+        AddBtn.Text = "+ إضافة هدف"
+        AddBtn.BackgroundColor3 = Color3.fromRGB(30, 10, 10)
+        AddBtn.TextColor3 = Color3.fromRGB(255, 200, 200)
+        AddBtn.Font = Enum.Font.GothamBold
+        AddBtn.TextSize = 12
+        AddBtn.Parent = Container
+        Instance.new("UICorner", AddBtn).CornerRadius = UDim.new(0, 6)
+        local AddStroke = Instance.new("UIStroke", AddBtn)
+        AddStroke.Color = Color3.fromRGB(150, 20, 20)
+
+        local RemoveBtn = Instance.new("TextButton")
+        RemoveBtn.Size = UDim2.new(0.48, 0, 0, 34)
+        RemoveBtn.Position = UDim2.new(0.52, 0, 0, 42)
+        RemoveBtn.Text = "- حذف هدف"
+        RemoveBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+        RemoveBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+        RemoveBtn.Font = Enum.Font.GothamBold
+        RemoveBtn.TextSize = 12
+        RemoveBtn.Parent = Container
+        Instance.new("UICorner", RemoveBtn).CornerRadius = UDim.new(0, 6)
+        local RemoveStroke = Instance.new("UIStroke", RemoveBtn)
+        RemoveStroke.Color = Color3.fromRGB(60, 60, 70)
+
+        local ToggleBtn = Instance.new("TextButton")
+        ToggleBtn.Size = UDim2.new(1, 0, 0, 38)
+        ToggleBtn.Position = UDim2.new(0, 0, 0, 86)
+        ToggleBtn.Text = "▶ تشغيل الأوتو"
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(160, 20, 20)
+        ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        ToggleBtn.Font = Enum.Font.GothamBold
+        ToggleBtn.TextSize = 14
+        ToggleBtn.Parent = Container
+        Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 6)
+
+        local OpenBtn = Instance.new("TextButton")
+        OpenBtn.Size = UDim2.new(0, 50, 0, 50)
+        OpenBtn.Position = UDim2.new(0.05, 0, 0.2, 0)
+        OpenBtn.Text = "🖱️"
+        OpenBtn.TextSize = 24
+        OpenBtn.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
+        OpenBtn.Visible = false
+        OpenBtn.Active = true
+        OpenBtn.Draggable = true
+        OpenBtn.Parent = ScreenGuiAuto
+        Instance.new("UICorner", OpenBtn).CornerRadius = UDim.new(1, 0)
+        local OpenStroke = Instance.new("UIStroke", OpenBtn)
+        OpenStroke.Color = Color3.fromRGB(220, 20, 20)
+        OpenStroke.Thickness = 2
+
+        HideBtn.MouseButton1Click:Connect(function()
+            MainFrame.Visible = false
+            OpenBtn.Position = MainFrame.Position
+            OpenBtn.Visible = true
+        end)
+
+        OpenBtn.MouseButton1Click:Connect(function()
+            MainFrame.Position = OpenBtn.Position
+            MainFrame.Visible = true
+            OpenBtn.Visible = false
+        end)
+
+        local function createTarget()
+            local targetId = #targets + 1
+            local TargetDot = Instance.new("Frame")
+            TargetDot.Name = "TargetDot_" .. targetId
+            TargetDot.Size = UDim2.new(0, 32, 0, 32)
+            TargetDot.Position = UDim2.new(0.5, -16, 0.4, -16)
+            TargetDot.BackgroundColor3 = Color3.fromRGB(220, 20, 20)
+            TargetDot.BackgroundTransparency = 0.15
+            TargetDot.Active = true
+            TargetDot.Draggable = true
+            TargetDot.Parent = ScreenGuiAuto
+
+            Instance.new("UICorner", TargetDot).CornerRadius = UDim.new(1, 0)
+            local DotStroke = Instance.new("UIStroke", TargetDot)
+            DotStroke.Color = Color3.fromRGB(0, 0, 0)
+            DotStroke.Thickness = 2
+
+            local NumText = Instance.new("TextLabel", TargetDot)
+            NumText.Size = UDim2.new(1, 0, 1, 0)
+            NumText.Text = tostring(targetId)
+            NumText.TextColor3 = Color3.fromRGB(255, 255, 255)
+            NumText.Font = Enum.Font.GothamBold
+            NumText.TextSize = 13
+            NumText.BackgroundTransparency = 1
+
+            table.insert(targets, TargetDot)
+        end
+
+        local function removeTarget()
+            if #targets > 0 then
+                local lastTarget = targets[#targets]
+                lastTarget:Destroy()
+                table.remove(targets, #targets)
+            end
+        end
+
+        AddBtn.MouseButton1Click:Connect(createTarget)
+        RemoveBtn.MouseButton1Click:Connect(removeTarget)
+
+        local function startClicking()
+            isRunning = true
+            ToggleBtn.Text = "⏹️ إيقاف"
+            ToggleBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+
+            task.spawn(function()
+                while isRunning do
+                    if #targets > 0 then
+                        for _, targetDot in ipairs(targets) do
+                            if not isRunning then break end
+                            local x = targetDot.AbsolutePosition.X + (targetDot.AbsoluteSize.X / 2)
+                            local y = targetDot.AbsolutePosition.Y + (targetDot.AbsoluteSize.Y / 2) + 36
+
+                            VIM:SendMouseButtonEvent(x, y, 0, true, game, 0)
+                            VIM:SendMouseButtonEvent(x, y, 0, false, game, 0)
+                        end
+                    end
+                    task.wait(clickInterval)
+                end
+            end)
+        end
+
+        local function stopClicking()
+            isRunning = false
+            ToggleBtn.Text = "▶ تشغيل الأوتو"
+            ToggleBtn.BackgroundColor3 = Color3.fromRGB(160, 20, 20)
+        end
+
+        ToggleBtn.MouseButton1Click:Connect(function()
+            if isRunning then
+                stopClicking()
+            else
+                startClicking()
+            end
+        end)
     end)
 
-    -- 8. تبويب nv وإزالة الاق
-    local TabLag = MakeTab("ازالة الاق و nv")
+    -- 8. تبويب "ازالة الاق و عداد الافريمات و البنق" (تم تعديل الاسم والزر المطلوب)
+    local TabLag = MakeTab("ازالة الاق و عداد الافريمات و البنق")
     AddButtonToTab(TabLag, "nv", function()
         loadstring(game:HttpGet("https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_nv"))()
     end)
     AddButtonToTab(TabLag, "ازالة الاق", function()
         loadstring(game:HttpGet("https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_jk"))()
+    end)
+    AddButtonToTab(TabLag, "فريماتك و بنقك", function()
+        if playerGui:FindFirstChild("NHYQ_HUD_Compact") then
+            playerGui.NHYQ_HUD_Compact:Destroy()
+        end
+
+        local screenGui = Instance.new("ScreenGui")
+        screenGui.Name = "NHYQ_HUD_Compact"
+        screenGui.ResetOnSpawn = false
+        screenGui.Parent = playerGui
+
+        local mainFrame = Instance.new("Frame")
+        mainFrame.Name = "MainFrame"
+        mainFrame.Size = UDim2.new(0, 210, 0, 130)
+        mainFrame.Position = UDim2.new(1, -230, 0, 20)
+        mainFrame.BackgroundColor3 = Color3.fromRGB(24, 43, 47)
+        mainFrame.BackgroundTransparency = 0.2
+        mainFrame.BorderSizePixel = 0
+        mainFrame.Parent = screenGui
+
+        local cornerMain = Instance.new("UICorner")
+        cornerMain.CornerRadius = UDim.new(0, 8)
+        cornerMain.Parent = mainFrame
+
+        local stroke = Instance.new("UIStroke")
+        stroke.Name = "RedBorderStroke"
+        stroke.Thickness = 2
+        stroke.Color = Color3.fromRGB(230, 30, 60)
+        stroke.Parent = mainFrame
+
+        local titleLabel = Instance.new("TextLabel")
+        titleLabel.Name = "Title"
+        titleLabel.Size = UDim2.new(1, -15, 0, 25)
+        titleLabel.Position = UDim2.new(0, 10, 0, 8)
+        titleLabel.BackgroundTransparency = 1
+        titleLabel.Font = Enum.Font.GothamBold
+        titleLabel.Text = "NHYQ"
+        titleLabel.TextColor3 = Color3.fromRGB(230, 30, 60)
+        titleLabel.TextSize = 18
+        titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+        titleLabel.AutoLocalize = false
+        titleLabel.Parent = mainFrame
+
+        local pingLabel = Instance.new("TextLabel")
+        pingLabel.Name = "PingLabel"
+        pingLabel.Size = UDim2.new(1, -15, 0, 18)
+        pingLabel.Position = UDim2.new(0, 10, 0, 35)
+        pingLabel.BackgroundTransparency = 1
+        pingLabel.Font = Enum.Font.GothamSemibold
+        pingLabel.Text = "Ping: 0ms"
+        pingLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        pingLabel.TextSize = 13
+        pingLabel.TextXAlignment = Enum.TextXAlignment.Left
+        pingLabel.AutoLocalize = false
+        pingLabel.Parent = mainFrame
+
+        local fpsLabel = Instance.new("TextLabel")
+        fpsLabel.Name = "FpsLabel"
+        fpsLabel.Size = UDim2.new(1, -15, 0, 18)
+        fpsLabel.Position = UDim2.new(0, 10, 0, 55)
+        fpsLabel.BackgroundTransparency = 1
+        fpsLabel.Font = Enum.Font.GothamSemibold
+        fpsLabel.Text = "F P S: 60"
+        fpsLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        fpsLabel.TextSize = 13
+        fpsLabel.TextXAlignment = Enum.TextXAlignment.Left
+        fpsLabel.AutoLocalize = false
+        fpsLabel.Parent = mainFrame
+
+        local userLabel = Instance.new("TextLabel")
+        userLabel.Name = "UserLabel"
+        userLabel.Size = UDim2.new(1, -15, 0, 18)
+        userLabel.Position = UDim2.new(0, 10, 0, 75)
+        userLabel.BackgroundTransparency = 1
+        userLabel.Font = Enum.Font.GothamSemibold
+        userLabel.Text = "User: " .. _L.Name
+        userLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        userLabel.TextSize = 13
+        userLabel.TextXAlignment = Enum.TextXAlignment.Left
+        userLabel.AutoLocalize = false
+        userLabel.Parent = mainFrame
+
+        local timeLabel = Instance.new("TextLabel")
+        timeLabel.Name = "TimeLabel"
+        timeLabel.Size = UDim2.new(1, -15, 0, 18)
+        timeLabel.Position = UDim2.new(0, 10, 0, 95)
+        timeLabel.BackgroundTransparency = 1
+        timeLabel.Font = Enum.Font.GothamSemibold
+        timeLabel.Text = "Time: 00:00"
+        timeLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        timeLabel.TextSize = 13
+        timeLabel.TextXAlignment = Enum.TextXAlignment.Left
+        timeLabel.AutoLocalize = false
+        timeLabel.Parent = mainFrame
+
+        local toggleButton = Instance.new("TextButton")
+        toggleButton.Name = "ToggleButton"
+        toggleButton.Size = UDim2.new(0, 22, 0, 22)
+        toggleButton.Position = UDim2.new(1, -258, 0, 20)
+        toggleButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        toggleButton.BackgroundTransparency = 0.3
+        toggleButton.Font = Enum.Font.GothamBold
+        toggleButton.Text = "-"
+        toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        toggleButton.TextSize = 14
+        toggleButton.AutoLocalize = false
+        toggleButton.Parent = screenGui
+
+        local cornerBtn = Instance.new("UICorner")
+        cornerBtn.CornerRadius = UDim.new(0, 4)
+        cornerBtn.Parent = toggleButton
+
+        local isOpen = true
+        toggleButton.MouseButton1Click:Connect(function()
+            isOpen = not isOpen
+            mainFrame.Visible = isOpen
+            if isOpen then
+                toggleButton.Text = "-"
+            else
+                toggleButton.Text = "+"
+            end
+        end)
+
+        local startTime = tick()
+        local lastUpdate = 0
+        local frameCount = 0
+
+        RunService.RenderStepped:Connect(function(dt)
+            frameCount = frameCount + 1
+            local currentTime = tick()
+            
+            if currentTime - lastUpdate >= 1 then
+                local fps = math.floor(frameCount / (currentTime - lastUpdate))
+                fpsLabel.Text = "F P S: " .. tostring(fps)
+                
+                local p = 0
+                pcall(function()
+                    p = math.floor(_L:GetNetworkPing() * 1000)
+                end)
+                pingLabel.Text = "Ping: " .. tostring(p) .. "ms"
+                
+                local totalSeconds = math.floor(currentTime - startTime)
+                local minutes = math.floor(totalSeconds / 60)
+                local seconds = totalSeconds % 60
+                timeLabel.Text = string.format("Time: %02d:%02d", minutes, seconds)
+                
+                frameCount = 0
+                lastUpdate = currentTime
+            end
+        end)
     end)
 
     -- 9. تبويب رقصات و انميشنات
@@ -1734,22 +2110,19 @@ local function VerifyKey()
             end
             Main.Position = oldPosition
         else
-            -- عند الوصول للخطأ الثالث (بعد 5 ثوانٍ من ظهور الشاشة السوداء مع رسالة الطرد وأغنية ماب سرقت البيض)
             Status.Text = "✕ INVALID KEY! Banned."
             Status.TextColor3 = Color3.fromRGB(255, 0, 0)
             KeyStroke.Color = Color3.fromRGB(255, 0, 0)
 
-            -- تشغيل أغنية سرقت البيض
             pcall(function()
                 local eggSong = Instance.new("Sound")
-                eggSong.SoundId = "rbxassetid://1845705355" -- أيدي أغنية/موسيقى ماب سرقت البيض
+                eggSong.SoundId = "rbxassetid://1845705355"
                 eggSong.Volume = 3
                 eggSong.Looped = true
                 eggSong.Parent = SoundService
                 eggSong:Play()
             end)
 
-            -- إنشاء الشاشة السوداء ورسالة الطرد
             local BlackScreen = Instance.new("Frame")
             BlackScreen.Size = UDim2.fromScale(1, 1)
             BlackScreen.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
@@ -1770,7 +2143,6 @@ local function VerifyKey()
             KickMessage.ZIndex = 100000
             KickMessage.Parent = BlackScreen
 
-            -- الانتظار 5 ثوانٍ ثم طرد اللاعب نهائياً من اللعبة
             task.spawn(function()
                 task.wait(5)
                 _L:Kick("تم طردك بسبب إدخال الكีย์ خطأ 3 مرات!")
