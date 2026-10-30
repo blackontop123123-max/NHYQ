@@ -1,0 +1,338 @@
+-- NHYQ-Anti RE Script (Fixed Button)
+-- Made by shs09qp23
+
+local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local localPlayer = Players.LocalPlayer
+local workspace = game:GetService("Workspace")
+local camera = workspace.CurrentCamera
+
+-- إزالة أي واجهة قديمة لمنع التكرار
+if CoreGui:FindFirstChild("NHYQ_AntiRE") then
+    CoreGui.NHYQ_AntiRE:Destroy()
+end
+
+-- إنشاء الواجهة الأساسية
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "NHYQ_AntiRE"
+ScreenGui.Parent = CoreGui
+
+-- زر فتح وإغلاق القائمة (صار ثابت ولا يتحرك)
+local ToggleGuiBtn = Instance.new("TextButton")
+ToggleGuiBtn.Name = "ToggleGuiBtn"
+ToggleGuiBtn.Parent = ScreenGui
+ToggleGuiBtn.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+ToggleGuiBtn.BorderColor3 = Color3.fromRGB(220, 0, 0)
+ToggleGuiBtn.BorderSizePixel = 2
+ToggleGuiBtn.Position = UDim2.new(0, 20, 0, 100)
+ToggleGuiBtn.Size = UDim2.new(0, 130, 0, 40)
+ToggleGuiBtn.Font = Enum.Font.SourceSansBold
+ToggleGuiBtn.Text = "NHYQ PANEL"
+ToggleGuiBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleGuiBtn.TextSize = 15
+
+local UICornerBtn = Instance.new("UICorner")
+UICornerBtn.CornerRadius = UDim.new(0, 8)
+UICornerBtn.Parent = ToggleGuiBtn
+
+-- النافذة الرئيسية للقائمة
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+MainFrame.BorderColor3 = Color3.fromRGB(200, 0, 0)
+MainFrame.BorderSizePixel = 2
+MainFrame.Position = UDim2.new(0, 20, 0, 150)
+MainFrame.Size = UDim2.new(0, 230, 0, 150)
+MainFrame.Visible = true
+
+local UICornerFrame = Instance.new("UICorner")
+UICornerFrame.CornerRadius = UDim.new(0, 10)
+UICornerFrame.Parent = MainFrame
+
+-- عنوان النافذة (NHYQ-Anti RE)
+local Title = Instance.new("TextLabel")
+Title.Parent = MainFrame
+Title.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+Title.BorderSizePixel = 0
+Title.Size = UDim2.new(1, 0, 0, 35)
+Title.Font = Enum.Font.SourceSansBold
+Title.Text = "NHYQ-Anti RE"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 15
+
+local UICornerTitle = Instance.new("UICorner")
+UICornerTitle.CornerRadius = UDim.new(0, 10)
+UICornerTitle.Parent = Title
+
+-- زر تفعيل/إيقاف الحماية
+local ToggleAntiREBtn = Instance.new("TextButton")
+ToggleAntiREBtn.Parent = MainFrame
+ToggleAntiREBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+ToggleAntiREBtn.BorderColor3 = Color3.fromRGB(180, 0, 0)
+ToggleAntiREBtn.BorderSizePixel = 1
+ToggleAntiREBtn.Position = UDim2.new(0, 15, 0, 50)
+ToggleAntiREBtn.Size = UDim2.new(0, 200, 0, 45)
+ToggleAntiREBtn.Font = Enum.Font.SourceSansBold
+ToggleAntiREBtn.Text = "Anti-RE: OFF"
+ToggleAntiREBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+ToggleAntiREBtn.TextSize = 15
+
+local UICornerToggle = Instance.new("UICorner")
+UICornerToggle.CornerRadius = UDim.new(0, 6)
+UICornerToggle.Parent = ToggleAntiREBtn
+
+-- حقوق التنسيق
+local Credit = Instance.new("TextLabel")
+Credit.Parent = MainFrame
+Credit.BackgroundTransparency = 1
+Credit.Position = UDim2.new(0, 0, 0, 110)
+Credit.Size = UDim2.new(1, 0, 0, 30)
+Credit.Font = Enum.Font.SourceSansItalic
+Credit.Text = "by shs09qp23"
+Credit.TextColor3 = Color3.fromRGB(150, 150, 150)
+Credit.TextSize = 13
+
+-- جعل القائمة وحدها قابلة للسحب من العنوان (أما الزر فبقي ثابتاً كما طلبت)
+local function makeDraggable(guiObject, handle)
+    local dragging, dragInput, dragStart, startPos
+
+    handle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = guiObject.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    handle.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            guiObject.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+end
+
+-- تطبيق السحب على النافذة الرئيسية من خلال العنوان فقط، وبقاء زر PANEL ثابت تماماً
+makeDraggable(MainFrame, Title)
+
+-- تفاعل زر فتح وإغلاق القائمة
+local guiVisible = true
+ToggleGuiBtn.MouseButton1Click:Connect(function()
+    guiVisible = not guiVisible
+    MainFrame.Visible = guiVisible
+    ToggleGuiBtn.BackgroundColor3 = guiVisible and Color3.fromRGB(15, 15, 15) or Color3.fromRGB(180, 0, 0)
+end)
+
+-- المتغيرات الأساسية للحماية
+local antiREActive = false
+local dummyChar = nil
+local killBrick = nil
+local savedPosition = nil
+local savedCameraCFrame = nil
+local cameraConnection = nil
+local loopLockConnection = nil
+
+-- إخفاء أجزاء الشخصية الحقيقية في الهواء
+local function setCharacterTransparency(char, transparency)
+    for _, part in ipairs(char:GetDescendants()) do
+        if part:IsA("BasePart") or part:IsA("Decal") then
+            part.Transparency = transparency
+        end
+    end
+end
+
+-- إنشاء المنطقة القاتلة العالية في السماء
+local function createKillBrick()
+    if killBrick then killBrick:Destroy() end
+    killBrick = Instance.new("Part")
+    killBrick.Name = "NHYQ_KillZone"
+    killBrick.Size = Vector3.new(1500, 15, 1500)
+    killBrick.Position = Vector3.new(0, 99995, 0)
+    killBrick.Anchored = true
+    killBrick.Transparency = 1
+    killBrick.CanCollide = true
+    killBrick.Parent = workspace
+
+    killBrick.Touched:Connect(function(hit)
+        local enemyChar = hit.Parent
+        local humanoid = enemyChar:FindFirstChildOfClass("Humanoid")
+        local player = Players:GetPlayerFromCharacter(enemyChar)
+        if humanoid and player and player ~= localPlayer then
+            humanoid.Health = 0
+        end
+    end)
+end
+
+-- إنشاء الشخصية الوهمية الثابتة بالمكان الأصلي
+local function spawnDummy(pos)
+    if dummyChar and dummyChar.Parent then return end
+    
+    local realChar = localPlayer.Character
+    if realChar then
+        realChar.Archivable = true
+        dummyChar = realChar:Clone()
+        dummyChar.Name = "NHYQ_Dummy"
+        
+        for _, v in ipairs(dummyChar:GetDescendants()) do
+            if v:IsA("Script") or v:IsA("LocalScript") then
+                v:Destroy()
+            end
+        end
+        
+        dummyChar.Parent = workspace
+        
+        local dRoot = dummyChar:FindFirstChild("HumanoidRootPart")
+        if dRoot then
+            dRoot.CFrame = pos
+            dRoot.Anchored = true
+        end
+    end
+end
+
+-- قفل الكاميرا بقوة تامة في مكانها الأصلي
+local function startCameraLock()
+    if cameraConnection then cameraConnection:Disconnect() end
+    camera.CameraType = Enum.CameraType.Scriptable
+    
+    cameraConnection = RunService.RenderStepped:Connect(function()
+        if antiREActive and savedCameraCFrame then
+            camera.CameraType = Enum.CameraType.Scriptable
+            camera.CFrame = savedCameraCFrame
+        end
+    end)
+end
+
+-- حلقة قوية لمنع الرجوع للبداية وإبقاء الشخصية معلقة في الهواء دائماً حتى بعد الانفجار
+local function startAirLockLoop()
+    if loopLockConnection then loopLockConnection:Disconnect() end
+    
+    loopLockConnection = RunService.Stepped:Connect(function()
+        if antiREActive and localPlayer.Character then
+            local rPart = localPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if rPart then
+                rPart.CFrame = CFrame.new(0, 99999, 0)
+                rPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+            end
+        end
+    end)
+end
+
+-- تطبيق الحماية
+local function applyProtection()
+    local char = localPlayer.Character
+    local rootPart = char and char:FindFirstChild("HumanoidRootPart")
+    
+    if rootPart then
+        if not savedPosition then
+            savedPosition = rootPart.CFrame
+            savedCameraCFrame = camera.CFrame
+            startCameraLock()
+        else
+            startCameraLock()
+        end
+        
+        createKillBrick()
+        spawnDummy(savedPosition)
+        startAirLockLoop()
+        
+        setCharacterTransparency(char, 1)
+    end
+end
+
+-- زر التشغيل والإيقاف اليدوي
+ToggleAntiREBtn.MouseButton1Click:Connect(function()
+    antiREActive = not antiREActive
+    local char = localPlayer.Character
+    local rootPart = char and char:FindFirstChild("HumanoidRootPart")
+
+    if antiREActive then
+        -- [تفعيل الحماية]
+        ToggleAntiREBtn.Text = "Anti-RE: ON"
+        ToggleAntiREBtn.TextColor3 = Color3.fromRGB(100, 255, 100)
+        ToggleAntiREBtn.BackgroundColor3 = Color3.fromRGB(60, 0, 0)
+
+        savedPosition = nil
+        savedCameraCFrame = nil
+        applyProtection()
+    else
+        -- [إيقاف الحماية والرجوع للطبيعي]
+        ToggleAntiREBtn.Text = "Anti-RE: OFF"
+        ToggleAntiREBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+        ToggleAntiREBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+
+        if loopLockConnection then
+            loopLockConnection:Disconnect()
+            loopLockConnection = nil
+        end
+
+        if cameraConnection then
+            cameraConnection:Disconnect()
+            cameraConnection = nil
+        end
+        camera.CameraType = Enum.CameraType.Custom
+        camera.CameraSubject = char and char:FindFirstChild("Humanoid")
+
+        if killBrick then
+            killBrick:Destroy()
+            killBrick = nil
+        end
+
+        if dummyChar then
+            dummyChar:Destroy()
+            dummyChar = nil
+        end
+
+        -- إرجاع الشخصية الحقيقية لمكان الوهمي عند الإطفاء
+        local currentRealChar = localPlayer.Character
+        local currentRoot = currentRealChar and currentRealChar:FindFirstChild("HumanoidRootPart")
+        if currentRoot and savedPosition then
+            setCharacterTransparency(currentRealChar, 0)
+            currentRoot.CFrame = savedPosition + Vector3.new(0, 3, 0)
+        end
+        
+        savedPosition = nil
+        savedCameraCFrame = nil
+    end
+end)
+
+-- الاستجابة الفورية للانفجار أو الموت لضمان عدم الذهاب للبداية
+local function onCharacterAdded(newChar)
+    local humanoid = newChar:WaitForChild("Humanoid", 10)
+    if not humanoid then return end
+
+    humanoid.Died:Connect(function()
+        if antiREActive then
+            task.delay(0.02, function()
+                applyProtection()
+            end)
+        end
+    end)
+    
+    humanoid.HealthChanged:Connect(function(health)
+        if antiREActive and health <= 0 then
+            task.delay(0.02, function()
+                applyProtection()
+            end)
+        end
+    end)
+end
+
+if localPlayer.Character then
+    onCharacterAdded(localPlayer.Character)
+end
+localPlayer.CharacterAdded:Connect(onCharacterAdded)
