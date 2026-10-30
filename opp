@@ -23,7 +23,8 @@ local Whitelist = {
     "abualkasm4",
     "nice_shot",
     "SVR_HKIRE9",
-    "ooooooppp12319", 
+    "ooooooppp12319",
+    "RMLA203",
 }
 
 local isAllowed = false
