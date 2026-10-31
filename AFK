@@ -1,11 +1,10 @@
 -- ==========================================
--- NHYQ-AFK (Smart Auto-Restore Title & Anti-AFK)
+-- NHYQ-AFK (100% Unstoppable & Always Running)
 -- Creator: shs09qp23
 -- ==========================================
 
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local VirtualUser = game:GetService("VirtualUser")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
@@ -13,20 +12,6 @@ local LocalPlayer = Players.LocalPlayer
 -- إزالة أي واجهة أو سكريبت قديم
 if CoreGui:FindFirstChild("NHYQ_AFK_Hub") then
     CoreGui.NHYQ_AFK_Hub:Destroy()
-end
-
--- دالة إرسال أوامر الإدارة للتايتل
-local function sendTitleCommand(cmd)
-    pcall(function()
-        if ReplicatedStorage:FindFirstChild("HDAdminHDClient") then
-            ReplicatedStorage.HDAdminHDClient.Signals.RequestCommandModification:InvokeServer(cmd)
-        elseif ReplicatedStorage:FindFirstChild("RemoteEvents") and ReplicatedStorage.RemoteEvents:FindFirstChild("DataService") then
-            ReplicatedStorage.RemoteEvents.DataService:FireServer(cmd)
-        end
-    end)
-    pcall(function()
-        game:GetService("TextChatService").TextChannels.RBXGeneral:SendAsync(cmd)
-    end)
 end
 
 local ScreenGui = Instance.new("ScreenGui")
@@ -102,30 +87,85 @@ ToggleButton.MouseButton1Click:Connect(function()
     MainFrame.Visible = not MainFrame.Visible
 end)
 
--- 3. منطق التشغيل والتحقق الذكي
+-- 3. منطق الركض الذي لا يقهر أبداً
 local active = false
 local idledConnection = nil
+local moveConnection = nil
+local respawnConnection = nil
+local maxDistance = 14
 
--- حلقة مراقبة تعمل في الخلفية لإعادة كتابة التايتل فقط إذا كانت الحماية مشغلة
-task.spawn(function()
-    while true do
-        task.wait(3) -- فحص كل 3 ثوانٍ
-        if active then
-            sendTitleCommand(";title me AFK")
-        end
+local function getNewTarget(pos)
+    local rx = math.random(-maxDistance, maxDistance)
+    local rz = math.random(-maxDistance, maxDistance)
+    return Vector3.new(pos.X + rx, pos.Y, pos.Z + rz)
+end
+
+local function runSystem()
+    if not active then return end
+    
+    local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local humanoid = character:WaitForChild("Humanoid", 10)
+    local hrp = character:WaitForChild("HumanoidRootPart", 10)
+    
+    if humanoid and hrp then
+        humanoid.WalkSpeed = 22
+        local centerPos = hrp.Position
+        local targetPos = getNewTarget(centerPos)
+        humanoid:MoveTo(targetPos)
+        
+        if moveConnection then moveConnection:Disconnect() end
+        
+        local timer = 0
+        moveConnection = RunService.RenderStepped:Connect(function(dt)
+            if not active then return end
+            
+            local curChar = LocalPlayer.Character
+            if not curChar or not curChar:FindFirstChild("HumanoidRootPart") then return end
+            
+            local currentHrp = curChar.HumanoidRootPart
+            local currentHum = curChar:FindFirstChildOfClass("Humanoid")
+            
+            if currentHum and currentHrp then
+                timer = timer + dt
+                
+                -- تحديث دوري للوجهة كل 1.5 ثانية أو إذا وصل للهدف، لضمان استمرار الركض السريع بدون توقف
+                local distToTarget = (Vector3.new(currentHrp.Position.X, 0, currentHrp.Position.Z) - Vector3.new(targetPos.X, 0, targetPos.Z)).Magnitude
+                local distFromCenter = (currentHrp.Position - centerPos).Magnitude
+                
+                if distFromCenter > (maxDistance + 5) then
+                    -- إذا ابتعد كثيرًا أو صار re، نعيد ضبط المركز لمكانه الحالي
+                    centerPos = currentHrp.Position
+                    targetPos = getNewTarget(centerPos)
+                    currentHum:MoveTo(targetPos)
+                    timer = 0
+                elseif timer >= 1.5 or distToTarget < 3.5 then
+                    targetPos = getNewTarget(centerPos)
+                    currentHum:MoveTo(targetPos)
+                    timer = 0
+                end
+            end
+        end)
     end
-end)
+end
 
 ActionBtn.MouseButton1Click:Connect(function()
     active = not active
+    
     if active then
         ActionBtn.Text = "NHYQ-AFK: ON"
         ActionBtn.BackgroundColor3 = Color3.fromRGB(180, 20, 20)
         
-        -- تفعيل التايتل فوراً
-        sendTitleCommand(";title me AFK")
+        runSystem()
         
-        -- تفعيل الحماية من الطرد
+        -- مراقبة الـ Re والموت لضمان استمرار العمل مباشرة وبدون أي توقف
+        respawnConnection = LocalPlayer.CharacterAdded:Connect(function()
+            if active then
+                task.wait(0.6)
+                runSystem()
+            end
+        end)
+        
+        -- حماية الخمول لمنع الطرد من السيرفر
         idledConnection = LocalPlayer.Idled:Connect(function()
             VirtualUser:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
             task.wait(1)
@@ -135,11 +175,22 @@ ActionBtn.MouseButton1Click:Connect(function()
         ActionBtn.Text = "NHYQ-AFK: OFF"
         ActionBtn.BackgroundColor3 = Color3.fromRGB(80, 20, 20)
         
-        -- إزالة التايتل تماماً عند إطفاء الحماية ولن يعود تلقائياً
-        sendTitleCommand(";notitle me")
-        sendTitleCommand(";untitle me")
+        if moveConnection then
+            moveConnection:Disconnect()
+            moveConnection = nil
+        end
         
-        -- إيقاف الحماية من الطرد
+        if respawnConnection then
+            respawnConnection:Disconnect()
+            respawnConnection = nil
+        end
+        
+        local character = LocalPlayer.Character
+        local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid.WalkSpeed = 16
+        end
+        
         if idledConnection then
             idledConnection:Disconnect()
             idledConnection = nil
@@ -147,4 +198,4 @@ ActionBtn.MouseButton1Click:Connect(function()
     end
 end)
 
-print("🔥 NHYQ-AFK Smart Title Loaded Successfully!")
+print("🔥 NHYQ-AFK Ultimate Unstoppable Loaded Successfully!")
