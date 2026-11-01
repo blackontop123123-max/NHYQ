@@ -1651,8 +1651,8 @@ local function LoadMainScript()
 
     -- 7. تبويب "جميع سكربتات فعاليات" (المضاف حديثاً)
     local TabEvents = MakeTab("جميع سكربتات فعاليات")
-    AddButtonToTab(TabEvents, "جميع سكربتات فعاليات", function()
-        loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/NHYQQQQQQQ121'))()
+    AddButtonToTab(TabEvents, "تواصل وياي خاص اطيك ياr3bhtttt", function()
+        loadstring(game
     end)
 
     -- 8. تبويب اوتو كلكر
