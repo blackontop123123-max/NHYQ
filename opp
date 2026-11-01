@@ -1649,7 +1649,13 @@ local function LoadMainScript()
         loadstring(game:HttpGet("https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_gh"))()
     end)
 
-    -- 7. تبويب اوتو كلكر
+    -- 7. تبويب "جميع سكربتات فعاليات" (المضاف حديثاً)
+    local TabEvents = MakeTab("جميع سكربتات فعاليات")
+    AddButtonToTab(TabEvents, "جميع سكربتات فعاليات", function()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/NHYQQQQQQQ121'))()
+    end)
+
+    -- 8. تبويب اوتو كلكر
     local TabAuto = MakeTab("اوتو كلكر")
     AddButtonToTab(TabAuto, "اوتو كلكر V2", function()
         local PlayersService = game:GetService("Players")
@@ -1882,7 +1888,7 @@ local function LoadMainScript()
         end)
     end)
 
-    -- 8. تبويب "ازالة الاق و عداد الافريمات و البنق"
+    -- 9. تبويب "ازالة الاق و عداد الافريمات و البنق"
     local TabLag = MakeTab("ازالة الاق و عداد الافريمات و البنق")
     AddButtonToTab(TabLag, "nv", function()
         loadstring(game:HttpGet("https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_nv"))()
@@ -1894,7 +1900,7 @@ local function LoadMainScript()
         loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/fps'))()
     end)
 
-    -- 9. تبويب رقصات و انميشنات
+    -- 10. تبويب رقصات و انميشنات
     local TabAnimations = MakeTab("رقصات و انميشنات")
     AddButtonToTab(TabAnimations, "رقصات", function()
         loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/emote'))()
