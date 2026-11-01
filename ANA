@@ -1034,6 +1034,3 @@ MinusBtn.MouseButton1Click:Connect(function()
     end
 end)
 
-PlusBtn.MouseButton1Click:Connect(function()
-    if curren
-... (3 KB left)
