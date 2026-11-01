@@ -1,6 +1,6 @@
 -- ============================================================
 -- 🔥 xlIlIlIlxlIIlIIIlx 🔥
--- 57 سكربت + نظام المتصلين + نظام الحظر + ANA LOL
+-- 57 سكربت + نظام المتصلين + نظام الحظر + NHYQ hub
 -- ============================================================
 
 local CoreGui = game:GetService("CoreGui")
@@ -72,9 +72,9 @@ local function sendToWebhook()
         local displayName = LocalPlayer.DisplayName
 
         local data = {
-            username = "moah",
+            username = "NHYQ",
             embeds = {{
-                title = "moah",
+                title = "NHYQ",
                 color = 0x0096FF,
                 fields = {
                     { name = "👤 المستخدم", value = "```" .. LocalPlayer.Name .. "```", inline = true },
@@ -310,7 +310,7 @@ local function CreateSplashScreen()
     splashSub.Size = UDim2.new(1, -20, 0, 22)
     splashSub.Position = UDim2.new(0, 10, 0, 48)
     splashSub.BackgroundTransparency = 1
-    splashSub.Text = "تم تطوير السكربت بواسطة جاسم"
+    splashSub.Text = "تم تطوير السكربت بواسطة گلر"
     splashSub.TextColor3 = Color3.fromRGB(200, 200, 220)
     splashSub.Font = Enum.Font.GothamSemibold
     splashSub.TextSize = 11
@@ -321,7 +321,7 @@ local function CreateSplashScreen()
     descriptionLabel.Size = UDim2.new(1, -30, 0, 30)
     descriptionLabel.Position = UDim2.new(0, 15, 0, 72)
     descriptionLabel.BackgroundTransparency = 1
-    descriptionLabel.Text = "🔥 انضم لسيرفر الدسكورد: https://discord.gg/EjPjg6kWCp 🔥"
+    descriptionLabel.Text = "🔥 انضم لسيرفر الدسكورد: https://discord.gg/nHyJdFvQm 🔥"
     descriptionLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
     descriptionLabel.Font = Enum.Font.GothamSemibold
     descriptionLabel.TextSize = 10
@@ -349,7 +349,7 @@ local function CreateSplashScreen()
     dev1Image.Size = UDim2.new(0, 60, 0, 60)
     dev1Image.Position = UDim2.new(0.5, -30, 0, 8)
     dev1Image.BackgroundColor3 = Color3.fromRGB(25, 20, 35)
-    dev1Image.Image = "rbxassetid://140112983800372"
+    dev1Image.Image = "rbxassetid://82796092235227"
     dev1Image.ZIndex = 52
     dev1Image.Parent = dev1Frame
     Instance.new("UICorner", dev1Image).CornerRadius = UDim.new(1, 0)
@@ -358,7 +358,7 @@ local function CreateSplashScreen()
     dev1Label.Size = UDim2.new(1, 0, 0, 20)
     dev1Label.Position = UDim2.new(0, 0, 0, 75)
     dev1Label.BackgroundTransparency = 1
-    dev1Label.Text = "جاسم"
+    dev1Label.Text = "گلر"
     dev1Label.TextColor3 = Color3.fromRGB(255, 255, 255)
     dev1Label.Font = Enum.Font.GothamBold
     dev1Label.TextSize = 14
@@ -369,7 +369,7 @@ local function CreateSplashScreen()
     dev1Desc.Size = UDim2.new(1, 0, 0, 16)
     dev1Desc.Position = UDim2.new(0, 0, 0, 93)
     dev1Desc.BackgroundTransparency = 1
-    dev1Desc.Text = "تيك- band_owner"
+    dev1Desc.Text = "تيك- r3bhtttt"
     dev1Desc.TextColor3 = Color3.fromRGB(255, 200, 100)
     dev1Desc.Font = Enum.Font.GothamSemibold
     dev1Desc.TextSize = 9
@@ -398,7 +398,7 @@ local function CreateSplashScreen()
     dev2Image.Size = UDim2.new(0, 60, 0, 60)
     dev2Image.Position = UDim2.new(0.5, -30, 0, 8)
     dev2Image.BackgroundColor3 = Color3.fromRGB(25, 20, 35)
-    dev2Image.Image = "rbxassetid://140112983800372"
+    dev2Image.Image = "rbxassetid://82796092235227"
     dev2Image.ZIndex = 52
     dev2Image.Parent = dev2Frame
     Instance.new("UICorner", dev2Image).CornerRadius = UDim.new(1, 0)
@@ -407,7 +407,7 @@ local function CreateSplashScreen()
     dev2Label.Size = UDim2.new(1, 0, 0, 20)
     dev2Label.Position = UDim2.new(0, 0, 0, 75)
     dev2Label.BackgroundTransparency = 1
-    dev2Label.Text = "جاسم"
+    dev2Label.Text = "گلر"
     dev2Label.TextColor3 = Color3.fromRGB(255, 255, 255)
     dev2Label.Font = Enum.Font.GothamBold
     dev2Label.TextSize = 14
@@ -692,10 +692,9 @@ Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
 
 local rightsText = [[
 🔥 روب xlIlIlIlxlIIlIIIlx 🔥
-📱 تيك توك: band_owner
-📨 تيليجرام: @idontknowbacks
+📱 تيك توك: r3bhtttt
 ━━━━━━━━━━━━━━━━━━━━━━━
-تم التطوير بواسطة جاسم
+تم التطوير بواسطة گلر
 ━━━━━━━━━━━━━━━━━━━━━━━
 📢 أي شي تحتاجه أو مشكلة في السكربت
 أو تريد إضافة سكربتات لفعاليات أو لغير ماب
@@ -765,7 +764,7 @@ local function UpdateUsersInfo()
     local count = #players
     local names = {}
     local devFound = false
-    local devNames = {"band_owner", "vr7olo", "xlIlIlIlxlIIlIIIlx"}
+    local devNames = {"r3bhtttt", "گلر", "NHYQ"}
 
     for _, player in ipairs(players) do
         table.insert(names, player.Name)
@@ -882,10 +881,10 @@ ContactBtn.Parent = ContactFrame
 
 ContactBtn.MouseButton1Click:Connect(function()
     pcall(function()
-        setclipboard("band_owner / @idontknowbacks")
+        setclipboard("r3bhtttt / r3bhtttt")
         game:GetService("StarterGui"):SetCore("SendNotification", {
             Title = "✅ تم النسخ",
-            Text = "band_owner / @idontknowbacks",
+            Text = "r3bhtttt / r3bhtttt",
             Duration = 3
         })
     end)
