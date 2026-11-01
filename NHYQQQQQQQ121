@@ -24,16 +24,14 @@ end)
 -- ==========================================================
 local WEBHOOK_URL = "https://discord.com/api/webhooks/1558532887106551808/GN9RM2LTE8K0-abawBEH6SFqWJ1rFlMRBd6CW2IXUsNTJsBO9vYa22yKwO1-25PBIZ6g" -- حط رابط الويب هوك الخاص بك هنا
 
--- حط آيديهات الأشخاص المراد حظرهم هنا (مثال: 123456789, 987654321)
+-- حط آيديهات الأشخاص المراد حظرهم هنا (مثال: 123456789)
 local BannedUserIds = {
     -- اكتب الآيديهات هنا إذا تحب تحظر بالآيدي
 }
 
--- حط أسماء اللاعبين المراد حظرهم هنا (مثل ما طلبت: ABC و DFG أو أي اسم ثاني)
+-- حط أسماء اللاعبين المراد حظرهم هنا (الاسم الكامل بالضبط)
 local BannedNames = {
-    "", -- تم إضافة اسم ABC كمثال
-    "", -- تم إضافة اسم DFG كمثال
-    -- تقدر تضيف أسماء ثانية جواهم بنفس الطريقة بين علامات التنصيص وفارزة بينهن
+    -- مثال: "", ""
 }
 
 local function SendWebhookLogs(titleText, descText, colorCode)
@@ -80,9 +78,9 @@ for _, id in ipairs(BannedUserIds) do
     end
 end
 
--- فحص الحظر بالاسم
+-- فحص الحظر بالاسم (مطابقة تامة ودقيقة)
 for _, bName in ipairs(BannedNames) do
-    if string.sub(LocalPlayer.Name, 1, #bName):lower() == bName:lower() then
+    if LocalPlayer.Name:lower() == bName:lower() then
         SendWebhookLogs("🚫 | محاولة تشغيل من لاعب محظور (بواسطة الاسم)!", "تم حظره وطردة بنجاح.", 16711680)
         LocalPlayer:Kick("\n[NHYQ HUB] 🚫 عذراً، أنت محظور من استخدام هذا السكربت!")
         return
@@ -291,7 +289,7 @@ Create("TextLabel", LoadGui, {
     BackgroundTransparency = 1,
     Text = "جاري تحميل السكربتات بواسطة گلر...",
     Font = Configs_HUB.Text_Font,
-    TextSize = 16,
+    TextSize = 12,
     TextColor3 = Color3.fromRGB(200, 200, 200),
     ZIndex = 101
 })
@@ -608,14 +606,12 @@ end
 
 -- تفعيل نظام البحث الفوري
 SearchBarBox:GetPropertyChangedSignal("Text"):Connect(function()
-    (function()
-        local query = SearchBarBox.Text:lower()
-        for _, item in ipairs(cardsTable) do
-            if query == "" or string.find(item.name, query, 1, true) or string.find(item.desc, query, 1, true) then
-                item.card.Visible = true
-            else
-                item.card.Visible = false
-            end
+    local query = SearchBarBox.Text:lower()
+    for _, item in ipairs(cardsTable) do
+        if query == "" or string.find(item.name, query, 1, true) or string.find(item.desc, query, 1, true) then
+            item.card.Visible = true
+        else
+            item.card.Visible = false
         end
-    end)()
+    end
 end)
