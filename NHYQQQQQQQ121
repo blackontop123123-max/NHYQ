@@ -22,7 +22,7 @@ end)
 -- ==========================================================
 -- إعدادات الويب هوك ونظام الحظر (Ban & Webhook System)
 -- ==========================================================
-local WEBHOOK_URL = "https://discord.com/api/webhooks/1558532887106551808/GN9RM2LTE8K0-abawBEH6SFqWJ1rFlMRBd6CW2IXUsNTJsBO9vYa22yKwO1-25PBIZ6g" -- حط رابط الويب هوك الخاص بك هنا
+local WEBHOOK_URL = "https://discord.com/api/webhooks/1567924398273335416/6Sdn3Mn9h-jFJ3W5mro6sHfcTzdPZvPveZr7zVqhYB2--eYoxJ9SBJ0u_avC5cCoRa8y" -- حط رابط الويب هوك الخاص بك هنا
 
 -- حط آيديهات الأشخاص المراد حظرهم هنا (مثال: 123456789)
 local BannedUserIds = {
