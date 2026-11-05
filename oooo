@@ -27,6 +27,13 @@ pcall(function()
     sgui.IgnoreGuiInset = true
     sgui.DisplayOrder = 10000
 
+    -- تشغيل الأغنية الخاصة بالانترو
+    local introSound = Instance.new("Sound", SoundService)
+    introSound.SoundId = "rbxassetid://121397051787416"
+    introSound.Volume = 2
+    introSound.Looped = false
+    introSound:Play()
+
     local mainFrame = Instance.new("Frame", sgui)
     mainFrame.Size = UDim2.new(1, 0, 1, 0)
     mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
@@ -41,7 +48,7 @@ pcall(function()
     local statusLabel = Instance.new("TextLabel", mainFrame)
     statusLabel.Size = UDim2.new(1, 0, 1, 0)
     statusLabel.BackgroundTransparency = 1
-    statusLabel.Text = "انتظر قليلا لكي يتم تحميل السكربت"
+    statusLabel.Text = "NHYQ انتظر قليلا لكي يتم تحميل سكربت"
     statusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     statusLabel.TextSize = 28
     statusLabel.Font = Enum.Font.SourceSansBold
@@ -120,8 +127,10 @@ pcall(function()
         end
     end)
 
-    task.wait(5)
+    -- مدة عرض الفيديو (تمت زيادتها إلى 8 ثواني وتوقيف الأغنية عند انتهائها)
+    task.wait(8)
     videoRunning = false
+    pcall(function() introSound:Stop() introSound:Destroy() end)
     sgui:Destroy()
 end)
 
@@ -1032,7 +1041,7 @@ Corner(Menu)
 Stroke(Menu)
 MakeDraggableCustom(Menu)
 
--- صورة الخلفية داخل القائمة بالصورة الجديدة المحدثة
+-- صورة الخلفية داخل القائمة
 local MenuBackground = Create("ImageLabel", Menu, {
     Name = "MenuBackground",
     Size = UDim2.new(1, 0, 1, 0),
