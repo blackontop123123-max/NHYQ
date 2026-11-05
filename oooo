@@ -12,6 +12,120 @@ local _L = _P.LocalPlayer
 local Camera = workspace.CurrentCamera
 
 --==================================================
+-- -- الانترو فقط - گلر
+--==================================================
+
+pcall(function()
+    local playerGui = _L:WaitForChild("PlayerGui")
+
+    if playerGui:FindFirstChild("9MART_TURBO_DOOMSDAY") then
+        playerGui:FindFirstChild("9MART_TURBO_DOOMSDAY"):Destroy()
+    end
+
+    local sgui = Instance.new("ScreenGui", playerGui)
+    sgui.Name = "9MART_TURBO_DOOMSDAY"
+    sgui.IgnoreGuiInset = true
+    sgui.DisplayOrder = 10000
+
+    local mainFrame = Instance.new("Frame", sgui)
+    mainFrame.Size = UDim2.new(1, 0, 1, 0)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    mainFrame.BorderSizePixel = 0
+
+    local coverFrame = Instance.new("Frame", mainFrame)
+    coverFrame.Size = UDim2.new(1, 0, 1, 0)
+    coverFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    coverFrame.BorderSizePixel = 0
+    coverFrame.ZIndex = 50
+
+    local statusLabel = Instance.new("TextLabel", mainFrame)
+    statusLabel.Size = UDim2.new(1, 0, 1, 0)
+    statusLabel.BackgroundTransparency = 1
+    statusLabel.Text = "انتظر قليلا لكي يتم تحميل السكربت"
+    statusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    statusLabel.TextSize = 28
+    statusLabel.Font = Enum.Font.SourceSansBold
+    statusLabel.ZIndex = 100
+
+    local baseUrl = "https://digital-cloak-guard.lovable.app/api/public/raw/mw3v3n2see4uj/"
+    local totalFrames = 48
+
+    local frames = {}
+    local downloadedCount = 0
+
+    -- تحميل الفريمات في الخلفية
+    for i = 1, totalFrames do
+        task.spawn(function()
+            local frameNum = string.format("%04d", i)
+            local success, imgData = pcall(function() return game:HttpGet(baseUrl .. frameNum .. ".jpg") end)
+            if success then
+                local fileName = "9mart_f_" .. frameNum .. ".jpg"
+                if writefile then
+                    pcall(function() writefile(fileName, imgData) end)
+                end
+                
+                local imgLabel = Instance.new("ImageLabel", mainFrame)
+                imgLabel.Size = UDim2.new(1, 0, 1, 0)
+                imgLabel.Position = UDim2.new(0, 0, 0, 0)
+                imgLabel.BackgroundTransparency = 1
+                imgLabel.ScaleType = Enum.ScaleType.Fit
+                imgLabel.ResampleMode = Enum.ResamplerMode.Default
+                if getcustomasset then
+                    pcall(function() imgLabel.Image = getcustomasset(fileName) end)
+                end
+                imgLabel.Visible = false
+                imgLabel.ZIndex = 10
+                frames[i] = imgLabel
+            end
+            downloadedCount = downloadedCount + 1
+        end)
+    end
+
+    repeat task.wait() until downloadedCount >= totalFrames
+
+    for i = 1, totalFrames do
+        if frames[i] then frames[i].Visible = true end
+    end
+
+    task.wait(1.5)
+
+    for i = 1, totalFrames do
+        if frames[i] then frames[i].Visible = false end
+    end
+
+    coverFrame:Destroy()
+    statusLabel.Visible = false
+
+    -- تشغيل الفيديو
+    local currentFrame = 1
+    local videoRunning = true
+
+    task.spawn(function()
+        while videoRunning do
+            if frames[currentFrame] then
+                frames[currentFrame].Visible = true
+                
+                local prevFrame = if currentFrame == 1 then totalFrames else currentFrame - 1
+                if frames[prevFrame] and prevFrame ~= currentFrame then
+                    frames[prevFrame].Visible = false
+                end
+            end
+
+            task.wait(0.03)
+
+            currentFrame = currentFrame + 1
+            if currentFrame > totalFrames then
+                currentFrame = 1
+            end
+        end
+    end)
+
+    task.wait(5)
+    videoRunning = false
+    sgui:Destroy()
+end)
+
+--==================================================
 -- NHYQ WHITELIST SYSTEM (STRICT CHECK)
 --==================================================
 
@@ -866,13 +980,13 @@ local function MakeDraggableCustom(gui)
   end)
 end
 
--- زر الفتح والإغلاق العائم المضيء
+-- زر الفتح والإغلاق العائم المضيء (بالصورة الجديدة المطلوب تعيينها)
 local ToggleButton = Create("ImageButton", ScreenGui, {
   Name = "NHYQ_ToggleButton",
   Size = UDim2.new(0, 56, 0, 56),
   Position = UDim2.new(0.08, 0, 0.18, 0),
   BackgroundTransparency = 1,
-  Image = "rbxthumb://type=Asset&id=88644653338763&w=150&h=150",
+  Image = "rbxthumb://type=Asset&id=113113708193604&w=150&h=150",
   Active = true,
   Visible = false,
   ZIndex = 5000
