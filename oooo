@@ -12,7 +12,7 @@ local _L = _P.LocalPlayer
 local Camera = workspace.CurrentCamera
 
 --==================================================
--- -- الانترو فقط - گلر
+-- -- الانترو الجديد مع الصوت (من الثانية 42 ولمدة 8 ثواني)
 --==================================================
 
 pcall(function()
@@ -22,17 +22,18 @@ pcall(function()
         playerGui:FindFirstChild("9MART_TURBO_DOOMSDAY"):Destroy()
     end
 
+    -- تشغيل الصوت (الأغنية)
+    local soundId = 121397051787416
+    local sound = Instance.new("Sound")
+    sound.SoundId = "rbxassetid://" .. tostring(soundId)
+    sound.Volume = 1
+    sound.Looped = false
+    sound.Parent = SoundService
+
     local sgui = Instance.new("ScreenGui", playerGui)
     sgui.Name = "9MART_TURBO_DOOMSDAY"
     sgui.IgnoreGuiInset = true
     sgui.DisplayOrder = 10000
-
-    -- تشغيل الأغنية الخاصة بالانترو
-    local introSound = Instance.new("Sound", SoundService)
-    introSound.SoundId = "rbxassetid://121397051787416"
-    introSound.Volume = 2
-    introSound.Looped = false
-    introSound:Play()
 
     local mainFrame = Instance.new("Frame", sgui)
     mainFrame.Size = UDim2.new(1, 0, 1, 0)
@@ -48,7 +49,7 @@ pcall(function()
     local statusLabel = Instance.new("TextLabel", mainFrame)
     statusLabel.Size = UDim2.new(1, 0, 1, 0)
     statusLabel.BackgroundTransparency = 1
-    statusLabel.Text = "NHYQ انتظر قليلا لكي يتم تحميل سكربت"
+    statusLabel.Text = "انتظر قليلا لكي يتم  تحميل سكربت NHYQ"
     statusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     statusLabel.TextSize = 28
     statusLabel.Font = Enum.Font.SourceSansBold
@@ -67,9 +68,7 @@ pcall(function()
             local success, imgData = pcall(function() return game:HttpGet(baseUrl .. frameNum .. ".jpg") end)
             if success then
                 local fileName = "9mart_f_" .. frameNum .. ".jpg"
-                if writefile then
-                    pcall(function() writefile(fileName, imgData) end)
-                end
+                pcall(function() writefile(fileName, imgData) end)
                 
                 local imgLabel = Instance.new("ImageLabel", mainFrame)
                 imgLabel.Size = UDim2.new(1, 0, 1, 0)
@@ -77,9 +76,7 @@ pcall(function()
                 imgLabel.BackgroundTransparency = 1
                 imgLabel.ScaleType = Enum.ScaleType.Fit
                 imgLabel.ResampleMode = Enum.ResamplerMode.Default
-                if getcustomasset then
-                    pcall(function() imgLabel.Image = getcustomasset(fileName) end)
-                end
+                pcall(function() imgLabel.Image = getcustomasset(fileName) end)
                 imgLabel.Visible = false
                 imgLabel.ZIndex = 10
                 frames[i] = imgLabel
@@ -102,6 +99,12 @@ pcall(function()
 
     coverFrame:Destroy()
     statusLabel.Visible = false
+
+    -- ضبط بداية الأغنية من الثانية 42 وتشغيلها بالتزامن مع المقدمة
+    pcall(function()
+        sound.TimePosition = 42
+        sound:Play()
+    end)
 
     -- تشغيل الفيديو
     local currentFrame = 1
@@ -127,10 +130,16 @@ pcall(function()
         end
     end)
 
-    -- مدة عرض الفيديو (تمت زيادتها إلى 8 ثواني وتوقيف الأغنية عند انتهائها)
+    -- مدة عرض الفيديو 8 ثوانٍ
     task.wait(8)
     videoRunning = false
-    pcall(function() introSound:Stop() introSound:Destroy() end)
+
+    -- إيقاف الأغنية وحذفها تماماً عند انتهاء المقدمة
+    pcall(function()
+        sound:Stop()
+        sound:Destroy()
+    end)
+
     sgui:Destroy()
 end)
 
