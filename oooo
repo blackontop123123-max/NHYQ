@@ -161,6 +161,7 @@ local Whitelist = {
     "faraj1038",
     "ssdhbaze",
     "addddm6reeepro1",
+    "nojopnoprob",
 }
 
 local isAllowed = false
