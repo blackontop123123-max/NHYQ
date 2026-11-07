@@ -1,0 +1,472 @@
+-- NHYQ PREMIUM HD PROTECTION v2.0 + NOTICE BLOCKER (Merged & Clear Text)
+local p = game.Players.LocalPlayer
+local RS = game:GetService("ReplicatedStorage")
+local UIS = game:GetService("UserInputService")
+local WS = game:GetService("Workspace")
+local LS = game:GetService("Lighting")
+local TS = game:GetService("TweenService")
+local PlayerGui = p:WaitForChild("PlayerGui")
+
+local blocked = true
+local hidden = false
+
+-- =========================================================
+-- [[ تحميل الصورة للزر العائم ]]
+-- =========================================================
+local IMAGE_ID = "115796219141890"
+local IMAGE = "rbxthumb://type=Asset&id=" .. IMAGE_ID .. "&w=420&h=420"
+
+-- =========================================================
+-- [[ LEGENDARY RED ASTRAL GUI - NHYQ ]]
+-- =========================================================
+
+local function makeDraggable(obj)
+    local dragging, dragStart, startPos
+    obj.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = obj.Position
+        end
+    end)
+    obj.InputEnded:Connect(function() dragging = false end)
+    UIS.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - dragStart
+            obj.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+end
+
+-- إعدادات الألوان
+local COLORS = {
+    Primary = Color3.fromRGB(255, 30, 30),
+    PrimaryDark = Color3.fromRGB(120, 0, 0),
+    PrimaryLight = Color3.fromRGB(255, 90, 90),
+    Glow = Color3.fromRGB(255, 0, 0),
+    DarkBg = Color3.fromRGB(15, 10, 10),
+    DarkerBg = Color3.fromRGB(5, 2, 2),
+    Text = Color3.fromRGB(255, 255, 255), -- أبيض ناصع وواضح
+    TextDim = Color3.fromRGB(220, 150, 150),
+}
+
+-- =========================================================
+-- [[ SIGNAL BLOCKING ]]
+-- =========================================================
+
+local signal = RS:FindFirstChild("HDAdminHDClient") and RS.HDAdminHDClient:FindFirstChild("Signals")
+local createLogSignal = signal and signal:FindFirstChild("CreateLog") and signal.CreateLog.OnClientEvent
+local executeSignal = signal and signal:FindFirstChild("ExecuteClientCommand") and signal.ExecuteClientCommand.OnClientEvent
+local errorSignal = signal and signal:FindFirstChild("Error") and signal.Error.OnClientEvent
+
+local function RemoveWarp()
+    local total = 0
+    for _, obj in pairs(game:GetDescendants()) do
+        local name = obj.Name:lower()
+        if name:find("warp") then
+            pcall(function() obj:Destroy() total = total + 1 end)
+        end
+    end
+    for _, obj in pairs(game:GetDescendants()) do
+        if obj:IsA("WarpEffect") then
+            pcall(function() obj:Destroy() total = total + 1 end)
+        end
+    end
+    for _, obj in pairs(game:GetDescendants()) do
+        if obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction") then
+            local name = obj.Name:lower()
+            if name:find("warp") then
+                pcall(function() obj:Destroy() total = total + 1 end)
+            end
+        end
+    end
+    for _, obj in pairs(LS:GetDescendants()) do
+        local name = obj.Name:lower()
+        if name:find("warp") then
+            pcall(function() obj:Destroy() total = total + 1 end)
+        end
+    end
+    return total
+end
+
+local function updateBlock()
+    local signals = {createLogSignal, executeSignal, errorSignal}
+    for _, sig in ipairs(signals) do
+        if sig then
+            pcall(function()
+                local connections = getconnections(sig)
+                for _, conn in ipairs(connections) do
+                    if blocked then conn:Disable() else conn:Enable() end
+                end
+            end)
+        end
+    end
+    if blocked then
+        RemoveWarp()
+    end
+end
+
+updateBlock()
+
+-- =========================================================
+-- [[ LEGENDARY GUI - NHYQ ]]
+-- =========================================================
+
+local gui = Instance.new("ScreenGui", PlayerGui)
+gui.ResetOnSpawn = false
+gui.Name = "NHYQPremiumGUI"
+
+-- الدرع الرئيسي
+local shield = Instance.new("ImageButton", gui)
+shield.Size = UDim2.new(0, 55, 0, 55)
+shield.Position = UDim2.new(1, -75, 0, 20)
+shield.BackgroundTransparency = 1
+shield.Image = IMAGE
+shield.ScaleType = Enum.ScaleType.Fit
+shield.BorderSizePixel = 0
+shield.ZIndex = 100
+shield.AutoButtonColor = false
+shield.ImageColor3 = COLORS.Primary
+makeDraggable(shield)
+
+local shieldGlow = Instance.new("UIStroke", shield)
+shieldGlow.Color = COLORS.Glow
+shieldGlow.Thickness = 3
+shieldGlow.Transparency = 0.3
+
+local shieldCorner = Instance.new("UICorner", shield)
+shieldCorner.CornerRadius = UDim.new(1, 0)
+
+-- =========================================================
+-- [[ MAIN PANEL ]]
+-- =========================================================
+
+local main = Instance.new("Frame", gui)
+main.Size = UDim2.new(0, 280, 0, 260)
+main.Position = UDim2.new(1, -300, 0, 70)
+main.BackgroundColor3 = COLORS.DarkBg
+main.BorderSizePixel = 0
+main.Visible = true
+main.Active = true
+main.ZIndex = 99
+main.BackgroundTransparency = 0.15
+makeDraggable(main)
+
+local mainCorner = Instance.new("UICorner", main)
+mainCorner.CornerRadius = UDim.new(0, 16)
+
+local mainStroke = Instance.new("UIStroke", main)
+mainStroke.Color = COLORS.Primary
+mainStroke.Thickness = 2
+mainStroke.Transparency = 0.4
+
+-- =========================================================
+-- [[ TITLE BAR - NHYQ ]]
+-- =========================================================
+
+local titleBar = Instance.new("Frame", main)
+titleBar.Size = UDim2.new(1, 0, 0, 38)
+titleBar.BackgroundColor3 = COLORS.PrimaryDark
+titleBar.BorderSizePixel = 0
+titleBar.ZIndex = 99
+titleBar.BackgroundTransparency = 0.3
+
+local titleBarCorner = Instance.new("UICorner", titleBar)
+titleBarCorner.CornerRadius = UDim.new(0, 16)
+
+local iconTitle = Instance.new("ImageLabel", titleBar)
+iconTitle.Size = UDim2.new(0, 20, 0, 20)
+iconTitle.Position = UDim2.new(0, 12, 0, 9)
+iconTitle.BackgroundTransparency = 1
+iconTitle.Image = IMAGE
+iconTitle.ImageColor3 = COLORS.PrimaryLight
+iconTitle.ZIndex = 100
+
+local title = Instance.new("TextLabel", titleBar)
+title.Size = UDim2.new(1, -50, 1, 0)
+title.Position = UDim2.new(0, 40, 0, 0)
+title.BackgroundTransparency = 1
+title.TextColor3 = COLORS.Text
+title.Text = "✦ NHYQ PREMIUM ✦"
+title.Font = Enum.Font.GothamBlack
+title.TextSize = 14
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.ZIndex = 100
+
+local closeBtn = Instance.new("TextButton", titleBar)
+closeBtn.Size = UDim2.new(0, 28, 0, 28)
+closeBtn.Position = UDim2.new(1, -32, 0, 5)
+closeBtn.BackgroundTransparency = 1
+closeBtn.TextColor3 = COLORS.Text
+closeBtn.Text = "✕"
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.TextSize = 15
+closeBtn.ZIndex = 100
+closeBtn.BorderSizePixel = 0
+
+closeBtn.MouseButton1Click:Connect(function()
+    gui:Destroy()
+end)
+
+-- =========================================================
+-- [[ CONTENT ]]
+-- =========================================================
+
+local content = Instance.new("Frame", main)
+content.Size = UDim2.new(1, -24, 1, -55)
+content.Position = UDim2.new(0, 12, 0, 48)
+content.BackgroundTransparency = 1
+content.ZIndex = 99
+
+-- =========================================================
+-- [[ STATUS CARD ]]
+-- =========================================================
+
+local statusCard = Instance.new("Frame", content)
+statusCard.Size = UDim2.new(1, 0, 0, 40)
+statusCard.Position = UDim2.new(0, 0, 0, 0)
+statusCard.BackgroundColor3 = COLORS.DarkerBg
+statusCard.BorderSizePixel = 0
+statusCard.ZIndex = 99
+statusCard.BackgroundTransparency = 0.4
+
+local statusCardCorner = Instance.new("UICorner", statusCard)
+statusCardCorner.CornerRadius = UDim.new(0, 10)
+
+local statusCardStroke = Instance.new("UIStroke", statusCard)
+statusCardStroke.Color = COLORS.Primary
+statusCardStroke.Thickness = 1
+statusCardStroke.Transparency = 0.5
+
+local statusIcon = Instance.new("ImageLabel", statusCard)
+statusIcon.Size = UDim2.new(0, 22, 0, 22)
+statusIcon.Position = UDim2.new(0, 10, 0, 9)
+statusIcon.BackgroundTransparency = 1
+statusIcon.Image = IMAGE
+statusIcon.ImageColor3 = COLORS.Primary
+statusIcon.ZIndex = 100
+
+local statusText = Instance.new("TextLabel", statusCard)
+statusText.Size = UDim2.new(1, -50, 0, 16)
+statusText.Position = UDim2.new(0, 40, 0, 6)
+statusText.BackgroundTransparency = 1
+statusText.TextColor3 = COLORS.Text
+statusText.Text = "PROTECTION STATUS"
+statusText.Font = Enum.Font.GothamBlack
+statusText.TextSize = 10
+statusText.TextXAlignment = Enum.TextXAlignment.Left
+statusText.ZIndex = 100
+
+local statusSub = Instance.new("TextLabel", statusCard)
+statusSub.Size = UDim2.new(1, -50, 0, 16)
+statusSub.Position = UDim2.new(0, 40, 0, 20)
+statusSub.BackgroundTransparency = 1
+statusSub.TextColor3 = COLORS.PrimaryLight
+statusSub.Text = "●  FULLY ACTIVE"
+statusSub.Font = Enum.Font.GothamBold
+statusSub.TextSize = 11
+statusSub.TextXAlignment = Enum.TextXAlignment.Left
+statusSub.ZIndex = 100
+
+-- =========================================================
+-- [[ TOGGLE BUTTON 1 - PROTECTION ]]
+-- =========================================================
+
+local toggleBtn = Instance.new("TextButton", content)
+toggleBtn.Size = UDim2.new(1, 0, 0, 38)
+toggleBtn.Position = UDim2.new(0, 0, 0, 48)
+toggleBtn.BackgroundColor3 = COLORS.PrimaryDark
+toggleBtn.BackgroundTransparency = 0.3
+toggleBtn.TextColor3 = COLORS.Text
+toggleBtn.Text = "◉  PROTECTION ACTIVE"
+toggleBtn.Font = Enum.Font.GothamBlack
+toggleBtn.TextSize = 12
+toggleBtn.BorderSizePixel = 0
+toggleBtn.ZIndex = 99
+toggleBtn.AutoButtonColor = false
+
+local toggleCorner = Instance.new("UICorner", toggleBtn)
+toggleCorner.CornerRadius = UDim.new(1, 0)
+
+local toggleStroke = Instance.new("UIStroke", toggleBtn)
+toggleStroke.Color = COLORS.Primary
+toggleStroke.Thickness = 1.5
+toggleStroke.Transparency = 0.3
+
+local toggleGlow = Instance.new("Frame", toggleBtn)
+toggleGlow.Size = UDim2.new(0, 8, 0, 8)
+toggleGlow.Position = UDim2.new(1, -16, 0, 15)
+toggleGlow.BackgroundColor3 = COLORS.Primary
+toggleGlow.BorderSizePixel = 0
+toggleGlow.ZIndex = 100
+
+local toggleGlowCorner = Instance.new("UICorner", toggleGlow)
+toggleGlowCorner.CornerRadius = UDim.new(1, 0)
+
+-- =========================================================
+-- [[ TOGGLE BUTTON 2 - NOTICE BLOCKER (مغلق افتراضياً) ]]
+-- =========================================================
+
+local noticeBtn = Instance.new("TextButton", content)
+noticeBtn.Size = UDim2.new(1, 0, 0, 38)
+noticeBtn.Position = UDim2.new(0, 0, 0, 94)
+noticeBtn.BackgroundColor3 = COLORS.DarkerBg
+noticeBtn.BackgroundTransparency = 0.3
+noticeBtn.TextColor3 = COLORS.Text
+noticeBtn.Text = "○  NOTICE BLOCKER: OFF"
+noticeBtn.Font = Enum.Font.GothamBlack
+noticeBtn.TextSize = 12
+noticeBtn.BorderSizePixel = 0
+noticeBtn.ZIndex = 99
+noticeBtn.AutoButtonColor = false
+
+local noticeCorner = Instance.new("UICorner", noticeBtn)
+noticeCorner.CornerRadius = UDim.new(1, 0)
+
+local noticeStroke = Instance.new("UIStroke", noticeBtn)
+noticeStroke.Color = COLORS.TextDim
+noticeStroke.Thickness = 1.5
+noticeStroke.Transparency = 0.3
+
+local noticeGlow = Instance.new("Frame", noticeBtn)
+noticeGlow.Size = UDim2.new(0, 8, 0, 8)
+noticeGlow.Position = UDim2.new(1, -16, 0, 15)
+noticeGlow.BackgroundColor3 = COLORS.TextDim
+noticeGlow.BorderSizePixel = 0
+noticeGlow.ZIndex = 100
+
+local noticeGlowCorner = Instance.new("UICorner", noticeGlow)
+noticeGlowCorner.CornerRadius = UDim.new(1, 0)
+
+-- =========================================================
+-- [[ FOOTER - NHYQ ]]
+-- =========================================================
+
+local footer = Instance.new("Frame", main)
+footer.Size = UDim2.new(1, 0, 0, 28)
+footer.Position = UDim2.new(0, 0, 1, -28)
+footer.BackgroundTransparency = 1
+footer.ZIndex = 99
+
+local footerLine = Instance.new("Frame", footer)
+footerLine.Size = UDim2.new(0.8, 0, 0, 1)
+footerLine.Position = UDim2.new(0.1, 0, 0, 0)
+footerLine.BackgroundColor3 = COLORS.Primary
+footerLine.BackgroundTransparency = 0.6
+footerLine.BorderSizePixel = 0
+
+local footerText = Instance.new("TextLabel", footer)
+footerText.Size = UDim2.new(1, 0, 1, 0)
+footerText.Position = UDim2.new(0, 0, 0, 6)
+footerText.BackgroundTransparency = 1
+footerText.TextColor3 = COLORS.TextDim
+footerText.Text = "✦ NHYQ PREMIUM HD · PROTECTION ✦"
+footerText.Font = Enum.Font.GothamBold
+footerText.TextSize = 9
+footerText.ZIndex = 99
+
+-- =========================================================
+-- [[ BUTTON FUNCTIONS & NOTICE BLOCKING LOGIC ]]
+-- =========================================================
+
+local isBlockerOn = false
+
+task.spawn(function()
+    while true do
+        if isBlockerOn then
+            pcall(function()
+                local hdGui = PlayerGui:FindFirstChild("HDAdminInterface")
+                if hdGui then
+                    for _, noticeContainer in ipairs(hdGui:GetDescendants()) do
+                        if noticeContainer.Name == "Notice" or noticeContainer.Name == "Notices" then
+                            noticeContainer.Visible = false
+                        end
+                    end
+                end
+            end)
+        end
+        task.wait(0.2)
+    end
+end)
+
+noticeBtn.MouseButton1Click:Connect(function()
+    isBlockerOn = not isBlockerOn
+
+    if isBlockerOn then
+        noticeBtn.Text = "◉  NOTICE BLOCKER: ON"
+        noticeBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 50)
+        noticeStroke.Color = Color3.fromRGB(0, 200, 100)
+        noticeGlow.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
+        noticeBtn.TextColor3 = COLORS.Text
+    else
+        noticeBtn.Text = "○  NOTICE BLOCKER: OFF"
+        noticeBtn.BackgroundColor3 = COLORS.DarkerBg
+        noticeStroke.Color = COLORS.TextDim
+        noticeGlow.BackgroundColor3 = COLORS.TextDim
+        noticeBtn.TextColor3 = COLORS.Text
+
+        pcall(function()
+            local hdGui = PlayerGui:FindFirstChild("HDAdminInterface")
+            if hdGui then
+                for _, noticeContainer in ipairs(hdGui:GetDescendants()) do
+                    if noticeContainer.Name == "Notice" or noticeContainer.Name == "Notices" then
+                        noticeContainer.Visible = true
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+local function updateToggleState()
+    if blocked then
+        toggleBtn.Text = "◉  PROTECTION ACTIVE"
+        toggleBtn.BackgroundColor3 = COLORS.PrimaryDark
+        toggleStroke.Color = COLORS.Primary
+        toggleGlow.BackgroundColor3 = COLORS.Primary
+        statusSub.Text = "●  FULLY ACTIVE"
+        statusSub.TextColor3 = COLORS.PrimaryLight
+        shield.ImageColor3 = COLORS.Primary
+        shieldGlow.Color = COLORS.Glow
+        mainStroke.Color = COLORS.Primary
+        statusCardStroke.Color = COLORS.Primary
+    else
+        toggleBtn.Text = "○  PROTECTION INACTIVE"
+        toggleBtn.BackgroundColor3 = COLORS.DarkerBg
+        toggleStroke.Color = COLORS.TextDim
+        toggleGlow.BackgroundColor3 = COLORS.TextDim
+        statusSub.Text = "○  INACTIVE"
+        statusSub.TextColor3 = COLORS.TextDim
+        shield.ImageColor3 = COLORS.TextDim
+        shieldGlow.Color = COLORS.TextDim
+        mainStroke.Color = COLORS.TextDim
+        statusCardStroke.Color = COLORS.TextDim
+    end
+end
+
+toggleBtn.MouseButton1Click:Connect(function()
+    blocked = not blocked
+    updateBlock()
+    updateToggleState()
+end)
+
+shield.MouseButton1Click:Connect(function()
+    hidden = not hidden
+    main.Visible = not hidden
+    if hidden then
+        shield.ImageColor3 = COLORS.TextDim
+        shieldGlow.Color = COLORS.TextDim
+    else
+        updateToggleState()
+    end
+end)
+
+updateToggleState()
+
+main.BackgroundTransparency = 1
+main.Size = UDim2.new(0, 0, 0, 0)
+
+TS:Create(main, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+    BackgroundTransparency = 0.15,
+    Size = UDim2.new(0, 280, 0, 260)
+}):Play()
