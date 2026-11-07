@@ -1288,8 +1288,8 @@ local function LoadMainScript()
 
     -- 2. تبويب حماية
     local TabProtect = MakeTab("حماية")
-    AddButtonToTab(TabProtect, "حماية", function()
-        loadstring(game:HttpGet("https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_hh"))()
+    AddButtonToTab(TabProtect, "حماية و حظر اشعارات الادمن", function()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/Aprodict'))()
     end)
     AddButtonToTab(TabProtect, "حماية explode", function()
         loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/anti%20explode'))()
