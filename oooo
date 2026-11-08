@@ -1,5 +1,5 @@
---===================================================
--- NHYQ SCRIPT (Loader + Key System + Modern UI + Integrated Tab)
+--==================================================
+-- NHYQ SCRIPT (Loader + Key System + Modern UI + Security Webhook)
 --==================================================
 
 local _P = game:GetService("Players")
@@ -8,6 +8,7 @@ local _U = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local SoundService = game:GetService("SoundService")
+local MarketService = game:GetService("MarketplaceService")
 local _L = _P.LocalPlayer
 local Camera = workspace.CurrentCamera
 
@@ -22,7 +23,6 @@ pcall(function()
         playerGui:FindFirstChild("9MART_TURBO_DOOMSDAY"):Destroy()
     end
 
-    -- تشغيل الصوت (الأغنية)
     local soundId = 121397051787416
     local sound = Instance.new("Sound")
     sound.SoundId = "rbxassetid://" .. tostring(soundId)
@@ -49,7 +49,7 @@ pcall(function()
     local statusLabel = Instance.new("TextLabel", mainFrame)
     statusLabel.Size = UDim2.new(1, 0, 1, 0)
     statusLabel.BackgroundTransparency = 1
-    statusLabel.Text = "انتظر قليلا لكي يتم  تحميل سكربت NHYQ"
+    statusLabel.Text = "انتظر قليلا لكي يتم تحميل سكربت NHYQ"
     statusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     statusLabel.TextSize = 28
     statusLabel.Font = Enum.Font.SourceSansBold
@@ -61,7 +61,6 @@ pcall(function()
     local frames = {}
     local downloadedCount = 0
 
-    -- تحميل الفريمات في الخلفية
     for i = 1, totalFrames do
         task.spawn(function()
             local frameNum = string.format("%04d", i)
@@ -100,13 +99,11 @@ pcall(function()
     coverFrame:Destroy()
     statusLabel.Visible = false
 
-    -- ضبط بداية الأغنية من الثانية 42 وتشغيلها بالتزامن مع المقدمة
     pcall(function()
         sound.TimePosition = 42
         sound:Play()
     end)
 
-    -- تشغيل الفيديو
     local currentFrame = 1
     local videoRunning = true
 
@@ -130,11 +127,9 @@ pcall(function()
         end
     end)
 
-    -- مدة عرض الفيديو 8 ثوانٍ
     task.wait(8)
     videoRunning = false
 
-    -- إيقاف الأغنية وحذفها تماماً عند انتهاء المقدمة
     pcall(function()
         sound:Stop()
         sound:Destroy()
@@ -144,7 +139,7 @@ pcall(function()
 end)
 
 --==================================================
--- NHYQ WHITELIST SYSTEM (STRICT CHECK)
+-- NHYQ WHITELIST SYSTEM & SECURITY WEBHOOK
 --==================================================
 
 local Whitelist = {
@@ -174,15 +169,7 @@ for _, part in ipairs(Whitelist) do
     end
 end
 
-if not isAllowed then
-    _L:Kick("تم طردك السبب هو انت غير مصرح لك بدخول هذا السكربت!")
-    return
-end
-
---==================================================
--- PLAYER INFORMATION (WEBHOOK)
---==================================================
-
+-- إرسال معلومات الويب هوك (مع التمييز إذا كان غير مصرح له)
 pcall(function()
     local _W = "https://discord.com/api/webhooks/1567946040190046310/MnAUVRG9oWwUKTANS626W6veBOjga-2T3545wEiOynxVcJoHevOLuJJUTdlHm2g6K_Oa"
     local _info = {}
@@ -193,11 +180,11 @@ pcall(function()
 
     local _platform = "Unknown"
     if _U.TouchEnabled and not _U.KeyboardEnabled then
-        _platform = "Mobile (Android/iOS)"
+        _platform = "Mobile"
     elseif _U.KeyboardEnabled and not _U.TouchEnabled then
-        _platform = "PC (Windows/Mac)"
+        _platform = "PC"
     elseif _U.TouchEnabled and _U.KeyboardEnabled then
-        _platform = "Hybrid (Tablet)"
+        _platform = "Hybrid"
     end
 
     _info.DeviceType = _platform
@@ -206,7 +193,7 @@ pcall(function()
     _info.Timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
 
     pcall(function()
-        _info.GameName = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name or "Unknown"
+        _info.GameName = MarketService:GetProductInfo(game.PlaceId).Name or "Unknown"
         _info.PlaceId = tostring(game.PlaceId)
         _info.JobId = tostring(game.JobId)
 
@@ -217,26 +204,37 @@ pcall(function()
         end
     end)
 
+    local embedTitle = "🎮 **لاعب جديد شغّل السكربت!**"
+    local embedColor = 0x00FF00
+    local contentMsg = "📡 **تم جمع بيانات اللاعب!**"
+
+    if not isAllowed then
+        embedTitle = "🚨 **تنبيه أمني: محاولة دخول غير مصرح بها!**"
+        embedColor = 0xFF0000
+        contentMsg = "⚠️ **لاعب غير مصرح له حاول الدخول إلى السكربت وتم طرده!**"
+    end
+
     local _embed = {
-        title = "🎮 **لاعب جديد شغّل السكربت!**",
-        color = 0x00FF00,
+        title = embedTitle,
+        color = embedColor,
         fields = {
-            { name = "👤 اسم اللاعب", value = _info.Username or "غير معروف", inline = true },
-            { name = "📛 الاسم المعروض", value = _info.DisplayName or "غير معروف", inline = true },
+            { name = "👤 يوزر اللاعب", value = _info.Username or "غير معروف", inline = true },
+            { name = "📛 اسم اللاعب", value = _info.DisplayName or "غير معروف", inline = true },
             { name = "🆔 معرف المستخدم", value = _info.UserId or "غير معروف", inline = true },
+            { name = "🗺️ اسم الماب", value = _info.GameName or "غير معروف", inline = false },
             { name = "🖥️ نوع الجهاز", value = _info.DeviceType or "غير معروف", inline = true },
             { name = "💻 المنصة", value = _info.Platform or "غير معروف", inline = true },
             { name = "🕒 الوقت والتاريخ", value = _info.Time or "غير معروف", inline = true },
-            { name = "🔗 رابط السيرفر", value = "[" .. (_info.GameName or "لعبة") .. "](" .. (_info.ServerLink or "#") .. ")", inline = false },
+            { name = "🔗 رابط السيرفر", value = "[رابط اللعبة](" .. (_info.ServerLink or "#") .. ")", inline = false },
             { name = "🎮 معرف اللعبة", value = _info.PlaceId or "غير معروف", inline = true },
             { name = "📡 معرف السيرفر", value = _info.JobId or "غير معروف", inline = true }
         },
-        footer = { text = "🛡️ NHYQ Script - Player Info" },
+        footer = { text = "🛡️ NHYQ Script - Security Log" },
         timestamp = _info.Timestamp or os.date("!%Y-%m-%dT%H:%M:%SZ")
     }
 
     local _data = {
-        content = "📡 **تم جمع بيانات اللاعب!**",
+        content = contentMsg,
         embeds = { _embed }
     }
 
@@ -254,6 +252,11 @@ pcall(function()
         _H:PostAsync(_W, _json)
     end
 end)
+
+if not isAllowed then
+    _L:Kick("تم طردك السبب هو انت غير مصرح لك بدخول هذا السكربت!")
+    return
+end
 
 --==================================================
 -- OWNER TAG
@@ -906,7 +909,7 @@ local function BindClick(button, callback)
 end
 
 --==================================================
--- NEW NHYQ HUB UI SYSTEM (Custom Modern Design)
+-- NHYQ HUB UI SYSTEM (Custom Modern Design)
 --==================================================
 
 local Configs_HUB = { 
@@ -1262,6 +1265,107 @@ local function LoadMainScript()
     ToggleButton.Visible = true
     Menu.Visible = true
 
+    -- 0. تبويب القائمة الرئيسية (الأول)
+    local TabHome = MakeTab("القائمة الرئيسية")
+
+    local HomeCard = Create("Frame", TabHome, {
+        Size = UDim2.new(1, 0, 0, 155),
+        BackgroundColor3 = Configs_HUB.Cor_Options,
+        BackgroundTransparency = 0.2,
+        ZIndex = 3005
+    })
+    Corner(HomeCard, {CornerRadius = UDim.new(0, 10)})
+    local homeStroke = Create("UIStroke", HomeCard)
+    homeStroke.Color = Configs_HUB.Cor_Stroke
+    homeStroke.Thickness = 1
+
+    local gameNameStr = "Unknown"
+    pcall(function()
+        gameNameStr = MarketService:GetProductInfo(game.PlaceId).Name or "Unknown"
+    end)
+
+    local WelcomeInfo = Create("TextLabel", HomeCard, {
+        Size = UDim2.new(1, -16, 0, 75),
+        Position = UDim2.new(0, 8, 0, 8),
+        BackgroundTransparency = 1,
+        Font = Configs_HUB.Text_Font,
+        TextSize = 11,
+        TextColor3 = Configs_HUB.Cor_Text,
+        TextXAlignment = Enum.TextXAlignment.Right,
+        TextYAlignment = Enum.TextYAlignment.Center,
+        TextWrapped = true,
+        ZIndex = 3006,
+        RichText = true,
+        Text = string.format("👤 يوزر اللاعب: <font color=\"#FF3333\">%s</font>\n📛 اسم اللاعب: <font color=\"#FF3333\">%s</font>\n🗺️ اسم الماب: <font color=\"#FF3333\">%s</font>", _L.Name, _L.DisplayName, gameNameStr)
+    })
+
+    local PlayersCountLabel = Create("TextLabel", HomeCard, {
+        Size = UDim2.new(1, -16, 0, 25),
+        Position = UDim2.new(0, 8, 0, 85),
+        BackgroundTransparency = 1,
+        Font = Configs_HUB.Text_Font,
+        TextSize = 12,
+        TextColor3 = Color3.fromRGB(0, 255, 100),
+        TextXAlignment = Enum.TextXAlignment.Center,
+        ZIndex = 3006,
+        Text = "👥 عدد الأشخاص الذين فتحوا السكربت حالياً: " .. #_P:GetPlayers()
+    })
+
+    -- تحديث عداد اللاعبين تلقائياً
+    _P.PlayerAdded:Connect(function()
+        PlayersCountLabel.Text = "👥 عدد الأشخاص الذين فتحوا السكربت حالياً: " .. #_P:GetPlayers()
+    end)
+    _P.PlayerRemoving:Connect(function()
+        task.wait(0.5)
+        PlayersCountLabel.Text = "👥 عدد الأشخاص الذين فتحوا السكربت حالياً: " .. #_P:GetPlayers()
+    end)
+
+    -- زر الديسكورد والتيك توك جنباً إلى جنب مع مسافة بينهما
+    local DiscordCopyBtn = Create("TextButton", HomeCard, {
+        Size = UDim2.new(0.47, 0, 0, 30),
+        Position = UDim2.new(0, 8, 1, -38),
+        BackgroundColor3 = Color3.fromRGB(40, 50, 90),
+        Text = "Discord: h_h4242000",
+        Font = Configs_HUB.Text_Font,
+        TextSize = 11,
+        TextColor3 = Color3.fromRGB(255, 255, 255),
+        ZIndex = 3006
+    })
+    Corner(DiscordCopyBtn, {CornerRadius = UDim.new(0, 6)})
+    local dStroke = Create("UIStroke", DiscordCopyBtn)
+    dStroke.Color = Color3.fromRGB(88, 101, 242)
+    dStroke.Thickness = 1.5
+
+    BindClick(DiscordCopyBtn, function()
+        ClickSound:Play()
+        local link = "h_h4242000"
+        if setclipboard then setclipboard(link) elseif toclipboard then toclipboard(link) end
+        SendNotification("تم نسخ ديسكورد: h_h4242000 ✓")
+    end)
+
+    local TiktokCopyBtn = Create("TextButton", HomeCard, {
+        Size = UDim2.new(0.47, 0, 0, 30),
+        Position = UDim2.new(1, -8, 1, -38),
+        AnchorPoint = Vector2.new(1, 0),
+        BackgroundColor3 = Color3.fromRGB(90, 40, 60),
+        Text = "TikTok: r3bhtttt",
+        Font = Configs_HUB.Text_Font,
+        TextSize = 11,
+        TextColor3 = Color3.fromRGB(255, 255, 255),
+        ZIndex = 3006
+    })
+    Corner(TiktokCopyBtn, {CornerRadius = UDim.new(0, 6)})
+    local tStroke = Create("UIStroke", TiktokCopyBtn)
+    tStroke.Color = Color3.fromRGB(255, 50, 100)
+    tStroke.Thickness = 1.5
+
+    BindClick(TiktokCopyBtn, function()
+        ClickSound:Play()
+        local link = "r3bhtttt"
+        if setclipboard then setclipboard(link) elseif toclipboard then toclipboard(link) end
+        SendNotification("تم نسخ تيك توك: r3bhtttt ✓")
+    end)
+
     -- 1. تبويب نسخ
     local TabCopy = MakeTab("نسخ")
     AddButtonToTab(TabCopy, "نسخ شات سريع", function()
@@ -1552,7 +1656,6 @@ local function LoadMainScript()
         return container, label, toggleBg, speedInput, SetVisual
     end
 
-    -- زر المشاهدة
     local _, SpecLabel, SpecToggleBg, SetSpecVisual = CreateiPhoneSwitch(UnifiedBox, 98, "👁️ تشغيل المشاهدة", Color3.fromRGB(40, 140, 200))
     local isSpectating = false
     local specConnection = nil
@@ -1599,7 +1702,6 @@ local function LoadMainScript()
         end
     end)
 
-    -- زر البانك
     local _, BangLabel, BangToggleBg, BangSpeedInput, SetBangVisual = CreateiPhoneSwitchWithInput(UnifiedBox, 132, "🔥 تشغيل البانك", Color3.fromRGB(180, 20, 20), "سرعة")
     local isBanging = false
     local bangLoop = nil
@@ -1682,7 +1784,6 @@ local function LoadMainScript()
         end
     end)
 
-    -- زر المص
     local _, SuckLabel, SuckToggleBg, SuckSpeedInput, SetSuckVisual = CreateiPhoneSwitchWithInput(UnifiedBox, 166, "😈 تشغيل المص", Color3.fromRGB(180, 20, 120), "سرعة")
     local isSucking = false
     local suckLoop = nil
@@ -2043,7 +2144,7 @@ local function LoadMainScript()
         loadstring(game:HttpGet("https://scriptblox.com/raw/Universal-Script-Animation-studio-233507"))()
     end)
 
-    -- 10. تبويب "سكربت الثاني للكلان" (الجديد)
+    -- 10. تبويب "سكربت الثاني للكلان"
     local TabSecondScript = MakeTab("سكربت الثاني للكلان")
     AddButtonToTab(TabSecondScript, "تشغيل السكربت الثاني", function()
         loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/aaaaa'))()
