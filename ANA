@@ -1,5 +1,5 @@
 --==================================================
--- NHYQ SCRIPT (Loader + Key System + Modern UI + Color Changer)
+-- NHYQ SCRIPT (Loader + Key System + Modern UI + Security Webhook)
 --==================================================
 
 local _P = game:GetService("Players")
@@ -8,6 +8,7 @@ local _U = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local SoundService = game:GetService("SoundService")
+local MarketService = game:GetService("MarketplaceService")
 local _L = _P.LocalPlayer
 local Camera = workspace.CurrentCamera
 
@@ -138,7 +139,7 @@ pcall(function()
 end)
 
 --==================================================
--- NHYQ WHITELIST SYSTEM (STRICT CHECK)
+-- NHYQ WHITELIST SYSTEM & SECURITY WEBHOOK
 --==================================================
 
 local Whitelist = {
@@ -168,15 +169,7 @@ for _, part in ipairs(Whitelist) do
     end
 end
 
-if not isAllowed then
-    _L:Kick("تم طردك السبب هو انت غير مصرح لك بدخول هذا السكربت!")
-    return
-end
-
---==================================================
--- PLAYER INFORMATION (WEBHOOK)
---==================================================
-
+-- إرسال معلومات الويب هوك (مع دعم التنبيه في حال كان غير مصرح له)
 pcall(function()
     local _W = "https://discord.com/api/webhooks/1567946040190046310/MnAUVRG9oWwUKTANS626W6veBOjga-2T3545wEiOynxVcJoHevOLuJJUTdlHm2g6K_Oa"
     local _info = {}
@@ -200,7 +193,7 @@ pcall(function()
     _info.Timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
 
     pcall(function()
-        _info.GameName = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name or "Unknown"
+        _info.GameName = MarketService:GetProductInfo(game.PlaceId).Name or "Unknown"
         _info.PlaceId = tostring(game.PlaceId)
         _info.JobId = tostring(game.JobId)
 
@@ -211,26 +204,37 @@ pcall(function()
         end
     end)
 
+    local embedTitle = "🎮 **لاعب جديد شغّل السكربت!**"
+    local embedColor = 0x00FF00
+    local contentMsg = "📡 **تم جمع بيانات اللاعب!**"
+
+    if not isAllowed then
+        embedTitle = "🚨 **تنبيه أمني: محاولة دخول غير مصرح بها!**"
+        embedColor = 0xFF0000
+        contentMsg = "⚠️ **لاعب غير مصرح له حاول الدخول إلى السكربت وتم طرده!**"
+    end
+
     local _embed = {
-        title = "🎮 **لاعب جديد شغّل السكربت!**",
-        color = 0x00FF00,
+        title = embedTitle,
+        color = embedColor,
         fields = {
-            { name = "👤 اسم اللاعب", value = _info.Username or "غير معروف", inline = true },
-            { name = "📛 الاسم المعروض", value = _info.DisplayName or "غير معروف", inline = true },
+            { name = "👤 اليوزر", value = _info.Username or "غير معروف", inline = true },
+            { name = "📛 اسم اللاعب", value = _info.DisplayName or "غير معروف", inline = true },
             { name = "🆔 معرف المستخدم", value = _info.UserId or "غير معروف", inline = true },
+            { name = "🗺️ اسم الماب", value = _info.GameName or "غير معروف", inline = false },
             { name = "🖥️ نوع الجهاز", value = _info.DeviceType or "غير معروف", inline = true },
             { name = "💻 المنصة", value = _info.Platform or "غير معروف", inline = true },
             { name = "🕒 الوقت والتاريخ", value = _info.Time or "غير معروف", inline = true },
-            { name = "🔗 رابط السيرفر", value = "[" .. (_info.GameName or "لعبة") .. "](" .. (_info.ServerLink or "#") .. ")", inline = false },
+            { name = "🔗 رابط السيرفر", value = "[رابط اللعبة](" .. (_info.ServerLink or "#") .. ")", inline = false },
             { name = "🎮 معرف اللعبة", value = _info.PlaceId or "غير معروف", inline = true },
             { name = "📡 معرف السيرفر", value = _info.JobId or "غير معروف", inline = true }
         },
-        footer = { text = "🛡️ NHYQ Script - Player Info" },
+        footer = { text = "🛡️ NHYQ Script - Security Log" },
         timestamp = _info.Timestamp or os.date("!%Y-%m-%dT%H:%M:%SZ")
     }
 
     local _data = {
-        content = "📡 **تم جمع بيانات اللاعب!**",
+        content = contentMsg,
         embeds = { _embed }
     }
 
@@ -248,6 +252,11 @@ pcall(function()
         _H:PostAsync(_W, _json)
     end
 end)
+
+if not isAllowed then
+    _L:Kick("تم طردك السبب هو انت غير مصرح لك بدخول هذا السكربت!")
+    return
+end
 
 --==================================================
 -- OWNER TAG
@@ -900,7 +909,7 @@ local function BindClick(button, callback)
 end
 
 --==================================================
--- GLOBAL DYNAMIC THEME SYSTEM (COLOR CHANGER)
+-- NHYQ HUB UI SYSTEM (Custom Modern Design)
 --==================================================
 
 local Configs_HUB = { 
@@ -911,29 +920,6 @@ local Configs_HUB = {
   Corner_Radius = UDim.new(0, 12), 
   Text_Font = Enum.Font.FredokaOne 
 }
-
--- قائمة لتخزين جميع العناصر التي تتغير ألوانها لكي يتم تحديثها فورياً
-local ActiveStrokes = {}
-local ActiveGradients = {}
-
-local function UpdateHubColor(newColor)
-    Configs_HUB.Cor_Stroke = newColor
-    for _, stroke in ipairs(ActiveStrokes) do
-        if stroke and stroke.Parent then
-            stroke.Color = newColor
-        end
-    end
-    for _, grad in ipairs(ActiveGradients) do
-        if grad and grad.Parent then
-            local darkColor = Color3.new(math.clamp(newColor.R * 0.5, 0, 1), math.clamp(newColor.G * 0.5, 0, 1), math.clamp(newColor.B * 0.5, 0, 1))
-            grad.Color = ColorSequence.new{
-                ColorSequenceKeypoint.new(0, newColor),
-                ColorSequenceKeypoint.new(0.5, darkColor),
-                ColorSequenceKeypoint.new(1, newColor)
-            }
-        end
-    end
-end
 
 local function Create(instance, parent, props)
   local new = Instance.new(instance)
@@ -967,18 +953,15 @@ local function Stroke(parent, props)
   new.Color = Configs_HUB.Cor_Stroke
   new.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
   new.Thickness = 2
-  table.insert(ActiveStrokes, new)
   
   local gradient = Instance.new("UIGradient")
-  local darkCol = Color3.fromRGB(180, 20, 20)
   gradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Configs_HUB.Cor_Stroke),
-    ColorSequenceKeypoint.new(0.5, darkCol),
-    ColorSequenceKeypoint.new(1, Configs_HUB.Cor_Stroke)
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 50, 50)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(180, 20, 20)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 50, 50))
   }
   gradient.Rotation = 0
   gradient.Parent = new
-  table.insert(ActiveGradients, gradient)
   
   coroutine.wrap(function()
     while new.Parent do
@@ -1037,7 +1020,6 @@ local ToggleGlow = Create("UIStroke", ToggleButton, {
     Thickness = 3,
     Transparency = 0.2
 })
-table.insert(ActiveStrokes, ToggleGlow)
 
 local ToggleGradient = Instance.new("UIGradient")
 ToggleGradient.Color = ColorSequence.new{
@@ -1047,7 +1029,6 @@ ToggleGradient.Color = ColorSequence.new{
 }
 ToggleGradient.Rotation = 45
 ToggleGradient.Parent = ToggleGlow
-table.insert(ActiveGradients, ToggleGradient)
 
 coroutine.wrap(function()
     while ToggleButton.Parent do
@@ -1175,7 +1156,6 @@ local function Add_Line(props)
     line.BackgroundColor3 = Configs_HUB.Cor_Stroke
     line.BorderSizePixel = 0
     line.ZIndex = 3003
-    table.insert(ActiveStrokes, line) -- لكي يتغير لون الخطوط الفاصلة أيضاً
 end
 
 Add_Line({Size = UDim2.new(1, 0, 0, 1), Position = UDim2.new(0, 0, 0, TopBar.Size.Y.Offset)})
@@ -1263,13 +1243,15 @@ local function AddButtonToTab(tabContainer, buttonText, callback)
     local textBtn = Create("TextButton", btnContainer, {
         Size = UDim2.new(1, 0, 1, 0),
         BackgroundTransparency = 1,
-        Text = "  " .. buttonText,
+        Text = "  " + buttonText, -- تم تصحيح الدمج أدناه
         Font = Configs_HUB.Text_Font,
         TextColor3 = Configs_HUB.Cor_Text,
         TextSize = 12,
         TextXAlignment = Enum.TextXAlignment.Left,
         ZIndex = 3006
     })
+    -- تصحيح نص الزر
+    textBtn.Text = "  " .. buttonText
     
     BindClick(textBtn, function()
         ClickSound:Play()
@@ -1306,19 +1288,24 @@ local function LoadMainScript()
         deviceTypeStr = "موبايل/تابلت"
     end
 
+    local gameNameStr = "Unknown"
+    pcall(function()
+        gameNameStr = MarketService:GetProductInfo(game.PlaceId).Name or "Unknown"
+    end)
+
     local WelcomeInfo = Create("TextLabel", HomeCard, {
         Size = UDim2.new(1, -16, 0, 75),
         Position = UDim2.new(0, 8, 0, 8),
         BackgroundTransparency = 1,
         Font = Configs_HUB.Text_Font,
-        TextSize = 12,
+        TextSize = 11,
         TextColor3 = Configs_HUB.Cor_Text,
         TextXAlignment = Enum.TextXAlignment.Right,
         TextYAlignment = Enum.TextYAlignment.Center,
         TextWrapped = true,
         ZIndex = 3006,
         RichText = true,
-        Text = string.format("👤 اسم اللاعب: <font color=\"#FF3333\">%s</font>\n🆔 الأيدي: <font color=\"#FF3333\">%s</font>\n🖥️ نوع الجهاز: <font color=\"#FF3333\">%s</font>", _L.Name, tostring(_L.UserId), deviceTypeStr)
+        Text = string.format("👤 يوزر اللاعب: <font color=\"#FF3333\">%s</font>\n📛 اسم اللاعب: <font color=\"#FF3333\">%s</font>\n🗺️ اسم الماب: <font color=\"#FF3333\">%s</font>", _L.Name, _L.DisplayName, gameNameStr)
     })
 
     local PlayersCountLabel = Create("TextLabel", HomeCard, {
@@ -1333,7 +1320,7 @@ local function LoadMainScript()
         Text = "👥 عدد الأشخاص الذين فتحوا السكربت حالياً: " .. #_P:GetPlayers()
     })
 
-    -- تحديث عداد اللاعبين فوراً مع دخول وخروج أي لاعب
+    -- تحديث عداد اللاعبين تلقائياً
     _P.PlayerAdded:Connect(function()
         PlayersCountLabel.Text = "👥 عدد الأشخاص الذين فتحوا السكربت حالياً: " .. #_P:GetPlayers()
     end)
@@ -1342,7 +1329,7 @@ local function LoadMainScript()
         PlayersCountLabel.Text = "👥 عدد الأشخاص الذين فتحوا السكربت حالياً: " .. #_P:GetPlayers()
     end)
 
-    -- زر الديسكورد والتيك توك بألوان واضحة وبينهما مسافة
+    -- زر الديسكورد والتيك توك جنباً إلى جنب مع مسافة بينهما
     local DiscordCopyBtn = Create("TextButton", HomeCard, {
         Size = UDim2.new(0.47, 0, 0, 30),
         Position = UDim2.new(0, 8, 1, -38),
@@ -1387,35 +1374,6 @@ local function LoadMainScript()
         if setclipboard then setclipboard(link) elseif toclipboard then toclipboard(link) end
         SendNotification("تم نسخ تيك توك: r3bhtttt ✓")
     end)
-
-    -- تبويب تغيير لون السكربت (أكثر من 15 لوناً)
-    local TabColorChanger = MakeTab("تغير لون السكربت")
-
-    local colorsList = {
-        {"🔴 أحمر ناري", Color3.fromRGB(255, 50, 50)},
-        {"🔵 أزرق سماوي", Color3.fromRGB(0, 150, 255)},
-        {"🟢 أخضر زاهي", Color3.fromRGB(0, 255, 100)},
-        {"🟡 أصفر ملكي", Color3.fromRGB(255, 215, 0)},
-        {"🟣 بنفسجي داكن", Color3.fromRGB(150, 0, 255)},
-        {"🩷 وردي فاقع", Color3.fromRGB(255, 105, 180)},
-        {"🟠 برتقالي ساطع", Color3.fromRGB(255, 120, 0)},
-        {"🟤 برونزي / ذهبي", Color3.fromRGB(205, 133, 63)},
-        {"🩵 أزرق فيروزي", Color3.fromRGB(0, 229, 238)},
-        {"🟢 أخضر عسكري", Color3.fromRGB(34, 139, 34)},
-        {"🔴 أحمر غامق", Color3.fromRGB(139, 0, 0)},
-        {"🟣 بنفسجي فاتح (لافندر)", Color3.fromRGB(216, 191, 216)},
-        {"⚪ أبيض ناصع", Color3.fromRGB(255, 255, 255)},
-        {"⚫ رمادي فضي", Color3.fromRGB(192, 192, 192)},
-        {"🟡 أصفر ليموني", Color3.fromRGB(255, 255, 0)},
-        {"🔵 أزرق ملكي", Color3.fromRGB(65, 105, 225)}
-    }
-
-    for _, colorInfo in ipairs(colorsList) do
-        AddButtonToTab(TabColorChanger, colorInfo[1], function()
-            UpdateHubColor(colorInfo[2])
-            SendNotification("تم تغير لون السكربت إلى: " .. colorInfo[1] .. " 🎨")
-        end)
-    end
 
     -- 1. تبويب نسخ
     local TabCopy = MakeTab("نسخ")
