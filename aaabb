@@ -1,11 +1,11 @@
 -- ==============================================================================
---  ███╗   ██╗███╗   ██╗██╗  ██╗ ██████╗ 
---  ████╗  ██║████╗  ██║██║  ██║██╔═══██╗
---  ██╔██╗ ██║██╔██╗ ██║███████║██║   ██║
---  ██║╚██╗██║██║╚██╗██║██╔══██║██║   ██║
---  ██║ ╚████║██║ ╚████║██║  ██║╚██████╔╝
---  ╚═╝  ╚═══╝╚═╝  ╚═══╝╚═╝  ╚═╝ ╚═════╝ 
---  الإصدار V5.0 — شاشة تحميل + واجهة محسّنة + HNYQ HUB
+--  █████╗ ███╗   ██╗ █████╗   ██╗  ██╗██╗   ██╗██████╗ 
+-- ██╔══██╗████╗  ██║██╔══██╗  ██║  ██║██║   ██║██╔══██╗
+-- ███████║██╔██╗ ██║███████║  ███████║██║   ██║██████╔╝
+-- ██╔══██║██║╚██╗██║██╔══██║  ██╔══██║██║   ██║██╔══██╗
+-- ██║  ██║██║ ╚████║██║  ██║  ██║  ██║╚██████╔╝██████╔╝
+-- ╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝  ╚═╝  ╚═╝ ╚═════╝ ╚═════╝ 
+--  الإصدار V5.0 — شاشة تحميل + واجهة محسّنة + ANA HUB
 -- ==============================================================================
 
 local CoreGui         = game:GetService("CoreGui")
@@ -14,13 +14,14 @@ local UserInputService= game:GetService("UserInputService")
 local Lighting        = game:GetService("Lighting")
 local Players         = game:GetService("Players")
 local RunService      = game:GetService("RunService")
+local HttpService     = game:GetService("HttpService")
 local LocalPlayer     = Players.LocalPlayer
 
 -- ==============================================================================
 --  الإعدادات
 -- ==============================================================================
 
-local GUI_NAME            = "HNYQ_HUB_V5"
+local GUI_NAME            = "ANA_V5"
 local NOTIFICATION_DURATION = 3.5
 local MENU_IMAGE          = "rbxassetid://133152990460389"
 local TOGGLE_IMAGE        = "rbxassetid://131238052005900"
@@ -47,7 +48,7 @@ local State = {
 
 local Themes = {
     { 
-        Name="نيون أزرق (HNYQ)",     
+        Name="نيون أزرق",     
         Bg=Color3.fromRGB(8,12,30),   
         Bg2=Color3.fromRGB(12,18,40),
         Glow=Color3.fromRGB(0,150,255),  
@@ -415,7 +416,7 @@ local function ApplyThemeFull()
                                 end
                             end
                             if label:IsA("TextButton") then
-                                if label.Text == "تشغيل" then
+                                if label.Text == "إرسال للسيرفر" or label.Text == "التحقق من الهوية" then
                                     label.BackgroundColor3 = theme.Accent
                                 end
                             end
@@ -452,7 +453,7 @@ local function ApplyThemeFull()
                 end
                 for _, child in ipairs(notif:GetDescendants()) do
                     if child:IsA("TextLabel") then
-                        if child.Text == "إشعار HNYQ" then
+                        if child.Text == "إشعار" then
                             child.TextColor3 = theme.Title
                         else
                             child.TextColor3 = theme.Text
@@ -511,7 +512,7 @@ function Notif:Send(icon, title, msg, color)
     C(bar, 4)
     
     MakeLabel(notif, {
-        Text = icon or "⚡",
+        Text = icon or "",
         Size = UDim2.new(0, 32, 0, 32),
         Position = UDim2.new(0, 18, 0.5, -16),
         TextColor3 = color,
@@ -522,7 +523,7 @@ function Notif:Send(icon, title, msg, color)
     })
     
     MakeLabel(notif, {
-        Text = title or "إشعار HNYQ",
+        Text = title or "إشعار",
         Size = UDim2.new(1, -70, 0, 24),
         Position = UDim2.new(0, 58, 0, 8),
         TextColor3 = theme.Title,
@@ -611,13 +612,13 @@ end
 -- ==============================================================================
 
 local loadingMessages = {
-    "تشغيل محرك HNYQ...",
-    "تحميل ثيمات HNYQ المخصصة...",
-    "تهيئة جزيئات HNYQ...",
-    "تجهيز سكربتات HNYQ...",
-    "تحميل الأجواء الاحترافية...",
-    "اللمسات النهائية لـ HNYQ...",
-    "أهلاً بك في نظام HNYQ",
+    "جارٍ تشغيل المحرك...",
+    "تحميل الثيمات...",
+    "تهيئة الجزيئات...",
+    "تجهيز السكربتات...",
+    "تحميل الأجواء...",
+    "اللمسات النهائية...",
+    "مرحباً بك في ANA HUB",
 }
 
 local function ShowLoader(screenGui, onDone)
@@ -677,7 +678,7 @@ local function ShowLoader(screenGui, onDone)
     C(glass, 24)
     
     local logo = MakeLabel(center, {
-        Text = "HNYQ HUB",
+        Text = "ANA HUB",
         Size = UDim2.new(1,0,0,80),
         Position = UDim2.new(0,0,0,20),
         Font = Enum.Font.GothamBlack,
@@ -703,7 +704,7 @@ local function ShowLoader(screenGui, onDone)
     end)
     
     MakeLabel(center, {
-        Text = "الإصدار V5.0 — تطوير HNYQ",
+        Text = "الإصدار V5.0 — واجهة محسّنة",
         Size = UDim2.new(1,0,0,20),
         Position = UDim2.new(0,0,0,100),
         Font = Enum.Font.Gotham,
@@ -896,7 +897,7 @@ local function BuildMain(screenGui)
     }))
     
     local titleLabel = MakeLabel(titleBar, {
-        Text = "HNYQ HUB",
+        Text = "ANA HUB",
         Size = UDim2.new(0,200,1,0),
         Position = UDim2.new(0,16,0,0),
         Font = Enum.Font.GothamBlack,
@@ -926,7 +927,7 @@ local function BuildMain(screenGui)
     end)
     
     MakeLabel(titleBar, {
-        Text = "V5.0 — HNYQ Edition",
+        Text = "V5.0 — Enhanced UI",
         Size = UDim2.new(0,200,0,16),
         Position = UDim2.new(0,18,0,40),
         Font = Enum.Font.Gotham,
@@ -1096,7 +1097,7 @@ local function BuildMain(screenGui)
     S(infoCard, theme.Border, 1, 0.5)
     
     MakeLabel(infoCard, {
-        Text = "معلومات اللاعب (HNYQ)",
+        Text = "معلومات اللاعب",
         Size = UDim2.new(1,-16,0,24),
         Position = UDim2.new(0,8,0,8),
         Font = Enum.Font.GothamBold,
@@ -1175,7 +1176,7 @@ local function BuildMain(screenGui)
     })
     
     MakeLabel(infoCard, {
-        Text = "المطور:",
+        Text = "اللعبة:",
         Size = UDim2.new(0.3,0,0,22),
         Position = UDim2.new(0,8,0,114),
         Font = Enum.Font.GothamMedium,
@@ -1186,7 +1187,7 @@ local function BuildMain(screenGui)
     })
     MakeLabel(infoCard, {
         Name = "PlaceLabel",
-        Text = "HNYQ",
+        Text = tostring(game.PlaceId),
         Size = UDim2.new(0.6,0,0,22),
         Position = UDim2.new(0.32,0,0,114),
         Font = Enum.Font.GothamBold,
@@ -1208,7 +1209,7 @@ local function BuildMain(screenGui)
     S(statsCard, theme.Border, 1, 0.5)
     
     MakeLabel(statsCard, {
-        Text = "إحصائيات HNYQ الحية",
+        Text = "الإحصائيات الحية",
         Size = UDim2.new(1,-16,0,24),
         Position = UDim2.new(0,8,0,8),
         Font = Enum.Font.GothamBold,
@@ -1248,7 +1249,7 @@ local function BuildMain(screenGui)
     
     local scriptsPage = CreatePage("السكربتات")
     MakeLabel(scriptsPage, {
-        Text = "سكربتات HNYQ",
+        Text = "السكربتات",
         Size = UDim2.new(1,-20,0,32),
         Position = UDim2.new(0,10,0,8),
         Font = Enum.Font.GothamBlack,
@@ -1266,32 +1267,32 @@ local function BuildMain(screenGui)
     })
     
     local scriptList = {
-        { "HNYQ أدمن شامل",   "https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source.lua" },
-        { "HNYQ سبام خفيف",   "https://pastebin.com/raw/vZMPXevY" },
-        { "HNYQ سبام سريع",   "https://pastebin.com/raw/RwdmRr8G" },
-        { "HNYQ سبام مخفي",   "https://pastebin.com/raw/KcCBNHtH" },
-        { "HNYQ تحكم فوري",   "https://pastebin.com/raw/RcmEzyx1" },
-        { "HNYQ درع حماية",   "https://pastebin.com/raw/0CwE6xaQ" },
-        { "HNYQ ألوان نيون",  "https://pastebin.com/raw/hdMYpWsv" },
-        { "HNYQ مؤثرات خاصة", "https://pastebin.com/raw/tp3zFium" },
-        { "HNYQ سكن خاص",     "https://pastebin.com/raw/XPCA6dZx" },
-        { "HNYQ أدوات متقدمة", "https://pastebin.com/raw/29puvDSE" },
-        { "HNYQ رقصات حصرية", "https://rawscripts.net/raw/Universal-Script-ARES-EMOTE-HUB-148804" },
-        { "HNYQ راديو صوتي",  "https://raw.githubusercontent.com/Shhd-code/Raduooo/refs/heads/main/README.md" },
-        { "HNYQ شات متطور",   "https://pastebin.com/raw/cEnfYQqF" },
-        { "HNYQ تشغيل سريع",  "https://pastebin.com/raw/148uP1mi" },
-        { "HNYQ مكتبة كود",   "https://raw.githubusercontent.com/Shhd-code/K/refs/heads/main/README.md" },
-        { "HNYQ ميرسي سكريبت","https://raw.githubusercontent.com/Hm5011/hussain/refs/heads/main/Mercy%20Script" },
-        { "HNYQ نامليس أدمن","https://raw.githubusercontent.com/FilteringEnabled/NamelessAdmin/main/Source" },
-        { "HNYQ منع التجميد", "https://pastebin.com/raw/uUEY7Y5E" },
-        { "HNYQ سرعة فائقة",  "https://pastebin.com/raw/wfNBQqNh" },
-        { "HNYQ بلو سبام V2", "https://pastebin.com/raw/j8pi1Xb3" },
-        { "HNYQ مانع النسخ",  "https://pastebin.com/raw/WaaWrxc8" },
-        { "HNYQ سبام مطور",   "https://pastebin.com/raw/C6d8FfdG" },
-        { "HNYQ حماية كاملة", "https://pastebin.com/raw/bmbKGYZK" },
-        { "HNYQ تايتل خاص",   "https://pastebin.com/raw/DQeM5u2p" },
-        { "HNYQ الإصدار الأخير","https://pastebin.com/raw/2GYaPamA" },
-    }
+    { "انفينيت ييلد",    "https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source.lua" },
+    { "سبام عادي",       "https://pastebin.com/raw/vZMPXevY" },
+    { "سبام 1",          "https://pastebin.com/raw/RwdmRr8G" },
+    { "سبام مخفي",       "https://pastebin.com/raw/KcCBNHtH" },
+    { "CmdBar2",         "https://pastebin.com/raw/RcmEzyx1" },
+    { "حماية",           "https://pastebin.com/raw/0CwE6xaQ" },
+    { "تلوين",           "https://pastebin.com/raw/hdMYpWsv" },
+    { "مونستر",          "https://pastebin.com/raw/tp3zFium" },
+    { "سكن",             "https://pastebin.com/raw/XPCA6dZx" },
+    { "3f",              "https://pastebin.com/raw/29puvDSE" },
+    { "رقصات",           "https://rawscripts.net/raw/Universal-Script-ARES-EMOTE-HUB-148804" },
+    { "راديو",           "https://raw.githubusercontent.com/Shhd-code/Raduooo/refs/heads/main/README.md" },
+    { "سبام شات",        "https://pastebin.com/raw/cEnfYQqF" },
+    { "سكربت عماد",      "https://pastebin.com/raw/148uP1mi" },
+    { "سكربت شهد",       "https://raw.githubusercontent.com/Shhd-code/K/refs/heads/main/README.md" },
+    { "VR7",             "https://raw.githubusercontent.com/Hm5011/hussain/refs/heads/main/Mercy%20Script" },
+    { "نامليس أدمن",     "https://raw.githubusercontent.com/FilteringEnabled/NamelessAdmin/main/Source" },
+    { "حماية التجميد",   "https://pastebin.com/raw/uUEY7Y5E" },
+    { "سبام أزرق",       "https://pastebin.com/raw/wfNBQqNh" },
+    { "بلو سبام V2",     "https://pastebin.com/raw/j8pi1Xb3" },
+    { "حماية ماب النسخ", "https://pastebin.com/raw/WaaWrxc8" },
+    { "سبام 2",          "https://pastebin.com/raw/C6d8FfdG" },
+    { "حماية بلو",       "https://pastebin.com/raw/bmbKGYZK" },
+    { "حماية تايتل",     "https://pastebin.com/raw/DQeM5u2p" },
+    { "بلو الجديد",      "https://pastebin.com/raw/2GYaPamA" },
+}
     
     local scriptScroll = Instance.new("ScrollingFrame")
     scriptScroll.Size = UDim2.new(1,-10,1,-52)
@@ -1328,10 +1329,10 @@ local function BuildMain(screenGui)
         S(row, theme.Border, 1, 0.55)
         
         MakeLabel(row, {
-            Text = "⚡",
+            Text = "|",
             Size = UDim2.new(0,30,1,0),
             Position = UDim2.new(0,8,0,0),
-            TextSize = 14,
+            TextSize = 16,
             TextColor3 = theme.Text,
             ZIndex = 23,
             TextXAlignment = Enum.TextXAlignment.Center,
@@ -1359,15 +1360,15 @@ local function BuildMain(screenGui)
             TextSize = 11,
             ZIndex = 24,
         }, function()
-            Notif:Send("⚡", "HNYQ HUB", "جارٍ تحميل: " .. sd[1], theme.Accent)
+            Notif:Send("", "جارٍ التحميل...", sd[1], theme.Accent)
             task.spawn(function()
                 local ok, err = pcall(function()
                     loadstring(game:HttpGet(sd[2], true))()
                 end)
                 if ok then
-                    Notif:Send("⚡", "HNYQ HUB", sd[1] .. " — تعمل بنجاح!", theme.Accent)
+                    Notif:Send("", "تم التشغيل", sd[1] .. " — شغّال!", theme.Accent)
                 else
-                    Notif:Send("❌", "خطأ في HNYQ", tostring(err):sub(1,60), Color3.fromRGB(255,60,60))
+                    Notif:Send("", "فشل", tostring(err):sub(1,60), Color3.fromRGB(255,60,60))
                 end
             end)
         end)
@@ -1376,7 +1377,7 @@ local function BuildMain(screenGui)
     
     local atmosPage = CreatePage("الأجواء")
     MakeLabel(atmosPage, {
-        Text = "أجواء HNYQ",
+        Text = "الأجواء",
         Size = UDim2.new(1,-20,0,32),
         Position = UDim2.new(0,10,0,8),
         Font = Enum.Font.GothamBlack,
@@ -1394,26 +1395,26 @@ local function BuildMain(screenGui)
     })
     
     local atmosPresets = {
-        {"HNYQ ليل هادئ",     0,  1},   {"HNYQ منتصف الليل",  1,  1},
-        {"HNYQ قمر أحمر",     0,  1.2}, {"HNYQ ليل سحري",     0,  1.5},
-        {"HNYQ ليل عميق",     0.5,0.8}, {"HNYQ نجوم ساطعة",   0,  1.2},
-        {"HNYQ ليل بارد",     2,  1.5}, {"HNYQ نهار صافي",    14, 2},
-        {"HNYQ ذهبي خاص",    18, 2.5}, {"HNYQ غروب جميل",   19, 2},
-        {"HNYQ شروق رائع",    6,  2.2}, {"HNYQ نهار ساطع",   12, 3},
-        {"HNYQ سماء غائمة",   12, 1.5}, {"HNYQ أرجواني سحري", 12, 3},
-        {"HNYQ سماء حمراء",   6,  2},   {"HNYQ بركان مشتعل", 20, 3},
-        {"HNYQ فضاء خارجي",   0,  0.5}, {"HNYQ عالم كوني",   0,  1},
-        {"HNYQ سحر خاص",      6,  2},   {"HNYQ مظلم تماماً", 6,  0.8},
-        {"HNYQ الهاوية",      0,  0.2}, {"HNYQ ضباب كثيف",   6,  1.2},
-        {"HNYQ مستنقع",       4,  1.5}, {"HNYQ نيون خالص",   12, 5},
-        {"HNYQ سايبربنك",    10, 4},   {"HNYQ كوكب أورانوس",14, 3},
-        {"HNYQ نيون بنفسجي", 0,  2},   {"HNYQ برتقالي مشتعل",6,  2.5},
-        {"HNYQ عالم الأنمي",  10, 2.8}, {"HNYQ غابة كثيفة",  8,  1.2},
-        {"HNYQ صحراء حارة",   14, 3},   {"HNYQ قطب شمالي",   0,  0.5},
-        {"HNYQ جبال عالية",   10, 2},   {"HNYQ وادي عميق",   12, 2.5},
-        {"HNYQ سهول خضراء",  12, 2},   {"HNYQ نهر صافي",    10, 2},
-        {"HNYQ بحر هادئ",     12, 2.5}, {"HNYQ جزر سياحية",  14, 3},
-        {"HNYQ غروب هادئ",   18, 1.8},
+        {"الليل",           0,  1},   {"منتصف الليل",      1,  1},
+        {"القمر الدموي",    0,  1.2}, {"الليل الساحر",     0,  1.5},
+        {"الليل العميق",    0.5,0.8}, {"نجوم",             0,  1.2},
+        {"الليل البارد",    2,  1.5}, {"النهار",           14, 2},
+        {"سماء ذهبية",      18, 2.5}, {"غروب الشمس",      19, 2},
+        {"شروق الشمس",      6,  2.2}, {"النهار الساطع",   12, 3},
+        {"النهار الغائم",   12, 1.5}, {"سماء بنفسجية",    12, 3},
+        {"سماء حمراء",      6,  2},   {"البركان",          20, 3},
+        {"الفضاء",          0,  0.5}, {"كوني",             0,  1},
+        {"سحري",            6,  2},   {"مظلم",             6,  0.8},
+        {"الهاوية",         0,  0.2}, {"ضباب كثيف",       6,  1.2},
+        {"المستنقع",        4,  1.5}, {"نيون",             12, 5},
+        {"سايبر",           10, 4},   {"أورانوس",          14, 3},
+        {"نيون بنفسجي",     0,  2},   {"برتقالي مشتعل",   6,  2.5},
+        {"الأنمي",          10, 2.8}, {"الغابة الكثيفة",  8,  1.2},
+        {"الصحراء الحارة",  14, 3},   {"القطب الشمالي",   0,  0.5},
+        {"الجبل",           10, 2},   {"الوادي",           12, 2.5},
+        {"السهل",           12, 2},   {"النهر",            10, 2},
+        {"البحر",           12, 2.5}, {"الجزر",            14, 3},
+        {"الغروب الهادئ",   18, 1.8},
     }
     
     local atmosScroll = Instance.new("ScrollingFrame")
@@ -1454,7 +1455,7 @@ local function BuildMain(screenGui)
         }, function()
             Lighting.ClockTime = preset[2]
             Lighting.Brightness = preset[3]
-            Notif:Send("⚡", "HNYQ HUB", "تم تطبيق جو: " .. preset[1], theme.Accent)
+            Notif:Send("", "تم التطبيق", "جو: " .. preset[1], theme.Accent)
         end)
         C(btn, 10)
         S(btn, theme.Border, 1, 0.55)
@@ -1466,7 +1467,7 @@ local function BuildMain(screenGui)
     
     local settingsPage = CreatePage("الإعدادات")
     MakeLabel(settingsPage, {
-        Text = "إعدادات HNYQ",
+        Text = "الإعدادات",
         Size = UDim2.new(1,-20,0,32),
         Position = UDim2.new(0,10,0,8),
         Font = Enum.Font.GothamBlack,
@@ -1508,11 +1509,13 @@ local function BuildMain(screenGui)
     stPad.Parent = settingsScroll
     
     -- ==============================================================================
-    --  أداة النقرات (HNYQ Auto Clicker)
+    --  زر التطبيق (Auto Clicker) - في بداية الإعدادات
     -- ==============================================================================
     
     local autoClickerState = false
     local autoClickerGUI = nil
+    local autoClickerRunning = false
+    local autoClickerThread = nil
     
     local function loadAutoClicker()
         if autoClickerGUI then
@@ -1563,7 +1566,7 @@ local function BuildMain(screenGui)
             end
 
             local gui = Instance.new("ScreenGui")
-            gui.Name = "HNYQ_AutoClickerGUI"
+            gui.Name = "AutoClickerGUI"
             gui.ResetOnSpawn = false
             gui.IgnoreGuiInset = true
             gui.Parent = player:WaitForChild("PlayerGui")
@@ -1572,7 +1575,7 @@ local function BuildMain(screenGui)
             target.Name = "ClickTarget"
             target.Size = UDim2.new(0, 30, 0, 30)
             target.Position = UDim2.new(0.5, -15, 0.5, -15)
-            target.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
+            target.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
             target.AutoButtonColor = false
             target.BorderSizePixel = 0
             target.ZIndex = 1000
@@ -1580,7 +1583,7 @@ local function BuildMain(screenGui)
             Instance.new("UICorner", target).CornerRadius = UDim.new(1, 0)
 
             local targetStroke = Instance.new("UIStroke", target)
-            targetStroke.Color = Color3.fromRGB(100, 220, 255)
+            targetStroke.Color = Color3.fromRGB(255, 100, 100)
             targetStroke.Thickness = 2
 
             local centerDot = Instance.new("TextLabel", target)
@@ -1608,10 +1611,10 @@ local function BuildMain(screenGui)
             title.Size = UDim2.new(1, -16, 0, 24)
             title.Position = UDim2.new(0, 8, 0, 6)
             title.BackgroundTransparency = 1
-            title.Text = "HNYQ AUTO CLICKER"
+            title.Text = "AUTO CLICKER"
             title.Font = Enum.Font.GothamBlack
-            title.TextSize = 12
-            title.TextColor3 = Color3.fromRGB(0, 200, 255)
+            title.TextSize = 13
+            title.TextColor3 = Color3.fromRGB(230, 230, 230)
             title.TextXAlignment = Enum.TextXAlignment.Left
             title.ZIndex = 901
 
@@ -1687,6 +1690,7 @@ local function BuildMain(screenGui)
                     end
                 end
                 gui:Destroy()
+                print("🔴 تم إغلاق Auto Clicker")
             end)
 
             local clickThread
@@ -1716,7 +1720,7 @@ local function BuildMain(screenGui)
                 state.clicking = false
                 toggleBtn.Text = "START"
                 toggleBtn.BackgroundColor3 = COLOR_OFF
-                targetStroke.Color = Color3.fromRGB(100, 220, 255)
+                targetStroke.Color = Color3.fromRGB(255, 100, 100)
             end
 
             toggleBtn.MouseButton1Click:Connect(function()
@@ -1738,11 +1742,14 @@ local function BuildMain(screenGui)
             end)
 
             updateSpeedLabel()
+            print("✅ Auto Clicker جاهز - زر X يحذف كل شيء")
         ]]
         
         local func, err = loadstring(scriptText)
         if func then
             autoClickerGUI = func()
+        else
+            warn("❌ فشل تحميل Auto Clicker: " .. tostring(err))
         end
     end
 
@@ -1752,13 +1759,15 @@ local function BuildMain(screenGui)
             autoClickerGUI = nil
         end
         for _, gui in ipairs(game.Players.LocalPlayer.PlayerGui:GetChildren()) do
-            if gui.Name == "HNYQ_AutoClickerGUI" then
+            if gui.Name == "AutoClickerGUI" then
                 gui:Destroy()
             end
         end
         autoClickerState = false
+        print("🔴 تم إيقاف Auto Clicker")
     end
     
+    -- زر التبديل في بداية الإعدادات
     local autoClickerRow = MakeFrame(settingsScroll, {
         Size = UDim2.new(1,0,0,52),
         BackgroundColor3 = theme.Card,
@@ -1769,7 +1778,7 @@ local function BuildMain(screenGui)
     S(autoClickerRow, theme.Border, 1, 0.55)
     
     MakeLabel(autoClickerRow, {
-        Text = "أداة النقرات (HNYQ Clicker)",
+        Text = "التطبيق (Auto Clicker)",
         Size = UDim2.new(0.7,0,1,0),
         Position = UDim2.new(0,12,0,0),
         Font = Enum.Font.GothamMedium,
@@ -1807,12 +1816,16 @@ local function BuildMain(screenGui)
         
         if autoClickerState then
             loadAutoClicker()
-            Notif:Send("⚡", "HNYQ", "تم تشغيل أداة النقرات", theme.Accent)
+            Notif:Send("", "التطبيق", "تم تشغيل Auto Clicker", theme.Accent)
         else
             unloadAutoClicker()
-            Notif:Send("⚡", "HNYQ", "تم إيقاف أداة النقرات", Color3.fromRGB(255,60,60))
+            Notif:Send("", "التطبيق", "تم إيقاف Auto Clicker", Color3.fromRGB(255,60,60))
         end
     end)
+    
+    -- ==============================================================================
+    --  باقي إعدادات (الخلفية الحية، تأثير الزجاج، الثيمات)
+    -- ==============================================================================
     
     local function ToggleRow(label, initState, callback)
         local row = MakeFrame(settingsScroll, {
@@ -1867,20 +1880,20 @@ local function BuildMain(screenGui)
         return row
     end
     
-    ToggleRow("خلفية HNYQ الحية", State.LiveBg, function(v)
+    ToggleRow("الخلفية الحية", State.LiveBg, function(v)
         State.LiveBg = v
-        Notif:Send("⚡", "HNYQ", v and "تم تفعيل الخلفية الحية" or "تم إيقاف الخلفية الحية", theme.Accent)
+        Notif:Send("", "الخلفية الحية", v and "تم التفعيل" or "تم الإيقاف", theme.Accent)
     end)
     
-    ToggleRow("تأثير زجاج HNYQ", State.Glassmorphism, function(v)
+    ToggleRow("تأثير الزجاج", State.Glassmorphism, function(v)
         State.Glassmorphism = v
         local g = State.MainFrame and State.MainFrame:FindFirstChild("GlassEffect")
         if g then g.Visible = v end
-        Notif:Send("⚡", "HNYQ", v and "تم تفعيل الزجاج" or "تم إيقاف الزجاج", theme.Accent)
+        Notif:Send("", "تأثير الزجاج", v and "تم التفعيل" or "تم الإيقاف", theme.Accent)
     end)
     
     local themeHeader = MakeLabel(settingsScroll, {
-        Text = "اختر ثيم HNYQ المفضل",
+        Text = "اختر الثيم",
         Size = UDim2.new(1,0,0,28),
         Font = Enum.Font.GothamBold,
         TextSize = 14,
@@ -1898,7 +1911,7 @@ local function BuildMain(screenGui)
         }, function()
             State.CurrentTheme = i
             ApplyThemeFull()
-            Notif:Send("⚡", "HNYQ", "تم تطبيق ثيم: " .. th.Name, th.Accent)
+            Notif:Send("", "الثيم", "تم تطبيق: " .. th.Name, th.Accent)
         end)
         C(btn, 10)
         S(btn, th.Border, 1.5, 0.3)
@@ -1924,7 +1937,7 @@ local function BuildMain(screenGui)
     end
     
     -- ==============================================================================
-    --  الزر العائم القابل للحركة (HNYQ Toggle)
+    --  الزر العائم القابل للحركة
     -- ==============================================================================
     
     local toggleBtn = Instance.new("ImageButton")
@@ -2016,7 +2029,7 @@ local function BuildMain(screenGui)
     end)
     
     -- ==============================================================================
-    --  تحديث الإحصائيات (HNYQ Stats)
+    --  تحديث الإحصائيات
     -- ==============================================================================
     
     local statsRef = main:FindFirstChild("ContentArea") and main.ContentArea:FindFirstChild("الرئيسية") and main.ContentArea["الرئيسية"]:FindFirstChild("StatsCard")
@@ -2043,11 +2056,11 @@ local function BuildMain(screenGui)
     
     ApplyThemeFull()
     
-    Notif:Send("⚡", "HNYQ HUB", "تم تشغيل نظام HNYQ بنجاح V5.0", theme.Accent)
+    Notif:Send("", "أهلاً بك!", "ANA HUB V5.0 — جاهز للاستخدام", theme.Accent)
 end
 
 -- ==============================================================================
---  التشغيل الأساسي
+--  التشغيل
 -- ==============================================================================
 
 if CoreGui:FindFirstChild(GUI_NAME) then
