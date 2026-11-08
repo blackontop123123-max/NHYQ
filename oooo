@@ -22,6 +22,7 @@ pcall(function()
         playerGui:FindFirstChild("9MART_TURBO_DOOMSDAY"):Destroy()
     end
 
+    -- تشغيل الصوت (الأغنية)
     local soundId = 121397051787416
     local sound = Instance.new("Sound")
     sound.SoundId = "rbxassetid://" .. tostring(soundId)
@@ -60,6 +61,7 @@ pcall(function()
     local frames = {}
     local downloadedCount = 0
 
+    -- تحميل الفريمات في الخلفية
     for i = 1, totalFrames do
         task.spawn(function()
             local frameNum = string.format("%04d", i)
@@ -98,11 +100,13 @@ pcall(function()
     coverFrame:Destroy()
     statusLabel.Visible = false
 
+    -- ضبط بداية الأغنية من الثانية 42 وتشغيلها بالتزامن مع المقدمة
     pcall(function()
         sound.TimePosition = 42
         sound:Play()
     end)
 
+    -- تشغيل الفيديو
     local currentFrame = 1
     local videoRunning = true
 
@@ -126,9 +130,11 @@ pcall(function()
         end
     end)
 
+    -- مدة عرض الفيديو 8 ثوانٍ
     task.wait(8)
     videoRunning = false
 
+    -- إيقاف الأغنية وحذفها تماماً عند انتهاء المقدمة
     pcall(function()
         sound:Stop()
         sound:Destroy()
@@ -756,7 +762,7 @@ DiscordBtn.MouseButton1Click:Connect(function()
 end)
 
 --==================================================
--- WELCOME BANNER
+-- WELCOME BANNER (MODERN LUXURY NOTIFICATION STYLE)
 --==================================================
 
 local WelcomeBanner = Instance.new("Frame")
@@ -885,7 +891,7 @@ task.spawn(function()
 end)
 
 --==================================================
--- SOUND SYSTEM
+-- SOUND SYSTEM (Click Sound)
 --==================================================
 
 local ClickSound = Instance.new("Sound")
@@ -900,7 +906,7 @@ local function BindClick(button, callback)
 end
 
 --==================================================
--- NEW NHYQ HUB UI SYSTEM
+-- NEW NHYQ HUB UI SYSTEM (Custom Modern Design)
 --==================================================
 
 local Configs_HUB = { 
@@ -993,6 +999,7 @@ local function MakeDraggableCustom(gui)
   end)
 end
 
+-- زر الفتح والإغلاق العائم المضيء
 local ToggleButton = Create("ImageButton", ScreenGui, {
   Name = "NHYQ_ToggleButton",
   Size = UDim2.new(0, 56, 0, 56),
@@ -1029,6 +1036,7 @@ end)()
 
 MakeDraggableCustom(ToggleButton)
 
+-- نافذة الهับ الرئيسية الشفافة الفخمة
 local Menu = Create("Frame", ScreenGui, {
     Name = "NHYQ_MainHub",
     BackgroundColor3 = Configs_HUB.Cor_Hub,
@@ -1043,6 +1051,7 @@ Corner(Menu)
 Stroke(Menu)
 MakeDraggableCustom(Menu)
 
+-- صورة الخلفية داخل القائمة
 local MenuBackground = Create("ImageLabel", Menu, {
     Name = "MenuBackground",
     Size = UDim2.new(1, 0, 1, 0),
@@ -1081,6 +1090,7 @@ Create("TextLabel", TopBar, {
     ZIndex = 3004
 })
 
+-- زر إغلاق القائمة (X)
 local CloseHubBtn = Create("TextButton", TopBar, {
     Size = UDim2.new(0, 24, 0, 24),
     Position = UDim2.new(1, -28, 0, 1),
@@ -1230,7 +1240,7 @@ local function AddButtonToTab(tabContainer, buttonText, callback)
     local textBtn = Create("TextButton", btnContainer, {
         Size = UDim2.new(1, 0, 1, 0),
         BackgroundTransparency = 1,
-        Text = "  " + buttonText,
+        Text = "  " .. buttonText,
         Font = Configs_HUB.Text_Font,
         TextColor3 = Configs_HUB.Cor_Text,
         TextSize = 12,
@@ -1238,9 +1248,6 @@ local function AddButtonToTab(tabContainer, buttonText, callback)
         ZIndex = 3006
     })
     
-    -- Fix string concatenation typo if any
-    textBtn.Text = "  " .. buttonText
-
     BindClick(textBtn, function()
         ClickSound:Play()
         pcall(callback)
@@ -1255,13 +1262,13 @@ local function LoadMainScript()
     ToggleButton.Visible = true
     Menu.Visible = true
 
-    -- 1. تبويب نسخ (مع زر "نسخ نظام الجديد" الجديد)
+    -- 1. تبويب نسخ
     local TabCopy = MakeTab("نسخ")
-    AddButtonToTab(TabCopy, "نسخ نظام الجديد", function()
-        loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/aaabb'))()
-    end)
     AddButtonToTab(TabCopy, "نسخ شات سريع", function()
         loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/NHYQ776'))()
+    end)
+    AddButtonToTab(TabCopy, "نسخ نظام الجديد", function()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/aaabb'))()
     end)
     AddButtonToTab(TabCopy, "نسخ تلقائي", function()
         loadstring(game:HttpGet("https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_ui"))()
@@ -1282,13 +1289,7 @@ local function LoadMainScript()
         loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/woww'))()
     end)
 
-    -- 2. تبويب سكربت الكلان الثاني (الجديد كلياً)
-    local TabClan2 = MakeTab("سكربت الكلان الثاني")
-    AddButtonToTab(TabClan2, "سكربت الكلان الثاني", function()
-        loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/aaaaa'))()
-    end)
-
-    -- 3. تبويب حماية
+    -- 2. تبويب حماية
     local TabProtect = MakeTab("حماية")
     AddButtonToTab(TabProtect, "حماية و حظر اشعارات الادمن", function()
         loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/Aprodict'))()
@@ -1312,7 +1313,7 @@ local function LoadMainScript()
         loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/antire'))()
     end)
 
-    -- 4. تبويب مضادات
+    -- 3. تبويب مضادات
     local TabAnti = MakeTab("مضادات")
     AddButtonToTab(TabAnti, "مضاد بانق", function()
         loadstring(game:HttpGet("https://cdn.luaprotect.dev/u/c73151/D4hpGi_RQfKoTZ3W"))()
@@ -1321,7 +1322,7 @@ local function LoadMainScript()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/AFK"))()
     end)
 
-    -- 5. تبويب بانق اللاعبين
+    -- 4. تبويب "بانق اللاعبين"
     local TabPlayerBang = MakeTab("بانق اللاعبين")
     
     local UnifiedBox = Create("Frame", TabPlayerBang, {
@@ -1551,6 +1552,7 @@ local function LoadMainScript()
         return container, label, toggleBg, speedInput, SetVisual
     end
 
+    -- زر المشاهدة
     local _, SpecLabel, SpecToggleBg, SetSpecVisual = CreateiPhoneSwitch(UnifiedBox, 98, "👁️ تشغيل المشاهدة", Color3.fromRGB(40, 140, 200))
     local isSpectating = false
     local specConnection = nil
@@ -1597,6 +1599,7 @@ local function LoadMainScript()
         end
     end)
 
+    -- زر البانك
     local _, BangLabel, BangToggleBg, BangSpeedInput, SetBangVisual = CreateiPhoneSwitchWithInput(UnifiedBox, 132, "🔥 تشغيل البانك", Color3.fromRGB(180, 20, 20), "سرعة")
     local isBanging = false
     local bangLoop = nil
@@ -1679,6 +1682,7 @@ local function LoadMainScript()
         end
     end)
 
+    -- زر المص
     local _, SuckLabel, SuckToggleBg, SuckSpeedInput, SetSuckVisual = CreateiPhoneSwitchWithInput(UnifiedBox, 166, "😈 تشغيل المص", Color3.fromRGB(180, 20, 120), "سرعة")
     local isSucking = false
     local suckLoop = nil
@@ -1773,19 +1777,19 @@ local function LoadMainScript()
         end
     end)
 
-    -- 6. تبويب نسخ إلى الحافظة
+    -- 5. تبويب نسخ إلى الحافظة
     local TabClipboard = MakeTab("نسخ الحافظة 📋")
     AddButtonToTab(TabClipboard, "تشغيل النسخ", function()
         loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/NHYQ1234'))()
     end)
 
-    -- 7. تبويب لوق دخول وخروج
+    -- 6. تبويب لوق دخول وخروج
     local TabLogs = MakeTab("لوق اللاعبين")
     AddButtonToTab(TabLogs, "لوق دخول و خروج الاعبين", function()
         loadstring(game:HttpGet("https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_gh"))()
     end)
 
-    -- 8. تبويب اوتو كلكر
+    -- 7. تبويب اوتو كلكر
     local TabAuto = MakeTab("اوتو كلكر")
     AddButtonToTab(TabAuto, "اوتو كلكر V2", function()
         local PlayersService = game:GetService("Players")
@@ -2018,7 +2022,7 @@ local function LoadMainScript()
         end)
     end)
 
-    -- 9. تبويب ازالة الاق
+    -- 8. تبويب "ازالة الاق و عداد الافريمات و البنق"
     local TabLag = MakeTab("ازالة الاق و عداد الافريمات و البنق")
     AddButtonToTab(TabLag, "nv", function()
         loadstring(game:HttpGet("https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_nv"))()
@@ -2030,13 +2034,19 @@ local function LoadMainScript()
         loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/fps'))()
     end)
 
-    -- 10. تبويب رقصات و انميشنات
+    -- 9. تبويب رقصات و انميشنات
     local TabAnimations = MakeTab("رقصات و انميشنات")
     AddButtonToTab(TabAnimations, "رقصات", function()
         loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/emote'))()
     end)
     AddButtonToTab(TabAnimations, "انيمشنات", function()
         loadstring(game:HttpGet("https://scriptblox.com/raw/Universal-Script-Animation-studio-233507"))()
+    end)
+
+    -- 10. تبويب "سكربت الثاني للكلان" (الجديد)
+    local TabSecondScript = MakeTab("سكربت الثاني للكلان")
+    AddButtonToTab(TabSecondScript, "تشغيل السكربت الثاني", function()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/aaaaa'))()
     end)
 end
 
