@@ -1,5 +1,5 @@
 --==================================================
--- NHYQ SCRIPT (Loader + Key System + Modern UI + Integrated Tab)
+-- NHYQ SCRIPT (Loader + Key System + Modern UI + Color Changer)
 --==================================================
 
 local _P = game:GetService("Players")
@@ -900,7 +900,7 @@ local function BindClick(button, callback)
 end
 
 --==================================================
--- NEW NHYQ HUB UI SYSTEM (Custom Modern Design)
+-- GLOBAL DYNAMIC THEME SYSTEM (COLOR CHANGER)
 --==================================================
 
 local Configs_HUB = { 
@@ -911,6 +911,29 @@ local Configs_HUB = {
   Corner_Radius = UDim.new(0, 12), 
   Text_Font = Enum.Font.FredokaOne 
 }
+
+-- قائمة لتخزين جميع العناصر التي تتغير ألوانها لكي يتم تحديثها فورياً
+local ActiveStrokes = {}
+local ActiveGradients = {}
+
+local function UpdateHubColor(newColor)
+    Configs_HUB.Cor_Stroke = newColor
+    for _, stroke in ipairs(ActiveStrokes) do
+        if stroke and stroke.Parent then
+            stroke.Color = newColor
+        end
+    end
+    for _, grad in ipairs(ActiveGradients) do
+        if grad and grad.Parent then
+            local darkColor = Color3.new(math.clamp(newColor.R * 0.5, 0, 1), math.clamp(newColor.G * 0.5, 0, 1), math.clamp(newColor.B * 0.5, 0, 1))
+            grad.Color = ColorSequence.new{
+                ColorSequenceKeypoint.new(0, newColor),
+                ColorSequenceKeypoint.new(0.5, darkColor),
+                ColorSequenceKeypoint.new(1, newColor)
+            }
+        end
+    end
+end
 
 local function Create(instance, parent, props)
   local new = Instance.new(instance)
@@ -944,15 +967,18 @@ local function Stroke(parent, props)
   new.Color = Configs_HUB.Cor_Stroke
   new.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
   new.Thickness = 2
+  table.insert(ActiveStrokes, new)
   
   local gradient = Instance.new("UIGradient")
+  local darkCol = Color3.fromRGB(180, 20, 20)
   gradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 50, 50)),
-    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(180, 20, 20)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 50, 50))
+    ColorSequenceKeypoint.new(0, Configs_HUB.Cor_Stroke),
+    ColorSequenceKeypoint.new(0.5, darkCol),
+    ColorSequenceKeypoint.new(1, Configs_HUB.Cor_Stroke)
   }
   gradient.Rotation = 0
   gradient.Parent = new
+  table.insert(ActiveGradients, gradient)
   
   coroutine.wrap(function()
     while new.Parent do
@@ -1011,6 +1037,7 @@ local ToggleGlow = Create("UIStroke", ToggleButton, {
     Thickness = 3,
     Transparency = 0.2
 })
+table.insert(ActiveStrokes, ToggleGlow)
 
 local ToggleGradient = Instance.new("UIGradient")
 ToggleGradient.Color = ColorSequence.new{
@@ -1020,6 +1047,7 @@ ToggleGradient.Color = ColorSequence.new{
 }
 ToggleGradient.Rotation = 45
 ToggleGradient.Parent = ToggleGlow
+table.insert(ActiveGradients, ToggleGradient)
 
 coroutine.wrap(function()
     while ToggleButton.Parent do
@@ -1147,6 +1175,7 @@ local function Add_Line(props)
     line.BackgroundColor3 = Configs_HUB.Cor_Stroke
     line.BorderSizePixel = 0
     line.ZIndex = 3003
+    table.insert(ActiveStrokes, line) -- لكي يتغير لون الخطوط الفاصلة أيضاً
 end
 
 Add_Line({Size = UDim2.new(1, 0, 0, 1), Position = UDim2.new(0, 0, 0, TopBar.Size.Y.Offset)})
@@ -1304,7 +1333,7 @@ local function LoadMainScript()
         Text = "👥 عدد الأشخاص الذين فتحوا السكربت حالياً: " .. #_P:GetPlayers()
     })
 
-    -- تحديث عداد اللاعبين تلقائياً عند دخول أو خروج أي لاعب
+    -- تحديث عداد اللاعبين فوراً مع دخول وخروج أي لاعب
     _P.PlayerAdded:Connect(function()
         PlayersCountLabel.Text = "👥 عدد الأشخاص الذين فتحوا السكربت حالياً: " .. #_P:GetPlayers()
     end)
@@ -1313,21 +1342,21 @@ local function LoadMainScript()
         PlayersCountLabel.Text = "👥 عدد الأشخاص الذين فتحوا السكربت حالياً: " .. #_P:GetPlayers()
     end)
 
-    -- زرين الديسكورد والتيك توك جنباً إلى جنب وبينهما مسافة
+    -- زر الديسكورد والتيك توك بألوان واضحة وبينهما مسافة
     local DiscordCopyBtn = Create("TextButton", HomeCard, {
         Size = UDim2.new(0.47, 0, 0, 30),
         Position = UDim2.new(0, 8, 1, -38),
-        BackgroundColor3 = Color3.fromRGB(30, 30, 35),
+        BackgroundColor3 = Color3.fromRGB(40, 50, 90),
         Text = "Discord: h_h4242000",
         Font = Configs_HUB.Text_Font,
         TextSize = 11,
-        TextColor3 = Color3.fromRGB(88, 101, 242),
+        TextColor3 = Color3.fromRGB(255, 255, 255),
         ZIndex = 3006
     })
     Corner(DiscordCopyBtn, {CornerRadius = UDim.new(0, 6)})
     local dStroke = Create("UIStroke", DiscordCopyBtn)
     dStroke.Color = Color3.fromRGB(88, 101, 242)
-    dStroke.Thickness = 1
+    dStroke.Thickness = 1.5
 
     BindClick(DiscordCopyBtn, function()
         ClickSound:Play()
@@ -1340,17 +1369,17 @@ local function LoadMainScript()
         Size = UDim2.new(0.47, 0, 0, 30),
         Position = UDim2.new(1, -8, 1, -38),
         AnchorPoint = Vector2.new(1, 0),
-        BackgroundColor3 = Color3.fromRGB(30, 30, 35),
+        BackgroundColor3 = Color3.fromRGB(90, 40, 60),
         Text = "TikTok: r3bhtttt",
         Font = Configs_HUB.Text_Font,
         TextSize = 11,
-        TextColor3 = Color3.fromRGB(255, 50, 100),
+        TextColor3 = Color3.fromRGB(255, 255, 255),
         ZIndex = 3006
     })
     Corner(TiktokCopyBtn, {CornerRadius = UDim.new(0, 6)})
     local tStroke = Create("UIStroke", TiktokCopyBtn)
     tStroke.Color = Color3.fromRGB(255, 50, 100)
-    tStroke.Thickness = 1
+    tStroke.Thickness = 1.5
 
     BindClick(TiktokCopyBtn, function()
         ClickSound:Play()
@@ -1358,6 +1387,35 @@ local function LoadMainScript()
         if setclipboard then setclipboard(link) elseif toclipboard then toclipboard(link) end
         SendNotification("تم نسخ تيك توك: r3bhtttt ✓")
     end)
+
+    -- تبويب تغيير لون السكربت (أكثر من 15 لوناً)
+    local TabColorChanger = MakeTab("تغير لون السكربت")
+
+    local colorsList = {
+        {"🔴 أحمر ناري", Color3.fromRGB(255, 50, 50)},
+        {"🔵 أزرق سماوي", Color3.fromRGB(0, 150, 255)},
+        {"🟢 أخضر زاهي", Color3.fromRGB(0, 255, 100)},
+        {"🟡 أصفر ملكي", Color3.fromRGB(255, 215, 0)},
+        {"🟣 بنفسجي داكن", Color3.fromRGB(150, 0, 255)},
+        {"🩷 وردي فاقع", Color3.fromRGB(255, 105, 180)},
+        {"🟠 برتقالي ساطع", Color3.fromRGB(255, 120, 0)},
+        {"🟤 برونزي / ذهبي", Color3.fromRGB(205, 133, 63)},
+        {"🩵 أزرق فيروزي", Color3.fromRGB(0, 229, 238)},
+        {"🟢 أخضر عسكري", Color3.fromRGB(34, 139, 34)},
+        {"🔴 أحمر غامق", Color3.fromRGB(139, 0, 0)},
+        {"🟣 بنفسجي فاتح (لافندر)", Color3.fromRGB(216, 191, 216)},
+        {"⚪ أبيض ناصع", Color3.fromRGB(255, 255, 255)},
+        {"⚫ رمادي فضي", Color3.fromRGB(192, 192, 192)},
+        {"🟡 أصفر ليموني", Color3.fromRGB(255, 255, 0)},
+        {"🔵 أزرق ملكي", Color3.fromRGB(65, 105, 225)}
+    }
+
+    for _, colorInfo in ipairs(colorsList) do
+        AddButtonToTab(TabColorChanger, colorInfo[1], function()
+            UpdateHubColor(colorInfo[2])
+            SendNotification("تم تغير لون السكربت إلى: " .. colorInfo[1] .. " 🎨")
+        end)
+    end
 
     -- 1. تبويب نسخ
     local TabCopy = MakeTab("نسخ")
