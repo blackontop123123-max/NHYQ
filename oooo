@@ -8,7 +8,6 @@ local _U = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local SoundService = game:GetService("SoundService")
-local Lighting = game:GetService("Lighting")
 local _L = _P.LocalPlayer
 local Camera = workspace.CurrentCamera
 
@@ -901,7 +900,7 @@ local function BindClick(button, callback)
 end
 
 --==================================================
--- NEW NHYQ HUB UI SYSTEM (Dynamic Color Support)
+-- NEW NHYQ HUB UI SYSTEM
 --==================================================
 
 local Configs_HUB = { 
@@ -940,8 +939,6 @@ local function Corner(parent, props)
   return new
 end
 
-local strokesList = {}
-
 local function Stroke(parent, props)
   local new = Create("UIStroke", parent)
   new.Color = Configs_HUB.Cor_Stroke
@@ -950,14 +947,12 @@ local function Stroke(parent, props)
   
   local gradient = Instance.new("UIGradient")
   gradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Configs_HUB.Cor_Stroke),
-    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(math.clamp(Configs_HUB.Cor_Stroke.R*255 - 70, 0, 255), math.clamp(Configs_HUB.Cor_Stroke.G*255 - 30, 0, 255), math.clamp(Configs_HUB.Cor_Stroke.B*255 - 30, 0, 255))),
-    ColorSequenceKeypoint.new(1, Configs_HUB.Cor_Stroke)
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 50, 50)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(180, 20, 20)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 50, 50))
   }
   gradient.Rotation = 0
   gradient.Parent = new
-  
-  table.insert(strokesList, {Stroke = new, Gradient = gradient})
   
   coroutine.wrap(function()
     while new.Parent do
@@ -998,7 +993,6 @@ local function MakeDraggableCustom(gui)
   end)
 end
 
--- Toggle Floating Button
 local ToggleButton = Create("ImageButton", ScreenGui, {
   Name = "NHYQ_ToggleButton",
   Size = UDim2.new(0, 56, 0, 56),
@@ -1035,7 +1029,6 @@ end)()
 
 MakeDraggableCustom(ToggleButton)
 
--- Main Hub Window
 local Menu = Create("Frame", ScreenGui, {
     Name = "NHYQ_MainHub",
     BackgroundColor3 = Configs_HUB.Cor_Hub,
@@ -1237,7 +1230,7 @@ local function AddButtonToTab(tabContainer, buttonText, callback)
     local textBtn = Create("TextButton", btnContainer, {
         Size = UDim2.new(1, 0, 1, 0),
         BackgroundTransparency = 1,
-        Text = "  " .. buttonText,
+        Text = "  " + buttonText,
         Font = Configs_HUB.Text_Font,
         TextColor3 = Configs_HUB.Cor_Text,
         TextSize = 12,
@@ -1245,6 +1238,9 @@ local function AddButtonToTab(tabContainer, buttonText, callback)
         ZIndex = 3006
     })
     
+    -- Fix string concatenation typo if any
+    textBtn.Text = "  " .. buttonText
+
     BindClick(textBtn, function()
         ClickSound:Play()
         pcall(callback)
@@ -1252,308 +1248,14 @@ local function AddButtonToTab(tabContainer, buttonText, callback)
 end
 
 --==================================================
--- LOAD MAIN SCRIPT BUTTONS & TABS (Separated Completely)
+-- LOAD MAIN SCRIPT BUTTONS & TABS
 --==================================================
 
 local function LoadMainScript()
     ToggleButton.Visible = true
     Menu.Visible = true
 
-    -- 1. تبويب الرئيسية (معلومات اللاعب والعدادات الحية)
-    local TabHome = MakeTab("الرئيسية")
-    
-    local accentColor = Color3.fromRGB(0, 200, 255)
-    local cardColor = Color3.fromRGB(15, 20, 45)
-    local textColor = Color3.fromRGB(220, 235, 255)
-    
-    -- العنوان الرئيسي
-    Create("TextLabel", TabHome, {
-        Text = "الرئيسية",
-        Size = UDim2.new(1,-20,0,32),
-        Position = UDim2.new(0,10,0,8),
-        Font = Enum.Font.GothamBlack,
-        TextSize = 19,
-        TextColor3 = accentColor,
-        ZIndex = 21,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        BackgroundTransparency = 1
-    })
-    
-    Create("Frame", TabHome, {
-        Size = UDim2.new(1,-20,0,1),
-        Position = UDim2.new(0,10,0,44),
-        BackgroundColor3 = accentColor,
-        BackgroundTransparency = 0.7,
-        ZIndex = 21,
-        BorderSizePixel = 0
-    })
-    
-    -- بطاقة معلومات اللاعب
-    local infoCard = Create("Frame", TabHome, {
-        Name = "InfoCard",
-        Size = UDim2.new(1,-20,0,180),
-        Position = UDim2.new(0,10,0,52),
-        BackgroundColor3 = cardColor,
-        BackgroundTransparency = 0.2,
-        ZIndex = 21,
-        BorderSizePixel = 0
-    })
-    Corner(infoCard, 14)
-    Stroke(infoCard, accentColor, 1, 0.5)
-    
-    Create("TextLabel", infoCard, {
-        Text = "معلومات اللاعب (HNYQ)",
-        Size = UDim2.new(1,-16,0,24),
-        Position = UDim2.new(0,8,0,8),
-        Font = Enum.Font.GothamBold,
-        TextSize = 13,
-        TextColor3 = accentColor,
-        ZIndex = 22,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        BackgroundTransparency = 1
-    })
-    
-    Create("TextLabel", infoCard, {
-        Text = "الاسم:",
-        Size = UDim2.new(0.3,0,0,22),
-        Position = UDim2.new(0,8,0,36),
-        Font = Enum.Font.GothamMedium,
-        TextSize = 12,
-        TextColor3 = textColor,
-        ZIndex = 22,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        BackgroundTransparency = 1
-    })
-    Create("TextLabel", infoCard, {
-        Name = "PlayerNameLabel",
-        Text = _L.Name,
-        Size = UDim2.new(0.6,0,0,22),
-        Position = UDim2.new(0.32,0,0,36),
-        Font = Enum.Font.GothamBold,
-        TextSize = 12,
-        TextColor3 = accentColor,
-        ZIndex = 22,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        BackgroundTransparency = 1
-    })
-    
-    Create("TextLabel", infoCard, {
-        Text = "المعرف:",
-        Size = UDim2.new(0.3,0,0,22),
-        Position = UDim2.new(0,8,0,62),
-        Font = Enum.Font.GothamMedium,
-        TextSize = 12,
-        TextColor3 = textColor,
-        ZIndex = 22,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        BackgroundTransparency = 1
-    })
-    Create("TextLabel", infoCard, {
-        Name = "PlayerIdLabel",
-        Text = tostring(_L.UserId),
-        Size = UDim2.new(0.6,0,0,22),
-        Position = UDim2.new(0.32,0,0,62),
-        Font = Enum.Font.GothamBold,
-        TextSize = 12,
-        TextColor3 = accentColor,
-        ZIndex = 22,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        BackgroundTransparency = 1
-    })
-    
-    Create("TextLabel", infoCard, {
-        Text = "الجهاز:",
-        Size = UDim2.new(0.3,0,0,22),
-        Position = UDim2.new(0,8,0,88),
-        Font = Enum.Font.GothamMedium,
-        TextSize = 12,
-        TextColor3 = textColor,
-        ZIndex = 22,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        BackgroundTransparency = 1
-    })
-    local device = "PC"
-    if _U.TouchEnabled and not _U.MouseEnabled then device = "موبايل" end
-    Create("TextLabel", infoCard, {
-        Name = "DeviceLabel",
-        Text = device,
-        Size = UDim2.new(0.6,0,0,22),
-        Position = UDim2.new(0.32,0,0,88),
-        Font = Enum.Font.GothamBold,
-        TextSize = 12,
-        TextColor3 = accentColor,
-        ZIndex = 22,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        BackgroundTransparency = 1
-    })
-    
-    Create("TextLabel", infoCard, {
-        Text = "المطور:",
-        Size = UDim2.new(0.3,0,0,22),
-        Position = UDim2.new(0,8,0,114),
-        Font = Enum.Font.GothamMedium,
-        TextSize = 12,
-        TextColor3 = textColor,
-        ZIndex = 22,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        BackgroundTransparency = 1
-    })
-    Create("TextLabel", infoCard, {
-        Name = "PlaceLabel",
-        Text = "HNYQ",
-        Size = UDim2.new(0.6,0,0,22),
-        Position = UDim2.new(0.32,0,0,114),
-        Font = Enum.Font.GothamBold,
-        TextSize = 12,
-        TextColor3 = accentColor,
-        ZIndex = 22,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        BackgroundTransparency = 1
-    })
-    
-    -- بطاقة العدادات الحية
-    local statsCard = Create("Frame", TabHome, {
-        Name = "StatsCard",
-        Size = UDim2.new(1,-20,0,90),
-        Position = UDim2.new(0,10,0,242),
-        BackgroundColor3 = cardColor,
-        BackgroundTransparency = 0.2,
-        ZIndex = 21,
-        BorderSizePixel = 0
-    })
-    Corner(statsCard, 14)
-    Stroke(statsCard, accentColor, 1, 0.5)
-    
-    Create("TextLabel", statsCard, {
-        Text = "إحصائيات HNYQ الحية",
-        Size = UDim2.new(1,-16,0,24),
-        Position = UDim2.new(0,8,0,8),
-        Font = Enum.Font.GothamBold,
-        TextSize = 13,
-        TextColor3 = accentColor,
-        ZIndex = 22,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        BackgroundTransparency = 1
-    })
-    
-    local statsData = {
-        { name="StatsLabel_FPS",  label="FPS",  y=36 },
-        { name="StatsLabel_Ping", label="البنج", y=62 },
-    }
-    
-    for _, s in ipairs(statsData) do
-        Create("TextLabel", statsCard, {
-            Text = s.label..":",
-            Size = UDim2.new(0.4,0,0,22),
-            Position = UDim2.new(0,8,0,s.y),
-            Font = Enum.Font.GothamMedium,
-            TextSize = 12,
-            TextColor3 = textColor,
-            ZIndex = 22,
-            TextXAlignment = Enum.TextXAlignment.Left,
-            BackgroundTransparency = 1
-        })
-        Create("TextLabel", statsCard, {
-            Name = s.name,
-            Text = "0",
-            Size = UDim2.new(0.55,0,0,22),
-            Position = UDim2.new(0.43,0,0,s.y),
-            Font = Enum.Font.GothamBold,
-            TextSize = 13,
-            TextColor3 = accentColor,
-            ZIndex = 22,
-            TextXAlignment = Enum.TextXAlignment.Left,
-            BackgroundTransparency = 1
-        })
-    end
-    
-    local frameCount, lastFPS = 0, tick()
-    RunService.RenderStepped:Connect(function()
-        frameCount = frameCount + 1
-        if tick() - lastFPS >= 1 then
-            local currentFPS = frameCount
-            frameCount = 0
-            lastFPS = tick()
-            local currentPing = math.floor(_L:GetNetworkPing() * 1000)
-            
-            local fpsLabel = statsCard:FindFirstChild("StatsLabel_FPS")
-            local pingLabel = statsCard:FindFirstChild("StatsLabel_Ping")
-            
-            if fpsLabel then fpsLabel.Text = tostring(currentFPS) end
-            if pingLabel then pingLabel.Text = currentPing .. " ms" end
-        end
-    end)
-
-    -- 2. تبويب الجو (Lighting Environments)
-    local TabLighting = MakeTab("الجو")
-    
-    local function SetLighting(ambient, brightness, outdoorAmbient, timeOfDay)
-        Lighting.Ambient = ambient
-        Lighting.Brightness = brightness
-        Lighting.OutdoorAmbient = outdoorAmbient
-        Lighting.TimeOfDay = timeOfDay
-        SendNotification("تم تغيير الجو بنجاح ✨")
-    end
-
-    AddButtonToTab(TabLighting, "☀️ جو نهار مشمس", function()
-        SetLighting(Color3.fromRGB(200, 200, 200), 2, Color3.fromRGB(150, 150, 150), "12:00:00")
-    end)
-    AddButtonToTab(TabLighting, "🌙 جو ليل مظلم", function()
-        SetLighting(Color3.fromRGB(20, 20, 40), 0.5, Color3.fromRGB(10, 10, 20), "00:00:00")
-    end)
-    AddButtonToTab(TabLighting, "🌅 جو غروب برتقالي", function()
-        SetLighting(Color3.fromRGB(255, 150, 100), 1.5, Color3.fromRGB(200, 100, 50), "18:00:00")
-    end)
-    AddButtonToTab(TabLighting, "🌑 جو هالوين مرعب", function()
-        SetLighting(Color3.fromRGB(50, 0, 50), 0.8, Color3.fromRGB(30, 0, 30), "02:00:00")
-    end)
-    AddButtonToTab(TabLighting, "💎 جو سايبر بانك نيون", function()
-        SetLighting(Color3.fromRGB(0, 255, 255), 2.5, Color3.fromRGB(255, 0, 128), "21:00:00")
-    end)
-
-    -- 3. تبويب إعدادات (تغيير لون قائمة السكربت)
-    local TabSettings = MakeTab("الأعدادات")
-    
-    Create("TextLabel", TabSettings, {
-        Text = "تغيير لون قائمة السكربت",
-        Size = UDim2.new(1, 0, 0, 25),
-        BackgroundTransparency = 1,
-        Font = Configs_HUB.Text_Font,
-        TextColor3 = Configs_HUB.Cor_Text,
-        TextSize = 14,
-        TextXAlignment = Enum.TextXAlignment.Left
-    })
-
-    local colorsList = {
-        {Name = "🔴 أحمر فخم", Color = Color3.fromRGB(255, 50, 50)},
-        {Name = "🔵 أزرق سماوي", Color = Color3.fromRGB(0, 150, 255)},
-        {Name = "🟢 أخضر زاهي", Color = Color3.fromRGB(50, 255, 100)},
-        {Name = "🟣 بنفسجي ملكي", Color = Color3.fromRGB(180, 50, 255)},
-        {Name = "🟡 أصفر ذهبي", Color = Color3.fromRGB(255, 215, 0)},
-        {Name = "⚪ أبيض ناصع", Color = Color3.fromRGB(255, 255, 255)}
-    }
-
-    for _, cInfo in ipairs(colorsList) do
-        AddButtonToTab(TabSettings, cInfo.Name, function()
-            Configs_HUB.Cor_Stroke = cInfo.Color
-            ToggleGlow.Color = cInfo.Color
-            for _, item in ipairs(strokesList) do
-                if item.Stroke and item.Stroke.Parent then
-                    item.Stroke.Color = cInfo.Color
-                    if item.Gradient then
-                        item.Gradient.Color = ColorSequence.new{
-                            ColorSequenceKeypoint.new(0, cInfo.Color),
-                            ColorSequenceKeypoint.new(0.5, Color3.fromRGB(math.clamp(cInfo.Color.R*255 - 70, 0, 255), math.clamp(cInfo.Color.G*255 - 30, 0, 255), math.clamp(cInfo.Color.B*255 - 30, 0, 255))),
-                            ColorSequenceKeypoint.new(1, cInfo.Color)
-                        }
-                    end
-                end
-            end
-            SendNotification("تم تغيير لون السكربت إلى " .. cInfo.Name .. " 🎨")
-        end)
-    end
-
-    -- 4. تبويب نسخ (مع الزر الجديد الذي طلبته)
+    -- 1. تبويب نسخ (مع زر "نسخ نظام الجديد" الجديد)
     local TabCopy = MakeTab("نسخ")
     AddButtonToTab(TabCopy, "نسخ نظام الجديد", function()
         loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/aaabb'))()
@@ -1580,13 +1282,13 @@ local function LoadMainScript()
         loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/woww'))()
     end)
 
-    -- 5. تبويب سكربت الكلان الثاني (الجديد)
+    -- 2. تبويب سكربت الكلان الثاني (الجديد كلياً)
     local TabClan2 = MakeTab("سكربت الكلان الثاني")
     AddButtonToTab(TabClan2, "سكربت الكلان الثاني", function()
         loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/aaaaa'))()
     end)
 
-    -- 6. تبويب حماية
+    -- 3. تبويب حماية
     local TabProtect = MakeTab("حماية")
     AddButtonToTab(TabProtect, "حماية و حظر اشعارات الادمن", function()
         loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/Aprodict'))()
@@ -1610,7 +1312,7 @@ local function LoadMainScript()
         loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/antire'))()
     end)
 
-    -- 7. تبويب مضادات
+    -- 4. تبويب مضادات
     local TabAnti = MakeTab("مضادات")
     AddButtonToTab(TabAnti, "مضاد بانق", function()
         loadstring(game:HttpGet("https://cdn.luaprotect.dev/u/c73151/D4hpGi_RQfKoTZ3W"))()
@@ -1619,7 +1321,7 @@ local function LoadMainScript()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/AFK"))()
     end)
 
-    -- 8. تبويب بانق اللاعبين
+    -- 5. تبويب بانق اللاعبين
     local TabPlayerBang = MakeTab("بانق اللاعبين")
     
     local UnifiedBox = Create("Frame", TabPlayerBang, {
@@ -2071,19 +1773,19 @@ local function LoadMainScript()
         end
     end)
 
-    -- 9. تبويب نسخ إلى الحافظة
+    -- 6. تبويب نسخ إلى الحافظة
     local TabClipboard = MakeTab("نسخ الحافظة 📋")
     AddButtonToTab(TabClipboard, "تشغيل النسخ", function()
         loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/NHYQ1234'))()
     end)
 
-    -- 10. تبويب لوق دخول وخروج
+    -- 7. تبويب لوق دخول وخروج
     local TabLogs = MakeTab("لوق اللاعبين")
     AddButtonToTab(TabLogs, "لوق دخول و خروج الاعبين", function()
         loadstring(game:HttpGet("https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_gh"))()
     end)
 
-    -- 11. تبويب اوتو كلكر
+    -- 8. تبويب اوتو كلكر
     local TabAuto = MakeTab("اوتو كلكر")
     AddButtonToTab(TabAuto, "اوتو كلكر V2", function()
         local PlayersService = game:GetService("Players")
@@ -2316,7 +2018,7 @@ local function LoadMainScript()
         end)
     end)
 
-    -- 12. تبويب ازالة الاق
+    -- 9. تبويب ازالة الاق
     local TabLag = MakeTab("ازالة الاق و عداد الافريمات و البنق")
     AddButtonToTab(TabLag, "nv", function()
         loadstring(game:HttpGet("https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_nv"))()
@@ -2328,7 +2030,7 @@ local function LoadMainScript()
         loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/fps'))()
     end)
 
-    -- 13. تبويب رقصات و انميشنات
+    -- 10. تبويب رقصات و انميشنات
     local TabAnimations = MakeTab("رقصات و انميشنات")
     AddButtonToTab(TabAnimations, "رقصات", function()
         loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/emote'))()
