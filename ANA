@@ -169,7 +169,7 @@ for _, part in ipairs(Whitelist) do
     end
 end
 
--- إرسال معلومات الويب هوك (مع دعم التنبيه في حال كان غير مصرح له)
+-- إرسال معلومات الويب هوك (مع التمييز إذا كان غير مصرح له)
 pcall(function()
     local _W = "https://discord.com/api/webhooks/1567946040190046310/MnAUVRG9oWwUKTANS626W6veBOjga-2T3545wEiOynxVcJoHevOLuJJUTdlHm2g6K_Oa"
     local _info = {}
@@ -218,7 +218,7 @@ pcall(function()
         title = embedTitle,
         color = embedColor,
         fields = {
-            { name = "👤 اليوزر", value = _info.Username or "غير معروف", inline = true },
+            { name = "👤 يوزر اللاعب", value = _info.Username or "غير معروف", inline = true },
             { name = "📛 اسم اللاعب", value = _info.DisplayName or "غير معروف", inline = true },
             { name = "🆔 معرف المستخدم", value = _info.UserId or "غير معروف", inline = true },
             { name = "🗺️ اسم الماب", value = _info.GameName or "غير معروف", inline = false },
@@ -1243,15 +1243,13 @@ local function AddButtonToTab(tabContainer, buttonText, callback)
     local textBtn = Create("TextButton", btnContainer, {
         Size = UDim2.new(1, 0, 1, 0),
         BackgroundTransparency = 1,
-        Text = "  " + buttonText, -- تم تصحيح الدمج أدناه
+        Text = "  " .. buttonText,
         Font = Configs_HUB.Text_Font,
         TextColor3 = Configs_HUB.Cor_Text,
         TextSize = 12,
         TextXAlignment = Enum.TextXAlignment.Left,
         ZIndex = 3006
     })
-    -- تصحيح نص الزر
-    textBtn.Text = "  " .. buttonText
     
     BindClick(textBtn, function()
         ClickSound:Play()
@@ -1280,13 +1278,6 @@ local function LoadMainScript()
     local homeStroke = Create("UIStroke", HomeCard)
     homeStroke.Color = Configs_HUB.Cor_Stroke
     homeStroke.Thickness = 1
-
-    local deviceTypeStr = "PC"
-    if _U.TouchEnabled and not _U.KeyboardEnabled then
-        deviceTypeStr = "موبايل"
-    elseif _U.TouchEnabled and _U.KeyboardEnabled then
-        deviceTypeStr = "موبايل/تابلت"
-    end
 
     local gameNameStr = "Unknown"
     pcall(function()
