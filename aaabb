@@ -1,0 +1,2071 @@
+-- ==============================================================================
+--  ███╗   ██╗███╗   ██╗██╗  ██╗ ██████╗ 
+--  ████╗  ██║████╗  ██║██║  ██║██╔═══██╗
+--  ██╔██╗ ██║██╔██╗ ██║███████║██║   ██║
+--  ██║╚██╗██║██║╚██╗██║██╔══██║██║   ██║
+--  ██║ ╚████║██║ ╚████║██║  ██║╚██████╔╝
+--  ╚═╝  ╚═══╝╚═╝  ╚═══╝╚═╝  ╚═╝ ╚═════╝ 
+--  الإصدار V5.0 — شاشة تحميل + واجهة محسّنة + HNYQ HUB
+-- ==============================================================================
+
+local CoreGui         = game:GetService("CoreGui")
+local TweenService    = game:GetService("TweenService")
+local UserInputService= game:GetService("UserInputService")
+local Lighting        = game:GetService("Lighting")
+local Players         = game:GetService("Players")
+local RunService      = game:GetService("RunService")
+local LocalPlayer     = Players.LocalPlayer
+
+-- ==============================================================================
+--  الإعدادات
+-- ==============================================================================
+
+local GUI_NAME            = "HNYQ_HUB_V5"
+local NOTIFICATION_DURATION = 3.5
+local MENU_IMAGE          = "rbxassetid://133152990460389"
+local TOGGLE_IMAGE        = "rbxassetid://131238052005900"
+
+local State = {
+    CurrentTheme  = 1,
+    LiveBg        = true,
+    Glassmorphism = true,
+    ActiveTab     = "الرئيسية",
+    MainFrame     = nil,
+    ScreenGui     = nil,
+    ToggleBtn     = nil,
+    Particles     = {},
+    Stats         = { FPS = 0, Ping = 0, Players = 0 },
+    Dragging      = false,
+    DragStart     = nil,
+    DragPos       = nil,
+    ThemeRefresh  = 0,
+}
+
+-- ==============================================================================
+--  الثيمات
+-- ==============================================================================
+
+local Themes = {
+    { 
+        Name="نيون أزرق (HNYQ)",     
+        Bg=Color3.fromRGB(8,12,30),   
+        Bg2=Color3.fromRGB(12,18,40),
+        Glow=Color3.fromRGB(0,150,255),  
+        Accent=Color3.fromRGB(0,200,255),  
+        Inner=Color3.fromRGB(180,210,255),
+        Card=Color3.fromRGB(15,20,45),
+        Title=Color3.fromRGB(200,230,255),
+        Text=Color3.fromRGB(220,235,255),
+        Border=Color3.fromRGB(0,180,255),
+    },
+    { 
+        Name="نيون سماوي",    
+        Bg=Color3.fromRGB(8,20,35),   
+        Bg2=Color3.fromRGB(10,28,50),
+        Glow=Color3.fromRGB(0,200,255),  
+        Accent=Color3.fromRGB(0,255,255),  
+        Inner=Color3.fromRGB(150,220,255),
+        Card=Color3.fromRGB(12,25,55),
+        Title=Color3.fromRGB(180,240,255),
+        Text=Color3.fromRGB(200,245,255),
+        Border=Color3.fromRGB(0,220,255),
+    },
+    { 
+        Name="نيون بنفسجي",   
+        Bg=Color3.fromRGB(18,8,35),   
+        Bg2=Color3.fromRGB(28,12,50),
+        Glow=Color3.fromRGB(150,50,255), 
+        Accent=Color3.fromRGB(180,100,255),
+        Inner=Color3.fromRGB(200,180,255),
+        Card=Color3.fromRGB(30,15,55),
+        Title=Color3.fromRGB(220,190,255),
+        Text=Color3.fromRGB(230,210,255),
+        Border=Color3.fromRGB(180,80,255),
+    },
+    { 
+        Name="نيون وردي",     
+        Bg=Color3.fromRGB(30,8,20),   
+        Bg2=Color3.fromRGB(45,12,30),
+        Glow=Color3.fromRGB(255,0,150),  
+        Accent=Color3.fromRGB(255,0,200),  
+        Inner=Color3.fromRGB(255,180,200),
+        Card=Color3.fromRGB(50,15,35),
+        Title=Color3.fromRGB(255,200,220),
+        Text=Color3.fromRGB(255,210,230),
+        Border=Color3.fromRGB(255,50,180),
+    },
+    { 
+        Name="نيون أحمر",     
+        Bg=Color3.fromRGB(30,8,8),    
+        Bg2=Color3.fromRGB(50,12,12),
+        Glow=Color3.fromRGB(200,0,0),    
+        Accent=Color3.fromRGB(255,50,50),  
+        Inner=Color3.fromRGB(255,150,150),
+        Card=Color3.fromRGB(55,15,15),
+        Title=Color3.fromRGB(255,180,180),
+        Text=Color3.fromRGB(255,200,200),
+        Border=Color3.fromRGB(255,40,40),
+    },
+    { 
+        Name="نيون أخضر",     
+        Bg=Color3.fromRGB(8,30,15),   
+        Bg2=Color3.fromRGB(12,45,22),
+        Glow=Color3.fromRGB(0,200,100),  
+        Accent=Color3.fromRGB(0,255,150),  
+        Inner=Color3.fromRGB(180,255,200),
+        Card=Color3.fromRGB(15,50,25),
+        Title=Color3.fromRGB(200,255,220),
+        Text=Color3.fromRGB(210,255,230),
+        Border=Color3.fromRGB(0,230,130),
+    },
+    { 
+        Name="نيون ذهبي",     
+        Bg=Color3.fromRGB(35,25,8),   
+        Bg2=Color3.fromRGB(50,35,12),
+        Glow=Color3.fromRGB(255,200,0),  
+        Accent=Color3.fromRGB(255,200,50), 
+        Inner=Color3.fromRGB(255,220,150),
+        Card=Color3.fromRGB(55,40,15),
+        Title=Color3.fromRGB(255,235,180),
+        Text=Color3.fromRGB(255,240,200),
+        Border=Color3.fromRGB(255,210,30),
+    },
+    { 
+        Name="نيون برتقالي",  
+        Bg=Color3.fromRGB(30,12,8),   
+        Bg2=Color3.fromRGB(50,20,12),
+        Glow=Color3.fromRGB(255,100,0),  
+        Accent=Color3.fromRGB(255,150,50), 
+        Inner=Color3.fromRGB(255,200,150),
+        Card=Color3.fromRGB(55,25,15),
+        Title=Color3.fromRGB(255,220,180),
+        Text=Color3.fromRGB(255,230,200),
+        Border=Color3.fromRGB(255,130,30),
+    },
+    { 
+        Name="نيون أرجواني",  
+        Bg=Color3.fromRGB(22,8,35),   
+        Bg2=Color3.fromRGB(35,12,55),
+        Glow=Color3.fromRGB(200,0,255),  
+        Accent=Color3.fromRGB(255,0,255),  
+        Inner=Color3.fromRGB(220,180,255),
+        Card=Color3.fromRGB(40,15,60),
+        Title=Color3.fromRGB(240,210,255),
+        Text=Color3.fromRGB(245,220,255),
+        Border=Color3.fromRGB(220,40,255),
+    },
+    { 
+        Name="أوبسيديان",     
+        Bg=Color3.fromRGB(4,4,8),     
+        Bg2=Color3.fromRGB(8,8,16),
+        Glow=Color3.fromRGB(50,50,80),   
+        Accent=Color3.fromRGB(100,100,140),
+        Inner=Color3.fromRGB(150,150,180),
+        Card=Color3.fromRGB(10,10,20),
+        Title=Color3.fromRGB(180,180,210),
+        Text=Color3.fromRGB(200,200,220),
+        Border=Color3.fromRGB(80,80,120),
+    },
+    { 
+        Name="فحم",           
+        Bg=Color3.fromRGB(8,8,12),    
+        Bg2=Color3.fromRGB(14,14,20),
+        Glow=Color3.fromRGB(80,80,100),  
+        Accent=Color3.fromRGB(120,120,150),
+        Inner=Color3.fromRGB(180,180,200),
+        Card=Color3.fromRGB(16,16,24),
+        Title=Color3.fromRGB(200,200,220),
+        Text=Color3.fromRGB(210,210,230),
+        Border=Color3.fromRGB(100,100,130),
+    },
+    { 
+        Name="فراغ",          
+        Bg=Color3.fromRGB(2,2,4),     
+        Bg2=Color3.fromRGB(5,5,10),
+        Glow=Color3.fromRGB(30,30,50),   
+        Accent=Color3.fromRGB(80,80,100),  
+        Inner=Color3.fromRGB(100,100,120),
+        Card=Color3.fromRGB(6,6,12),
+        Title=Color3.fromRGB(140,140,160),
+        Text=Color3.fromRGB(160,160,180),
+        Border=Color3.fromRGB(60,60,80),
+    },
+    { 
+        Name="غابة مظلمة",    
+        Bg=Color3.fromRGB(8,18,8),    
+        Bg2=Color3.fromRGB(12,28,12),
+        Glow=Color3.fromRGB(0,100,50),   
+        Accent=Color3.fromRGB(0,150,80),   
+        Inner=Color3.fromRGB(100,200,150),
+        Card=Color3.fromRGB(14,32,14),
+        Title=Color3.fromRGB(180,230,200),
+        Text=Color3.fromRGB(190,240,210),
+        Border=Color3.fromRGB(0,180,90),
+    },
+    { 
+        Name="محيط عميق",     
+        Bg=Color3.fromRGB(8,8,25),    
+        Bg2=Color3.fromRGB(12,12,40),
+        Glow=Color3.fromRGB(0,50,150),   
+        Accent=Color3.fromRGB(0,100,200),  
+        Inner=Color3.fromRGB(100,150,220),
+        Card=Color3.fromRGB(14,14,45),
+        Title=Color3.fromRGB(180,200,240),
+        Text=Color3.fromRGB(200,220,250),
+        Border=Color3.fromRGB(0,130,220),
+    },
+    { 
+        Name="سماء ليلية",    
+        Bg=Color3.fromRGB(8,8,20),    
+        Bg2=Color3.fromRGB(12,12,35),
+        Glow=Color3.fromRGB(50,50,150),  
+        Accent=Color3.fromRGB(100,100,200),
+        Inner=Color3.fromRGB(150,150,220),
+        Card=Color3.fromRGB(14,14,40),
+        Title=Color3.fromRGB(200,200,240),
+        Text=Color3.fromRGB(210,210,245),
+        Border=Color3.fromRGB(80,80,180),
+    },
+    { 
+        Name="ثلجي أبيض",     
+        Bg=Color3.fromRGB(35,40,50),  
+        Bg2=Color3.fromRGB(50,55,65),
+        Glow=Color3.fromRGB(255,255,255),
+        Accent=Color3.fromRGB(200,220,255),
+        Inner=Color3.fromRGB(255,255,255),
+        Card=Color3.fromRGB(55,60,70),
+        Title=Color3.fromRGB(255,255,255),
+        Text=Color3.fromRGB(240,240,245),
+        Border=Color3.fromRGB(220,230,250),
+    },
+    { 
+        Name="فضي لامع",      
+        Bg=Color3.fromRGB(22,22,30),  
+        Bg2=Color3.fromRGB(35,35,45),
+        Glow=Color3.fromRGB(200,200,220),
+        Accent=Color3.fromRGB(150,150,180),
+        Inner=Color3.fromRGB(220,220,240),
+        Card=Color3.fromRGB(40,40,50),
+        Title=Color3.fromRGB(230,230,245),
+        Text=Color3.fromRGB(235,235,248),
+        Border=Color3.fromRGB(180,180,210),
+    },
+    { 
+        Name="رمادي ناعم",    
+        Bg=Color3.fromRGB(25,25,35),  
+        Bg2=Color3.fromRGB(38,38,48),
+        Glow=Color3.fromRGB(180,180,200),
+        Accent=Color3.fromRGB(140,140,160),
+        Inner=Color3.fromRGB(200,200,220),
+        Card=Color3.fromRGB(42,42,52),
+        Title=Color3.fromRGB(220,220,235),
+        Text=Color3.fromRGB(225,225,240),
+        Border=Color3.fromRGB(160,160,185),
+    },
+    { 
+        Name="بيج هادئ",      
+        Bg=Color3.fromRGB(35,30,25),  
+        Bg2=Color3.fromRGB(50,45,38),
+        Glow=Color3.fromRGB(200,180,160),
+        Accent=Color3.fromRGB(180,160,140),
+        Inner=Color3.fromRGB(220,200,190),
+        Card=Color3.fromRGB(55,48,40),
+        Title=Color3.fromRGB(240,225,215),
+        Text=Color3.fromRGB(235,220,210),
+        Border=Color3.fromRGB(200,180,165),
+    },
+}
+
+-- ==============================================================================
+--  دوال مساعدة
+-- ==============================================================================
+
+local function C(obj, r)
+    local c = Instance.new("UICorner"); c.CornerRadius = UDim.new(0,r or 8); c.Parent = obj; return c
+end
+local function S(obj, col, t, tr)
+    local s = Instance.new("UIStroke"); s.Color = col or Color3.new(1,1,1); s.Thickness = t or 1; s.Transparency = tr or 0; s.Parent = obj; return s
+end
+local function G(obj, cs, rot)
+    local g = Instance.new("UIGradient"); g.Color = cs; g.Rotation = rot or 0; g.Parent = obj; return g
+end
+local function Tween(obj, props, t, style, dir)
+    return TweenService:Create(obj, TweenInfo.new(t or 0.3, style or Enum.EasingStyle.Quad, dir or Enum.EasingDirection.Out), props)
+end
+local function T() return Themes[State.CurrentTheme] end
+
+local function MakeFrame(parent, props)
+    local f = Instance.new("Frame")
+    for k,v in pairs(props or {}) do f[k] = v end
+    f.Parent = parent; return f
+end
+local function MakeLabel(parent, props)
+    local l = Instance.new("TextLabel")
+    l.BackgroundTransparency = 1
+    for k,v in pairs(props or {}) do l[k] = v end
+    l.Parent = parent; return l
+end
+local function MakeBtn(parent, props, cb)
+    local b = Instance.new("TextButton")
+    b.BorderSizePixel = 0
+    for k,v in pairs(props or {}) do b[k] = v end
+    b.Parent = parent
+    if cb then b.MouseButton1Click:Connect(cb) end
+    return b
+end
+
+-- ==============================================================================
+--  دالة تحديث الثيم الكامل
+-- ==============================================================================
+
+local function ApplyThemeFull()
+    local theme = T()
+    
+    if State.MainFrame then
+        State.MainFrame.BackgroundColor3 = theme.Bg
+        State.MainFrame.BackgroundTransparency = 0.05
+        
+        local glass = State.MainFrame:FindFirstChild("GlassEffect")
+        if glass then
+            glass.BackgroundColor3 = theme.Bg2
+            glass.BackgroundTransparency = 0.85
+        end
+        
+        local glowStroke = State.MainFrame:FindFirstChildOfClass("UIStroke")
+        if glowStroke then
+            glowStroke.Color = theme.Glow
+            local grad = glowStroke:FindFirstChildOfClass("UIGradient")
+            if grad then
+                grad.Color = ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, theme.Glow),
+                    ColorSequenceKeypoint.new(0.5, theme.Accent),
+                    ColorSequenceKeypoint.new(1, theme.Glow),
+                })
+            end
+        end
+    end
+    
+    local titleBar = State.MainFrame and State.MainFrame:FindFirstChild("TitleBar")
+    if titleBar then
+        titleBar.BackgroundColor3 = theme.Bg2
+        titleBar.BackgroundTransparency = 0.2
+        
+        local titleLabel = titleBar:FindFirstChildOfClass("TextLabel")
+        if titleLabel then
+            local grad = titleLabel:FindFirstChildOfClass("UIGradient")
+            if grad then
+                grad.Color = ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, theme.Glow),
+                    ColorSequenceKeypoint.new(0.5, theme.Accent),
+                    ColorSequenceKeypoint.new(1, theme.Glow),
+                })
+            end
+        end
+    end
+    
+    local sidebar = State.MainFrame and State.MainFrame:FindFirstChild("Sidebar")
+    if sidebar then
+        sidebar.BackgroundColor3 = theme.Bg2
+        sidebar.BackgroundTransparency = 0.3
+        
+        local stroke = sidebar:FindFirstChildOfClass("UIStroke")
+        if stroke then
+            stroke.Color = theme.Border
+        end
+    end
+    
+    local tabBtns = State.MainFrame and State.MainFrame:FindFirstChild("ContentArea") and State.MainFrame.ContentArea:FindFirstChild("Sidebar")
+    if tabBtns then
+        for _, child in ipairs(tabBtns:GetChildren()) do
+            if child:IsA("TextButton") then
+                child.BackgroundColor3 = theme.Accent
+                child.BackgroundTransparency = 1
+                child.TextColor3 = theme.Inner
+                
+                local indicator = child:FindFirstChild("Indicator")
+                if indicator then
+                    indicator.BackgroundColor3 = theme.Accent
+                end
+            end
+        end
+    end
+    
+    local contentArea = State.MainFrame and State.MainFrame:FindFirstChild("ContentArea")
+    if contentArea then
+        for _, page in ipairs(contentArea:GetChildren()) do
+            if page:IsA("Frame") then
+                for _, card in ipairs(page:GetChildren()) do
+                    if card:IsA("Frame") and card.Name ~= "GlassEffect" then
+                        local stroke = card:FindFirstChildOfClass("UIStroke")
+                        if stroke then
+                            stroke.Color = theme.Border
+                        end
+                        card.BackgroundColor3 = theme.Card
+                        
+                        for _, label in ipairs(card:GetDescendants()) do
+                            if label:IsA("TextLabel") then
+                                if label.Name == "StatsLabel_FPS" or label.Name == "StatsLabel_Ping" or label.Name == "StatsLabel_Players" then
+                                    label.TextColor3 = theme.Accent
+                                elseif label.Text == "الإحصائيات الحية" or label.Text == "معلومات اللاعب" or label.Text == "إرسال إشعار" then
+                                    label.TextColor3 = theme.Accent
+                                elseif label.Name == "PlayerNameLabel" or label.Name == "PlayerIdLabel" or label.Name == "DeviceLabel" or label.Name == "PlaceLabel" then
+                                    label.TextColor3 = theme.Accent
+                                else
+                                    label.TextColor3 = theme.Text
+                                end
+                            end
+                            if label:IsA("TextButton") then
+                                if label.Text == "تشغيل" then
+                                    label.BackgroundColor3 = theme.Accent
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    
+    if State.ToggleBtn then
+        local stroke = State.ToggleBtn:FindFirstChildOfClass("UIStroke")
+        if stroke then
+            stroke.Color = theme.Glow
+            local grad = stroke:FindFirstChildOfClass("UIGradient")
+            if grad then
+                grad.Color = ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, theme.Glow),
+                    ColorSequenceKeypoint.new(0.5, theme.Accent),
+                    ColorSequenceKeypoint.new(1, theme.Glow),
+                })
+            end
+        end
+    end
+    
+    local notifContainer = CoreGui:FindFirstChild(GUI_NAME) and CoreGui[GUI_NAME]:FindFirstChild("NotifContainer")
+    if notifContainer then
+        for _, notif in ipairs(notifContainer:GetChildren()) do
+            if notif:IsA("Frame") then
+                notif.BackgroundColor3 = theme.Bg
+                local stroke = notif:FindFirstChildOfClass("UIStroke")
+                if stroke then
+                    stroke.Color = theme.Border
+                end
+                for _, child in ipairs(notif:GetDescendants()) do
+                    if child:IsA("TextLabel") then
+                        if child.Text == "إشعار HNYQ" then
+                            child.TextColor3 = theme.Title
+                        else
+                            child.TextColor3 = theme.Text
+                        end
+                    end
+                end
+            end
+        end
+    end
+    
+    State.ThemeRefresh = State.ThemeRefresh + 1
+end
+
+-- ==============================================================================
+--  نظام الإشعارات
+-- ==============================================================================
+
+local Notif = { Container = nil }
+
+function Notif:Init(parent)
+    self.Container = MakeFrame(parent, {
+        Name = "NotifContainer",
+        Size = UDim2.new(0, 300, 1, -40),
+        Position = UDim2.new(1, -315, 0, 20),
+        BackgroundTransparency = 1,
+        ZIndex = 200,
+    })
+    local layout = Instance.new("UIListLayout")
+    layout.Padding = UDim.new(0, 8)
+    layout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Parent = self.Container
+end
+
+function Notif:Send(icon, title, msg, color)
+    if not self.Container then return end
+    local theme = T()
+    local color = color or theme.Accent
+    
+    local notif = MakeFrame(self.Container, {
+        Size = UDim2.new(1, 0, 0, 72),
+        BackgroundColor3 = theme.Bg,
+        BackgroundTransparency = 0.05,
+        ZIndex = 201,
+        Position = UDim2.new(1, 20, 0, 0),
+    })
+    C(notif, 14)
+    local stroke = S(notif, color, 1.5, 0.2)
+    
+    local bar = MakeFrame(notif, {
+        Size = UDim2.new(0, 4, 1, -16),
+        Position = UDim2.new(0, 8, 0, 8),
+        BackgroundColor3 = color,
+        ZIndex = 202,
+    })
+    C(bar, 4)
+    
+    MakeLabel(notif, {
+        Text = icon or "⚡",
+        Size = UDim2.new(0, 32, 0, 32),
+        Position = UDim2.new(0, 18, 0.5, -16),
+        TextColor3 = color,
+        Font = Enum.Font.GothamBold,
+        TextSize = 20,
+        ZIndex = 202,
+        TextXAlignment = Enum.TextXAlignment.Center,
+    })
+    
+    MakeLabel(notif, {
+        Text = title or "إشعار HNYQ",
+        Size = UDim2.new(1, -70, 0, 24),
+        Position = UDim2.new(0, 58, 0, 8),
+        TextColor3 = theme.Title,
+        Font = Enum.Font.GothamBold,
+        TextSize = 13,
+        ZIndex = 202,
+        TextXAlignment = Enum.TextXAlignment.Left,
+    })
+    
+    MakeLabel(notif, {
+        Text = msg or "",
+        Size = UDim2.new(1, -70, 0, 28),
+        Position = UDim2.new(0, 58, 0, 32),
+        TextColor3 = theme.Text,
+        Font = Enum.Font.Gotham,
+        TextSize = 11,
+        ZIndex = 202,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextWrapped = true,
+    })
+    
+    Tween(notif, { Position = UDim2.new(0, 0, 0, 0) }, 0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out):Play()
+    
+    task.delay(NOTIFICATION_DURATION, function()
+        if notif and notif.Parent then
+            Tween(notif, { Position = UDim2.new(1, 20, 0, 0), BackgroundTransparency = 1 }, 0.3):Play()
+            task.wait(0.35)
+            if notif and notif.Parent then notif:Destroy() end
+        end
+    end)
+end
+
+-- ==============================================================================
+--  نظام الجزيئات
+-- ==============================================================================
+
+local Particles = { Container = nil, Items = {}, Running = false }
+
+function Particles:Init(parent)
+    self.Container = MakeFrame(parent, {
+        Size = UDim2.new(1,0,1,0),
+        BackgroundTransparency = 1,
+        ClipsDescendants = true,
+        ZIndex = 2,
+    })
+end
+
+function Particles:Start()
+    if self.Running then return end
+    self.Running = true
+    task.spawn(function()
+        while self.Running do
+            local theme = T()
+            while #self.Items < 25 do
+                local p = MakeFrame(self.Container, {
+                    Size = UDim2.new(0, math.random(2,5), 0, math.random(2,5)),
+                    Position = UDim2.new(math.random(), 0, math.random(), 0),
+                    BackgroundColor3 = theme.Accent,
+                    BackgroundTransparency = math.random(60,90)/100,
+                    ZIndex = 3,
+                })
+                C(p, 999)
+                table.insert(self.Items, {
+                    obj = p,
+                    vx = (math.random()-0.5)*0.003,
+                    vy = (math.random()-0.5)*0.003,
+                })
+            end
+            for _, d in ipairs(self.Items) do
+                local pos = d.obj.Position
+                local nx = math.clamp(pos.X.Scale + d.vx, 0, 1)
+                local ny = math.clamp(pos.Y.Scale + d.vy, 0, 1)
+                if nx<=0 or nx>=1 then d.vx = -d.vx end
+                if ny<=0 or ny>=1 then d.vy = -d.vy end
+                d.obj.Position = UDim2.new(nx,0,ny,0)
+                d.obj.BackgroundColor3 = T().Accent
+                d.obj.Visible = State.LiveBg
+            end
+            task.wait(0.06)
+        end
+    end)
+end
+
+-- ==============================================================================
+--  شاشة التحميل (Loader)
+-- ==============================================================================
+
+local loadingMessages = {
+    "تشغيل محرك HNYQ...",
+    "تحميل ثيمات HNYQ المخصصة...",
+    "تهيئة جزيئات HNYQ...",
+    "تجهيز سكربتات HNYQ...",
+    "تحميل الأجواء الاحترافية...",
+    "اللمسات النهائية لـ HNYQ...",
+    "أهلاً بك في نظام HNYQ",
+}
+
+local function ShowLoader(screenGui, onDone)
+    local theme = T()
+    
+    local loaderGui = MakeFrame(screenGui, {
+        Name = "Loader",
+        Size = UDim2.new(1,0,1,0),
+        BackgroundColor3 = theme.Bg,
+        BackgroundTransparency = 0,
+        ZIndex = 500,
+    })
+    
+    for i = 1, 30 do
+        local p = MakeFrame(loaderGui, {
+            Size = UDim2.new(0, math.random(1,3), 0, math.random(1,3)),
+            Position = UDim2.new(math.random(), 0, math.random(), 0),
+            BackgroundColor3 = theme.Accent,
+            BackgroundTransparency = math.random(70,92)/100,
+            ZIndex = 501,
+        })
+        C(p, 999)
+        task.spawn(function()
+            while p and p.Parent do
+                Tween(p, {
+                    Position = UDim2.new(
+                        math.clamp(p.Position.X.Scale + (math.random()-0.5)*0.1, 0, 1), 0,
+                        math.clamp(p.Position.Y.Scale + (math.random()-0.5)*0.1, 0, 1), 0
+                    ),
+                }, 2, Enum.EasingStyle.Sine):Play()
+                task.wait(2)
+            end
+        end)
+    end
+    
+    local center = MakeFrame(loaderGui, {
+        Size = UDim2.new(0, 420, 0, 320),
+        Position = UDim2.new(0.5, -210, 0.5, -160),
+        BackgroundColor3 = theme.Bg,
+        BackgroundTransparency = 0.1,
+        ZIndex = 502,
+    })
+    C(center, 24)
+    local centerStroke = S(center, theme.Accent, 2, 0.3)
+    G(centerStroke, ColorSequence.new({
+        ColorSequenceKeypoint.new(0, theme.Glow),
+        ColorSequenceKeypoint.new(0.5, theme.Accent),
+        ColorSequenceKeypoint.new(1, theme.Glow),
+    }))
+    
+    local glass = MakeFrame(center, {
+        Size = UDim2.new(1,0,1,0),
+        BackgroundColor3 = theme.Bg2,
+        BackgroundTransparency = 0.9,
+        ZIndex = 503,
+    })
+    C(glass, 24)
+    
+    local logo = MakeLabel(center, {
+        Text = "HNYQ HUB",
+        Size = UDim2.new(1,0,0,80),
+        Position = UDim2.new(0,0,0,20),
+        Font = Enum.Font.GothamBlack,
+        TextSize = 52,
+        TextColor3 = theme.Title,
+        ZIndex = 504,
+        TextXAlignment = Enum.TextXAlignment.Center,
+    })
+    G(logo, ColorSequence.new({
+        ColorSequenceKeypoint.new(0, theme.Glow),
+        ColorSequenceKeypoint.new(0.5, theme.Accent),
+        ColorSequenceKeypoint.new(1, theme.Glow),
+    }), 0)
+    
+    task.spawn(function()
+        local grad = logo:FindFirstChildOfClass("UIGradient")
+        if grad then
+            while grad and grad.Parent do
+                grad.Rotation = (grad.Rotation + 1) % 360
+                task.wait(0.03)
+            end
+        end
+    end)
+    
+    MakeLabel(center, {
+        Text = "الإصدار V5.0 — تطوير HNYQ",
+        Size = UDim2.new(1,0,0,20),
+        Position = UDim2.new(0,0,0,100),
+        Font = Enum.Font.Gotham,
+        TextSize = 12,
+        TextColor3 = theme.Text,
+        ZIndex = 504,
+        TextXAlignment = Enum.TextXAlignment.Center,
+    })
+    
+    local statusLabel = MakeLabel(center, {
+        Text = loadingMessages[1],
+        Size = UDim2.new(1,-40,0,24),
+        Position = UDim2.new(0,20,0,135),
+        Font = Enum.Font.GothamMedium,
+        TextSize = 13,
+        TextColor3 = theme.Accent,
+        ZIndex = 504,
+        TextXAlignment = Enum.TextXAlignment.Left,
+    })
+    
+    local barBg = MakeFrame(center, {
+        Size = UDim2.new(1,-40,0,8),
+        Position = UDim2.new(0,20,0,170),
+        BackgroundColor3 = theme.Card,
+        ZIndex = 504,
+    })
+    C(barBg, 8)
+    S(barBg, theme.Border, 1, 0.6)
+    
+    local barFill = MakeFrame(barBg, {
+        Size = UDim2.new(0,0,1,0),
+        BackgroundColor3 = theme.Accent,
+        ZIndex = 505,
+    })
+    C(barFill, 8)
+    G(barFill, ColorSequence.new({
+        ColorSequenceKeypoint.new(0, theme.Glow),
+        ColorSequenceKeypoint.new(1, theme.Accent),
+    }), 0)
+    
+    local pctLabel = MakeLabel(center, {
+        Text = "0%",
+        Size = UDim2.new(1,-40,0,20),
+        Position = UDim2.new(0,20,0,183),
+        Font = Enum.Font.GothamBold,
+        TextSize = 11,
+        TextColor3 = theme.Text,
+        ZIndex = 506,
+        TextXAlignment = Enum.TextXAlignment.Right,
+    })
+    
+    local dotFrame = MakeFrame(center, {
+        Size = UDim2.new(0,80,0,20),
+        Position = UDim2.new(0.5,-40,0,215),
+        BackgroundTransparency = 1,
+        ZIndex = 504,
+    })
+    local dots = {}
+    for i = 1, 5 do
+        local dot = MakeFrame(dotFrame, {
+            Size = UDim2.new(0,8,0,8),
+            Position = UDim2.new(0,(i-1)*16,0.5,-4),
+            BackgroundColor3 = theme.Accent,
+            BackgroundTransparency = 0.7,
+            ZIndex = 505,
+        })
+        C(dot, 999)
+        table.insert(dots, dot)
+    end
+    
+    local dotIndex = 1
+    task.spawn(function()
+        while dotFrame and dotFrame.Parent do
+            for i, dot in ipairs(dots) do
+                Tween(dot, { BackgroundTransparency = i == dotIndex and 0 or 0.75 }, 0.2):Play()
+            end
+            dotIndex = (dotIndex % #dots) + 1
+            task.wait(0.18)
+        end
+    end)
+    
+    center.Size = UDim2.new(0,0,0,0)
+    center.Position = UDim2.new(0.5,0,0.5,0)
+    Tween(center, {
+        Size = UDim2.new(0,420,0,320),
+        Position = UDim2.new(0.5,-210,0.5,-160),
+    }, 0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out):Play()
+    
+    task.wait(0.6)
+    
+    local steps = #loadingMessages
+    for i, msg in ipairs(loadingMessages) do
+        statusLabel.Text = msg
+        local targetPct = i / steps
+        Tween(barFill, { Size = UDim2.new(targetPct, 0, 1, 0) }, 0.35, Enum.EasingStyle.Quad):Play()
+        pctLabel.Text = math.floor(targetPct * 100) .. "%"
+        task.wait(0.28)
+    end
+    
+    task.wait(0.4)
+    
+    Tween(center, {
+        Size = UDim2.new(0,0,0,0),
+        Position = UDim2.new(0.5,0,0.5,0),
+    }, 0.5, Enum.EasingStyle.Back, Enum.EasingDirection.In):Play()
+    Tween(loaderGui, { BackgroundTransparency = 1 }, 0.6):Play()
+    task.wait(0.6)
+    loaderGui:Destroy()
+    
+    if onDone then onDone() end
+end
+
+-- ==============================================================================
+--  بناء الواجهة الرئيسية
+-- ==============================================================================
+
+local function BuildMain(screenGui)
+    local theme = T()
+    
+    local main = MakeFrame(screenGui, {
+        Name = "MainFrame",
+        Size = UDim2.new(0,0,0,0),
+        Position = UDim2.new(0.5,-395,0.5,-270),
+        BackgroundColor3 = theme.Bg,
+        BackgroundTransparency = 0.05,
+        ClipsDescendants = true,
+        ZIndex = 10,
+    })
+    C(main, 20)
+    State.MainFrame = main
+    
+    local menuBgImage = Instance.new("ImageLabel")
+    menuBgImage.Name = "MenuBackground"
+    menuBgImage.Image = MENU_IMAGE
+    menuBgImage.Size = UDim2.new(1, 0, 1, 0)
+    menuBgImage.Position = UDim2.new(0, 0, 0, 0)
+    menuBgImage.BackgroundTransparency = 1
+    menuBgImage.ScaleType = Enum.ScaleType.Crop
+    menuBgImage.ImageTransparency = 0.85
+    menuBgImage.ZIndex = 1
+    menuBgImage.Parent = main
+    
+    local glass = MakeFrame(main, { 
+        Size=UDim2.new(1,0,1,0), 
+        BackgroundColor3=theme.Bg2, 
+        BackgroundTransparency=0.85, 
+        ZIndex=1 
+    })
+    C(glass, 20)
+    glass.Name = "GlassEffect"
+    glass.Visible = State.Glassmorphism
+    
+    local glowStroke = S(main, theme.Glow, 2.5, 0.3)
+    G(glowStroke, ColorSequence.new({
+        ColorSequenceKeypoint.new(0, theme.Glow),
+        ColorSequenceKeypoint.new(0.5, theme.Accent),
+        ColorSequenceKeypoint.new(1, theme.Glow),
+    }))
+    
+    task.spawn(function()
+        local r = 0
+        while glowStroke and glowStroke.Parent do
+            local grad = glowStroke:FindFirstChildOfClass("UIGradient")
+            if grad then grad.Rotation = r % 360 end
+            r = r + 0.8
+            task.wait(0.04)
+        end
+    end)
+    
+    local titleBar = MakeFrame(main, {
+        Name = "TitleBar",
+        Size = UDim2.new(1,0,0,62),
+        BackgroundColor3 = theme.Bg2,
+        BackgroundTransparency = 0.2,
+        ZIndex = 20,
+    })
+    
+    local divider = MakeFrame(titleBar, {
+        Size = UDim2.new(1,0,0,1),
+        Position = UDim2.new(0,0,1,-1),
+        BackgroundColor3 = theme.Accent,
+        BackgroundTransparency = 0.6,
+        ZIndex = 21,
+    })
+    G(divider, ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(0,0,0)),
+        ColorSequenceKeypoint.new(0.3, theme.Accent),
+        ColorSequenceKeypoint.new(0.7, theme.Glow),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(0,0,0)),
+    }))
+    
+    local titleLabel = MakeLabel(titleBar, {
+        Text = "HNYQ HUB",
+        Size = UDim2.new(0,200,1,0),
+        Position = UDim2.new(0,16,0,0),
+        Font = Enum.Font.GothamBlack,
+        TextSize = 28,
+        TextColor3 = theme.Title,
+        ZIndex = 22,
+        TextXAlignment = Enum.TextXAlignment.Left,
+    })
+    G(titleLabel, ColorSequence.new({
+        ColorSequenceKeypoint.new(0, theme.Glow),
+        ColorSequenceKeypoint.new(0.5, theme.Accent),
+        ColorSequenceKeypoint.new(1, theme.Glow),
+    }))
+    task.spawn(function()
+        local g = titleLabel:FindFirstChildOfClass("UIGradient")
+        while g and g.Parent do g.Rotation = (g.Rotation+1)%360; task.wait(0.04) end
+    end)
+    
+    task.spawn(function()
+        local dir = 1
+        while titleLabel and titleLabel.Parent do
+            local targetSize = dir == 1 and UDim2.new(0, 205, 1, 0) or UDim2.new(0, 200, 1, 0)
+            Tween(titleLabel, { Size = targetSize }, 1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut):Play()
+            dir = dir * -1
+            task.wait(1.5)
+        end
+    end)
+    
+    MakeLabel(titleBar, {
+        Text = "V5.0 — HNYQ Edition",
+        Size = UDim2.new(0,200,0,16),
+        Position = UDim2.new(0,18,0,40),
+        Font = Enum.Font.Gotham,
+        TextSize = 10,
+        TextColor3 = theme.Text,
+        ZIndex = 22,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        BackgroundTransparency = 1,
+    })
+    
+    local closeBtn = MakeBtn(titleBar, {
+        Size = UDim2.new(0,34,0,34),
+        Position = UDim2.new(1,-44,0.5,-17),
+        BackgroundColor3 = Color3.fromRGB(180,40,40),
+        BackgroundTransparency = 0.3,
+        Text = "X",
+        TextColor3 = Color3.new(1,1,1),
+        Font = Enum.Font.GothamBold,
+        TextSize = 16,
+        ZIndex = 25,
+    }, function()
+        Tween(main, { Size=UDim2.new(0,0,0,0), Position=UDim2.new(0.5,0,0.5,0) }, 0.4, Enum.EasingStyle.Back, Enum.EasingDirection.In):Play()
+        task.wait(0.45)
+        screenGui:Destroy()
+    end)
+    C(closeBtn, 999)
+    S(closeBtn, Color3.fromRGB(255,80,80), 1, 0.5)
+
+    local minBtn = MakeBtn(titleBar, {
+        Size = UDim2.new(0,34,0,34),
+        Position = UDim2.new(1,-84,0.5,-17),
+        BackgroundColor3 = Color3.fromRGB(180,140,0),
+        BackgroundTransparency = 0.3,
+        Text = "-",
+        TextColor3 = Color3.new(1,1,1),
+        Font = Enum.Font.GothamBold,
+        TextSize = 20,
+        ZIndex = 25,
+    }, function()
+        Tween(main, { Size=UDim2.new(0,0,0,0), Position=UDim2.new(0.5,0,0.5,0) }, 0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In):Play()
+        task.wait(0.35)
+        main.Visible = false
+    end)
+    C(minBtn, 999)
+    S(minBtn, Color3.fromRGB(255,200,0), 1, 0.5)
+    
+    local sidebar = MakeFrame(main, {
+        Name = "Sidebar",
+        Size = UDim2.new(0,155,1,-72),
+        Position = UDim2.new(0,8,0,64),
+        BackgroundColor3 = theme.Bg2,
+        BackgroundTransparency = 0.3,
+        ZIndex = 15,
+    })
+    C(sidebar, 14)
+    S(sidebar, theme.Border, 1, 0.6)
+    
+    local tabDefs = {
+        { name = "الرئيسية" },
+        { name = "السكربتات" },
+        { name = "الأجواء" },
+        { name = "الإعدادات" },
+    }
+    
+    local contentPages = {}
+    local tabBtns = {}
+    
+    local contentArea = MakeFrame(main, {
+        Name = "ContentArea",
+        Size = UDim2.new(1,-175,1,-72),
+        Position = UDim2.new(0,167,0,64),
+        BackgroundTransparency = 1,
+        ClipsDescendants = true,
+        ZIndex = 15,
+    })
+    
+    local function CreatePage(name)
+        local p = MakeFrame(contentArea, {
+            Name = name, Size = UDim2.new(1,0,1,0),
+            BackgroundTransparency = 1, ZIndex = 20, Visible = false,
+        })
+        table.insert(contentPages, p)
+        return p
+    end
+    
+    local function SwitchTab(name)
+        State.ActiveTab = name
+        for _, pg in ipairs(contentPages) do
+            pg.Visible = pg.Name == name
+        end
+        for _, info in ipairs(tabBtns) do
+            local active = info.name == name
+            Tween(info.btn, {
+                BackgroundTransparency = active and 0.5 or 1,
+                TextColor3 = active and theme.Title or theme.Text,
+            }, 0.2):Play()
+            if active then
+                Tween(info.indicator, { BackgroundTransparency = 0.1 }, 0.2):Play()
+            else
+                Tween(info.indicator, { BackgroundTransparency = 1 }, 0.2):Play()
+            end
+        end
+    end
+    
+    for i, tab in ipairs(tabDefs) do
+        local btn = MakeBtn(sidebar, {
+            Size = UDim2.new(1,-12,0,46),
+            Position = UDim2.new(0,6,0,8+(i-1)*52),
+            BackgroundColor3 = theme.Accent,
+            BackgroundTransparency = 1,
+            Text = tab.name,
+            TextColor3 = theme.Text,
+            Font = Enum.Font.GothamMedium,
+            TextSize = 13,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            ZIndex = 16,
+        }, function() SwitchTab(tab.name) end)
+        C(btn, 10)
+        
+        local indicator = MakeFrame(btn, {
+            Name = "Indicator",
+            Size = UDim2.new(0,3,0.7,0),
+            Position = UDim2.new(0,0,0.15,0),
+            BackgroundColor3 = theme.Accent,
+            BackgroundTransparency = 1,
+            ZIndex = 17,
+        })
+        C(indicator, 4)
+        
+        local pad = Instance.new("UIPadding")
+        pad.PaddingLeft = UDim.new(0,12)
+        pad.Parent = btn
+        
+        table.insert(tabBtns, { btn = btn, name = tab.name, indicator = indicator })
+    end
+    
+    local homePage = CreatePage("الرئيسية")
+    
+    local homeHeader = MakeLabel(homePage, {
+        Text = "الرئيسية",
+        Size = UDim2.new(1,-20,0,32),
+        Position = UDim2.new(0,10,0,8),
+        Font = Enum.Font.GothamBlack,
+        TextSize = 19,
+        TextColor3 = theme.Accent,
+        ZIndex = 21,
+        TextXAlignment = Enum.TextXAlignment.Left,
+    })
+    
+    local homeDivider = MakeFrame(homePage, {
+        Size = UDim2.new(1,-20,0,1),
+        Position = UDim2.new(0,10,0,44),
+        BackgroundColor3 = theme.Accent,
+        BackgroundTransparency = 0.7,
+        ZIndex = 21,
+    })
+    
+    local infoCard = MakeFrame(homePage, {
+        Name = "InfoCard",
+        Size = UDim2.new(1,-20,0,180),
+        Position = UDim2.new(0,10,0,52),
+        BackgroundColor3 = theme.Card,
+        BackgroundTransparency = 0.2,
+        ZIndex = 21,
+    })
+    C(infoCard, 14)
+    S(infoCard, theme.Border, 1, 0.5)
+    
+    MakeLabel(infoCard, {
+        Text = "معلومات اللاعب (HNYQ)",
+        Size = UDim2.new(1,-16,0,24),
+        Position = UDim2.new(0,8,0,8),
+        Font = Enum.Font.GothamBold,
+        TextSize = 13,
+        TextColor3 = theme.Accent,
+        ZIndex = 22,
+        TextXAlignment = Enum.TextXAlignment.Left,
+    })
+    
+    MakeLabel(infoCard, {
+        Text = "الاسم:",
+        Size = UDim2.new(0.3,0,0,22),
+        Position = UDim2.new(0,8,0,36),
+        Font = Enum.Font.GothamMedium,
+        TextSize = 12,
+        TextColor3 = theme.Text,
+        ZIndex = 22,
+        TextXAlignment = Enum.TextXAlignment.Left,
+    })
+    MakeLabel(infoCard, {
+        Name = "PlayerNameLabel",
+        Text = LocalPlayer.Name,
+        Size = UDim2.new(0.6,0,0,22),
+        Position = UDim2.new(0.32,0,0,36),
+        Font = Enum.Font.GothamBold,
+        TextSize = 12,
+        TextColor3 = theme.Accent,
+        ZIndex = 22,
+        TextXAlignment = Enum.TextXAlignment.Left,
+    })
+    
+    MakeLabel(infoCard, {
+        Text = "المعرف:",
+        Size = UDim2.new(0.3,0,0,22),
+        Position = UDim2.new(0,8,0,62),
+        Font = Enum.Font.GothamMedium,
+        TextSize = 12,
+        TextColor3 = theme.Text,
+        ZIndex = 22,
+        TextXAlignment = Enum.TextXAlignment.Left,
+    })
+    MakeLabel(infoCard, {
+        Name = "PlayerIdLabel",
+        Text = tostring(LocalPlayer.UserId),
+        Size = UDim2.new(0.6,0,0,22),
+        Position = UDim2.new(0.32,0,0,62),
+        Font = Enum.Font.GothamBold,
+        TextSize = 12,
+        TextColor3 = theme.Accent,
+        ZIndex = 22,
+        TextXAlignment = Enum.TextXAlignment.Left,
+    })
+    
+    MakeLabel(infoCard, {
+        Text = "الجهاز:",
+        Size = UDim2.new(0.3,0,0,22),
+        Position = UDim2.new(0,8,0,88),
+        Font = Enum.Font.GothamMedium,
+        TextSize = 12,
+        TextColor3 = theme.Text,
+        ZIndex = 22,
+        TextXAlignment = Enum.TextXAlignment.Left,
+    })
+    local device = "PC"
+    if UserInputService.TouchEnabled and not UserInputService.MouseEnabled then device = "موبايل" end
+    MakeLabel(infoCard, {
+        Name = "DeviceLabel",
+        Text = device,
+        Size = UDim2.new(0.6,0,0,22),
+        Position = UDim2.new(0.32,0,0,88),
+        Font = Enum.Font.GothamBold,
+        TextSize = 12,
+        TextColor3 = theme.Accent,
+        ZIndex = 22,
+        TextXAlignment = Enum.TextXAlignment.Left,
+    })
+    
+    MakeLabel(infoCard, {
+        Text = "المطور:",
+        Size = UDim2.new(0.3,0,0,22),
+        Position = UDim2.new(0,8,0,114),
+        Font = Enum.Font.GothamMedium,
+        TextSize = 12,
+        TextColor3 = theme.Text,
+        ZIndex = 22,
+        TextXAlignment = Enum.TextXAlignment.Left,
+    })
+    MakeLabel(infoCard, {
+        Name = "PlaceLabel",
+        Text = "HNYQ",
+        Size = UDim2.new(0.6,0,0,22),
+        Position = UDim2.new(0.32,0,0,114),
+        Font = Enum.Font.GothamBold,
+        TextSize = 12,
+        TextColor3 = theme.Accent,
+        ZIndex = 22,
+        TextXAlignment = Enum.TextXAlignment.Left,
+    })
+    
+    local statsCard = MakeFrame(homePage, {
+        Name = "StatsCard",
+        Size = UDim2.new(1,-20,0,90),
+        Position = UDim2.new(0,10,0,242),
+        BackgroundColor3 = theme.Card,
+        BackgroundTransparency = 0.2,
+        ZIndex = 21,
+    })
+    C(statsCard, 14)
+    S(statsCard, theme.Border, 1, 0.5)
+    
+    MakeLabel(statsCard, {
+        Text = "إحصائيات HNYQ الحية",
+        Size = UDim2.new(1,-16,0,24),
+        Position = UDim2.new(0,8,0,8),
+        Font = Enum.Font.GothamBold,
+        TextSize = 13,
+        TextColor3 = theme.Accent,
+        ZIndex = 22,
+        TextXAlignment = Enum.TextXAlignment.Left,
+    })
+    
+    local statsData = {
+        { name="StatsLabel_FPS",     label="FPS",      y=36 },
+        { name="StatsLabel_Ping",    label="البنج",     y=62 },
+    }
+    for _, s in ipairs(statsData) do
+        MakeLabel(statsCard, {
+            Text = s.label..":",
+            Size = UDim2.new(0.4,0,0,22),
+            Position = UDim2.new(0,8,0,s.y),
+            Font = Enum.Font.GothamMedium,
+            TextSize = 12,
+            TextColor3 = theme.Text,
+            ZIndex = 22,
+            TextXAlignment = Enum.TextXAlignment.Left,
+        })
+        local val = MakeLabel(statsCard, {
+            Name = s.name,
+            Text = "0",
+            Size = UDim2.new(0.55,0,0,22),
+            Position = UDim2.new(0.43,0,0,s.y),
+            Font = Enum.Font.GothamBold,
+            TextSize = 13,
+            TextColor3 = theme.Accent,
+            ZIndex = 22,
+            TextXAlignment = Enum.TextXAlignment.Left,
+        })
+    end
+    
+    local scriptsPage = CreatePage("السكربتات")
+    MakeLabel(scriptsPage, {
+        Text = "سكربتات HNYQ",
+        Size = UDim2.new(1,-20,0,32),
+        Position = UDim2.new(0,10,0,8),
+        Font = Enum.Font.GothamBlack,
+        TextSize = 19,
+        TextColor3 = theme.Accent,
+        ZIndex = 21,
+        TextXAlignment = Enum.TextXAlignment.Left,
+    })
+    MakeFrame(scriptsPage, {
+        Size = UDim2.new(1,-20,0,1),
+        Position = UDim2.new(0,10,0,44),
+        BackgroundColor3 = theme.Accent,
+        BackgroundTransparency = 0.7,
+        ZIndex = 21,
+    })
+    
+    local scriptList = {
+        { "HNYQ أدمن شامل",   "https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source.lua" },
+        { "HNYQ سبام خفيف",   "https://pastebin.com/raw/vZMPXevY" },
+        { "HNYQ سبام سريع",   "https://pastebin.com/raw/RwdmRr8G" },
+        { "HNYQ سبام مخفي",   "https://pastebin.com/raw/KcCBNHtH" },
+        { "HNYQ تحكم فوري",   "https://pastebin.com/raw/RcmEzyx1" },
+        { "HNYQ درع حماية",   "https://pastebin.com/raw/0CwE6xaQ" },
+        { "HNYQ ألوان نيون",  "https://pastebin.com/raw/hdMYpWsv" },
+        { "HNYQ مؤثرات خاصة", "https://pastebin.com/raw/tp3zFium" },
+        { "HNYQ سكن خاص",     "https://pastebin.com/raw/XPCA6dZx" },
+        { "HNYQ أدوات متقدمة", "https://pastebin.com/raw/29puvDSE" },
+        { "HNYQ رقصات حصرية", "https://rawscripts.net/raw/Universal-Script-ARES-EMOTE-HUB-148804" },
+        { "HNYQ راديو صوتي",  "https://raw.githubusercontent.com/Shhd-code/Raduooo/refs/heads/main/README.md" },
+        { "HNYQ شات متطور",   "https://pastebin.com/raw/cEnfYQqF" },
+        { "HNYQ تشغيل سريع",  "https://pastebin.com/raw/148uP1mi" },
+        { "HNYQ مكتبة كود",   "https://raw.githubusercontent.com/Shhd-code/K/refs/heads/main/README.md" },
+        { "HNYQ ميرسي سكريبت","https://raw.githubusercontent.com/Hm5011/hussain/refs/heads/main/Mercy%20Script" },
+        { "HNYQ نامليس أدمن","https://raw.githubusercontent.com/FilteringEnabled/NamelessAdmin/main/Source" },
+        { "HNYQ منع التجميد", "https://pastebin.com/raw/uUEY7Y5E" },
+        { "HNYQ سرعة فائقة",  "https://pastebin.com/raw/wfNBQqNh" },
+        { "HNYQ بلو سبام V2", "https://pastebin.com/raw/j8pi1Xb3" },
+        { "HNYQ مانع النسخ",  "https://pastebin.com/raw/WaaWrxc8" },
+        { "HNYQ سبام مطور",   "https://pastebin.com/raw/C6d8FfdG" },
+        { "HNYQ حماية كاملة", "https://pastebin.com/raw/bmbKGYZK" },
+        { "HNYQ تايتل خاص",   "https://pastebin.com/raw/DQeM5u2p" },
+        { "HNYQ الإصدار الأخير","https://pastebin.com/raw/2GYaPamA" },
+    }
+    
+    local scriptScroll = Instance.new("ScrollingFrame")
+    scriptScroll.Size = UDim2.new(1,-10,1,-52)
+    scriptScroll.Position = UDim2.new(0,5,0,52)
+    scriptScroll.BackgroundTransparency = 1
+    scriptScroll.ScrollBarThickness = 4
+    scriptScroll.ScrollBarImageColor3 = theme.Accent
+    scriptScroll.CanvasSize = UDim2.new(0,0,0,0)
+    scriptScroll.BorderSizePixel = 0
+    scriptScroll.ZIndex = 21
+    scriptScroll.Parent = scriptsPage
+    
+    local sLayout = Instance.new("UIListLayout")
+    sLayout.Padding = UDim.new(0,6)
+    sLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    sLayout.Parent = scriptScroll
+    sLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        scriptScroll.CanvasSize = UDim2.new(0,0,0,sLayout.AbsoluteContentSize.Y+10)
+    end)
+    local sPad = Instance.new("UIPadding")
+    sPad.PaddingTop = UDim.new(0,6)
+    sPad.PaddingLeft = UDim.new(0,4)
+    sPad.PaddingRight = UDim.new(0,4)
+    sPad.Parent = scriptScroll
+    
+    for _, sd in ipairs(scriptList) do
+        local row = MakeFrame(scriptScroll, {
+            Size = UDim2.new(1,0,0,46),
+            BackgroundColor3 = theme.Card,
+            BackgroundTransparency = 0.2,
+            ZIndex = 22,
+        })
+        C(row, 10)
+        S(row, theme.Border, 1, 0.55)
+        
+        MakeLabel(row, {
+            Text = "⚡",
+            Size = UDim2.new(0,30,1,0),
+            Position = UDim2.new(0,8,0,0),
+            TextSize = 14,
+            TextColor3 = theme.Text,
+            ZIndex = 23,
+            TextXAlignment = Enum.TextXAlignment.Center,
+        })
+        
+        MakeLabel(row, {
+            Text = sd[1],
+            Size = UDim2.new(1,-110,1,0),
+            Position = UDim2.new(0,42,0,0),
+            Font = Enum.Font.GothamMedium,
+            TextSize = 13,
+            TextColor3 = theme.Title,
+            ZIndex = 23,
+            TextXAlignment = Enum.TextXAlignment.Left,
+        })
+        
+        local runBtn = MakeBtn(row, {
+            Size = UDim2.new(0,72,0,30),
+            Position = UDim2.new(1,-80,0.5,-15),
+            BackgroundColor3 = theme.Accent,
+            BackgroundTransparency = 0.2,
+            Text = "تشغيل",
+            TextColor3 = Color3.new(1,1,1),
+            Font = Enum.Font.GothamBold,
+            TextSize = 11,
+            ZIndex = 24,
+        }, function()
+            Notif:Send("⚡", "HNYQ HUB", "جارٍ تحميل: " .. sd[1], theme.Accent)
+            task.spawn(function()
+                local ok, err = pcall(function()
+                    loadstring(game:HttpGet(sd[2], true))()
+                end)
+                if ok then
+                    Notif:Send("⚡", "HNYQ HUB", sd[1] .. " — تعمل بنجاح!", theme.Accent)
+                else
+                    Notif:Send("❌", "خطأ في HNYQ", tostring(err):sub(1,60), Color3.fromRGB(255,60,60))
+                end
+            end)
+        end)
+        C(runBtn, 8)
+    end
+    
+    local atmosPage = CreatePage("الأجواء")
+    MakeLabel(atmosPage, {
+        Text = "أجواء HNYQ",
+        Size = UDim2.new(1,-20,0,32),
+        Position = UDim2.new(0,10,0,8),
+        Font = Enum.Font.GothamBlack,
+        TextSize = 19,
+        TextColor3 = theme.Accent,
+        ZIndex = 21,
+        TextXAlignment = Enum.TextXAlignment.Left,
+    })
+    MakeFrame(atmosPage, {
+        Size = UDim2.new(1,-20,0,1),
+        Position = UDim2.new(0,10,0,44),
+        BackgroundColor3 = theme.Accent,
+        BackgroundTransparency = 0.7,
+        ZIndex = 21,
+    })
+    
+    local atmosPresets = {
+        {"HNYQ ليل هادئ",     0,  1},   {"HNYQ منتصف الليل",  1,  1},
+        {"HNYQ قمر أحمر",     0,  1.2}, {"HNYQ ليل سحري",     0,  1.5},
+        {"HNYQ ليل عميق",     0.5,0.8}, {"HNYQ نجوم ساطعة",   0,  1.2},
+        {"HNYQ ليل بارد",     2,  1.5}, {"HNYQ نهار صافي",    14, 2},
+        {"HNYQ ذهبي خاص",    18, 2.5}, {"HNYQ غروب جميل",   19, 2},
+        {"HNYQ شروق رائع",    6,  2.2}, {"HNYQ نهار ساطع",   12, 3},
+        {"HNYQ سماء غائمة",   12, 1.5}, {"HNYQ أرجواني سحري", 12, 3},
+        {"HNYQ سماء حمراء",   6,  2},   {"HNYQ بركان مشتعل", 20, 3},
+        {"HNYQ فضاء خارجي",   0,  0.5}, {"HNYQ عالم كوني",   0,  1},
+        {"HNYQ سحر خاص",      6,  2},   {"HNYQ مظلم تماماً", 6,  0.8},
+        {"HNYQ الهاوية",      0,  0.2}, {"HNYQ ضباب كثيف",   6,  1.2},
+        {"HNYQ مستنقع",       4,  1.5}, {"HNYQ نيون خالص",   12, 5},
+        {"HNYQ سايبربنك",    10, 4},   {"HNYQ كوكب أورانوس",14, 3},
+        {"HNYQ نيون بنفسجي", 0,  2},   {"HNYQ برتقالي مشتعل",6,  2.5},
+        {"HNYQ عالم الأنمي",  10, 2.8}, {"HNYQ غابة كثيفة",  8,  1.2},
+        {"HNYQ صحراء حارة",   14, 3},   {"HNYQ قطب شمالي",   0,  0.5},
+        {"HNYQ جبال عالية",   10, 2},   {"HNYQ وادي عميق",   12, 2.5},
+        {"HNYQ سهول خضراء",  12, 2},   {"HNYQ نهر صافي",    10, 2},
+        {"HNYQ بحر هادئ",     12, 2.5}, {"HNYQ جزر سياحية",  14, 3},
+        {"HNYQ غروب هادئ",   18, 1.8},
+    }
+    
+    local atmosScroll = Instance.new("ScrollingFrame")
+    atmosScroll.Size = UDim2.new(1,-10,1,-52)
+    atmosScroll.Position = UDim2.new(0,5,0,52)
+    atmosScroll.BackgroundTransparency = 1
+    atmosScroll.ScrollBarThickness = 4
+    atmosScroll.ScrollBarImageColor3 = theme.Accent
+    atmosScroll.CanvasSize = UDim2.new(0,0,0,0)
+    atmosScroll.BorderSizePixel = 0
+    atmosScroll.ZIndex = 21
+    atmosScroll.Parent = atmosPage
+    
+    local aLayout = Instance.new("UIListLayout")
+    aLayout.Padding = UDim.new(0,6)
+    aLayout.FillDirection = Enum.FillDirection.Horizontal
+    aLayout.Wraps = true
+    aLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    aLayout.Parent = atmosScroll
+    aLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        atmosScroll.CanvasSize = UDim2.new(0,0,0,aLayout.AbsoluteContentSize.Y+10)
+    end)
+    local aPad = Instance.new("UIPadding")
+    aPad.PaddingTop = UDim.new(0,6)
+    aPad.PaddingLeft = UDim.new(0,4)
+    aPad.Parent = atmosScroll
+    
+    for _, preset in ipairs(atmosPresets) do
+        local btn = MakeBtn(atmosScroll, {
+            Size = UDim2.new(0,140,0,38),
+            BackgroundColor3 = theme.Card,
+            BackgroundTransparency = 0.2,
+            Text = preset[1],
+            TextColor3 = theme.Title,
+            Font = Enum.Font.GothamMedium,
+            TextSize = 12,
+            ZIndex = 22,
+        }, function()
+            Lighting.ClockTime = preset[2]
+            Lighting.Brightness = preset[3]
+            Notif:Send("⚡", "HNYQ HUB", "تم تطبيق جو: " .. preset[1], theme.Accent)
+        end)
+        C(btn, 10)
+        S(btn, theme.Border, 1, 0.55)
+    end
+    
+    -- ==============================================================================
+    --  TAB الإعدادات
+    -- ==============================================================================
+    
+    local settingsPage = CreatePage("الإعدادات")
+    MakeLabel(settingsPage, {
+        Text = "إعدادات HNYQ",
+        Size = UDim2.new(1,-20,0,32),
+        Position = UDim2.new(0,10,0,8),
+        Font = Enum.Font.GothamBlack,
+        TextSize = 19,
+        TextColor3 = theme.Accent,
+        ZIndex = 21,
+        TextXAlignment = Enum.TextXAlignment.Left,
+    })
+    MakeFrame(settingsPage, {
+        Size = UDim2.new(1,-20,0,1),
+        Position = UDim2.new(0,10,0,44),
+        BackgroundColor3 = theme.Accent,
+        BackgroundTransparency = 0.7,
+        ZIndex = 21,
+    })
+    
+    local settingsScroll = Instance.new("ScrollingFrame")
+    settingsScroll.Size = UDim2.new(1,-10,1,-52)
+    settingsScroll.Position = UDim2.new(0,5,0,52)
+    settingsScroll.BackgroundTransparency = 1
+    settingsScroll.ScrollBarThickness = 4
+    settingsScroll.ScrollBarImageColor3 = theme.Accent
+    settingsScroll.CanvasSize = UDim2.new(0,0,0,0)
+    settingsScroll.BorderSizePixel = 0
+    settingsScroll.ZIndex = 21
+    settingsScroll.Parent = settingsPage
+    
+    local stLayout = Instance.new("UIListLayout")
+    stLayout.Padding = UDim.new(0,8)
+    stLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    stLayout.Parent = settingsScroll
+    stLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        settingsScroll.CanvasSize = UDim2.new(0,0,0,stLayout.AbsoluteContentSize.Y+10)
+    end)
+    local stPad = Instance.new("UIPadding")
+    stPad.PaddingTop = UDim.new(0,6)
+    stPad.PaddingLeft = UDim.new(0,4)
+    stPad.PaddingRight = UDim.new(0,4)
+    stPad.Parent = settingsScroll
+    
+    -- ==============================================================================
+    --  أداة النقرات (HNYQ Auto Clicker)
+    -- ==============================================================================
+    
+    local autoClickerState = false
+    local autoClickerGUI = nil
+    
+    local function loadAutoClicker()
+        if autoClickerGUI then
+            autoClickerGUI:Destroy()
+            autoClickerGUI = nil
+        end
+        
+        local scriptText = [[
+            local Players = game:GetService("Players")
+            local UIS = game:GetService("UserInputService")
+            local VIM = game:GetService("VirtualInputManager")
+            local player = Players.LocalPlayer
+
+            local state = {
+                clicking = false,
+                interval = 0.15,
+                minInterval = 0.02,
+                maxInterval = 1.0,
+                step = 0.02,
+            }
+
+            local COLOR_ON = Color3.fromRGB(80, 220, 130)
+            local COLOR_OFF = Color3.fromRGB(255, 90, 100)
+            local COLOR_BG = Color3.fromRGB(18, 18, 24)
+
+            local function makeDraggable(frame, handle)
+                handle = handle or frame
+                local dragging, dragStart, startPos
+
+                handle.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                        dragging = true
+                        dragStart = input.Position
+                        startPos = frame.Position
+                    end
+                end)
+
+                handle.InputEnded:Connect(function()
+                    dragging = false
+                end)
+
+                UIS.InputChanged:Connect(function(input)
+                    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                        local delta = input.Position - dragStart
+                        frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+                    end
+                end)
+            end
+
+            local gui = Instance.new("ScreenGui")
+            gui.Name = "HNYQ_AutoClickerGUI"
+            gui.ResetOnSpawn = false
+            gui.IgnoreGuiInset = true
+            gui.Parent = player:WaitForChild("PlayerGui")
+
+            local target = Instance.new("ImageButton")
+            target.Name = "ClickTarget"
+            target.Size = UDim2.new(0, 30, 0, 30)
+            target.Position = UDim2.new(0.5, -15, 0.5, -15)
+            target.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
+            target.AutoButtonColor = false
+            target.BorderSizePixel = 0
+            target.ZIndex = 1000
+            target.Parent = gui
+            Instance.new("UICorner", target).CornerRadius = UDim.new(1, 0)
+
+            local targetStroke = Instance.new("UIStroke", target)
+            targetStroke.Color = Color3.fromRGB(100, 220, 255)
+            targetStroke.Thickness = 2
+
+            local centerDot = Instance.new("TextLabel", target)
+            centerDot.Size = UDim2.new(1, 0, 1, 0)
+            centerDot.BackgroundTransparency = 1
+            centerDot.Text = "+"
+            centerDot.TextColor3 = Color3.fromRGB(255, 255, 255)
+            centerDot.TextScaled = true
+            centerDot.ZIndex = 1001
+
+            makeDraggable(target)
+
+            local panel = Instance.new("Frame")
+            panel.Name = "ControlPanel"
+            panel.Size = UDim2.new(0, 190, 0, 100)
+            panel.Position = UDim2.new(0, 20, 0, 20)
+            panel.BackgroundColor3 = COLOR_BG
+            panel.BorderSizePixel = 0
+            panel.ZIndex = 900
+            panel.Parent = gui
+            Instance.new("UICorner", panel).CornerRadius = UDim.new(0, 14)
+            makeDraggable(panel)
+
+            local title = Instance.new("TextLabel", panel)
+            title.Size = UDim2.new(1, -16, 0, 24)
+            title.Position = UDim2.new(0, 8, 0, 6)
+            title.BackgroundTransparency = 1
+            title.Text = "HNYQ AUTO CLICKER"
+            title.Font = Enum.Font.GothamBlack
+            title.TextSize = 12
+            title.TextColor3 = Color3.fromRGB(0, 200, 255)
+            title.TextXAlignment = Enum.TextXAlignment.Left
+            title.ZIndex = 901
+
+            local closeBtn = Instance.new("TextButton", panel)
+            closeBtn.Size = UDim2.new(0, 24, 0, 24)
+            closeBtn.Position = UDim2.new(1, -28, 0, 4)
+            closeBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+            closeBtn.Text = "✕"
+            closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            closeBtn.Font = Enum.Font.GothamBlack
+            closeBtn.TextSize = 14
+            closeBtn.BorderSizePixel = 0
+            closeBtn.ZIndex = 901
+            Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(1, 0)
+
+            local speedLabel = Instance.new("TextLabel", panel)
+            speedLabel.Size = UDim2.new(1, -16, 0, 18)
+            speedLabel.Position = UDim2.new(0, 8, 0, 30)
+            speedLabel.BackgroundTransparency = 1
+            speedLabel.Text = string.format("Speed: %.2fs (%.1f CPS)", state.interval, 1/state.interval)
+            speedLabel.Font = Enum.Font.Gotham
+            speedLabel.TextSize = 11
+            speedLabel.TextColor3 = Color3.fromRGB(160, 160, 170)
+            speedLabel.TextXAlignment = Enum.TextXAlignment.Left
+            speedLabel.ZIndex = 901
+
+            local function updateSpeedLabel()
+                speedLabel.Text = string.format("Speed: %.2fs (%.1f CPS)", state.interval, 1/state.interval)
+            end
+
+            local slowerBtn = Instance.new("TextButton", panel)
+            slowerBtn.Size = UDim2.new(0, 40, 0, 30)
+            slowerBtn.Position = UDim2.new(0, 8, 0, 54)
+            slowerBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+            slowerBtn.Text = "-"
+            slowerBtn.Font = Enum.Font.GothamBlack
+            slowerBtn.TextSize = 18
+            slowerBtn.TextColor3 = Color3.fromRGB(230,230,230)
+            slowerBtn.BorderSizePixel = 0
+            slowerBtn.ZIndex = 901
+            Instance.new("UICorner", slowerBtn).CornerRadius = UDim.new(0, 8)
+
+            local fasterBtn = Instance.new("TextButton", panel)
+            fasterBtn.Size = UDim2.new(0, 40, 0, 30)
+            fasterBtn.Position = UDim2.new(0, 54, 0, 54)
+            fasterBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+            fasterBtn.Text = "+"
+            fasterBtn.Font = Enum.Font.GothamBlack
+            fasterBtn.TextSize = 18
+            fasterBtn.TextColor3 = Color3.fromRGB(230,230,230)
+            fasterBtn.BorderSizePixel = 0
+            fasterBtn.ZIndex = 901
+            Instance.new("UICorner", fasterBtn).CornerRadius = UDim.new(0, 8)
+
+            local toggleBtn = Instance.new("TextButton", panel)
+            toggleBtn.Size = UDim2.new(0, 80, 0, 30)
+            toggleBtn.Position = UDim2.new(0, 102, 0, 54)
+            toggleBtn.BackgroundColor3 = COLOR_OFF
+            toggleBtn.Text = "START"
+            toggleBtn.Font = Enum.Font.GothamBlack
+            toggleBtn.TextSize = 13
+            toggleBtn.TextColor3 = Color3.fromRGB(255,255,255)
+            toggleBtn.BorderSizePixel = 0
+            toggleBtn.ZIndex = 901
+            Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(0, 8)
+
+            closeBtn.MouseButton1Click:Connect(function()
+                if state.clicking then
+                    state.clicking = false
+                    if clickThread then
+                        task.cancel(clickThread)
+                        clickThread = nil
+                    end
+                end
+                gui:Destroy()
+            end)
+
+            local clickThread
+
+            local function performClick()
+                local pos = target.AbsolutePosition + target.AbsoluteSize / 2
+                VIM:SendMouseButtonEvent(pos.X, pos.Y, 0, true, game, 0)
+                task.wait(0.01)
+                VIM:SendMouseButtonEvent(pos.X, pos.Y, 0, false, game, 0)
+            end
+
+            local function startClicking()
+                state.clicking = true
+                toggleBtn.Text = "STOP"
+                toggleBtn.BackgroundColor3 = COLOR_ON
+                targetStroke.Color = COLOR_ON
+
+                clickThread = task.spawn(function()
+                    while state.clicking do
+                        performClick()
+                        task.wait(state.interval)
+                    end
+                end)
+            end
+
+            local function stopClicking()
+                state.clicking = false
+                toggleBtn.Text = "START"
+                toggleBtn.BackgroundColor3 = COLOR_OFF
+                targetStroke.Color = Color3.fromRGB(100, 220, 255)
+            end
+
+            toggleBtn.MouseButton1Click:Connect(function()
+                if state.clicking then
+                    stopClicking()
+                else
+                    startClicking()
+                end
+            end)
+
+            slowerBtn.MouseButton1Click:Connect(function()
+                state.interval = math.min(state.maxInterval, state.interval + state.step)
+                updateSpeedLabel()
+            end)
+
+            fasterBtn.MouseButton1Click:Connect(function()
+                state.interval = math.max(state.minInterval, state.interval - state.step)
+                updateSpeedLabel()
+            end)
+
+            updateSpeedLabel()
+        ]]
+        
+        local func, err = loadstring(scriptText)
+        if func then
+            autoClickerGUI = func()
+        end
+    end
+
+    local function unloadAutoClicker()
+        if autoClickerGUI then
+            autoClickerGUI:Destroy()
+            autoClickerGUI = nil
+        end
+        for _, gui in ipairs(game.Players.LocalPlayer.PlayerGui:GetChildren()) do
+            if gui.Name == "HNYQ_AutoClickerGUI" then
+                gui:Destroy()
+            end
+        end
+        autoClickerState = false
+    end
+    
+    local autoClickerRow = MakeFrame(settingsScroll, {
+        Size = UDim2.new(1,0,0,52),
+        BackgroundColor3 = theme.Card,
+        BackgroundTransparency = 0.2,
+        ZIndex = 22,
+    })
+    C(autoClickerRow, 12)
+    S(autoClickerRow, theme.Border, 1, 0.55)
+    
+    MakeLabel(autoClickerRow, {
+        Text = "أداة النقرات (HNYQ Clicker)",
+        Size = UDim2.new(0.7,0,1,0),
+        Position = UDim2.new(0,12,0,0),
+        Font = Enum.Font.GothamMedium,
+        TextSize = 13,
+        TextColor3 = theme.Text,
+        ZIndex = 23,
+        TextXAlignment = Enum.TextXAlignment.Left,
+    })
+    
+    local autoToggleBg = MakeFrame(autoClickerRow, {
+        Size = UDim2.new(0,50,0,26),
+        Position = UDim2.new(1,-62,0.5,-13),
+        BackgroundColor3 = Color3.fromRGB(50,50,60),
+        ZIndex = 23,
+    })
+    C(autoToggleBg, 999)
+    
+    local autoKnob = MakeFrame(autoToggleBg, {
+        Size = UDim2.new(0,20,0,20),
+        Position = UDim2.new(0,3,0.5,-10),
+        BackgroundColor3 = Color3.new(1,1,1),
+        ZIndex = 24,
+    })
+    C(autoKnob, 999)
+    
+    local autoHitbox = MakeBtn(autoClickerRow, {
+        Size = UDim2.new(1,0,1,0),
+        BackgroundTransparency = 1,
+        Text = "",
+        ZIndex = 25,
+    }, function()
+        autoClickerState = not autoClickerState
+        Tween(autoToggleBg, { BackgroundColor3 = autoClickerState and theme.Accent or Color3.fromRGB(50,50,60) }, 0.2):Play()
+        Tween(autoKnob, { Position = autoClickerState and UDim2.new(1,-23,0.5,-10) or UDim2.new(0,3,0.5,-10) }, 0.2):Play()
+        
+        if autoClickerState then
+            loadAutoClicker()
+            Notif:Send("⚡", "HNYQ", "تم تشغيل أداة النقرات", theme.Accent)
+        else
+            unloadAutoClicker()
+            Notif:Send("⚡", "HNYQ", "تم إيقاف أداة النقرات", Color3.fromRGB(255,60,60))
+        end
+    end)
+    
+    local function ToggleRow(label, initState, callback)
+        local row = MakeFrame(settingsScroll, {
+            Size = UDim2.new(1,0,0,52),
+            BackgroundColor3 = theme.Card,
+            BackgroundTransparency = 0.2,
+            ZIndex = 22,
+        })
+        C(row, 12)
+        S(row, theme.Border, 1, 0.55)
+        
+        MakeLabel(row, {
+            Text = label,
+            Size = UDim2.new(0.7,0,1,0),
+            Position = UDim2.new(0,12,0,0),
+            Font = Enum.Font.GothamMedium,
+            TextSize = 13,
+            TextColor3 = theme.Text,
+            ZIndex = 23,
+            TextXAlignment = Enum.TextXAlignment.Left,
+        })
+        
+        local state = initState
+        local toggleBg = MakeFrame(row, {
+            Size = UDim2.new(0,50,0,26),
+            Position = UDim2.new(1,-62,0.5,-13),
+            BackgroundColor3 = state and theme.Accent or Color3.fromRGB(50,50,60),
+            ZIndex = 23,
+        })
+        C(toggleBg, 999)
+        
+        local knob = MakeFrame(toggleBg, {
+            Size = UDim2.new(0,20,0,20),
+            Position = state and UDim2.new(1,-23,0.5,-10) or UDim2.new(0,3,0.5,-10),
+            BackgroundColor3 = Color3.new(1,1,1),
+            ZIndex = 24,
+        })
+        C(knob, 999)
+        
+        local hitbox = MakeBtn(row, {
+            Size = UDim2.new(1,0,1,0),
+            BackgroundTransparency = 1,
+            Text = "",
+            ZIndex = 25,
+        }, function()
+            state = not state
+            Tween(toggleBg, { BackgroundColor3 = state and theme.Accent or Color3.fromRGB(50,50,60) }, 0.2):Play()
+            Tween(knob, { Position = state and UDim2.new(1,-23,0.5,-10) or UDim2.new(0,3,0.5,-10) }, 0.2):Play()
+            if callback then callback(state) end
+        end)
+        
+        return row
+    end
+    
+    ToggleRow("خلفية HNYQ الحية", State.LiveBg, function(v)
+        State.LiveBg = v
+        Notif:Send("⚡", "HNYQ", v and "تم تفعيل الخلفية الحية" or "تم إيقاف الخلفية الحية", theme.Accent)
+    end)
+    
+    ToggleRow("تأثير زجاج HNYQ", State.Glassmorphism, function(v)
+        State.Glassmorphism = v
+        local g = State.MainFrame and State.MainFrame:FindFirstChild("GlassEffect")
+        if g then g.Visible = v end
+        Notif:Send("⚡", "HNYQ", v and "تم تفعيل الزجاج" or "تم إيقاف الزجاج", theme.Accent)
+    end)
+    
+    local themeHeader = MakeLabel(settingsScroll, {
+        Text = "اختر ثيم HNYQ المفضل",
+        Size = UDim2.new(1,0,0,28),
+        Font = Enum.Font.GothamBold,
+        TextSize = 14,
+        TextColor3 = theme.Accent,
+        ZIndex = 22,
+        TextXAlignment = Enum.TextXAlignment.Left,
+    })
+    
+    for i, th in ipairs(Themes) do
+        local btn = MakeBtn(settingsScroll, {
+            Size = UDim2.new(1,0,0,38),
+            BackgroundColor3 = th.Bg,
+            BackgroundTransparency = 0.2,
+            ZIndex = 22,
+        }, function()
+            State.CurrentTheme = i
+            ApplyThemeFull()
+            Notif:Send("⚡", "HNYQ", "تم تطبيق ثيم: " .. th.Name, th.Accent)
+        end)
+        C(btn, 10)
+        S(btn, th.Border, 1.5, 0.3)
+        
+        local dot = MakeFrame(btn, {
+            Size = UDim2.new(0,12,0,12),
+            Position = UDim2.new(0,12,0.5,-6),
+            BackgroundColor3 = th.Accent,
+            ZIndex = 23,
+        })
+        C(dot, 999)
+        
+        MakeLabel(btn, {
+            Text = th.Name,
+            Size = UDim2.new(1,-36,1,0),
+            Position = UDim2.new(0,32,0,0),
+            Font = Enum.Font.GothamMedium,
+            TextSize = 13,
+            TextColor3 = th.Title,
+            ZIndex = 23,
+            TextXAlignment = Enum.TextXAlignment.Left,
+        })
+    end
+    
+    -- ==============================================================================
+    --  الزر العائم القابل للحركة (HNYQ Toggle)
+    -- ==============================================================================
+    
+    local toggleBtn = Instance.new("ImageButton")
+    toggleBtn.Name = "ToggleBtn"
+    toggleBtn.Size = UDim2.new(0, 70, 0, 70)
+    toggleBtn.Position = UDim2.new(0, 16, 0.5, -35)
+    toggleBtn.BackgroundTransparency = 1
+    toggleBtn.Image = TOGGLE_IMAGE
+    toggleBtn.ScaleType = Enum.ScaleType.Fit
+    toggleBtn.BorderSizePixel = 0
+    toggleBtn.ZIndex = 100
+    toggleBtn.AutoButtonColor = false
+    toggleBtn.Parent = screenGui
+    
+    State.ToggleBtn = toggleBtn
+    
+    local toggleGlow = Instance.new("UIStroke")
+    toggleGlow.Color = theme.Glow
+    toggleGlow.Thickness = 3
+    toggleGlow.Transparency = 0.3
+    toggleGlow.Parent = toggleBtn
+    local tGrad = Instance.new("UIGradient")
+    tGrad.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, theme.Glow),
+        ColorSequenceKeypoint.new(0.5, theme.Accent),
+        ColorSequenceKeypoint.new(1, theme.Glow),
+    })
+    tGrad.Parent = toggleGlow
+    
+    Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(0, 999)
+    
+    task.spawn(function()
+        local r = 0
+        while toggleGlow and toggleGlow.Parent do
+            local g = toggleGlow:FindFirstChildOfClass("UIGradient")
+            if g then g.Rotation = r%360 end
+            r = r + 1.5
+            task.wait(0.04)
+        end
+    end)
+    
+    local dragging = false
+    local dragStart = nil
+    local startPos = nil
+    
+    toggleBtn.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = toggleBtn.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+    
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - dragStart
+            local newX = startPos.X.Offset + delta.X
+            local newY = startPos.Y.Offset + delta.Y
+            
+            local viewport = workspace.CurrentCamera.ViewportSize
+            newX = math.clamp(newX, 0, viewport.X - 70)
+            newY = math.clamp(newY, 0, viewport.Y - 70)
+            
+            toggleBtn.Position = UDim2.new(0, newX, 0, newY)
+        end
+    end)
+    
+    toggleBtn.MouseButton1Click:Connect(function()
+        if main.Visible and main.Size.X.Offset > 10 then
+            Tween(main, {Size=UDim2.new(0,0,0,0), Position=UDim2.new(0.5,0,0.5,0)}, 0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In):Play()
+            task.wait(0.35)
+            main.Visible = false
+        else
+            main.Visible = true
+            Tween(main, {Size=UDim2.new(0,790,0,540), Position=UDim2.new(0.5,-395,0.5,-270)}, 0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out):Play()
+        end
+    end)
+    
+    toggleBtn.MouseEnter:Connect(function()
+        Tween(toggleBtn, {Size = UDim2.new(0, 76, 0, 76)}, 0.15, Enum.EasingStyle.Back):Play()
+    end)
+    toggleBtn.MouseLeave:Connect(function()
+        Tween(toggleBtn, {Size = UDim2.new(0, 70, 0, 70)}, 0.15, Enum.EasingStyle.Back):Play()
+    end)
+    
+    -- ==============================================================================
+    --  تحديث الإحصائيات (HNYQ Stats)
+    -- ==============================================================================
+    
+    local statsRef = main:FindFirstChild("ContentArea") and main.ContentArea:FindFirstChild("الرئيسية") and main.ContentArea["الرئيسية"]:FindFirstChild("StatsCard")
+    local frameCount, lastFPS = 0, tick()
+    
+    RunService.RenderStepped:Connect(function()
+        frameCount = frameCount + 1
+        if tick() - lastFPS >= 1 then
+            State.Stats.FPS = frameCount
+            frameCount = 0
+            lastFPS = tick()
+            State.Stats.Ping = math.floor(LocalPlayer:GetNetworkPing() * 1000)
+            
+            if statsRef then
+                local fps = statsRef:FindFirstChild("StatsLabel_FPS")
+                local ping = statsRef:FindFirstChild("StatsLabel_Ping")
+                if fps then fps.Text = State.Stats.FPS end
+                if ping then ping.Text = State.Stats.Ping .. " ms" end
+            end
+        end
+    end)
+    
+    Tween(main, {Size=UDim2.new(0,790,0,540)}, 0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out):Play()
+    
+    ApplyThemeFull()
+    
+    Notif:Send("⚡", "HNYQ HUB", "تم تشغيل نظام HNYQ بنجاح V5.0", theme.Accent)
+end
+
+-- ==============================================================================
+--  التشغيل الأساسي
+-- ==============================================================================
+
+if CoreGui:FindFirstChild(GUI_NAME) then
+    CoreGui:FindFirstChild(GUI_NAME):Destroy()
+end
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = GUI_NAME
+screenGui.ResetOnSpawn = false
+screenGui.IgnoreGuiInset = true
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.DisplayOrder = 999999
+screenGui.Parent = CoreGui
+
+Particles:Init(screenGui)
+Notif:Init(screenGui)
+
+ShowLoader(screenGui, function()
+    Particles:Start()
+    BuildMain(screenGui) 
+end)
