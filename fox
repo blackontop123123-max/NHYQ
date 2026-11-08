@@ -1,0 +1,457 @@
+-- 🛡 FOX Anti v2.0 + NOTICE BLOCKER
+local p = game.Players.LocalPlayer
+local RS = game:GetService("ReplicatedStorage")
+local UIS = game:GetService("UserInputService")
+local WS = game:GetService("Workspace")
+local LS = game:GetService("Lighting")
+local TS = game:GetService("TweenService")
+local PlayerGui = p:WaitForChild("PlayerGui")
+
+-- جعل الحماية تبدأ وهي مغلقة (false)
+local blocked = false
+local hidden = false
+
+-- =========================================================
+-- [[ صورة الزر العائم ]]
+-- =========================================================
+local IMAGE_ID = "125494119310211"
+local IMAGE = "rbxthumb://type=Asset&id=" .. IMAGE_ID .. "&w=420&h=420"
+
+-- =========================================================
+-- [[ نظام السحب والإفلات السلس للاصبع والماوس ]]
+-- =========================================================
+local function makeDraggable(obj)
+    local dragging, dragInput, dragStart, startPos
+    
+    obj.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = obj.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+    
+    obj.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+    
+    UIS.InputChanged:Connect(function(input)
+        if dragging and input == dragInput then
+            local delta = input.Position - dragStart
+            obj.Position = UDim2.new(
+                startPos.X.Scale, 
+                startPos.X.Offset + delta.X, 
+                startPos.Y.Scale, 
+                startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+end
+
+-- =========================================================
+-- [[ إعدادات الألوان البرتقالية النارية ]]
+-- =========================================================
+local COLORS = {
+    Primary = Color3.fromRGB(255, 115, 0),       -- برتقالي ناري مشرق
+    PrimaryDark = Color3.fromRGB(140, 50, 0),     -- برتقالي داكن فاخر
+    PrimaryLight = Color3.fromRGB(255, 170, 60),   -- برتقالي فاتح
+    Glow = Color3.fromRGB(255, 90, 0),          -- توهج ناري
+    DarkBg = Color3.fromRGB(18, 12, 10),         -- خلفية داكنة متناسقة
+    DarkerBg = Color3.fromRGB(8, 5, 4),          -- خلفية أعماق داكنة جداً
+    Text = Color3.fromRGB(255, 255, 255),        -- أبيض ناصع
+    TextBright = Color3.fromRGB(255, 200, 150),   -- أبيض برتقالي ساطع وواضح جداً
+    TextDim = Color3.fromRGB(220, 170, 140),     -- لون نص فرعي دافئ
+}
+
+-- =========================================================
+-- [[ نظام حجب الإشارات و HD ADMIN ]]
+-- =========================================================
+local signal = RS:FindFirstChild("HDAdminHDClient") and RS.HDAdminHDClient:FindFirstChild("Signals")
+local createLogSignal = signal and signal:FindFirstChild("CreateLog") and signal.CreateLog.OnClientEvent
+local executeSignal = signal and signal:FindFirstChild("ExecuteClientCommand") and signal.ExecuteClientCommand.OnClientEvent
+local errorSignal = signal and signal:FindFirstChild("Error") and signal.Error.OnClientEvent
+
+local function RemoveWarp()
+    local total = 0
+    for _, obj in pairs(game:GetDescendants()) do
+        local name = obj.Name:lower()
+        if name:find("warp") or obj:IsA("WarpEffect") then
+            pcall(function() obj:Destroy() total = total + 1 end)
+        end
+        if obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction") then
+            if name:find("warp") then
+                pcall(function() obj:Destroy() total = total + 1 end)
+            end
+        end
+    end
+    for _, obj in pairs(LS:GetDescendants()) do
+        if obj.Name:lower():find("warp") then
+            pcall(function() obj:Destroy() total = total + 1 end)
+        end
+    end
+    return total
+end
+
+local function updateBlock()
+    local signals = {createLogSignal, executeSignal, errorSignal}
+    for _, sig in ipairs(signals) do
+        if sig then
+            pcall(function()
+                local connections = getconnections(sig)
+                for _, conn in ipairs(connections) do
+                    if blocked then conn:Disable() else conn:Enable() end
+                end
+            end)
+        end
+    end
+    if blocked then RemoveWarp() end
+end
+
+updateBlock()
+
+-- =========================================================
+-- [[ واجهة المستخدم الأساسية - FOX Anti GUI ]]
+-- =========================================================
+local gui = Instance.new("ScreenGui", PlayerGui)
+gui.ResetOnSpawn = false
+gui.Name = "FoxAntiGUI"
+
+-- ---------------------------------------------------------
+-- الزر العائم (مع كلمة Anti واضحة ومنزلّة للأسفل تماماً)
+-- ---------------------------------------------------------
+local floatHolder = Instance.new("Frame", gui)
+floatHolder.Size = UDim2.new(0, 70, 0, 85) -- زيادة الارتفاع لاستيعاب الكلمة بوضوح
+floatHolder.Position = UDim2.new(1, -85, 0, 25)
+floatHolder.BackgroundTransparency = 1
+floatHolder.ZIndex = 110
+makeDraggable(floatHolder)
+
+local floatGlowFrame = Instance.new("Frame", floatHolder)
+floatGlowFrame.Size = UDim2.new(0, 65, 0, 65)
+floatGlowFrame.Position = UDim2.new(0, 2, 0, 0)
+floatGlowFrame.BackgroundColor3 = COLORS.DarkerBg
+local floatGlowImageCorner = Instance.new("UICorner", floatGlowFrame)
+floatGlowImageCorner.CornerRadius = UDim.new(0, 14)
+
+local floatStroke = Instance.new("UIStroke", floatGlowFrame)
+floatStroke.Color = COLORS.TextDim
+floatStroke.Thickness = 2.5
+floatStroke.Transparency = 0.4
+
+local shield = Instance.new("ImageButton", floatGlowFrame)
+shield.Size = UDim2.new(1, -10, 1, -10)
+shield.Position = UDim2.new(0, 5, 0, 5)
+shield.BackgroundTransparency = 1
+shield.Image = IMAGE
+shield.ScaleType = Enum.ScaleType.Fit
+shield.BorderSizePixel = 0
+shield.ZIndex = 112
+shield.AutoButtonColor = false
+shield.ImageColor3 = COLORS.TextDim
+
+local shieldCorner = Instance.new("UICorner", shield)
+shieldCorner.CornerRadius = UDim.new(0, 10)
+
+-- كتابة كلمة Anti نازلة وموضحة بخط عريض وساطع
+local floatLabel = Instance.new("TextLabel", floatHolder)
+floatLabel.Size = UDim2.new(1, 0, 0, 18)
+floatLabel.Position = UDim2.new(0, 0, 0, 67) -- نزلتها أكثر للأسفل لتكون بارزة
+floatLabel.BackgroundTransparency = 1
+floatLabel.TextColor3 = COLORS.TextBright
+floatLabel.Text = "Anti"
+floatLabel.Font = Enum.Font.GothamBlack
+floatLabel.TextSize = 13 -- تكبير حجم الخط ليكون واضحاً
+floatLabel.ZIndex = 113
+
+-- =========================================================
+-- [[ لوحة التحكم الرئيسية ]]
+-- =========================================================
+local main = Instance.new("Frame", gui)
+main.Size = UDim2.new(0, 290, 0, 275)
+main.Position = UDim2.new(1, -315, 0, 100)
+main.BackgroundColor3 = COLORS.DarkBg
+main.BorderSizePixel = 0
+main.Visible = true
+main.Active = true
+main.ZIndex = 99
+main.BackgroundTransparency = 0.1
+makeDraggable(main)
+
+local mainCorner = Instance.new("UICorner", main)
+mainCorner.CornerRadius = UDim.new(0, 18)
+
+local mainStroke = Instance.new("UIStroke", main)
+mainStroke.Color = COLORS.TextDim
+mainStroke.Thickness = 2
+mainStroke.Transparency = 0.4
+
+-- شريط العنوان العلوي
+local titleBar = Instance.new("Frame", main)
+titleBar.Size = UDim2.new(1, 0, 0, 42)
+titleBar.BackgroundColor3 = COLORS.PrimaryDark
+titleBar.BorderSizePixel = 0
+titleBar.ZIndex = 99
+titleBar.BackgroundTransparency = 0.2
+
+local titleBarCorner = Instance.new("UICorner", titleBar)
+titleBarCorner.CornerRadius = UDim.new(0, 18)
+
+local iconTitle = Instance.new("ImageLabel", titleBar)
+iconTitle.Size = UDim2.new(0, 24, 0, 24)
+iconTitle.Position = UDim2.new(0, 14, 0, 9)
+iconTitle.BackgroundTransparency = 1
+iconTitle.Image = IMAGE
+iconTitle.ImageColor3 = COLORS.PrimaryLight
+iconTitle.ZIndex = 100
+
+local title = Instance.new("TextLabel", titleBar)
+title.Size = UDim2.new(1, -60, 1, 0)
+title.Position = UDim2.new(0, 46, 0, 0)
+title.BackgroundTransparency = 1
+title.TextColor3 = COLORS.Text
+title.Text = "🛡 FOX Anti 🛡"
+title.Font = Enum.Font.GothamBlack
+title.TextSize = 14
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.ZIndex = 100
+
+local closeBtn = Instance.new("TextButton", titleBar)
+closeBtn.Size = UDim2.new(0, 30, 0, 30)
+closeBtn.Position = UDim2.new(1, -35, 0, 6)
+closeBtn.BackgroundTransparency = 1
+closeBtn.TextColor3 = COLORS.Text
+closeBtn.Text = "✕"
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.TextSize = 16
+closeBtn.ZIndex = 100
+closeBtn.BorderSizePixel = 0
+
+closeBtn.MouseButton1Click:Connect(function()
+    gui:Destroy()
+end)
+
+-- محتوى القائمة
+local content = Instance.new("Frame", main)
+content.Size = UDim2.new(1, -28, 1, -60)
+content.Position = UDim2.new(0, 14, 0, 52)
+content.BackgroundTransparency = 1
+content.ZIndex = 99
+
+-- بطاقة الحالة (Status Card)
+local statusCard = Instance.new("Frame", content)
+statusCard.Size = UDim2.new(1, 0, 0, 42)
+statusCard.Position = UDim2.new(0, 0, 0, 0)
+statusCard.BackgroundColor3 = COLORS.DarkerBg
+statusCard.BorderSizePixel = 0
+statusCard.ZIndex = 99
+statusCard.BackgroundTransparency = 0.3
+
+local statusCardCorner = Instance.new("UICorner", statusCard)
+statusCardCorner.CornerRadius = UDim.new(0, 12)
+
+local statusCardStroke = Instance.new("UIStroke", statusCard)
+statusCardStroke.Color = COLORS.TextDim
+statusCardStroke.Thickness = 1.2
+statusCardStroke.Transparency = 0.4
+
+local statusIcon = Instance.new("ImageLabel", statusCard)
+statusIcon.Size = UDim2.new(0, 22, 0, 22)
+statusIcon.Position = UDim2.new(0, 12, 0, 10)
+statusIcon.BackgroundTransparency = 1
+statusIcon.Image = IMAGE
+statusIcon.ImageColor3 = COLORS.TextDim
+statusIcon.ZIndex = 100
+
+local statusText = Instance.new("TextLabel", statusCard)
+statusText.Size = UDim2.new(1, -50, 0, 16)
+statusText.Position = UDim2.new(0, 42, 0, 6)
+statusText.BackgroundTransparency = 1
+statusText.TextColor3 = COLORS.TextDim
+statusText.Text = "FIREWALL STATUS"
+statusText.Font = Enum.Font.GothamBlack
+statusText.TextSize = 10
+statusText.TextXAlignment = Enum.TextXAlignment.Left
+statusText.ZIndex = 100
+
+local statusSub = Instance.new("TextLabel", statusCard)
+statusSub.Size = UDim2.new(1, -50, 0, 16)
+statusSub.Position = UDim2.new(0, 42, 0, 20)
+statusSub.BackgroundTransparency = 1
+statusSub.TextColor3 = COLORS.TextDim
+statusSub.Text = "○  STANDBY (OFF)"
+statusSub.Font = Enum.Font.GothamBold
+statusSub.TextSize = 11
+statusSub.TextXAlignment = Enum.TextXAlignment.Left
+statusSub.ZIndex = 100
+
+-- زر الحماية الرئيسي
+local toggleBtn = Instance.new("TextButton", content)
+toggleBtn.Size = UDim2.new(1, 0, 0, 40)
+toggleBtn.Position = UDim2.new(0, 0, 0, 52)
+toggleBtn.BackgroundColor3 = COLORS.DarkerBg
+toggleBtn.BackgroundTransparency = 0.3
+toggleBtn.TextColor3 = COLORS.Text
+toggleBtn.Text = "🔥  PROTECTION: INACTIVE"
+toggleBtn.Font = Enum.Font.GothamBlack
+toggleBtn.TextSize = 12
+toggleBtn.BorderSizePixel = 0
+toggleBtn.ZIndex = 99
+toggleBtn.AutoButtonColor = false
+
+local toggleCorner = Instance.new("UICorner", toggleBtn)
+toggleCorner.CornerRadius = UDim.new(0, 12)
+
+local toggleStroke = Instance.new("UIStroke", toggleBtn)
+toggleStroke.Color = COLORS.TextDim
+toggleStroke.Thickness = 1.5
+toggleStroke.Transparency = 0.4
+
+-- زر حجب الإشعارات (Notice Blocker)
+local noticeBtn = Instance.new("TextButton", content)
+noticeBtn.Size = UDim2.new(1, 0, 0, 40)
+noticeBtn.Position = UDim2.new(0, 0, 0, 102)
+noticeBtn.BackgroundColor3 = COLORS.DarkerBg
+noticeBtn.BackgroundTransparency = 0.3
+noticeBtn.TextColor3 = COLORS.Text
+noticeBtn.Text = "🛡️  NOTICE BLOCKER: OFF"
+noticeBtn.Font = Enum.Font.GothamBlack
+noticeBtn.TextSize = 12
+noticeBtn.BorderSizePixel = 0
+noticeBtn.ZIndex = 99
+noticeBtn.AutoButtonColor = false
+
+local noticeCorner = Instance.new("UICorner", noticeBtn)
+noticeCorner.CornerRadius = UDim.new(0, 12)
+
+local noticeStroke = Instance.new("UIStroke", noticeBtn)
+noticeStroke.Color = COLORS.TextDim
+noticeStroke.Thickness = 1.5
+noticeStroke.Transparency = 0.4
+
+-- تذييل القائمة (Footer)
+local footer = Instance.new("Frame", main)
+footer.Size = UDim2.new(1, 0, 0, 30)
+footer.Position = UDim2.new(0, 0, 1, -30)
+footer.BackgroundTransparency = 1
+footer.ZIndex = 99
+
+local footerLine = Instance.new("Frame", footer)
+footerLine.Size = UDim2.new(0.85, 0, 0, 1)
+footerLine.Position = UDim2.new(0.075, 0, 0, 0)
+footerLine.BackgroundColor3 = COLORS.TextDim
+footerLine.BackgroundTransparency = 0.5
+footerLine.BorderSizePixel = 0
+
+local footerText = Instance.new("TextLabel", footer)
+footerText.Size = UDim2.new(1, 0, 1, 0)
+footerText.Position = UDim2.new(0, 0, 0, 4)
+footerText.BackgroundTransparency = 1
+footerText.TextColor3 = COLORS.TextDim
+footerText.Text = "🛡️ FOX Anti · Protection System 🛡️"
+footerText.Font = Enum.Font.GothamBold
+footerText.TextSize = 9
+footerText.ZIndex = 99
+
+-- =========================================================
+-- [[ منطق التفاعل والأزرار ]]
+-- =========================================================
+local isBlockerOn = false
+
+task.spawn(function()
+    while true do
+        if isBlockerOn then
+            pcall(function()
+                local hdGui = PlayerGui:FindFirstChild("HDAdminInterface")
+                if hdGui then
+                    for _, noticeContainer in ipairs(hdGui:GetDescendants()) do
+                        if noticeContainer.Name == "Notice" or noticeContainer.Name == "Notices" then
+                            noticeContainer.Visible = false
+                        end
+                    end
+                end
+            end)
+        end
+        task.wait(0.2)
+    end
+end)
+
+noticeBtn.MouseButton1Click:Connect(function()
+    isBlockerOn = not isBlockerOn
+
+    if isBlockerOn then
+        noticeBtn.Text = "🛡️  NOTICE BLOCKER: ON"
+        noticeBtn.BackgroundColor3 = Color3.fromRGB(120, 40, 0)
+        noticeStroke.Color = COLORS.Primary
+    else
+        noticeBtn.Text = "🛡️  NOTICE BLOCKER: OFF"
+        noticeBtn.BackgroundColor3 = COLORS.DarkerBg
+        noticeStroke.Color = COLORS.TextDim
+
+        pcall(function()
+            local hdGui = PlayerGui:FindFirstChild("HDAdminInterface")
+            if hdGui then
+                for _, noticeContainer in ipairs(hdGui:GetDescendants()) do
+                    if noticeContainer.Name == "Notice" or noticeContainer.Name == "Notices" then
+                        noticeContainer.Visible = true
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+local function updateToggleState()
+    if blocked then
+        toggleBtn.Text = "🔥  PROTECTION: ACTIVE"
+        toggleBtn.BackgroundColor3 = COLORS.PrimaryDark
+        toggleStroke.Color = COLORS.Primary
+        statusSub.Text = "●  SYSTEM ARMED"
+        statusSub.TextColor3 = COLORS.PrimaryLight
+        floatStroke.Color = COLORS.Primary
+        mainStroke.Color = COLORS.Primary
+        statusCardStroke.Color = COLORS.Primary
+        shield.ImageColor3 = COLORS.Text
+        floatLabel.TextColor3 = COLORS.PrimaryLight
+    else
+        toggleBtn.Text = "🔥  PROTECTION: INACTIVE"
+        toggleBtn.BackgroundColor3 = COLORS.DarkerBg
+        toggleStroke.Color = COLORS.TextDim
+        statusSub.Text = "○  STANDBY (OFF)"
+        statusSub.TextColor3 = COLORS.TextDim
+        floatStroke.Color = COLORS.TextDim
+        mainStroke.Color = COLORS.TextDim
+        statusCardStroke.Color = COLORS.TextDim
+        shield.ImageColor3 = COLORS.TextDim
+        floatLabel.TextColor3 = COLORS.TextBright
+    end
+end
+
+toggleBtn.MouseButton1Click:Connect(function()
+    blocked = not blocked
+    updateBlock()
+    updateToggleState()
+end)
+
+shield.MouseButton1Click:Connect(function()
+    hidden = not hidden
+    main.Visible = not hidden
+end)
+
+updateToggleState()
+
+-- تأثير حركة الفتح للنافذة
+main.BackgroundTransparency = 1
+main.Size = UDim2.new(0, 0, 0, 0)
+
+TS:Create(main, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+    BackgroundTransparency = 0.1,
+    Size = UDim2.new(0, 290, 0, 275)
+}):Play()
