@@ -1,0 +1,657 @@
+--====================================================================
+-- [[ NHYQ HUB | ثيم أسود وأحمر ]] --
+--====================================================================
+
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local HttpService = game:GetService("HttpService")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+local BannedPlayers = {
+    ["iraqi_6789"] = true,
+    ["aromil5c"] = true,
+    ["9xo_114"] = true,
+    ["hz6rx"] = true
+}
+
+-- التحقق من المحظورين أولاً
+if BannedPlayers[LocalPlayer.Name:lower()] then
+    LocalPlayer:Kick("❌ أنت محظور من استخدام NHYQ HUB.")
+    return
+end
+
+-- helper parent
+local function getGuiParent()
+    local ok, hidden = pcall(function() return gethui() end)
+    if ok and hidden then return hidden end
+    local ok2, cg = pcall(function() return CoreGui end)
+    if ok2 and cg then return cg end
+    return PlayerGui
+end
+local guiParent = getGuiParent()
+
+-- cleanup old
+pcall(function()
+    for _, n in ipairs({"NvHub","NvMini","NvSplash","CopyPopup","NvLogSystem","MapCopy_Red","NvSquareBtn","BLUE_HUB","BlueSquareBtn","Nv_HUB","NV_Clan_Protection","NvKeySystem","NHYQ_HUB","NHYQSquareBtn"}) do
+        local old = guiParent:FindFirstChild(n)
+        if old then old:Destroy() end
+        local old2 = PlayerGui:FindFirstChild(n)
+        if old2 then old2:Destroy() end
+    end
+end)
+
+-- ========== دالة تشغيل السكربت الرئيسي ==========
+local function LoadMainScript()
+    print("🔥 NHYQ HUB | تم تسجيل الدخول: " .. LocalPlayer.Name)
+
+    -- ========== زر الفتح/الإغلاق المربع ==========
+    local squareToggleGui = Instance.new("ScreenGui")
+    squareToggleGui.Name = "NHYQSquareBtn"
+    squareToggleGui.ResetOnSpawn = false
+    squareToggleGui.IgnoreGuiInset = true
+    squareToggleGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    squareToggleGui.DisplayOrder = 9002
+    pcall(function() squareToggleGui.Parent = guiParent end)
+    if not squareToggleGui.Parent then squareToggleGui.Parent = PlayerGui end
+
+    local toggleSquareBtn = Instance.new("TextButton", squareToggleGui)
+    toggleSquareBtn.Name = "ToggleSquareBtn"
+    toggleSquareBtn.AnchorPoint = Vector2.new(0, 0.5)
+    toggleSquareBtn.Position = UDim2.new(0, 10, 0.5, 0)
+    toggleSquareBtn.Size = UDim2.new(0, 48, 0, 48)
+    toggleSquareBtn.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    toggleSquareBtn.BackgroundTransparency = 0.15
+    toggleSquareBtn.BorderSizePixel = 0
+    toggleSquareBtn.Text = "NH"
+    toggleSquareBtn.Font = Enum.Font.GothamBlack
+    toggleSquareBtn.TextSize = 18
+    toggleSquareBtn.TextColor3 = Color3.fromRGB(255, 50, 50)
+    Instance.new("UICorner", toggleSquareBtn).CornerRadius = UDim.new(0, 10)
+
+    local toggleBtnStroke = Instance.new("UIStroke", toggleSquareBtn)
+    toggleBtnStroke.Color = Color3.fromRGB(220, 20, 60)
+    toggleBtnStroke.Thickness = 1.8
+
+    local isBtnLocked = false
+
+    local function sendCommandToBoth(cmd)
+        if cmd == "" then return false end
+        pcall(function()
+            local remote = ReplicatedStorage:FindFirstChild("RemoteEvents")
+            if remote then
+                local dataService = remote:FindFirstChild("DataService")
+                if dataService then dataService:FireServer(cmd) end
+            end
+        end)
+        pcall(function()
+            local hd = ReplicatedStorage:FindFirstChild("HDAdminHDClient")
+            if hd then
+                local signals = hd:FindFirstChild("Signals")
+                if signals then
+                    local requestCommand = signals:FindFirstChild("RequestCommandModification")
+                    if requestCommand then requestCommand:InvokeServer(cmd) end
+                end
+            end
+        end)
+        return true
+    end
+
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "NHYQ_HUB"
+    gui.ResetOnSpawn = false
+    gui.IgnoreGuiInset = true
+    gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    gui.DisplayOrder = 9000
+    pcall(function() gui.Parent = guiParent end)
+    if not gui.Parent then gui.Parent = PlayerGui end
+
+    local main = Instance.new("Frame", gui)
+    main.Name = "Main"
+    main.AnchorPoint = Vector2.new(0.5, 0.5)
+    main.Position = UDim2.new(0.5, 0, 0.5, 0)
+    main.Size = UDim2.new(0.92, 0, 0.82, 0)
+    main.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    main.BackgroundTransparency = 0.15
+    main.BorderSizePixel = 0
+    Instance.new("UICorner", main).CornerRadius = UDim.new(0, 14)
+
+    local mConstraint = Instance.new("UISizeConstraint", main)
+    mConstraint.MaxSize = Vector2.new(460, 440)
+    mConstraint.MinSize = Vector2.new(300, 320)
+
+    local mStroke = Instance.new("UIStroke", main)
+    mStroke.Color = Color3.fromRGB(220, 20, 60)
+    mStroke.Thickness = 1.5
+    mStroke.Transparency = 0.1
+
+    local title = Instance.new("TextLabel", main)
+    title.BackgroundTransparency = 1
+    title.Size = UDim2.new(1, -70, 0, 38)
+    title.Position = UDim2.new(0, 14, 0, 0)
+    title.Font = Enum.Font.GothamBlack
+    title.Text = "NHYQ HUB"
+    title.TextSize = 20
+    title.TextColor3 = Color3.fromRGB(255, 50, 50)
+    title.TextXAlignment = Enum.TextXAlignment.Left
+
+    local closeBtn = Instance.new("TextButton", main)
+    closeBtn.AnchorPoint = Vector2.new(1, 0)
+    closeBtn.Position = UDim2.new(1, -6, 0, 6)
+    closeBtn.Size = UDim2.new(0, 28, 0, 28)
+    closeBtn.BackgroundColor3 = Color3.fromRGB(40, 10, 10)
+    closeBtn.BackgroundTransparency = 0.3
+    closeBtn.BorderSizePixel = 0
+    closeBtn.Text = "X"
+    closeBtn.Font = Enum.Font.GothamBold
+    closeBtn.TextColor3 = Color3.fromRGB(255, 50, 50)
+    closeBtn.TextSize = 15
+    Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 6)
+
+    local isGuiOpen = true
+
+    toggleSquareBtn.MouseButton1Click:Connect(function()
+        if isGuiOpen then
+            main.Visible = false
+            isGuiOpen = false
+            toggleBtnStroke.Color = Color3.fromRGB(120, 20, 30)
+        else
+            main.Visible = true
+            isGuiOpen = true
+            toggleBtnStroke.Color = Color3.fromRGB(220, 20, 60)
+        end
+    end)
+
+    -- زر X أصبح يخفي القائمة فقط بدلاً من حذفها لكي تتمكن من إرجاعها بالزر المربع
+    closeBtn.MouseButton1Click:Connect(function()
+        main.Visible = false
+        isGuiOpen = false
+        toggleBtnStroke.Color = Color3.fromRGB(120, 20, 30)
+    end)
+
+    local function makeDraggable(handle, target, checkLock)
+        local dragging, dragStart, startPos
+        handle.InputBegan:Connect(function(input)
+            if checkLock and isBtnLocked then return end
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = true
+                dragStart = input.Position
+                startPos = target.Position
+                input.Changed:Connect(function()
+                    if input.UserInputState == Enum.UserInputState.End then dragging = false end
+                end)
+            end
+        end)
+        UserInputService.InputChanged:Connect(function(input)
+            if dragging and (not checkLock or not isBtnLocked) and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                local delta = input.Position - dragStart
+                target.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+            end
+        end)
+    end
+    makeDraggable(toggleSquareBtn, toggleSquareBtn, true)
+    makeDraggable(title, main, false)
+
+    -- ========== التبويبات ==========
+    local tabBar = Instance.new("Frame", main)
+    tabBar.BackgroundTransparency = 1
+    tabBar.Position = UDim2.new(0, 10, 0, 42)
+    tabBar.Size = UDim2.new(1, -20, 0, 32)
+    local tabLayout = Instance.new("UIListLayout", tabBar)
+    tabLayout.FillDirection = Enum.FillDirection.Horizontal
+    tabLayout.Padding = UDim.new(0, 6)
+
+    local pages, tabButtons = {}, {}
+
+    local function makeTab(name)
+        local btn = Instance.new("TextButton", tabBar)
+        btn.Size = UDim2.new(0.5, -3, 1, 0)
+        btn.BackgroundColor3 = Color3.fromRGB(25, 20, 20)
+        btn.BackgroundTransparency = 0.3
+        btn.BorderSizePixel = 0
+        btn.Font = Enum.Font.GothamBold
+        btn.Text = name
+        btn.TextSize = 14
+        btn.TextColor3 = Color3.fromRGB(200, 150, 150)
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+
+        local page = Instance.new("Frame", main)
+        page.Position = UDim2.new(0, 10, 0, 80)
+        page.Size = UDim2.new(1, -20, 1, -90)
+        page.BackgroundColor3 = Color3.fromRGB(20, 18, 18)
+        page.BackgroundTransparency = 0.3
+        page.BorderSizePixel = 0
+        page.Visible = false
+        Instance.new("UICorner", page).CornerRadius = UDim.new(0, 8)
+
+        pages[name] = page
+        tabButtons[name] = btn
+        btn.MouseButton1Click:Connect(function()
+            for n, p in pairs(pages) do p.Visible = (n == name) end
+            for n, b in pairs(tabButtons) do
+                if n == name then
+                    b.BackgroundTransparency = 0.1
+                    b.TextColor3 = Color3.fromRGB(255, 50, 50)
+                else
+                    b.BackgroundTransparency = 0.4
+                    b.TextColor3 = Color3.fromRGB(200, 150, 150)
+                end
+            end
+        end)
+        return page, btn
+    end
+
+    local copyPage = makeTab("نسخ")
+    local controlPage = makeTab("تحكم")
+
+    pages["نسخ"].Visible = true
+    tabButtons["نسخ"].BackgroundTransparency = 0.1
+    tabButtons["نسخ"].TextColor3 = Color3.fromRGB(255, 50, 50)
+
+    -- ========== Page: نسخ ==========
+    local copyScroll = Instance.new("ScrollingFrame", copyPage)
+    copyScroll.Position = UDim2.new(0, 0, 0, 0)
+    copyScroll.Size = UDim2.new(1, 0, 1, 0)
+    copyScroll.BackgroundTransparency = 1
+    copyScroll.BorderSizePixel = 0
+    copyScroll.ScrollBarThickness = 3
+    copyScroll.ScrollBarImageColor3 = Color3.fromRGB(255, 50, 50)
+    copyScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    copyScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+
+    local copyList = Instance.new("UIListLayout", copyScroll)
+    copyList.Padding = UDim.new(0, 8)
+    copyList.SortOrder = Enum.SortOrder.LayoutOrder
+
+    local copyPad = Instance.new("UIPadding", copyScroll)
+    copyPad.PaddingTop = UDim.new(0, 8)
+    copyPad.PaddingBottom = UDim.new(0, 8)
+    copyPad.PaddingLeft = UDim.new(0, 8)
+    copyPad.PaddingRight = UDim.new(0, 8)
+
+    local nameRow = Instance.new("Frame", copyScroll)
+    nameRow.LayoutOrder = 1
+    nameRow.Size = UDim2.new(1, 0, 0, 36)
+    nameRow.BackgroundTransparency = 1
+
+    local targetNameBox = Instance.new("TextBox", nameRow)
+    targetNameBox.Size = UDim2.new(0.68, -4, 1, 0)
+    targetNameBox.Position = UDim2.new(0, 0, 0, 0)
+    targetNameBox.BackgroundColor3 = Color3.fromRGB(35, 20, 20)
+    targetNameBox.BackgroundTransparency = 0.2
+    targetNameBox.BorderSizePixel = 0
+    targetNameBox.PlaceholderText = "اسم اللاعب (مثال: Lu)"
+    targetNameBox.Text = ""
+    targetNameBox.TextColor3 = Color3.fromRGB(255, 220, 220)
+    targetNameBox.Font = Enum.Font.GothamBold
+    targetNameBox.TextSize = 12
+    targetNameBox.ClearTextOnFocus = false
+    Instance.new("UICorner", targetNameBox).CornerRadius = UDim.new(0, 6)
+
+    local tBoxStroke = Instance.new("UIStroke", targetNameBox)
+    tBoxStroke.Color = Color3.fromRGB(200, 40, 50)
+    tBoxStroke.Thickness = 1.2
+
+    local autoFillBtn = Instance.new("TextButton", nameRow)
+    autoFillBtn.Size = UDim2.new(0.32, 0, 1, 0)
+    autoFillBtn.Position = UDim2.new(0.68, 4, 0, 0)
+    autoFillBtn.BackgroundColor3 = Color3.fromRGB(160, 30, 40)
+    autoFillBtn.BorderSizePixel = 0
+    autoFillBtn.Font = Enum.Font.GothamBold
+    autoFillBtn.Text = "إكمال الاسم"
+    autoFillBtn.TextSize = 11
+    autoFillBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Instance.new("UICorner", autoFillBtn).CornerRadius = UDim.new(0, 6)
+
+    local prefixRow = Instance.new("Frame", copyScroll)
+    prefixRow.LayoutOrder = 2
+    prefixRow.Size = UDim2.new(1, 0, 0, 32)
+    prefixRow.BackgroundTransparency = 1
+
+    local prefixBox = Instance.new("TextBox", prefixRow)
+    prefixBox.Size = UDim2.new(0, 44, 1, 0)
+    prefixBox.Position = UDim2.new(0, 0, 0, 0)
+    prefixBox.BackgroundColor3 = Color3.fromRGB(45, 20, 20)
+    prefixBox.BackgroundTransparency = 0.15
+    prefixBox.BorderSizePixel = 0
+    prefixBox.Text = ";"
+    prefixBox.TextColor3 = Color3.fromRGB(255, 50, 50)
+    prefixBox.Font = Enum.Font.GothamBold
+    prefixBox.TextSize = 14
+    prefixBox.ClearTextOnFocus = false
+    Instance.new("UICorner", prefixBox).CornerRadius = UDim.new(0, 6)
+
+    local prefixLabel = Instance.new("TextLabel", prefixRow)
+    prefixLabel.BackgroundTransparency = 1
+    prefixLabel.Position = UDim2.new(0, 50, 0, 0)
+    prefixLabel.Size = UDim2.new(1, -50, 1, 0)
+    prefixLabel.Font = Enum.Font.GothamSemibold
+    prefixLabel.TextSize = 11
+    prefixLabel.TextColor3 = Color3.fromRGB(220, 180, 180)
+    prefixLabel.TextXAlignment = Enum.TextXAlignment.Left
+    prefixLabel.Text = "علامة الأدمن (Prefix)"
+
+    local allStartButtons = {}
+
+    local function makeSpamRow(parentFrame, order, nameText)
+        local row = Instance.new("Frame", parentFrame)
+        row.Size = UDim2.new(1, 0, 0, 36)
+        row.BackgroundTransparency = 1
+        row.LayoutOrder = order
+
+        local lbl = Instance.new("TextLabel", row)
+        lbl.Size = UDim2.new(0.38, -2, 1, 0)
+        lbl.BackgroundColor3 = Color3.fromRGB(35, 20, 20)
+        lbl.BackgroundTransparency = 0.3
+        lbl.Font = Enum.Font.GothamBold
+        lbl.Text = nameText
+        lbl.TextSize = 12
+        lbl.TextColor3 = Color3.fromRGB(240, 200, 200)
+        Instance.new("UICorner", lbl).CornerRadius = UDim.new(0, 6)
+
+        local startBtn = Instance.new("TextButton", row)
+        startBtn.Position = UDim2.new(0.38, 2, 0, 0)
+        startBtn.Size = UDim2.new(0.31, -2, 1, 0)
+        startBtn.BackgroundColor3 = Color3.fromRGB(180, 30, 40)
+        startBtn.Font = Enum.Font.GothamBold
+        startBtn.Text = "تشغيل"
+        startBtn.TextSize = 12
+        startBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        Instance.new("UICorner", startBtn).CornerRadius = UDim.new(0, 6)
+
+        local stopBtn = Instance.new("TextButton", row)
+        stopBtn.Position = UDim2.new(0.69, 2, 0, 0)
+        stopBtn.Size = UDim2.new(0.31, -2, 1, 0)
+        stopBtn.BackgroundColor3 = Color3.fromRGB(45, 35, 35)
+        stopBtn.Font = Enum.Font.GothamBold
+        stopBtn.Text = "إيقاف"
+        stopBtn.TextSize = 12
+        stopBtn.TextColor3 = Color3.fromRGB(210, 210, 215)
+        Instance.new("UICorner", stopBtn).CornerRadius = UDim.new(0, 6)
+
+        table.insert(allStartButtons, startBtn)
+
+        return startBtn, stopBtn
+    end
+
+    local function makeSingleRow(parentFrame, order, nameText)
+        local row = Instance.new("Frame", parentFrame)
+        row.Size = UDim2.new(1, 0, 0, 36)
+        row.BackgroundTransparency = 1
+        row.LayoutOrder = order
+
+        local lbl = Instance.new("TextLabel", row)
+        lbl.Size = UDim2.new(0.55, -2, 1, 0)
+        lbl.BackgroundColor3 = Color3.fromRGB(35, 20, 20)
+        lbl.BackgroundTransparency = 0.3
+        lbl.Font = Enum.Font.GothamBold
+        lbl.Text = nameText
+        lbl.TextSize = 12
+        lbl.TextColor3 = Color3.fromRGB(240, 200, 200)
+        Instance.new("UICorner", lbl).CornerRadius = UDim.new(0, 6)
+
+        local actionBtn = Instance.new("TextButton", row)
+        actionBtn.Position = UDim2.new(0.55, 2, 0, 0)
+        actionBtn.Size = UDim2.new(0.45, -2, 1, 0)
+        actionBtn.BackgroundColor3 = Color3.fromRGB(180, 30, 40)
+        actionBtn.Font = Enum.Font.GothamBold
+        actionBtn.Text = "تشغيل"
+        actionBtn.TextSize = 12
+        actionBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        Instance.new("UICorner", actionBtn).CornerRadius = UDim.new(0, 6)
+
+        return actionBtn
+    end
+
+    local normalStart, normalStop = makeSpamRow(copyScroll, 3, "نسخ عادي")
+    local headStart, headStop = makeSpamRow(copyScroll, 4, "نسخ هيد")
+    local mysteryStart, mysteryStop = makeSpamRow(copyScroll, 5, "نسخ غامض")
+    local insultStart, insultStop = makeSpamRow(copyScroll, 6, "نسخ إهانة")
+    local strongStart, strongStop = makeSpamRow(copyScroll, 7, "نسخ قوي")
+    local normal2Start, normal2Stop = makeSpamRow(copyScroll, 8, "نسخ عادي 2")
+    local ihanaStart, ihanaStop = makeSpamRow(copyScroll, 9, "إهانة")
+
+    local statusLbl = Instance.new("TextLabel", copyScroll)
+    statusLbl.LayoutOrder = 10
+    statusLbl.Size = UDim2.new(1, 0, 0, 20)
+    statusLbl.BackgroundTransparency = 1
+    statusLbl.Font = Enum.Font.GothamSemibold
+    statusLbl.TextSize = 11
+    statusLbl.TextColor3 = Color3.fromRGB(255, 60, 60)
+    statusLbl.Text = ""
+
+    local function setStatus(txt)
+        statusLbl.Text = txt
+    end
+
+    local spamRunning = false
+    local spamThread
+
+    local function resetAllStartButtons()
+        for _, btn in ipairs(allStartButtons) do
+            btn.BackgroundColor3 = Color3.fromRGB(180, 30, 40)
+        end
+    end
+
+    local function stopSpam()
+        spamRunning = false
+        if spamThread then task.cancel(spamThread) end
+        spamThread = nil
+        resetAllStartButtons()
+        setStatus("تم الإيقاف")
+    end
+
+    local function startSpam(message, activeBtn)
+        stopSpam()
+        task.wait(0.05)
+        if activeBtn then activeBtn.BackgroundColor3 = Color3.fromRGB(220, 20, 60) end
+        spamRunning = true
+        setStatus("السبام شغال...")
+        spamThread = task.spawn(function()
+            while spamRunning do
+                sendCommandToBoth(message)
+                task.wait(0.05)
+            end
+        end)
+    end
+
+    local function buildCopy(name, prefix, cmds)
+        prefix = (prefix ~= "" and prefix) or ";"
+        local parts = {}
+        for i = 1, 10 do
+            local line = ""
+            for j, cmd in ipairs(cmds) do
+                if j == 1 then
+                    line = prefix .. cmd .. " " .. name
+                else
+                    line = line .. " " .. prefix .. cmd .. " " .. name
+                end
+            end
+            parts[i] = line
+        end
+        return table.concat(parts, " ")
+    end
+
+    local function getManualTarget()
+        local text = targetNameBox.Text
+        if text == "" or text:gsub("%s+", "") == "" then
+            setStatus("❌ اكتب اسم اللاعب أولاً!")
+            return nil
+        end
+        return text
+    end
+
+    autoFillBtn.MouseButton1Click:Connect(function()
+        local query = targetNameBox.Text:lower()
+        if query == "" then
+            setStatus("❌ اكتب بداية الاسم أولاً!")
+            return
+        end
+        local foundPlayer = nil
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p.Name:lower():sub(1, #query) == query or (p.DisplayName and p.DisplayName:lower():sub(1, #query) == query) then
+                foundPlayer = p
+                break
+            end
+        end
+        if foundPlayer then
+            targetNameBox.Text = foundPlayer.Name
+            setStatus("✅ تم وضع الاسم: " .. foundPlayer.Name)
+        else
+            setStatus("❌ لم يتم العثور على اللاعب")
+        end
+    end)
+
+    normalStart.MouseButton1Click:Connect(function()
+        local n = getManualTarget()
+        if n then startSpam(buildCopy(n, prefixBox.Text, {"logs", "re"}), normalStart) end
+    end)
+    normalStop.MouseButton1Click:Connect(stopSpam)
+
+    headStart.MouseButton1Click:Connect(function()
+        local n = getManualTarget()
+        if n then startSpam(buildCopy(n, prefixBox.Text, {"explode", "logs", "re"}), headStart) end
+    end)
+    headStop.MouseButton1Click:Connect(stopSpam)
+
+    mysteryStart.MouseButton1Click:Connect(function()
+        local n = getManualTarget()
+        if n then startSpam(buildCopy(n, prefixBox.Text, {"explode", "logs", "re", "warp"}), mysteryStart) end
+    end)
+    mysteryStop.MouseButton1Click:Connect(stopSpam)
+
+    insultStart.MouseButton1Click:Connect(function()
+        local n = getManualTarget()
+        if not n then return end
+        resetAllStartButtons()
+        insultStart.BackgroundColor3 = Color3.fromRGB(220, 20, 60)
+        local prefix = (prefixBox.Text ~= "" and prefixBox.Text) or ";"
+        local cmd = prefix.."char "..n.." miri "..prefix.."tp "..n.." "..prefix.."ice "..n.." "..prefix.."dog "..n
+        sendCommandToBoth(cmd)
+        setStatus("✓ تم إرسال الأمر")
+    end)
+    insultStop.MouseButton1Click:Connect(stopSpam)
+
+    strongStart.MouseButton1Click:Connect(function()
+        local n = getManualTarget()
+        if n then startSpam(buildCopy(n, prefixBox.Text, {"logs", "clogs", "re", "res", "nhyq"}), strongStart) end
+    end)
+    strongStop.MouseButton1Click:Connect(stopSpam)
+
+    normal2Start.MouseButton1Click:Connect(function()
+        local n = getManualTarget()
+        if n then startSpam(buildCopy(n, prefixBox.Text, {"logs", "re", "nhyq"}), normal2Start) end
+    end)
+    normal2Stop.MouseButton1Click:Connect(stopSpam)
+
+    ihanaStart.MouseButton1Click:Connect(function()
+        local n = getManualTarget()
+        if n then 
+            local p = (prefixBox.Text ~= "" and prefixBox.Text) or ";"
+            local cmd = p.."dog "..n.." "..p.."tp "..n.." "..p.."titlepk "..n.." المهان/ه"
+            startSpam(cmd, ihanaStart) 
+        end
+    end)
+    ihanaStop.MouseButton1Click:Connect(stopSpam)
+
+    -- ========== Page: تحكم ==========
+    local ctrlScroll = Instance.new("ScrollingFrame", controlPage)
+    ctrlScroll.Position = UDim2.new(0, 0, 0, 0)
+    ctrlScroll.Size = UDim2.new(1, 0, 1, 0)
+    ctrlScroll.BackgroundTransparency = 1
+    ctrlScroll.BorderSizePixel = 0
+    ctrlScroll.ScrollBarThickness = 3
+    ctrlScroll.ScrollBarImageColor3 = Color3.fromRGB(255, 50, 50)
+    ctrlScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    ctrlScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+
+    local ctrlList = Instance.new("UIListLayout", ctrlScroll)
+    ctrlList.Padding = UDim.new(0, 8)
+    ctrlList.SortOrder = Enum.SortOrder.LayoutOrder
+
+    local ctrlPad = Instance.new("UIPadding", ctrlScroll)
+    ctrlPad.PaddingTop = UDim.new(0, 8)
+    ctrlPad.PaddingBottom = UDim.new(0, 8)
+    ctrlPad.PaddingLeft = UDim.new(0, 8)
+    ctrlPad.PaddingRight = UDim.new(0, 8)
+
+    local lockStart, lockStop = makeSpamRow(ctrlScroll, 1, "إيقاف التثبيت")
+
+    lockStart.MouseButton1Click:Connect(function()
+        isBtnLocked = true
+        lockStart.BackgroundColor3 = Color3.fromRGB(220, 20, 60)
+    end)
+
+    lockStop.MouseButton1Click:Connect(function()
+        isBtnLocked = false
+        lockStart.BackgroundColor3 = Color3.fromRGB(180, 30, 40)
+    end)
+
+    local protectToggleBtn = makeSingleRow(ctrlScroll, 2, "حماية NHYQ")
+
+    local blockedWords = {"log","clog","nhyq","alert","cmd","cmdbar","admin","bchat"}
+    local protectEnabled = false
+
+    local function nukeRemote()
+        for _, obj in ipairs(ReplicatedStorage:GetDescendants()) do
+            if obj:IsA("RemoteEvent") and obj.Name:lower():find("executeclientcommand") then
+                obj:Destroy()
+            end
+        end
+    end
+
+    ReplicatedStorage.DescendantAdded:Connect(function(obj)
+        if protectEnabled and obj:IsA("RemoteEvent") and obj.Name:lower():find("executeclientcommand") then
+            obj:Destroy()
+        end
+    end)
+
+    local function isBlocked(name)
+        name = name:lower()
+        for _, w in ipairs(blockedWords) do
+            if name:find(w, 1, true) then return true end
+        end
+    end
+
+    local function blockGui(g)
+        if protectEnabled and isBlocked(g.Name) and g.Name ~= "NHYQ_HUB" and g.Name ~= "NHYQSquareBtn" then
+            g:Destroy()
+        end
+    end
+
+    PlayerGui.ChildAdded:Connect(function(c)
+        task.wait(0.02)
+        blockGui(c)
+    end)
+
+    task.spawn(function()
+        while true do
+            if protectEnabled then
+                for _, g in ipairs(PlayerGui:GetChildren()) do blockGui(g) end
+            end
+            task.wait(0.3)
+        end
+    end)
+
+    protectToggleBtn.MouseButton1Click:Connect(function()
+        protectEnabled = not protectEnabled
+        if protectEnabled then
+            protectToggleBtn.BackgroundColor3 = Color3.fromRGB(220, 20, 60)
+            protectToggleBtn.Text = "شغال"
+            nukeRemote()
+            setStatus("🛡️ تم تفعيل حماية NHYQ")
+        else
+            protectToggleBtn.BackgroundColor3 = Color3.fromRGB(180, 30, 40)
+            protectToggleBtn.Text = "تشغيل"
+            setStatus("⚠️ تم إيقاف حماية NHYQ")
+        end
+    end)
+end
+
+-- تشغيل مباشر بدون كود أو ويب هوك
+LoadMainScript()
