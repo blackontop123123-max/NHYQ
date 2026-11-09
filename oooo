@@ -157,6 +157,7 @@ local Whitelist = {
     "ssdhbaze",
     "addddm6reeepro1",
     "nojopnoprob",
+    "TMAX_015",
 }
 
 local isAllowed = false
