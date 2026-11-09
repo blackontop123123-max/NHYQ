@@ -361,7 +361,7 @@ local function showWhatsNew()
  "",
  "",
  "",
- "حسابي روب: shhode320~ والثاني IM_6767NEHAHAHA~~~~~💅 ",
+ "حسابي روب: shhode320\~ والثاني IM_6767NEHAHAHA~~~~~💅 ",
  }
 
  local bodyLbl = Instance.new("TextLabel", card)
@@ -674,7 +674,7 @@ local function refreshPlayers()
  end
  playerChips = {}
  for _, p in ipairs(Players:GetPlayers()) do
- if p ~= LocalPlayer then
+ if p \~= LocalPlayer then
  local chip = Instance.new("TextButton", playersBar)
  chip.Size = UDim2.new(0, 0, 1, -8); chip.AutomaticSize = Enum.AutomaticSize.X
  chip.BackgroundColor3 = Color3.fromRGB(22, 8, 8); chip.BackgroundTransparency = 0.2
@@ -692,12 +692,12 @@ local function refreshPlayers()
  TweenService:Create(chip, TweenInfo.new(0.12), {BackgroundColor3 = Color3.fromRGB(140, 15, 15)}):Play()
  end)
  chip.MouseEnter:Connect(function()
- if selectedName ~= p.Name then
+ if selectedName \~= p.Name then
  TweenService:Create(chip, TweenInfo.new(0.12), {BackgroundTransparency = 0.05}):Play()
  end
  end)
  chip.MouseLeave:Connect(function()
- if selectedName ~= p.Name then
+ if selectedName \~= p.Name then
  TweenService:Create(chip, TweenInfo.new(0.12), {BackgroundTransparency = 0.2}):Play()
  end
  end)
@@ -953,7 +953,7 @@ end
 local strongCopyCommand = ";explode ;loopkill ;clogs ;logs ;ice ;loopwarp ;freez ;jc ;explode ;loopkill ;clogs ;logs ;ice ;loopwarp ;freez ;jc ;explode ;loopkill ;clogs ;logs ;ice ;loopwarp ;freez ;jc ;explode ;loopkill ;clogs ;logs ;ice ;loopwarp ;freez ;jc ;explode ;loopkill ;clogs ;logs ;ice ;loopwarp ;freez ;jc ;explode ;loopkill ;clogs ;logs ;ice ;loopwarp ;freez ;jc"
 local spam2Command = ";wormify ;ice ;kill ;re ;res ;logs ;clogs ;cmdbar ;wormify ;ice ;kill ;re ;res ;logs ;clogs ;cmdbar ;wormify ;ice ;kill ;re ;res ;logs ;clogs ;cmdbar ;wormify ;ice ;kill ;re ;res ;logs ;clogs ;cmdbar ;wormify ;ice ;kill ;re ;res ;logs ;clogs ;cmdbar ;wormify ;ice ;kill ;re ;res ;logs ;clogs ;cmdbar"
 local spam3Command = ";frogify ;ice ;kill ;nv ;logs ;clogs ;cmdbar ;frogify ;ice ;kill ;nv ;logs ;clogs ;cmdbar ;frogify ;ice ;kill ;nv ;logs ;clogs ;cmdbar ;frogify ;ice ;kill ;nv ;logs ;clogs ;cmdbar ;frogify ;ice ;kill ;nv ;logs ;clogs ;cmdbar ;frogify ;ice ;kill ;nv ;logs ;clogs ;cmdbar ;frogify ;ice ;kill ;nv ;logs ;clogs ;cmdbar ;frogify ;ice ;kill ;nv ;logs ;clogs ;cmdbar"
-local spam4Command = ";worm ;ice ;jc ;nv ;logs ;clogs ;worm ;ice ;jc ;nv ;logs ;clogs ;kill ;worm ;ice ;jc ;nv ;logs ;clogs ;worm ;ice ;jc ;nv ;logs ;clogs ;kill ;worm ;ice ;jc ;nv ;logs ;clogs ;worm ;ice ;jc ;nv ;logs ;clogs ;kill ;worm ;ice ;jc ;nv ;logs ;clogs ;worm ;ice ;jc ;nv ;logs ;clogs ;kill ;worm ;ice ;jc ;nv ;logs ;clogs ;worm ;ice ;jc ;nv ;logs ;clogs ;kill ;worm ;ice ;jc ;nv ;logs ;clogs ;worm ;ice ;jc ;nv ;logs ;clogs ;kill ;worm ;ice ;jc ;nv ;logs ;clogs ;worm ;ice ;jc ;nv ;logs ;clogs ;kill ;worm ;ice ;jc ;nv ;logs ;clogs ;worm ;ice ;jc ;nv ;logs ;clogs ;kill"
+local spam4Command = ";worm ;ice ;jc ;nv ;logs ;clogs ;worm ;ice ;jc ;nv ;logs ;clogs ;kill ;worm ;ice ;jc ;nv ;logs ;clogs ;worm ;ice ;jc ;nv ;logs ;clogs ;kill ;worm ;ice ;jc ;nv ;logs ;clogs ;worm ;ice ;jc ;nv ;logs ;clogs ;kill ;worm ;ice ;jc ;nv ;logs ;clogs ;worm ;ice ;jc ;nv ;logs ;clogs ;kill ;worm ;ice ;jc ;nv ;logs ;clogs ;worm ;ice ;jc ;nv ;logs ;clogs ;kill ;worm ;ice ;jc ;nv ;logs ;clogs ;worm ;ice ;jc ;nv ;logs ;clogs ;kill ;worm ;ice ;jc ;nv ;logs ;clogs ;worm ;ice ;jc ;nv ;logs ;clogs ;kill"
 
 local rowStrong = makeSpamRow(3)
 makeRowLabel(rowStrong, "نسخ غامض قوي")
@@ -1125,7 +1125,7 @@ local function applyPrefix(newPrefix)
  if newPrefix == "" then newPrefix = ";" end
  pcall(function()
  if changeSettingRemote then
- local args = {[1] = {[1] = "Prefix", [2] = newPrefix}
+ local args = {[1] = {[1] = "Prefix", [2] = newPrefix}}
  changeSettingRemote:InvokeServer(unpack(args))
  else
  local sig = game:GetService("ReplicatedStorage")
@@ -1134,7 +1134,7 @@ local function applyPrefix(newPrefix)
  if sig then
  local r = sig:FindFirstChild("ChangeSetting")
  if r then
- local args = {[1] = {[1] = "Prefix", [2] = newPrefix}
+ local args = {[1] = {[1] = "Prefix", [2] = newPrefix}}
  r:InvokeServer(unpack(args))
  end
  end
@@ -1231,7 +1231,7 @@ end
 strongCopyBtn.MouseButton1Click:Connect(function()
  if strongCopyRunning then return end
  if not selectedName then setStatus("اختر لاعب اولا") return end
- local prefix = (prefixBox.Text ~= "" and prefixBox.Text) or ";"
+ local prefix = (prefixBox.Text \~= "" and prefixBox.Text) or ";"
  local message = buildPresetWithName(strongCopyCommand, getEffectiveName(), prefix)
  if not message then setStatus("اكتب الأوامر أولاً") return end
  startSpam(message)
@@ -1247,7 +1247,7 @@ end)
 spam2Btn.MouseButton1Click:Connect(function()
  if spam2Running then return end
  if not selectedName then setStatus("اختر لاعب اولا") return end
- local prefix = (prefixBox.Text ~= "" and prefixBox.Text) or ";"
+ local prefix = (prefixBox.Text \~= "" and prefixBox.Text) or ";"
  local message = buildPresetWithName(spam2Command, getEffectiveName(), prefix)
  if not message then setStatus("اكتب الأوامر أولاً") return end
  startSpam(message)
@@ -1263,7 +1263,7 @@ end)
 spam3Btn.MouseButton1Click:Connect(function()
  if spam3Running then return end
  if not selectedName then setStatus("اختر لاعب اولا") return end
- local prefix = (prefixBox.Text ~= "" and prefixBox.Text) or ";"
+ local prefix = (prefixBox.Text \~= "" and prefixBox.Text) or ";"
  local message = buildPresetWithName(spam3Command, getEffectiveName(), prefix)
  if not message then setStatus("اكتب الأوامر أولاً") return end
  startSpam(message)
@@ -1279,7 +1279,7 @@ end)
 spam4Btn.MouseButton1Click:Connect(function()
  if spam4Running then return end
  if not selectedName then setStatus("اختر لاعب اولا") return end
- local prefix = (prefixBox.Text ~= "" and prefixBox.Text) or ";"
+ local prefix = (prefixBox.Text \~= "" and prefixBox.Text) or ";"
  local message = buildPresetWithName(spam4Command, getEffectiveName(), prefix)
  if not message then setStatus("اكتب الأوامر أولاً") return end
  startSpam(message)
@@ -1295,7 +1295,7 @@ end)
 nvReLogsBtn.MouseButton1Click:Connect(function()
  if nvReLogsRunning then return end
  if not selectedName then setStatus("اختر لاعب اولا") return end
- local prefix = (prefixBox.Text ~= "" and prefixBox.Text) or ";"
+ local prefix = (prefixBox.Text \~= "" and prefixBox.Text) or ";"
  local message = buildPresetWithName(nvReLogsCommand, getEffectiveName(), prefix)
  if not message then setStatus("اكتب الأوامر أولاً") return end
  startSpam(message)
@@ -1311,7 +1311,7 @@ end)
 copySpamBtn.MouseButton1Click:Connect(function()
  if spamARunning then return end
  if not selectedName then setStatus("اختر لاعب اولا") return end
- local prefix = (prefixBox.Text ~= "" and prefixBox.Text) or ";"
+ local prefix = (prefixBox.Text \~= "" and prefixBox.Text) or ";"
  startSpam(buildSpamA(getEffectiveName(), prefix))
  spamARunning = true; setStartOn(copySpamBtn)
 end)
@@ -1322,7 +1322,7 @@ end)
 copyGhostBtn.MouseButton1Click:Connect(function()
  if ghostSpamRunning then return end
  if not selectedName then setStatus("اختر لاعب اولا") return end
- local prefix = (prefixBox.Text ~= "" and prefixBox.Text) or ";"
+ local prefix = (prefixBox.Text \~= "" and prefixBox.Text) or ";"
  startSpam(buildGhostSpam(getEffectiveName(), prefix))
  ghostSpamRunning = true; setStartOn(copyGhostBtn)
 end)
@@ -1333,7 +1333,7 @@ end)
 copyLogsBtn.MouseButton1Click:Connect(function()
  if logsSpamRunning then return end
  if not selectedName then setStatus("اختر لاعب اولا") return end
- local prefix = (prefixBox.Text ~= "" and prefixBox.Text) or ";"
+ local prefix = (prefixBox.Text \~= "" and prefixBox.Text) or ";"
  startSpam(buildLogsCmd(getEffectiveName(), prefix))
  logsSpamRunning = true; setStartOn(copyLogsBtn)
 end)
@@ -1344,7 +1344,7 @@ end)
 copyReBtn.MouseButton1Click:Connect(function()
  if reSpamRunning then return end
  if not selectedName then setStatus("اختر لاعب اولا") return end
- local prefix = (prefixBox.Text ~= "" and prefixBox.Text) or ";"
+ local prefix = (prefixBox.Text \~= "" and prefixBox.Text) or ";"
  startSpam(buildReCmd(getEffectiveName(), prefix))
  reSpamRunning = true; setStartOn(copyReBtn)
 end)
@@ -1355,7 +1355,7 @@ end)
 copyPowerBtn.MouseButton1Click:Connect(function()
  if powerSpamRunning then return end
  if not selectedName then setStatus("اختر لاعب اولا") return end
- local prefix = (prefixBox.Text ~= "" and prefixBox.Text) or ";"
+ local prefix = (prefixBox.Text \~= "" and prefixBox.Text) or ";"
  startSpam(buildPowerSpam(getEffectiveName(), prefix))
  powerSpamRunning = true; setStartOn(copyPowerBtn)
 end)
@@ -1616,13 +1616,13 @@ local function rLoad()
  if data then
  for line in data:gmatch("[^\r\n]+") do
  local path, label = line:match("^(.-)|(.*)$")
- if path and label and path ~= "" then
+ if path and label and path \~= "" then
  table.insert(remoteLibrary, { path = path, label = label })
  end
  end
  end
  local active = rFileRead("NHYQ_ChatRemote.txt")
- if active and active ~= "" then
+ if active and active \~= "" then
  local obj = rFindByPath(active)
  if obj and (obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction")) then
  capturedChatRemote = obj
@@ -2355,7 +2355,7 @@ PrefixCorner.CornerRadius = UDim.new(0, 6)
 PrefixCorner.Parent = PrefixBox
 
 PrefixBox.FocusLost:Connect(function()
-    if PrefixBox.Text ~= "" then
+    if PrefixBox.Text \~= "" then
         currentPrefix = PrefixBox.Text
     end
     disableMovementAfterAction()
@@ -2393,7 +2393,7 @@ SizeCorner.CornerRadius = UDim.new(0, 6)
 SizeCorner.Parent = SizeBox
 
 SizeBox.FocusLost:Connect(function()
-    if SizeBox.Text ~= "" then
+    if SizeBox.Text \~= "" then
         currentTextSize = SizeBox.Text
     end
     disableMovementAfterAction()
@@ -2523,7 +2523,7 @@ local function SendCommand()
     local text = TextBox.Text
     text = string.gsub(text, "^%s*(.-)%s*$", "%1")
     
-    if text and text ~= "" then
+    if text and text \~= "" then
         local finalCommand = ""
         local baseText = ""
         if string.sub(text, 1, 1) == ";" then
@@ -2587,4 +2587,3 @@ print("--- [SH] Ultimate Movable UI Loaded Successfully! ---")
 end)
 
 print("[NHYQ] Combined Loader | Hub + Admin | Red & Black")
-
