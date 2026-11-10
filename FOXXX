@@ -1,0 +1,1283 @@
+--[[
+	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
+]]
+-- ========================================================================
+--              🔥 FOX HUB • ULTIMATE EDITION (VERTICAL) 🔥
+--           نسخ تلقائي + حماية مطورة FOX Anti v2.0 + تصميم ناري
+-- ========================================================================
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local HttpService = game:GetService("HttpService")
+local SoundService = game:GetService("SoundService")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Lighting = game:GetService("Lighting")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+-- ================= الألوان (برتقالية نارية فاخرة) =================
+local Colors = {
+    Background = Color3.fromRGB(15, 8, 5),
+    Panel = Color3.fromRGB(30, 15, 8),
+    Accent = Color3.fromRGB(255, 120, 0),
+    Accent2 = Color3.fromRGB(200, 70, 0),
+    Text = Color3.fromRGB(255, 240, 230),
+    TextDim = Color3.fromRGB(215, 180, 160),
+    Card = Color3.fromRGB(28, 16, 10),
+    Border = Color3.fromRGB(160, 70, 20),
+    Success = Color3.fromRGB(0, 220, 100),
+    Error = Color3.fromRGB(255, 60, 60),
+    SearchBg = Color3.fromRGB(20, 10, 5),
+    Shadow = Color3.fromRGB(0, 0, 0)
+}
+
+-- ================= قائمة السكربتات =================
+local ScriptList = {
+    {"نسخ تلقائي", "Fox Hub Advanced Copy", function()
+        -- ====== FOX HUB - نظام النسخ المتقدم (الإصدار الناري) ======
+        local FOX_IMAGE_ID = "116203551275856"
+
+        local dataServiceSpeed = 0.05
+        local commandSpeed = 0.2
+
+        local HiddenMode = false
+        local SecondExecutionMode = false
+        local InfiniteCopy = false
+        local GamedMode = false
+
+        local function getDataService()
+            local remotesFolder = ReplicatedStorage:FindFirstChild("RemoteEvents")
+            if remotesFolder then return remotesFolder:FindFirstChild("DataService") end
+            return nil
+        end
+
+        local function getRequestCommandModification()
+            local hdAdmin = ReplicatedStorage:FindFirstChild("HDAdminHDClient")
+            if hdAdmin then
+                local signals = hdAdmin:FindFirstChild("Signals")
+                if signals then return signals:FindFirstChild("RequestCommandModification") end
+            end
+            return nil
+        end
+
+        local function executeCommand(cmd)
+            if cmd == "" then return false end
+            local dataService = getDataService()
+            local requestCmdMod = getRequestCommandModification()
+
+            if SecondExecutionMode then
+                if dataService and not HiddenMode then pcall(function() dataService:FireServer(cmd) end) end
+            else
+                if requestCmdMod then pcall(function() requestCmdMod:InvokeServer(cmd) end) end
+                if dataService and not HiddenMode then pcall(function() dataService:FireServer(cmd) end) end
+            end
+            return true
+        end
+
+        local function getCurrentDelay()
+            if getDataService() and not HiddenMode then return dataServiceSpeed else return commandSpeed end
+        end
+
+        local SelectedPlayers = {}
+        local SavedPlayers = {}
+        local CopyActive = false
+        local CopyTask = nil
+        local CurrentActivePlayer = nil
+        local CopyType = "normal"
+
+        local TabCommands = {
+            [1] = { name = "نسخ عادي", commands = "/logs sa /re sa /nv sa /clogs sa /logs sa /re sa /nv sa /clogs sa" },
+            [2] = { name = "نسخ قوي", commands = "/logs sa /re sa /nv sa /logs sa /re sa /logs sa /re sa /logs sa /re sa" },
+            [3] = { name = "نسخ حلو", commands = "/char sa miri !dog sa /sit sa /jp sa /tp sa /Titlepk sa فحبه" },
+            [4] = { name = "نسخ قوي 2", commands = "/logs sa /re sa /res sa /nv sa /logs sa /re sa /res sa /logs sa /re sa /res sa" },
+            [5] = { name = "نسخ حماية", commands = "/logs sa /re sa /logs sa /re sa /logs sa /re sa /logs sa /re sa /logs sa /re sa" },
+            [6] = { name = "نسخ الهيد", commands = "/explode sa /re sa /logs sa /explode sa /re sa /logs sa /explode sa /re sa /logs sa" },
+            [7] = { name = "نسخ الحمايه القويه", commands = "/re sa /res sa /logs sa /re sa /res sa /logs sa /re sa /res sa /logs sa" },
+            [8] = { name = "نسخ غامض", commands = "/clogs sa /explode sa /re sa /loopwarp sa /logs sa /explode sa /nv sa /clogs sa" },
+            [9] = { name = "نسخ هيد قوي", commands = "/explode sa /clogs sa /re sa /logs sa /nv sa /explode sa /clogs sa /re sa" },
+            [10] = { name = "نسخ غامض قوي", commands = "/explode sa /clogs sa /re sa /loopwarp sa /explode sa /logs sa /re sa /explode sa" }
+        }
+
+        local function createGlow(parent, color, transparency, sizeOffset)
+            sizeOffset = sizeOffset or 20
+            local glow = Instance.new("ImageLabel")
+            glow.Size = UDim2.new(1, sizeOffset, 1, sizeOffset)
+            glow.Position = UDim2.new(0, -sizeOffset/2, 0, -sizeOffset/2)
+            glow.BackgroundTransparency = 1
+            glow.Image = "rbxassetid://5554236805"
+            glow.ImageColor3 = color or Colors.Accent
+            glow.ImageTransparency = transparency or 0.6
+            glow.ScaleType = Enum.ScaleType.Slice
+            glow.SliceCenter = Rect.new(23, 23, 277, 277)
+            glow.Parent = parent
+            glow.ZIndex = 0
+            return glow
+        end
+
+        local function saveSavedPlayers()
+            pcall(function() writefile("FoxCopy_SavedPlayers.json", HttpService:JSONEncode(SavedPlayers)) end)
+        end
+
+        local function loadSavedPlayers()
+            local s, c = pcall(function() return readfile("FoxCopy_SavedPlayers.json") end)
+            if s and c then
+                local d = HttpService:JSONDecode(c)
+                SavedPlayers = type(d) == "table" and d or {}
+            else
+                SavedPlayers = {}
+            end
+        end
+        loadSavedPlayers()
+
+        for _, child in ipairs(PlayerGui:GetChildren()) do
+            if child.Name == "FoxCopyGUI" then child:Destroy() end
+        end
+
+        local ScreenGui = Instance.new("ScreenGui")
+        ScreenGui.Name = "FoxCopyGUI"
+        ScreenGui.Parent = PlayerGui
+        ScreenGui.ResetOnSpawn = false
+        ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+        local ToggleButton = Instance.new("ImageButton")
+        ToggleButton.Size = UDim2.new(0, 58, 0, 58)
+        ToggleButton.Position = UDim2.new(0, 18, 0, 120)
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(25, 12, 5)
+        ToggleButton.BackgroundTransparency = 0.12
+        ToggleButton.Image = "rbxassetid://" .. FOX_IMAGE_ID
+        ToggleButton.ScaleType = Enum.ScaleType.Fit
+        ToggleButton.BorderSizePixel = 0
+        ToggleButton.Parent = ScreenGui
+        ToggleButton.Active = true
+        ToggleButton.Draggable = true
+
+        Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(0, 12)
+        local ToggleStroke = Instance.new("UIStroke")
+        ToggleStroke.Color = Colors.Accent
+        ToggleStroke.Thickness = 2.5
+        ToggleStroke.Transparency = 0.15
+        ToggleStroke.Parent = ToggleButton
+
+        local ToggleText = Instance.new("TextLabel")
+        ToggleText.Size = UDim2.new(1, 0, 0, 18)
+        ToggleText.Position = UDim2.new(0, 0, 1, 4)
+        ToggleText.BackgroundTransparency = 1
+        ToggleText.Text = "FOX"
+        ToggleText.TextColor3 = Colors.Accent
+        ToggleText.Font = Enum.Font.GothamBold
+        ToggleText.TextSize = 11
+        ToggleText.Parent = ToggleButton
+
+        local MainFrame = Instance.new("Frame")
+        MainFrame.Size = UDim2.new(0, 350, 0, 620)
+        MainFrame.Position = UDim2.new(0, 80, 0, 20)
+        MainFrame.BackgroundColor3 = Colors.Background
+        MainFrame.BackgroundTransparency = 0.05
+        MainFrame.BorderSizePixel = 0
+        MainFrame.Visible = false
+        MainFrame.ClipsDescendants = true
+        MainFrame.Parent = ScreenGui
+
+        createGlow(MainFrame, Colors.Accent, 0.5, 25)
+        Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 14)
+        local MainStroke = Instance.new("UIStroke")
+        MainStroke.Color = Colors.Accent
+        MainStroke.Thickness = 2
+        MainStroke.Transparency = 0.3
+        MainStroke.Parent = MainFrame
+
+        local TitleFrame = Instance.new("Frame")
+        TitleFrame.Size = UDim2.new(1, 0, 0, 42)
+        TitleFrame.BackgroundColor3 = Colors.Panel
+        TitleFrame.BorderSizePixel = 0
+        TitleFrame.Active = true
+        TitleFrame.Parent = MainFrame
+        Instance.new("UICorner", TitleFrame).CornerRadius = UDim.new(0, 14)
+
+        local TitleLabel = Instance.new("TextLabel")
+        TitleLabel.Size = UDim2.new(1, -40, 0, 22)
+        TitleLabel.Position = UDim2.new(0, 15, 0, 5)
+        TitleLabel.BackgroundTransparency = 1
+        TitleLabel.Text = "FOX HUB"
+        TitleLabel.TextColor3 = Colors.Accent
+        TitleLabel.Font = Enum.Font.GothamBlack
+        TitleLabel.TextSize = 18
+        TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+        TitleLabel.Parent = TitleFrame
+
+        local CloseBtn = Instance.new("TextButton")
+        CloseBtn.Size = UDim2.new(0, 30, 0, 30)
+        CloseBtn.Position = UDim2.new(1, -38, 0.5, -15)
+        CloseBtn.BackgroundColor3 = Colors.Error
+        CloseBtn.Text = "✕"
+        CloseBtn.TextColor3 = Color3.new(1,1,1)
+        CloseBtn.Font = Enum.Font.GothamBold
+        CloseBtn.TextSize = 16
+        CloseBtn.Parent = TitleFrame
+        Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 7)
+
+        CloseBtn.MouseButton1Click:Connect(function()
+            MainFrame.Visible = false
+            ToggleText.Text = "FOX"
+        end)
+
+        local ScrollingFrame = Instance.new("ScrollingFrame")
+        ScrollingFrame.Size = UDim2.new(1, -10, 1, -48)
+        ScrollingFrame.Position = UDim2.new(0, 5, 0, 46)
+        ScrollingFrame.BackgroundTransparency = 1
+        ScrollingFrame.BorderSizePixel = 0
+        ScrollingFrame.ScrollBarThickness = 3
+        ScrollingFrame.ScrollBarImageColor3 = Colors.Accent
+        ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 950)
+        ScrollingFrame.Parent = MainFrame
+
+        local SettingsFrame = Instance.new("Frame")
+        SettingsFrame.Size = UDim2.new(1, -20, 0, 150)
+        SettingsFrame.Position = UDim2.new(0, 10, 0, 5)
+        SettingsFrame.BackgroundColor3 = Colors.Panel
+        SettingsFrame.BackgroundTransparency = 0.3
+        SettingsFrame.Parent = ScrollingFrame
+        Instance.new("UICorner", SettingsFrame).CornerRadius = UDim.new(0, 10)
+
+        local SettingsLabel = Instance.new("TextLabel")
+        SettingsLabel.Size = UDim2.new(1, -10, 0, 20)
+        SettingsLabel.Position = UDim2.new(0, 5, 0, 5)
+        SettingsLabel.BackgroundTransparency = 1
+        SettingsLabel.Text = "⚙️ إعدادات النسخ"
+        SettingsLabel.TextColor3 = Colors.Accent
+        SettingsLabel.Font = Enum.Font.GothamBold
+        SettingsLabel.TextSize = 11
+        SettingsLabel.TextXAlignment = Enum.TextXAlignment.Left
+        SettingsLabel.Parent = SettingsFrame
+
+        local CopyTypeFrame = Instance.new("Frame")
+        CopyTypeFrame.Size = UDim2.new(1, -10, 0, 24)
+        CopyTypeFrame.Position = UDim2.new(0, 5, 0, 28)
+        CopyTypeFrame.BackgroundTransparency = 1
+        CopyTypeFrame.Parent = SettingsFrame
+
+        local VirtualButton = Instance.new("TextButton")
+        VirtualButton.Size = UDim2.new(0.32, 0, 1, 0)
+        VirtualButton.BackgroundColor3 = Color3.fromRGB(60, 25, 10)
+        VirtualButton.Text = "وهمي"
+        VirtualButton.TextColor3 = Colors.Text
+        VirtualButton.Font = Enum.Font.GothamBold
+        VirtualButton.TextSize = 11
+        VirtualButton.Parent = CopyTypeFrame
+        Instance.new("UICorner", VirtualButton).CornerRadius = UDim.new(0, 6)
+
+        local NormalButton = Instance.new("TextButton")
+        NormalButton.Size = UDim2.new(0.32, 0, 1, 0)
+        NormalButton.Position = UDim2.new(0.34, 0, 0, 0)
+        NormalButton.BackgroundColor3 = Colors.Accent2
+        NormalButton.Text = "عادي"
+        NormalButton.TextColor3 = Color3.new(1,1,1)
+        NormalButton.Font = Enum.Font.GothamBold
+        NormalButton.TextSize = 11
+        NormalButton.Parent = CopyTypeFrame
+        Instance.new("UICorner", NormalButton).CornerRadius = UDim.new(0, 6)
+
+        local GamedButton = Instance.new("TextButton")
+        GamedButton.Size = UDim2.new(0.32, 0, 1, 0)
+        GamedButton.Position = UDim2.new(0.68, 0, 0, 0)
+        GamedButton.BackgroundColor3 = Color3.fromRGB(60, 25, 10)
+        GamedButton.Text = "غامض"
+        GamedButton.TextColor3 = Colors.Text
+        GamedButton.Font = Enum.Font.GothamBold
+        GamedButton.TextSize = 11
+        GamedButton.Parent = CopyTypeFrame
+        Instance.new("UICorner", GamedButton).CornerRadius = UDim.new(0, 6)
+
+        local HiddenButton = Instance.new("TextButton")
+        HiddenButton.Size = UDim2.new(1, -10, 0, 24)
+        HiddenButton.Position = UDim2.new(0, 5, 0, 56)
+        HiddenButton.BackgroundColor3 = Color3.fromRGB(60, 25, 10)
+        HiddenButton.Text = "مخفي: OFF"
+        HiddenButton.TextColor3 = Colors.Text
+        HiddenButton.Font = Enum.Font.GothamBold
+        HiddenButton.TextSize = 11
+        HiddenButton.Parent = SettingsFrame
+        Instance.new("UICorner", HiddenButton).CornerRadius = UDim.new(0, 6)
+
+        local SecondExecButton = Instance.new("TextButton")
+        SecondExecButton.Size = UDim2.new(1, -10, 0, 24)
+        SecondExecButton.Position = UDim2.new(0, 5, 0, 84)
+        SecondExecButton.BackgroundColor3 = Color3.fromRGB(60, 25, 10)
+        SecondExecButton.Text = "وضع التنفيذ الثاني: OFF"
+        SecondExecButton.TextColor3 = Colors.Text
+        SecondExecButton.Font = Enum.Font.GothamBold
+        SecondExecButton.TextSize = 11
+        SecondExecButton.Parent = SettingsFrame
+        Instance.new("UICorner", SecondExecButton).CornerRadius = UDim.new(0, 6)
+
+        local InfiniteButton = Instance.new("TextButton")
+        InfiniteButton.Size = UDim2.new(1, -10, 0, 24)
+        InfiniteButton.Position = UDim2.new(0, 5, 0, 112)
+        InfiniteButton.BackgroundColor3 = Color3.fromRGB(60, 25, 10)
+        InfiniteButton.Text = "النسخ اللا نهائي: OFF"
+        InfiniteButton.TextColor3 = Colors.Text
+        InfiniteButton.Font = Enum.Font.GothamBold
+        InfiniteButton.TextSize = 11
+        InfiniteButton.Parent = SettingsFrame
+        Instance.new("UICorner", InfiniteButton).CornerRadius = UDim.new(0, 6)
+
+        local function updateCopyTypeButtons()
+            if CopyType == "virtual" then
+                VirtualButton.BackgroundColor3 = Colors.Accent2; NormalButton.BackgroundColor3 = Color3.fromRGB(60, 25, 10); GamedButton.BackgroundColor3 = Color3.fromRGB(60, 25, 10); GamedMode = false
+            elseif CopyType == "normal" then
+                NormalButton.BackgroundColor3 = Colors.Accent2; VirtualButton.BackgroundColor3 = Color3.fromRGB(60, 25, 10); GamedButton.BackgroundColor3 = Color3.fromRGB(60, 25, 10); GamedMode = false
+            elseif CopyType == "gamed" then
+                GamedButton.BackgroundColor3 = Colors.Accent2; VirtualButton.BackgroundColor3 = Color3.fromRGB(60, 25, 10); NormalButton.BackgroundColor3 = Color3.fromRGB(60, 25, 10); GamedMode = true
+            end
+            HiddenButton.BackgroundColor3 = HiddenMode and Colors.Accent2 or Color3.fromRGB(60, 25, 10)
+            HiddenButton.Text = HiddenMode and "مخفي: ON" or "مخفي: OFF"
+            SecondExecButton.BackgroundColor3 = SecondExecutionMode and Colors.Accent2 or Color3.fromRGB(60, 25, 10)
+            SecondExecButton.Text = SecondExecutionMode and "وضع التنفيذ الثاني: ON" or "وضع التنفيذ الثاني: OFF"
+            InfiniteButton.BackgroundColor3 = InfiniteCopy and Colors.Accent2 or Color3.fromRGB(60, 25, 10)
+            InfiniteButton.Text = InfiniteCopy and "النسخ اللا نهائي: ON" or "النسخ اللا نهائي: OFF"
+        end
+
+        VirtualButton.MouseButton1Click:Connect(function() CopyType = "virtual" updateCopyTypeButtons() end)
+        NormalButton.MouseButton1Click:Connect(function() CopyType = "normal" updateCopyTypeButtons() end)
+        GamedButton.MouseButton1Click:Connect(function() CopyType = "gamed" updateCopyTypeButtons() end)
+        HiddenButton.MouseButton1Click:Connect(function() HiddenMode = not HiddenMode updateCopyTypeButtons() end)
+        SecondExecButton.MouseButton1Click:Connect(function() SecondExecutionMode = not SecondExecutionMode updateCopyTypeButtons() end)
+        InfiniteButton.MouseButton1Click:Connect(function() InfiniteCopy = not InfiniteCopy updateCopyTypeButtons() end)
+
+        local SavedSection = Instance.new("Frame")
+        SavedSection.Size = UDim2.new(1, -20, 0, 90)
+        SavedSection.Position = UDim2.new(0, 10, 0, 163)
+        SavedSection.BackgroundColor3 = Colors.Panel
+        SavedSection.BackgroundTransparency = 0.3
+        SavedSection.Parent = ScrollingFrame
+        Instance.new("UICorner", SavedSection).CornerRadius = UDim.new(0, 10)
+
+        local SavedLabel = Instance.new("TextLabel")
+        SavedLabel.Size = UDim2.new(1, -10, 0, 20)
+        SavedLabel.Position = UDim2.new(0, 5, 0, 5)
+        SavedLabel.BackgroundTransparency = 1
+        SavedLabel.Text = "💾 اللاعبين المحفوظين"
+        SavedLabel.TextColor3 = Colors.Accent
+        SavedLabel.Font = Enum.Font.GothamBold
+        SavedLabel.TextSize = 11
+        SavedLabel.TextXAlignment = Enum.TextXAlignment.Left
+        SavedLabel.Parent = SavedSection
+
+        local SavedFrame = Instance.new("Frame")
+        SavedFrame.Size = UDim2.new(1, -10, 0, 30)
+        SavedFrame.Position = UDim2.new(0, 5, 0, 28)
+        SavedFrame.BackgroundColor3 = Color3.fromRGB(35, 15, 8)
+        SavedFrame.Parent = SavedSection
+        Instance.new("UICorner", SavedFrame).CornerRadius = UDim.new(0, 6)
+
+        local SavedPlayersList = Instance.new("ScrollingFrame")
+        SavedPlayersList.Size = UDim2.new(1, -5, 1, -5)
+        SavedPlayersList.Position = UDim2.new(0, 2, 0, 2)
+        SavedPlayersList.BackgroundTransparency = 1
+        SavedPlayersList.BorderSizePixel = 0
+        SavedPlayersList.ScrollBarThickness = 2
+        SavedPlayersList.Parent = SavedFrame
+
+        local SaveControlsFrame = Instance.new("Frame")
+        SaveControlsFrame.Size = UDim2.new(1, -10, 0, 22)
+        SaveControlsFrame.Position = UDim2.new(0, 5, 0, 63)
+        SaveControlsFrame.BackgroundTransparency = 1
+        SaveControlsFrame.Parent = SavedSection
+
+        local AddSavedBtn = Instance.new("TextButton")
+        AddSavedBtn.Size = UDim2.new(0.48, 0, 1, 0)
+        AddSavedBtn.BackgroundColor3 = Colors.Accent2
+        AddSavedBtn.Text = "حفظ"
+        AddSavedBtn.TextColor3 = Color3.new(1,1,1)
+        AddSavedBtn.Font = Enum.Font.GothamBold
+        AddSavedBtn.TextSize = 10
+        AddSavedBtn.Parent = SaveControlsFrame
+        Instance.new("UICorner", AddSavedBtn).CornerRadius = UDim.new(0, 5)
+
+        local ClearSavedBtn = Instance.new("TextButton")
+        ClearSavedBtn.Size = UDim2.new(0.48, 0, 1, 0)
+        ClearSavedBtn.Position = UDim2.new(0.52, 0, 0, 0)
+        ClearSavedBtn.BackgroundColor3 = Colors.Error
+        ClearSavedBtn.Text = "مسح"
+        ClearSavedBtn.TextColor3 = Color3.new(1,1,1)
+        ClearSavedBtn.Font = Enum.Font.GothamBold
+        ClearSavedBtn.TextSize = 10
+        ClearSavedBtn.Parent = SaveControlsFrame
+        Instance.new("UICorner", ClearSavedBtn).CornerRadius = UDim.new(0, 5)
+
+        local PlayersSection = Instance.new("Frame")
+        PlayersSection.Size = UDim2.new(1, -20, 0, 140)
+        PlayersSection.Position = UDim2.new(0, 10, 0, 263)
+        PlayersSection.BackgroundColor3 = Colors.Panel
+        PlayersSection.BackgroundTransparency = 0.3
+        PlayersSection.Parent = ScrollingFrame
+        Instance.new("UICorner", PlayersSection).CornerRadius = UDim.new(0, 10)
+
+        local PlayersLabel = Instance.new("TextLabel")
+        PlayersLabel.Size = UDim2.new(1, -10, 0, 20)
+        PlayersLabel.Position = UDim2.new(0, 5, 0, 5)
+        PlayersLabel.BackgroundTransparency = 1
+        PlayersLabel.Text = "🔥 اللاعبين الحاليين"
+        PlayersLabel.TextColor3 = Colors.Accent
+        PlayersLabel.Font = Enum.Font.GothamBold
+        PlayersLabel.TextSize = 11
+        PlayersLabel.TextXAlignment = Enum.TextXAlignment.Left
+        PlayersLabel.Parent = PlayersSection
+
+        local PlayersFrame = Instance.new("Frame")
+        PlayersFrame.Size = UDim2.new(1, -10, 0, 78)
+        PlayersFrame.Position = UDim2.new(0, 5, 0, 28)
+        PlayersFrame.BackgroundColor3 = Color3.fromRGB(35, 15, 8)
+        PlayersFrame.Parent = PlayersSection
+        Instance.new("UICorner", PlayersFrame).CornerRadius = UDim.new(0, 6)
+
+        local PlayersList = Instance.new("ScrollingFrame")
+        PlayersList.Size = UDim2.new(1, -5, 1, -5)
+        PlayersList.Position = UDim2.new(0, 2, 0, 2)
+        PlayersList.BackgroundTransparency = 1
+        PlayersList.BorderSizePixel = 0
+        PlayersList.ScrollBarThickness = 2
+        PlayersList.Parent = PlayersFrame
+
+        local SelectedFrame = Instance.new("Frame")
+        SelectedFrame.Size = UDim2.new(1, -10, 0, 26)
+        SelectedFrame.Position = UDim2.new(0, 5, 0, 110)
+        SelectedFrame.BackgroundColor3 = Color3.fromRGB(50, 20, 10)
+        SelectedFrame.Parent = PlayersSection
+        Instance.new("UICorner", SelectedFrame).CornerRadius = UDim.new(0, 6)
+
+        local SelectedLabel = Instance.new("TextLabel")
+        SelectedLabel.Size = UDim2.new(1, -5, 1, 0)
+        SelectedLabel.BackgroundTransparency = 1
+        SelectedLabel.Text = "لا يوجد مختارين"
+        SelectedLabel.TextColor3 = Colors.Text
+        SelectedLabel.Font = Enum.Font.GothamBold
+        SelectedLabel.TextSize = 10
+        SelectedLabel.Parent = SelectedFrame
+
+        local CurrentFrame = Instance.new("Frame")
+        CurrentFrame.Size = UDim2.new(1, -20, 0, 24)
+        CurrentFrame.Position = UDim2.new(0, 10, 0, 413)
+        CurrentFrame.BackgroundColor3 = Color3.fromRGB(120, 45, 10)
+        CurrentFrame.Parent = ScrollingFrame
+        Instance.new("UICorner", CurrentFrame).CornerRadius = UDim.new(0, 6)
+
+        local CurrentLabel = Instance.new("TextLabel")
+        CurrentLabel.Size = UDim2.new(1, -5, 1, 0)
+        CurrentLabel.BackgroundTransparency = 1
+        CurrentLabel.Text = "اللاعب النشط: لا يوجد"
+        CurrentLabel.TextColor3 = Colors.Text
+        CurrentLabel.Font = Enum.Font.GothamBold
+        CurrentLabel.TextSize = 10
+        CurrentLabel.TextXAlignment = Enum.TextXAlignment.Center
+        CurrentLabel.Parent = CurrentFrame
+
+        local TabsSection = Instance.new("Frame")
+        TabsSection.Size = UDim2.new(1, -20, 0, 115)
+        TabsSection.Position = UDim2.new(0, 10, 0, 447)
+        TabsSection.BackgroundColor3 = Colors.Panel
+        TabsSection.BackgroundTransparency = 0.3
+        TabsSection.Parent = ScrollingFrame
+        Instance.new("UICorner", TabsSection).CornerRadius = UDim.new(0, 10)
+
+        local TabsFrame = Instance.new("Frame")
+        TabsFrame.Size = UDim2.new(1, -10, 0, 28)
+        TabsFrame.Position = UDim2.new(0, 5, 0, 28)
+        TabsFrame.BackgroundTransparency = 1
+        TabsFrame.Parent = TabsSection
+
+        local CommandsBox = Instance.new("TextBox")
+        CommandsBox.Size = UDim2.new(1, -10, 0, 48)
+        CommandsBox.Position = UDim2.new(0, 5, 0, 60)
+        CommandsBox.BackgroundColor3 = Color3.fromRGB(20, 10, 5)
+        CommandsBox.TextColor3 = Colors.Accent
+        CommandsBox.Font = Enum.Font.Gotham
+        CommandsBox.TextSize = 10
+        CommandsBox.TextWrapped = true
+        CommandsBox.TextXAlignment = Enum.TextXAlignment.Center
+        CommandsBox.ClearTextOnFocus = false
+        CommandsBox.Text = TabCommands[1].commands
+        CommandsBox.Parent = TabsSection
+        Instance.new("UICorner", CommandsBox).CornerRadius = UDim.new(0, 6)
+
+        local tabColors = {
+            [1] = Color3.fromRGB(200, 80, 0), [2] = Color3.fromRGB(220, 100, 0), [3] = Color3.fromRGB(255, 120, 0), [4] = Color3.fromRGB(230, 90, 0), [5] = Color3.fromRGB(190, 70, 0),
+            [6] = Color3.fromRGB(255, 140, 20), [7] = Color3.fromRGB(210, 85, 0), [8] = Color3.fromRGB(240, 110, 10), [9] = Color3.fromRGB(255, 100, 0), [10] = Color3.fromRGB(255, 150, 40)
+        }
+
+        for i = 1, 10 do
+            local tabBtn = Instance.new("TextButton")
+            tabBtn.Size = UDim2.new(0.09, 0, 1, 0)
+            tabBtn.Position = UDim2.new(0.01 + (i-1) * 0.1, 0, 0, 0)
+            tabBtn.BackgroundColor3 = tabColors[i]
+            tabBtn.Text = TabCommands[i].name
+            tabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            tabBtn.Font = Enum.Font.GothamBold
+            tabBtn.TextSize = 7
+            tabBtn.Parent = TabsFrame
+            Instance.new("UICorner", tabBtn).CornerRadius = UDim.new(0, 5)
+
+            tabBtn.MouseButton1Click:Connect(function()
+                CommandsBox.Text = TabCommands[i].commands
+            end)
+        end
+
+        local ControlsSection = Instance.new("Frame")
+        ControlsSection.Size = UDim2.new(1, -20, 0, 70)
+        ControlsSection.Position = UDim2.new(0, 10, 0, 572)
+        ControlsSection.BackgroundColor3 = Colors.Panel
+        ControlsSection.BackgroundTransparency = 0.3
+        ControlsSection.Parent = ScrollingFrame
+        Instance.new("UICorner", ControlsSection).CornerRadius = UDim.new(0, 10)
+
+        local ActivateButton = Instance.new("TextButton")
+        ActivateButton.Size = UDim2.new(0.9, 0, 0, 32)
+        ActivateButton.Position = UDim2.new(0.05, 0, 0.08, 0)
+        ActivateButton.BackgroundColor3 = Colors.Accent2
+        ActivateButton.Text = "تفعيل النسخ"
+        ActivateButton.TextColor3 = Color3.new(1,1,1)
+        ActivateButton.Font = Enum.Font.GothamBold
+        ActivateButton.TextSize = 12
+        ActivateButton.Parent = ControlsSection
+        Instance.new("UICorner", ActivateButton).CornerRadius = UDim.new(0, 7)
+
+        local StopButton = Instance.new("TextButton")
+        StopButton.Size = UDim2.new(0.9, 0, 0, 28)
+        StopButton.Position = UDim2.new(0.05, 0, 0.58, 0)
+        StopButton.BackgroundColor3 = Colors.Error
+        StopButton.Text = "إيقاف"
+        StopButton.TextColor3 = Color3.new(1,1,1)
+        StopButton.Font = Enum.Font.GothamBold
+        StopButton.TextSize = 12
+        StopButton.Parent = ControlsSection
+        Instance.new("UICorner", StopButton).CornerRadius = UDim.new(0, 7)
+
+        local function updateSelectedPlayersText()
+            local count = 0
+            for _ in pairs(SelectedPlayers) do count = count + 1 end
+            SelectedLabel.Text = count == 0 and "لا يوجد مختارين" or (count == 1 and "مختار: " .. next(SelectedPlayers) or count .. " مختارين")
+        end
+
+        local function updateSavedPlayersList()
+            for _, child in ipairs(SavedPlayersList:GetChildren()) do if child:IsA("TextButton") then child:Destroy() end end
+            local index = 0
+            for playerName, _ in pairs(SavedPlayers) do
+                local savedBtn = Instance.new("TextButton")
+                savedBtn.Size = UDim2.new(1, -5, 0, 20)
+                savedBtn.Position = UDim2.new(0, 2, 0, index * 22 + 2)
+                savedBtn.BackgroundColor3 = Colors.Accent2
+                savedBtn.Text = playerName
+                savedBtn.TextColor3 = Color3.new(1,1,1)
+                savedBtn.Font = Enum.Font.Gotham
+                savedBtn.TextSize = 10
+                savedBtn.Parent = SavedPlayersList
+                Instance.new("UICorner", savedBtn).CornerRadius = UDim.new(0, 4)
+                savedBtn.MouseButton1Click:Connect(function() SelectedPlayers[playerName] = true; updateSelectedPlayersText() end)
+                index = index + 1
+            end
+            SavedPlayersList.CanvasSize = UDim2.new(0, 0, 0, index * 22 + 5)
+        end
+
+        local function updatePlayersList()
+            for _, child in ipairs(PlayersList:GetChildren()) do if child:IsA("TextButton") then child:Destroy() end end
+            local index = 0
+            for _, p in ipairs(Players:GetPlayers()) do
+                if p ~= LocalPlayer then
+                    local playerBtn = Instance.new("TextButton")
+                    playerBtn.Size = UDim2.new(1, -5, 0, 20)
+                    playerBtn.Position = UDim2.new(0, 2, 0, index * 22 + 2)
+                    playerBtn.BackgroundColor3 = SelectedPlayers[p.Name] and Colors.Accent2 or Color3.fromRGB(60, 25, 10)
+                    playerBtn.Text = (SelectedPlayers[p.Name] and "✓ " or "") .. p.Name
+                    playerBtn.TextColor3 = Color3.new(1,1,1)
+                    playerBtn.Font = Enum.Font.Gotham
+                    playerBtn.TextSize = 10
+                    playerBtn.Parent = PlayersList
+                    Instance.new("UICorner", playerBtn).CornerRadius = UDim.new(0, 4)
+                    playerBtn.MouseButton1Click:Connect(function()
+                        SelectedPlayers[p.Name] = SelectedPlayers[p.Name] and nil or true
+                        updatePlayersList()
+                        updateSelectedPlayersText()
+                    end)
+                    index = index + 1
+                end
+            end
+            PlayersList.CanvasSize = UDim2.new(0, 0, 0, index * 22 + 5)
+        end
+
+        AddSavedBtn.MouseButton1Click:Connect(function() for n, _ in pairs(SelectedPlayers) do SavedPlayers[n] = true end; saveSavedPlayers(); updateSavedPlayersList() end)
+        ClearSavedBtn.MouseButton1Click:Connect(function() SavedPlayers = {}; saveSavedPlayers(); updateSavedPlayersList() end)
+
+        local menuVisible = false
+        ToggleButton.MouseButton1Click:Connect(function()
+            menuVisible = not menuVisible
+            MainFrame.Visible = true
+            MainFrame.Size = menuVisible and UDim2.new(0, 0, 0, 0) or UDim2.new(0, 350, 0, 620)
+            if menuVisible then
+                TweenService:Create(MainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Back), {Size = UDim2.new(0, 350, 0, 620)}):Play()
+                ToggleText.Text = "✖"
+                updatePlayersList(); updateSavedPlayersList(); updateSelectedPlayersText()
+            else
+                TweenService:Create(MainFrame, TweenInfo.new(0.2, Enum.EasingStyle.Back), {Size = UDim2.new(0, 0, 0, 0)}):Play()
+                task.wait(0.2)
+                MainFrame.Visible = false
+                ToggleText.Text = "FOX"
+            end
+        end)
+
+        ActivateButton.MouseButton1Click:Connect(function()
+            if CopyActive then
+                CopyActive = false if CopyTask then task.cancel(CopyTask) end
+                ActivateButton.Text = "تفعيل النسخ"
+                ActivateButton.BackgroundColor3 = Colors.Accent2
+                CurrentActivePlayer = nil
+                CurrentLabel.Text = "اللاعب النشط: متوقف"
+                return
+            end
+
+            local chosenPlayer = nil
+            for n, _ in pairs(SavedPlayers) do chosenPlayer = n break end
+            if not chosenPlayer then for n, _ in pairs(SelectedPlayers) do chosenPlayer = n break end end
+            if not chosenPlayer then ActivateButton.Text = "اختر لاعب!" task.wait(1) ActivateButton.Text = "تفعيل النسخ" return end
+
+            CurrentActivePlayer = chosenPlayer
+            CurrentLabel.Text = "اللاعب النشط: " .. CurrentActivePlayer
+
+            local commands = {}
+            for cmd in CommandsBox.Text:gmatch("[^\r\n]+") do if cmd ~= "" then table.insert(commands, cmd) end end
+
+            CopyActive = true
+            ActivateButton.Text = "إيقاف النسخ"
+            ActivateButton.BackgroundColor3 = Colors.Error
+
+            CopyTask = task.spawn(function()
+                while CopyActive do
+                    local shortName = CurrentActivePlayer:sub(1, 3)
+                    for _, cmd in ipairs(commands) do
+                        if not CopyActive then break end
+                        executeCommand(cmd:gsub(" sa", " " .. shortName))
+                        task.wait(getCurrentDelay())
+                    end
+                    task.wait(0.1)
+                end
+            end)
+        end)
+
+        StopButton.MouseButton1Click:Connect(function()
+            if CopyActive then
+                CopyActive = false if CopyTask then task.cancel(CopyTask) end
+                ActivateButton.Text = "تفعيل النسخ"
+                ActivateButton.BackgroundColor3 = Colors.Accent2
+                CurrentActivePlayer = nil
+                CurrentLabel.Text = "اللاعب النشط: متوقف"
+            end
+        end)
+
+        updateCopyTypeButtons()
+    end},
+
+    {"حماية", "Protection Script v2.0", function()
+        for _, child in ipairs(PlayerGui:GetChildren()) do
+            if child.Name == "FoxAntiGUI" then child:Destroy() end
+        end
+
+        local blocked = false
+        local hidden = false
+        local IMAGE_ID = "109802894665519"
+        local IMAGE = "rbxthumb://type=Asset&id=" .. IMAGE_ID .. "&w=420&h=420"
+
+        local function makeDraggable(obj)
+            local dragging, dragInput, dragStart, startPos
+            obj.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                    dragging = true
+                    dragStart = input.Position
+                    startPos = obj.Position
+                    input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
+                end
+            end)
+            obj.InputChanged:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end
+            end)
+            UserInputService.InputChanged:Connect(function(input)
+                if dragging and input == dragInput then
+                    local delta = input.Position - dragStart
+                    obj.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+                end
+            end)
+        end
+
+        local COLORS = {
+            Primary = Color3.fromRGB(255, 115, 0),
+            PrimaryDark = Color3.fromRGB(140, 50, 0),
+            PrimaryLight = Color3.fromRGB(255, 170, 60),
+            DarkBg = Color3.fromRGB(18, 12, 10),
+            DarkerBg = Color3.fromRGB(8, 5, 4),
+            Text = Color3.fromRGB(255, 255, 255),
+            TextBright = Color3.fromRGB(255, 200, 150),
+            TextDim = Color3.fromRGB(220, 170, 140),
+        }
+
+        local signal = ReplicatedStorage:FindFirstChild("HDAdminHDClient") and ReplicatedStorage.HDAdminHDClient:FindFirstChild("Signals")
+        local createLogSignal = signal and signal:FindFirstChild("CreateLog") and signal.CreateLog.OnClientEvent
+        local executeSignal = signal and signal:FindFirstChild("ExecuteClientCommand") and signal.ExecuteClientCommand.OnClientEvent
+        local errorSignal = signal and signal:FindFirstChild("Error") and signal.Error.OnClientEvent
+
+        local function RemoveWarp()
+            for _, obj in pairs(workspace:GetDescendants()) do
+                local name = obj.Name:lower()
+                if name:find("warp") or obj:IsA("WarpEffect") then pcall(function() obj:Destroy() end) end
+            end
+            for _, obj in pairs(Lighting:GetDescendants()) do
+                if obj.Name:lower():find("warp") then pcall(function() obj:Destroy() end) end
+            end
+        end
+
+        local function updateBlock()
+            local signals = {createLogSignal, executeSignal, errorSignal}
+            for _, sig in ipairs(signals) do
+                if sig then
+                    pcall(function()
+                        local connections = getconnections(sig)
+                        for _, conn in ipairs(connections) do if blocked then conn:Disable() else conn:Enable() end end
+                    end)
+                end
+            end
+            if blocked then RemoveWarp() end
+        end
+
+        updateBlock()
+
+        local gui = Instance.new("ScreenGui", PlayerGui)
+        gui.ResetOnSpawn = false
+        gui.Name = "FoxAntiGUI"
+
+        local floatHolder = Instance.new("Frame", gui)
+        floatHolder.Size = UDim2.new(0, 70, 0, 85)
+        floatHolder.Position = UDim2.new(1, -85, 0, 25)
+        floatHolder.BackgroundTransparency = 1
+        floatHolder.ZIndex = 110
+        makeDraggable(floatHolder)
+
+        local floatGlowFrame = Instance.new("Frame", floatHolder)
+        floatGlowFrame.Size = UDim2.new(0, 65, 0, 65)
+        floatGlowFrame.Position = UDim2.new(0, 2, 0, 0)
+        floatGlowFrame.BackgroundColor3 = COLORS.DarkerBg
+        Instance.new("UICorner", floatGlowFrame).CornerRadius = UDim.new(0, 14)
+
+        local floatStroke = Instance.new("UIStroke", floatGlowFrame)
+        floatStroke.Color = COLORS.TextDim
+        floatStroke.Thickness = 2.5
+        floatStroke.Transparency = 0.4
+
+        local shield = Instance.new("ImageButton", floatGlowFrame)
+        shield.Size = UDim2.new(1, -10, 1, -10)
+        shield.Position = UDim2.new(0, 5, 0, 5)
+        shield.BackgroundTransparency = 1
+        shield.Image = IMAGE
+        shield.ScaleType = Enum.ScaleType.Fit
+        shield.BorderSizePixel = 0
+        shield.ZIndex = 112
+        shield.AutoButtonColor = false
+        shield.ImageColor3 = COLORS.TextDim
+        Instance.new("UICorner", shield).CornerRadius = UDim.new(0, 10)
+
+        local floatLabel = Instance.new("TextLabel", floatHolder)
+        floatLabel.Size = UDim2.new(1, 0, 0, 18)
+        floatLabel.Position = UDim2.new(0, 0, 0, 67)
+        floatLabel.BackgroundTransparency = 1
+        floatLabel.TextColor3 = COLORS.TextBright
+        floatLabel.Text = "FOX"
+        floatLabel.Font = Enum.Font.GothamBlack
+        floatLabel.TextSize = 13
+        floatLabel.ZIndex = 113
+
+        local main = Instance.new("Frame", gui)
+        main.Size = UDim2.new(0, 290, 0, 275)
+        main.Position = UDim2.new(1, -315, 0, 100)
+        main.BackgroundColor3 = COLORS.DarkBg
+        main.BorderSizePixel = 0
+        main.Visible = true
+        main.Active = true
+        main.ZIndex = 99
+        main.BackgroundTransparency = 0.1
+        makeDraggable(main)
+        Instance.new("UICorner", main).CornerRadius = UDim.new(0, 18)
+
+        local mainStroke = Instance.new("UIStroke", main)
+        mainStroke.Color = COLORS.TextDim
+        mainStroke.Thickness = 2
+        mainStroke.Transparency = 0.4
+
+        local titleBar = Instance.new("Frame", main)
+        titleBar.Size = UDim2.new(1, 0, 0, 42)
+        titleBar.BackgroundColor3 = COLORS.PrimaryDark
+        titleBar.BorderSizePixel = 0
+        titleBar.ZIndex = 99
+        titleBar.BackgroundTransparency = 0.2
+        Instance.new("UICorner", titleBar).CornerRadius = UDim.new(0, 18)
+
+        local iconTitle = Instance.new("ImageLabel", titleBar)
+        iconTitle.Size = UDim2.new(0, 24, 0, 24)
+        iconTitle.Position = UDim2.new(0, 14, 0, 9)
+        iconTitle.BackgroundTransparency = 1
+        iconTitle.Image = IMAGE
+        iconTitle.ImageColor3 = COLORS.PrimaryLight
+        iconTitle.ZIndex = 100
+
+        local title = Instance.new("TextLabel", titleBar)
+        title.Size = UDim2.new(1, -60, 1, 0)
+        title.Position = UDim2.new(0, 46, 0, 0)
+        title.BackgroundTransparency = 1
+        title.TextColor3 = COLORS.Text
+        title.Text = "🔥 حماية فوكس 🔥"
+        title.Font = Enum.Font.GothamBlack
+        title.TextSize = 14
+        title.TextXAlignment = Enum.TextXAlignment.Left
+        title.ZIndex = 100
+
+        local closeBtn = Instance.new("TextButton", titleBar)
+        closeBtn.Size = UDim2.new(0, 30, 0, 30)
+        closeBtn.Position = UDim2.new(1, -35, 0, 6)
+        closeBtn.BackgroundTransparency = 1
+        closeBtn.TextColor3 = COLORS.Text
+        closeBtn.Text = "✕"
+        closeBtn.Font = Enum.Font.GothamBold
+        closeBtn.TextSize = 16
+        closeBtn.ZIndex = 100
+        closeBtn.MouseButton1Click:Connect(function() gui:Destroy() end)
+
+        local content = Instance.new("Frame", main)
+        content.Size = UDim2.new(1, -28, 1, -60)
+        content.Position = UDim2.new(0, 14, 0, 52)
+        content.BackgroundTransparency = 1
+        content.ZIndex = 99
+
+        local statusCard = Instance.new("Frame", content)
+        statusCard.Size = UDim2.new(1, 0, 0, 42)
+        statusCard.BackgroundColor3 = COLORS.DarkerBg
+        statusCard.BorderSizePixel = 0
+        statusCard.ZIndex = 99
+        statusCard.BackgroundTransparency = 0.3
+        Instance.new("UICorner", statusCard).CornerRadius = UDim.new(0, 12)
+
+        local statusCardStroke = Instance.new("UIStroke", statusCard)
+        statusCardStroke.Color = COLORS.TextDim
+        statusCardStroke.Thickness = 1.2
+        statusCardStroke.Transparency = 0.4
+
+        local statusIcon = Instance.new("ImageLabel", statusCard)
+        statusIcon.Size = UDim2.new(0, 22, 0, 22)
+        statusIcon.Position = UDim2.new(0, 12, 0, 10)
+        statusIcon.BackgroundTransparency = 1
+        statusIcon.Image = IMAGE
+        statusIcon.ImageColor3 = COLORS.TextDim
+        statusIcon.ZIndex = 100
+
+        local statusText = Instance.new("TextLabel", statusCard)
+        statusText.Size = UDim2.new(1, -50, 0, 16)
+        statusText.Position = UDim2.new(0, 42, 0, 6)
+        statusText.BackgroundTransparency = 1
+        statusText.TextColor3 = COLORS.TextDim
+        statusText.Text = "حالة جدار الحماية"
+        statusText.Font = Enum.Font.GothamBlack
+        statusText.TextSize = 10
+        statusText.TextXAlignment = Enum.TextXAlignment.Left
+        statusText.ZIndex = 100
+
+        local statusSub = Instance.new("TextLabel", statusCard)
+        statusSub.Size = UDim2.new(1, -50, 0, 16)
+        statusSub.Position = UDim2.new(0, 42, 0, 20)
+        statusSub.BackgroundTransparency = 1
+        statusSub.TextColor3 = COLORS.TextDim
+        statusSub.Text = "○  في الانتظار (متوقف)"
+        statusSub.Font = Enum.Font.GothamBold
+        statusSub.TextSize = 11
+        statusSub.TextXAlignment = Enum.TextXAlignment.Left
+        statusSub.ZIndex = 100
+
+        local toggleBtn = Instance.new("TextButton", content)
+        toggleBtn.Size = UDim2.new(1, 0, 0, 40)
+        toggleBtn.Position = UDim2.new(0, 0, 0, 52)
+        toggleBtn.BackgroundColor3 = COLORS.DarkerBg
+        toggleBtn.BackgroundTransparency = 0.3
+        toggleBtn.TextColor3 = COLORS.Text
+        toggleBtn.Text = "🔥  الحماية: معطلة"
+        toggleBtn.Font = Enum.Font.GothamBlack
+        toggleBtn.TextSize = 12
+        toggleBtn.BorderSizePixel = 0
+        toggleBtn.ZIndex = 99
+        toggleBtn.AutoButtonColor = false
+        Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(0, 12)
+
+        local toggleStroke = Instance.new("UIStroke", toggleBtn)
+        toggleStroke.Color = COLORS.TextDim
+        toggleStroke.Thickness = 1.5
+        toggleStroke.Transparency = 0.4
+
+        local noticeBtn = Instance.new("TextButton", content)
+        noticeBtn.Size = UDim2.new(1, 0, 0, 40)
+        noticeBtn.Position = UDim2.new(0, 0, 0, 102)
+        noticeBtn.BackgroundColor3 = COLORS.DarkerBg
+        noticeBtn.BackgroundTransparency = 0.3
+        noticeBtn.TextColor3 = COLORS.Text
+        noticeBtn.Text = "🛡️  حجب الإشعارات: متوقف"
+        noticeBtn.Font = Enum.Font.GothamBlack
+        noticeBtn.TextSize = 12
+        noticeBtn.BorderSizePixel = 0
+        noticeBtn.ZIndex = 99
+        noticeBtn.AutoButtonColor = false
+        Instance.new("UICorner", noticeBtn).CornerRadius = UDim.new(0, 12)
+
+        local noticeStroke = Instance.new("UIStroke", noticeBtn)
+        noticeStroke.Color = COLORS.TextDim
+        noticeStroke.Thickness = 1.5
+        noticeStroke.Transparency = 0.4
+
+        local footer = Instance.new("Frame", main)
+        footer.Size = UDim2.new(1, 0, 0, 30)
+        footer.Position = UDim2.new(0, 0, 1, -30)
+        footer.BackgroundTransparency = 1
+        footer.ZIndex = 99
+
+        local footerText = Instance.new("TextLabel", footer)
+        footerText.Size = UDim2.new(1, 0, 1, 0)
+        footerText.Position = UDim2.new(0, 0, 0, 4)
+        footerText.BackgroundTransparency = 1
+        footerText.TextColor3 = COLORS.TextDim
+        footerText.Text = "🔥 نظام الحماية المتطور من FOX 🔥"
+        footerText.Font = Enum.Font.GothamBold
+        footerText.TextSize = 9
+        footerText.ZIndex = 99
+
+        local isBlockerOn = false
+        task.spawn(function()
+            while true do
+                if isBlockerOn then
+                    pcall(function()
+                        local hdGui = PlayerGui:FindFirstChild("HDAdminInterface")
+                        if hdGui then
+                            for _, container in ipairs(hdGui:GetDescendants()) do
+                                if container.Name == "Notice" or container.Name == "Notices" then container.Visible = false end
+                            end
+                        end
+                    end)
+                end
+                task.wait(0.2)
+            end
+        end)
+
+        noticeBtn.MouseButton1Click:Connect(function()
+            isBlockerOn = not isBlockerOn
+            if isBlockerOn then
+                noticeBtn.Text = "🛡️  حجب الإشعارات: شغال"
+                noticeBtn.BackgroundColor3 = Color3.fromRGB(120, 40, 0)
+                noticeStroke.Color = COLORS.Primary
+            else
+                noticeBtn.Text = "🛡️  حجب الإشعارات: متوقف"
+                noticeBtn.BackgroundColor3 = COLORS.DarkerBg
+                noticeStroke.Color = COLORS.TextDim
+            end
+        end)
+
+        local function updateToggleState()
+            if blocked then
+                toggleBtn.Text = "🔥  الحماية: مفعلة"
+                toggleBtn.BackgroundColor3 = COLORS.PrimaryDark
+                toggleStroke.Color = COLORS.Primary
+                statusSub.Text = "●  النظام محمي ومؤمن"
+                statusSub.TextColor3 = COLORS.PrimaryLight
+                floatStroke.Color = COLORS.Primary
+                mainStroke.Color = COLORS.Primary
+                statusCardStroke.Color = COLORS.Primary
+                shield.ImageColor3 = COLORS.Text
+                floatLabel.TextColor3 = COLORS.PrimaryLight
+            else
+                toggleBtn.Text = "🔥  الحماية: معطلة"
+                toggleBtn.BackgroundColor3 = COLORS.DarkerBg
+                toggleStroke.Color = COLORS.TextDim
+                statusSub.Text = "○  في الانتظار (متوقف)"
+                statusSub.TextColor3 = COLORS.TextDim
+                floatStroke.Color = COLORS.TextDim
+                mainStroke.Color = COLORS.TextDim
+                statusCardStroke.Color = COLORS.TextDim
+                shield.ImageColor3 = COLORS.TextDim
+                floatLabel.TextColor3 = COLORS.TextBright
+            end
+        end
+
+        toggleBtn.MouseButton1Click:Connect(function()
+            blocked = not blocked
+            updateBlock()
+            updateToggleState()
+        end)
+
+        shield.MouseButton1Click:Connect(function()
+            hidden = not hidden
+            main.Visible = not hidden
+        end)
+
+        updateToggleState()
+    end}
+}
+
+-- ================= أدوات التشغيل والتحكم =================
+local function SaveData(key, value)
+    pcall(function()
+        if writefile then
+            local json = HttpService:JSONEncode(value)
+            writefile("FOXHUB_ULTIMATE_" .. LocalPlayer.UserId .. "_" .. key .. ".txt", json)
+        end
+    end)
+end
+
+local function LoadData(key, defaultValue)
+    local success, result = pcall(function()
+        if isfile and readfile then
+            local fileName = "FOXHUB_ULTIMATE_" .. LocalPlayer.UserId .. "_" .. key .. ".txt"
+            if isfile(fileName) then
+                local data = readfile(fileName)
+                if data ~= "" then return HttpService:JSONDecode(data) end
+            end
+        end
+        return nil
+    end)
+    return (success and result ~= nil) and result or defaultValue
+end
+
+local function PlaySound(id)
+    pcall(function()
+        local s = Instance.new("Sound")
+        s.SoundId = "rbxassetid://" .. id
+        s.Volume = 0.2
+        s.Parent = SoundService
+        s:Play()
+        s.Ended:Once(function() s:Destroy() end)
+    end)
+end
+
+local function ExecuteScript(data)
+    local success = pcall(function()
+        if type(data) == "function" then
+            data()
+        elseif type(data) == "string" then
+            loadstring(game:HttpGet(data))()
+        end
+    end)
+    return success
+end
+
+local function CreateUICorner(obj, radius)
+    local corner = Instance.new("UICorner", obj)
+    corner.CornerRadius = UDim.new(0, radius)
+    return corner
+end
+
+local function CreateUIStroke(obj, color, thickness, transparency)
+    local stroke = Instance.new("UIStroke", obj)
+    stroke.Color = color
+    stroke.Thickness = thickness or 1.5
+    stroke.Transparency = transparency or 0
+    return stroke
+end
+
+local function CreateShadow(obj, size, transparency)
+    local shadow = Instance.new("ImageLabel", obj)
+    shadow.Size = UDim2.new(1, size*2, 1, size*2)
+    shadow.Position = UDim2.new(-size/obj.AbsoluteSize.X, 0, -size/obj.AbsoluteSize.Y, 0)
+    shadow.BackgroundTransparency = 1
+    shadow.Image = "rbxassetid://1316045739"
+    shadow.ImageColor3 = Colors.Shadow
+    shadow.ImageTransparency = transparency or 0.6
+    shadow.ZIndex = -1
+    return shadow
+end
+
+-- ================= الزر العائم الرئيسي (FOX) =================
+local function CreateFloatingButton()
+    local gui = Instance.new("ScreenGui", PlayerGui)
+    gui.Name = "FOX_ULTIMATE_BTN"
+    gui.ResetOnSpawn = false
+    gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    gui.DisplayOrder = 9999
+
+    local btn = Instance.new("ImageButton", gui)
+    btn.Size = UDim2.new(0, 58, 0, 58)
+    btn.Position = LoadData("BPos", UDim2.new(0.92, 0, 0.07, 0))
+    btn.BackgroundColor3 = Color3.fromRGB(15, 8, 5)
+    btn.BackgroundTransparency = 0.2
+    btn.Image = "rbxassetid://109802894665519"
+    btn.ScaleType = Enum.ScaleType.Fit
+    btn.AutoButtonColor = false
+    CreateUICorner(btn, 16)
+    CreateUIStroke(btn, Colors.Accent, 3, 0.2)
+
+    local isDragging = false
+    local dragStartMouse, dragStartPos
+
+    btn.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            isDragging = true
+            dragStartMouse = input.Position
+            dragStartPos = btn.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    isDragging = false
+                    SaveData("BPos", btn.Position)
+                end
+            end)
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if isDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - dragStartMouse
+            btn.Position = UDim2.new(dragStartPos.X.Scale, dragStartPos.X.Offset + delta.X, dragStartPos.Y.Scale, dragStartPos.Y.Offset + delta.Y)
+        end
+    end)
+
+    local mainFrame = nil
+    local isOpen = false
+
+    btn.MouseButton1Click:Connect(function()
+        if isDragging then return end
+        PlaySound(12221967)
+        if not mainFrame then mainFrame = CreateMainUI(btn) end
+        isOpen = not isOpen
+        mainFrame.Visible = isOpen
+    end)
+
+    return btn
+end
+
+-- ================= القائمة الرئيسية =================
+function CreateMainUI(parent)
+    local gui = parent.Parent
+    local frame = Instance.new("Frame", gui)
+    frame.Name = "FOX_ULTIMATE_UI"
+    frame.Size = UDim2.new(0, 380, 0, 520)
+    frame.Position = UDim2.new(0.5, -190, 0.5, -260)
+    frame.BackgroundColor3 = Colors.Background
+    frame.ClipsDescendants = true
+    frame.Visible = false
+    CreateUICorner(frame, 24)
+    CreateUIStroke(frame, Colors.Accent, 2, 0.3)
+    CreateShadow(frame, 30, 0.7)
+
+    local header = Instance.new("Frame", frame)
+    header.Size = UDim2.new(1, 0, 0, 70)
+    header.BackgroundColor3 = Colors.Panel
+    CreateUICorner(header, 24, 0, 0)
+
+    local title = Instance.new("TextLabel", header)
+    title.Size = UDim2.new(0, 200, 0, 28)
+    title.Position = UDim2.new(0, 20, 0, 10)
+    title.Text = "FOX HUB"
+    title.Font = Enum.Font.GothamBlack
+    title.TextSize = 22
+    title.TextColor3 = Colors.Accent
+    title.BackgroundTransparency = 1
+
+    local sub = Instance.new("TextLabel", header)
+    sub.Size = UDim2.new(0, 200, 0, 18)
+    sub.Position = UDim2.new(0, 20, 0, 42)
+    sub.Text = "Ultimate Edition • Vertical"
+    sub.Font = Enum.Font.GothamMedium
+    sub.TextSize = 11
+    sub.TextColor3 = Colors.TextDim
+    sub.BackgroundTransparency = 1
+
+    local searchFrame = Instance.new("Frame", frame)
+    searchFrame.Size = UDim2.new(1, -30, 0, 40)
+    searchFrame.Position = UDim2.new(0, 15, 0, 80)
+    searchFrame.BackgroundColor3 = Colors.SearchBg
+    CreateUICorner(searchFrame, 12)
+    CreateUIStroke(searchFrame, Colors.Border, 1.5)
+
+    local searchBox = Instance.new("TextBox", searchFrame)
+    searchBox.Size = UDim2.new(1, -20, 1, 0)
+    searchBox.Position = UDim2.new(0, 10, 0, 0)
+    searchBox.PlaceholderText = "🔍 ابحث عن سكربت..."
+    searchBox.PlaceholderColor3 = Colors.TextDim
+    searchBox.Text = ""
+    searchBox.TextColor3 = Colors.Text
+    searchBox.Font = Enum.Font.GothamMedium
+    searchBox.TextSize = 14
+    searchBox.BackgroundTransparency = 1
+    searchBox.ClearTextOnFocus = false
+
+    local scroll = Instance.new("ScrollingFrame", frame)
+    scroll.Size = UDim2.new(1, -20, 1, -140)
+    scroll.Position = UDim2.new(0, 10, 0, 130)
+    scroll.BackgroundTransparency = 1
+    scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+    scroll.ScrollBarThickness = 4
+    scroll.ScrollBarImageColor3 = Colors.Accent
+
+    local listLayout = Instance.new("UIListLayout", scroll)
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listLayout.Padding = UDim.new(0, 10)
+
+    local cardData = {}
+
+    for _, data in ipairs(ScriptList) do
+        local card = Instance.new("Frame", scroll)
+        card.Size = UDim2.new(1, -10, 0, 56)
+        card.BackgroundColor3 = Colors.Card
+        CreateUICorner(card, 12)
+        CreateUIStroke(card, Colors.Border, 1.5)
+
+        local nameLabel = Instance.new("TextLabel", card)
+        nameLabel.Size = UDim2.new(0.6, 0, 1, 0)
+        nameLabel.Position = UDim2.new(0, 12, 0, 0)
+        nameLabel.Text = data[1]
+        nameLabel.Font = Enum.Font.GothamBold
+        nameLabel.TextSize = 13
+        nameLabel.TextColor3 = Colors.Text
+        nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+        nameLabel.BackgroundTransparency = 1
+
+        local execBtn = Instance.new("TextButton", card)
+        execBtn.Size = UDim2.new(0, 100, 0, 32)
+        execBtn.Position = UDim2.new(1, -112, 0.5, -16)
+        execBtn.Text = "▶ EXECUTE"
+        execBtn.Font = Enum.Font.GothamBold
+        execBtn.TextSize = 11
+        execBtn.TextColor3 = Colors.Text
+        execBtn.BackgroundColor3 = Colors.Accent2
+        CreateUICorner(execBtn, 8)
+        execBtn.AutoButtonColor = false
+
+        execBtn.MouseButton1Click:Connect(function()
+            PlaySound(12221967)
+            execBtn.Text = "⏳"
+            local success = ExecuteScript(data[3])
+            execBtn.Text = success and "✓ DONE" or "✕ FAIL"
+            task.delay(1.5, function() execBtn.Text = "▶ EXECUTE" end)
+        end)
+
+        table.insert(cardData, {card = card, name = data[1], desc = data[2]})
+    end
+
+    listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        scroll.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 20)
+    end)
+
+    searchBox:GetPropertyChangedSignal("Text"):Connect(function()
+        local query = searchBox.Text:lower()
+        for _, elem in ipairs(cardData) do
+            elem.card.Visible = (query == "" or elem.name:lower():find(query) ~= nil or elem.desc:lower():find(query) ~= nil)
+        end
+    end)
+
+    return frame
+end
+
+-- ================= بدء التشغيل المباشر =================
+task.spawn(function()
+    CreateFloatingButton()
+end)
+
+print("🔥 FOX HUB • READY & LOADED SUCCESSFULLY")
