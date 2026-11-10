@@ -1,0 +1,404 @@
+--====================================================================--
+--  🛡️ NHYQ LOG SYSTEM | أحمر وأسود • بحث مرن • By shs09qp23        --
+--====================================================================--
+
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
+local LocalPlayer = Players.LocalPlayer
+
+local MonitoredPlayers = {}
+local PlayerHistory = {}
+local PlayerTimers = {}
+
+-- 🔴 أصول وألوان نظام NHYQ (أحمر وأسود)
+local THEME = {
+    Main = Color3.fromHex("#E50914"),   -- أحمر جريء
+    Light = Color3.fromHex("#FF3333"),  -- أحمر فاتح للتوهج
+    Dark = Color3.fromHex("#0F0F0F")    -- أسود داكن
+}
+
+-- [ دالة السحب السلسة ]
+local function MakeDraggable(Frame, DragAnchor)
+    local Dragging = false
+    local DragInput, DragStart, StartPosition
+    
+    DragAnchor.InputBegan:Connect(function(Input)
+        if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+            Dragging = true
+            DragStart = Input.Position
+            StartPosition = Frame.Position
+            Input.Changed:Connect(function()
+                if Input.UserInputState == Enum.UserInputState.End then
+                    Dragging = false
+                end
+            end)
+        end
+    end)
+    
+    DragAnchor.InputChanged:Connect(function(Input)
+        if Input.UserInputType == Enum.UserInputType.MouseMovement or Input.UserInputType == Enum.UserInputType.Touch then
+            DragInput = Input
+        end
+    end)
+    
+    UserInputService.InputChanged:Connect(function(Input)
+        if Input == DragInput and Dragging then
+            local Delta = Input.Position - DragStart
+            Frame.Position = UDim2.new(
+                StartPosition.X.Scale, StartPosition.X.Offset + Delta.X,
+                StartPosition.Y.Scale, StartPosition.Y.Offset + Delta.Y
+            )
+        end
+    end)
+end
+
+-- دالة جلب صورة اللاعب
+local function GetAvatar(userId, imageLabel)
+    if not userId or userId <= 0 then
+        imageLabel.Image = "rbxassetid://139930568"
+        return
+    end
+    pcall(function()
+        local img = Players:GetUserThumbnailAsync(userId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
+        imageLabel.Image = img or "rbxassetid://139930568"
+    end)
+end
+
+-- إنشاء الواجهة
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "NhyqLogSystem"
+ScreenGui.ResetOnSpawn = false
+
+if getgui then
+    ScreenGui.Parent = getgui()
+elseif syn and syn.protect_gui then
+    syn.protect_gui(ScreenGui)
+    ScreenGui.Parent = CoreGui
+else
+    ScreenGui.Parent = CoreGui:FindFirstChild("RobloxGui") or LocalPlayer:WaitForChild("PlayerGui")
+end
+
+-- =============================================
+-- 🔘 الزر الرئيسي (NHYQ)
+-- =============================================
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Name = "NhyqLogToggle"
+ToggleButton.Parent = ScreenGui
+ToggleButton.Size = UDim2.new(0, 60, 0, 60)
+ToggleButton.Position = UDim2.new(0.03, 0, 0.2, 0)
+ToggleButton.BackgroundColor3 = THEME.Dark
+ToggleButton.BackgroundTransparency = 0.05
+ToggleButton.Text = "NHYQ"
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.Font = Enum.Font.GothamBlack
+ToggleButton.TextSize = 13
+ToggleButton.Active = true
+ToggleButton.Draggable = true
+ToggleButton.ClipsDescendants = false
+
+Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(0, 18)
+
+local ButtonStroke = Instance.new("UIStroke")
+ButtonStroke.Thickness = 3
+ButtonStroke.Color = THEME.Main
+ButtonStroke.Parent = ToggleButton
+
+local SubLabel = Instance.new("TextLabel")
+SubLabel.Parent = ToggleButton
+SubLabel.Size = UDim2.new(0, 40, 0, 16)
+SubLabel.Position = UDim2.new(0.5, -20, 1, 2)
+SubLabel.BackgroundTransparency = 1
+SubLabel.Text = "LOG"
+SubLabel.TextColor3 = THEME.Light
+SubLabel.Font = Enum.Font.GothamBlack
+SubLabel.TextSize = 11
+SubLabel.TextXAlignment = Enum.TextXAlignment.Center
+
+task.spawn(function()
+    while ToggleButton and ToggleButton.Parent do
+        TweenService:Create(ButtonStroke, TweenInfo.new(1.5), {Color = THEME.Light, Thickness = 4}):Play()
+        task.wait(1.5)
+        TweenService:Create(ButtonStroke, TweenInfo.new(1.5), {Color = THEME.Main, Thickness = 3}):Play()
+        task.wait(1.5)
+    end
+end)
+
+local GlowBg = Instance.new("ImageLabel")
+GlowBg.Size = UDim2.new(1.6, 0, 1.6, 0)
+GlowBg.Position = UDim2.new(-0.3, 0, -0.3, 0)
+GlowBg.BackgroundTransparency = 1
+GlowBg.Image = "rbxassetid://5554236805"
+GlowBg.ImageColor3 = THEME.Main
+GlowBg.ImageTransparency = 0.5
+GlowBg.ScaleType = Enum.ScaleType.Slice
+GlowBg.SliceCenter = Rect.new(23, 23, 277, 277)
+GlowBg.Parent = ToggleButton
+
+task.spawn(function()
+    while GlowBg and GlowBg.Parent do
+        TweenService:Create(GlowBg, TweenInfo.new(2), {ImageTransparency = 0.2}):Play()
+        task.wait(2)
+        TweenService:Create(GlowBg, TweenInfo.new(2), {ImageTransparency = 0.6}):Play()
+        task.wait(2)
+    end
+end)
+
+MakeDraggable(ToggleButton, ToggleButton)
+
+ToggleButton.MouseButton1Down:Connect(function()
+    TweenService:Create(ToggleButton, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, 54, 0, 54)
+    }):Play()
+    TweenService:Create(ButtonStroke, TweenInfo.new(0.1), {
+        Color = Color3.fromRGB(255, 255, 255),
+        Thickness = 5
+    }):Play()
+end)
+
+ToggleButton.MouseButton1Up:Connect(function()
+    TweenService:Create(ToggleButton, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, 60, 0, 60)
+    }):Play()
+    TweenService:Create(ButtonStroke, TweenInfo.new(0.2), {
+        Color = THEME.Main,
+        Thickness = 3
+    }):Play()
+end)
+
+-- =============================================
+-- 🔴 اللوحة الرئيسية
+-- =============================================
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.Size = UDim2.new(0, 460, 0, 350)
+MainFrame.Position = UDim2.new(0.5, -230, 0.4, -175)
+MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+MainFrame.Visible = false
+
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 14)
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Parent = MainFrame
+MainStroke.Color = THEME.Main
+MainStroke.Thickness = 2
+
+local DragHeader = Instance.new("Frame")
+DragHeader.Parent = MainFrame
+DragHeader.Size = UDim2.new(1, 0, 0, 40)
+DragHeader.BackgroundTransparency = 1
+MakeDraggable(MainFrame, DragHeader)
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Parent = MainFrame
+TitleLabel.Size = UDim2.new(1, 0, 0, 20)
+TitleLabel.Position = UDim2.new(0, 0, 0, 10)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "لوق دخول وخروج اللاعبين"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.Font = Enum.Font.GothamBlack
+TitleLabel.TextSize = 16
+
+local SubtitleLabel = Instance.new("TextLabel")
+SubtitleLabel.Parent = MainFrame
+SubtitleLabel.Size = UDim2.new(1, 0, 0, 15)
+SubtitleLabel.Position = UDim2.new(0, 0, 0, 30)
+SubtitleLabel.BackgroundTransparency = 1
+SubtitleLabel.Text = "NHYQ Log v2 | By shs09qp23"
+SubtitleLabel.TextColor3 = THEME.Main
+SubtitleLabel.Font = Enum.Font.GothamBold
+SubtitleLabel.TextSize = 11
+
+local Line = Instance.new("Frame")
+Line.Parent = MainFrame
+Line.Size = UDim2.new(0, 420, 0, 1)
+Line.Position = UDim2.new(0.5, -210, 0, 50)
+Line.BackgroundColor3 = Color3.fromRGB(60, 10, 10)
+
+-- مربع البحث المرن (بالحروف أو جزء من الاسم)
+local SearchBox = Instance.new("TextBox")
+SearchBox.Parent = MainFrame
+SearchBox.Size = UDim2.new(0, 340, 0, 34)
+SearchBox.Position = UDim2.new(0.5, -170, 0, 58)
+SearchBox.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+SearchBox.PlaceholderText = "ابحث وأضف أي عدد من اللاعبين..."
+SearchBox.Text = ""
+SearchBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+SearchBox.PlaceholderColor3 = Color3.fromRGB(120, 50, 50)
+SearchBox.Font = Enum.Font.GothamBold
+SearchBox.TextSize = 12
+
+Instance.new("UICorner", SearchBox).CornerRadius = UDim.new(0, 8)
+
+local SearchStroke = Instance.new("UIStroke")
+SearchStroke.Color = THEME.Main
+SearchStroke.Thickness = 1
+SearchStroke.Parent = SearchBox
+
+local Container = Instance.new("ScrollingFrame")
+Container.Parent = MainFrame
+Container.Size = UDim2.new(0, 420, 0, 230)
+Container.Position = UDim2.new(0.5, -210, 0, 102)
+Container.BackgroundTransparency = 1
+Container.ScrollBarThickness = 3
+Container.ScrollBarImageColor3 = THEME.Main
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.Parent = Container
+UIListLayout.Padding = UDim.new(0, 8)
+UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    Container.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y)
+end)
+
+ToggleButton.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+end)
+
+local function ResetPlayerData(playerName)
+    PlayerHistory[playerName] = { Joins = 0, Leaves = 0 }
+    PlayerTimers[playerName] = { Start = os.time(), Running = true }
+end
+
+local function CreateMonitorCard(targetPlayer)
+    local name = targetPlayer.Name
+    if MonitoredPlayers[name] then return end
+
+    ResetPlayerData(name)
+    
+    local Card = Instance.new("Frame")
+    Card.Name = name
+    Card.Size = UDim2.new(1, -5, 0, 90)
+    Card.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    Card.Parent = Container
+    
+    Instance.new("UICorner", Card).CornerRadius = UDim.new(0, 8)
+    local CardStroke = Instance.new("UIStroke")
+    CardStroke.Parent = Card
+    CardStroke.Color = Color3.fromRGB(60, 20, 20)
+    
+    local AvatarImage = Instance.new("ImageLabel")
+    AvatarImage.Parent = Card
+    AvatarImage.Size = UDim2.new(0, 48, 0, 48)
+    AvatarImage.Position = UDim2.new(0, 10, 0, 10)
+    AvatarImage.BackgroundColor3 = Color3.fromRGB(25, 15, 15)
+    AvatarImage.Image = "rbxassetid://139930568"
+    Instance.new("UICorner", AvatarImage).CornerRadius = UDim.new(0, 6)
+    GetAvatar(targetPlayer.UserId, AvatarImage)
+
+    local NameLabel = Instance.new("TextLabel")
+    NameLabel.Parent = Card
+    NameLabel.Size = UDim2.new(0, 240, 0, 18)
+    NameLabel.Position = UDim2.new(0, 68, 0, 12)
+    NameLabel.BackgroundTransparency = 1
+    NameLabel.Text = targetPlayer.DisplayName .. " (@" .. name .. ")"
+    NameLabel.TextColor3 = Color3.fromRGB(255, 240, 240)
+    NameLabel.Font = Enum.Font.GothamBold
+    NameLabel.TextSize = 12
+
+    local StatsLabel = Instance.new("TextLabel")
+    StatsLabel.Parent = Card
+    StatsLabel.Size = UDim2.new(0, 240, 0, 15)
+    StatsLabel.Position = UDim2.new(0, 68, 0, 32)
+    StatsLabel.BackgroundTransparency = 1
+    StatsLabel.Text = "🔢 الدخول: 0 | 🚪 الخروج: 0"
+    StatsLabel.TextColor3 = Color3.fromRGB(180, 140, 140)
+    StatsLabel.Font = Enum.Font.Gotham
+    StatsLabel.TextSize = 11
+
+    local TimerLabel = Instance.new("TextLabel")
+    TimerLabel.Parent = Card
+    TimerLabel.Size = UDim2.new(0, 200, 0, 15)
+    TimerLabel.Position = UDim2.new(0, 68, 0, 50)
+    TimerLabel.BackgroundTransparency = 1
+    TimerLabel.Text = "⏱️ الوقت: 00:00"
+    TimerLabel.TextColor3 = Color3.fromRGB(220, 170, 170)
+    TimerLabel.Font = Enum.Font.GothamBold
+    TimerLabel.TextSize = 11
+
+    local StatusLabel = Instance.new("TextLabel")
+    StatusLabel.Parent = Card
+    StatusLabel.Size = UDim2.new(0, 140, 0, 15)
+    StatusLabel.Position = UDim2.new(1, -150, 0, 22)
+    StatusLabel.BackgroundTransparency = 1
+    StatusLabel.Text = "🟢 متواجد الآن"
+    StatusLabel.TextColor3 = Color3.fromRGB(80, 220, 120)
+    StatusLabel.Font = Enum.Font.GothamBold
+    StatusLabel.TextSize = 11
+
+    local DeleteButton = Instance.new("TextButton")
+    DeleteButton.Parent = Card
+    DeleteButton.Size = UDim2.new(0, 55, 0, 24)
+    DeleteButton.Position = UDim2.new(1, -65, 0, 55)
+    DeleteButton.BackgroundColor3 = Color3.fromRGB(30, 10, 10)
+    DeleteButton.Text = "إزالة ❌"
+    DeleteButton.TextColor3 = Color3.fromRGB(255, 180, 180)
+    DeleteButton.Font = Enum.Font.GothamBold
+    DeleteButton.TextSize = 11
+    Instance.new("UICorner", DeleteButton).CornerRadius = UDim.new(0, 6)
+    local DelStroke = Instance.new("UIStroke")
+    DelStroke.Parent = DeleteButton
+    DelStroke.Color = THEME.Main
+
+    MonitoredPlayers[name] = {
+        Card = Card,
+        StatsLabel = StatsLabel,
+        TimerLabel = TimerLabel,
+        StatusLabel = StatusLabel
+    }
+
+    task.spawn(function()
+        while MonitoredPlayers[name] and PlayerTimers[name].Running do
+            local diff = os.time() - PlayerTimers[name].Start
+            local min = math.floor(diff / 60)
+            local sec = diff % 60
+            TimerLabel.Text = string.format("⏱️ الوقت: %02d:%02d", min, sec)
+            task.wait(1)
+        end
+    end)
+
+    DeleteButton.MouseButton1Click:Connect(function()
+        MonitoredPlayers[name] = nil
+        PlayerTimers[name] = nil
+        Card:Destroy()
+    end)
+end
+
+-- ✅ البحث المرن القديم (يبحث بجزء من الاسم أو اسم العرض ويضيفهم ويمسح خانة البحث)
+SearchBox.FocusLost:Connect(function()
+    local searchText = SearchBox.Text:lower():gsub("^%s*(.-)%s*$", "%1")
+    SearchBox.Text = ""
+    if #searchText < 2 then return end
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player.Name:lower():find(searchText) or player.DisplayName:lower():find(searchText) then
+            CreateMonitorCard(player)
+        end
+    end
+end)
+
+Players.PlayerAdded:Connect(function(player)
+    local name = player.Name
+    if MonitoredPlayers[name] then
+        PlayerHistory[name].Joins += 1
+        PlayerTimers[name].Start = os.time()
+        PlayerTimers[name].Running = true
+        MonitoredPlayers[name].StatsLabel.Text = "🔢 الدخول: "..PlayerHistory[name].Joins.." | 🚪 الخروج: "..PlayerHistory[name].Leaves
+        MonitoredPlayers[name].StatusLabel.Text = "🟢 متواجد الآن"
+        MonitoredPlayers[name].StatusLabel.TextColor3 = Color3.fromRGB(80, 220, 120)
+    end
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    local name = player.Name
+    if MonitoredPlayers[name] then
+        PlayerHistory[name].Leaves += 1
+        PlayerTimers[name].Running = false
+        MonitoredPlayers[name].StatsLabel.Text = "🔢 الدخول: "..PlayerHistory[name].Joins.." | 🚪 الخروج: "..PlayerHistory[name].Leaves
+        MonitoredPlayers[name].StatusLabel.Text = "🔴 غادر السيرفر"
+        MonitoredPlayers[name].StatusLabel.TextColor3 = Color3.fromRGB(220, 80, 100)
+    end
+end)
+
+print("✅ 🛡️ NHYQ LOG v2 • By shs09qp23 Ready ✅")
