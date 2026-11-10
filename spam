@@ -1,0 +1,496 @@
+-- ============================================================
+--           NHYQ COMMAND PANEL • ULTRA EDITION
+--        تصميم أحمر وأسود فاخر • تأثيرات نيون • عصري جداً
+--                    by NHYQ HUB • shs09qp23
+-- ============================================================
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local player = Players.LocalPlayer
+local CoreGui = game:GetService("CoreGui")
+
+local NHYQ_IMAGE_ID = "120778114905818"  -- ✅ الآيدي الجديد للصورة
+
+-- ====== متغيرات ======
+local isPanelVisible = false
+local isSpamming = false
+local spamActive = false
+local spamSpeed = 0.03
+
+-- ====== ألوان حمراء وسوداء متطورة ======
+local C = {
+    bg = Color3.fromRGB(8, 4, 4),
+    bg2 = Color3.fromRGB(20, 8, 8),
+    bg3 = Color3.fromRGB(35, 12, 12),
+    accent = Color3.fromRGB(229, 9, 20),      -- أحمر نتفلكس البارز
+    accent2 = Color3.fromRGB(255, 50, 50),    -- أحمر فاتح للتوهج
+    accent3 = Color3.fromRGB(150, 10, 15),
+    glow = Color3.fromRGB(255, 30, 30),
+    text = Color3.fromRGB(255, 240, 240),
+    sub = Color3.fromRGB(200, 160, 160),
+    green = Color3.fromRGB(0, 210, 100),
+    red = Color3.fromRGB(230, 40, 40),
+    orange = Color3.fromRGB(255, 140, 0),
+    white = Color3.new(1,1,1),
+    card = Color3.fromRGB(25, 10, 10),
+    border = Color3.fromRGB(180, 20, 20),
+    glass = Color3.fromRGB(255,255,255)
+}
+
+-- ====== دوال مساعدة ======
+local function createGlow(parent, color, trans, size)
+    local g = Instance.new("ImageLabel")
+    g.Size = UDim2.new(1, size or 18, 1, size or 18)
+    g.Position = UDim2.new(0, -(size or 18)/2, 0, -(size or 18)/2)
+    g.BackgroundTransparency = 1
+    g.Image = "rbxassetid://5554236805"
+    g.ImageColor3 = color or C.accent
+    g.ImageTransparency = trans or 0.55
+    g.ScaleType = Enum.ScaleType.Slice
+    g.SliceCenter = Rect.new(23, 23, 277, 277)
+    g.ZIndex = 0
+    g.Parent = parent
+    return g
+end
+
+local function createGlassFrame(parent, size, pos, color)
+    local f = Instance.new("Frame")
+    f.Size = size
+    f.Position = pos
+    f.BackgroundColor3 = color or C.glass
+    f.BackgroundTransparency = 0.92
+    f.BorderSizePixel = 0
+    f.ClipsDescendants = true
+    f.Parent = parent
+    Instance.new("UICorner", f).CornerRadius = UDim.new(0, 16)
+    local s = Instance.new("UIStroke", f)
+    s.Color = C.accent
+    s.Thickness = 1.2
+    s.Transparency = 0.55
+    return f
+end
+
+-- ====== وظائف التنفيذ ======
+local function sendHDAdminCommand(cmd)
+    if cmd == "" then return end
+    local hdAdmin = ReplicatedStorage:FindFirstChild("HDAdminHDClient")
+    if hdAdmin then
+        local signals = hdAdmin:FindFirstChild("Signals")
+        if signals then
+            local requestCmd = signals:FindFirstChild("RequestCommand")
+            if requestCmd then
+                pcall(function() requestCmd:InvokeServer(cmd) end)
+            end
+        end
+    end
+end
+
+-- ====== إنشاء الواجهة ======
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "NhyqCommandPanel"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.Parent = CoreGui
+
+-- ====== الزر الخارجي (دائري مع توهج أحمر وأسود) ======
+local ToggleButton = Instance.new("ImageButton")
+ToggleButton.Size = UDim2.new(0, 52, 0, 52)
+ToggleButton.Position = UDim2.new(0, 18, 0.5, -26)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(12, 4, 4)
+ToggleButton.BackgroundTransparency = 0.15
+ToggleButton.Image = "rbxassetid://" .. NHYQ_IMAGE_ID
+ToggleButton.ScaleType = Enum.ScaleType.Fit
+ToggleButton.BorderSizePixel = 0
+ToggleButton.Active = true
+ToggleButton.Draggable = true
+ToggleButton.Parent = ScreenGui
+Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(1, 0)
+
+-- طبقات التوهج الأحمر الداكن
+local redGlow1 = createGlow(ToggleButton, Color3.fromRGB(230, 20, 20), 0.40, 22)
+redGlow1.ZIndex = 0
+local redGlow2 = createGlow(ToggleButton, Color3.fromRGB(255, 50, 50), 0.20, 30)
+redGlow2.ZIndex = -1
+
+local ToggleStroke = Instance.new("UIStroke", ToggleButton)
+ToggleStroke.Color = Color3.fromRGB(220, 20, 20)
+ToggleStroke.Thickness = 2.8
+ToggleStroke.Transparency = 0.15
+
+-- النص أسفل الزر
+local ToggleText = Instance.new("TextLabel")
+ToggleText.Size = UDim2.new(1, 0, 0, 16)
+ToggleText.Position = UDim2.new(0, 0, 1, 4)
+ToggleText.BackgroundTransparency = 1
+ToggleText.Text = "أوامر"
+ToggleText.Font = Enum.Font.GothamBold
+ToggleText.TextSize = 11
+ToggleText.TextColor3 = Color3.fromRGB(230, 40, 40)
+ToggleText.TextStrokeTransparency = 0.3
+ToggleText.TextStrokeColor3 = Color3.new(0,0,0)
+ToggleText.Parent = ToggleButton
+
+-- نبض متحرك للزر
+task.spawn(function()
+    while ToggleButton and ToggleButton.Parent do
+        local pulse = (math.sin(tick() * 3) + 1) / 2
+        ToggleStroke.Transparency = 0.08 + pulse * 0.2
+        redGlow1.ImageTransparency = 0.35 + pulse * 0.25
+        redGlow2.ImageTransparency = 0.15 + pulse * 0.2
+        ToggleText.TextColor3 = Color3.fromRGB(220, 20, 20):lerp(Color3.fromRGB(255, 100, 100), pulse * 0.6)
+        ToggleButton.Size = UDim2.new(0, 52 + pulse * 4, 0, 52 + pulse * 4)
+        task.wait(0.03)
+    end
+end)
+
+ToggleButton.MouseEnter:Connect(function()
+    TweenService:Create(ToggleButton, TweenInfo.new(0.15), { Size = UDim2.new(0, 56, 0, 56), BackgroundTransparency = 0 }):Play()
+    TweenService:Create(ToggleStroke, TweenInfo.new(0.15), { Thickness = 3.5, Transparency = 0.05 }):Play()
+end)
+ToggleButton.MouseLeave:Connect(function()
+    TweenService:Create(ToggleButton, TweenInfo.new(0.15), { Size = UDim2.new(0, 52, 0, 52), BackgroundTransparency = 0.15 }):Play()
+    TweenService:Create(ToggleStroke, TweenInfo.new(0.15), { Thickness = 2.8, Transparency = 0.15 }):Play()
+end)
+
+-- ====== القائمة الرئيسية ======
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 300, 0, 290)
+MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+MainFrame.BackgroundColor3 = Color3.fromRGB(12, 6, 6)
+MainFrame.BackgroundTransparency = 0.08
+MainFrame.BorderSizePixel = 0
+MainFrame.Visible = false
+MainFrame.ClipsDescendants = true
+MainFrame.Parent = ScreenGui
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 20)
+
+-- تأثير الزجاج الخلفي الأحمر الداكن
+local glassBg = Instance.new("Frame")
+glassBg.Size = UDim2.new(1, 0, 1, 0)
+glassBg.BackgroundColor3 = Color3.fromRGB(80, 20, 20)
+glassBg.BackgroundTransparency = 0.92
+glassBg.BorderSizePixel = 0
+glassBg.Parent = MainFrame
+Instance.new("UICorner", glassBg).CornerRadius = UDim.new(0, 20)
+
+-- توهج خلفي قوي للوحة
+local mainGlow1 = createGlow(MainFrame, C.glow, 0.3, 30)
+mainGlow1.ZIndex = -1
+local mainGlow2 = createGlow(MainFrame, C.accent2, 0.2, 40)
+mainGlow2.ZIndex = -2
+
+local MainStroke = Instance.new("UIStroke", MainFrame)
+MainStroke.Color = C.accent
+MainStroke.Thickness = 1.8
+MainStroke.Transparency = 0.2
+
+-- ====== شريط العنوان ======
+local TitleBar = Instance.new("Frame")
+TitleBar.Size = UDim2.new(1, 0, 0, 48)
+TitleBar.BackgroundColor3 = Color3.fromRGB(22, 8, 8)
+TitleBar.BackgroundTransparency = 0.15
+TitleBar.Active = true
+TitleBar.Parent = MainFrame
+Instance.new("UICorner", TitleBar).CornerRadius = UDim.new(0, 20)
+
+local TitleIcon = Instance.new("ImageLabel")
+TitleIcon.Size = UDim2.new(0, 30, 0, 30)
+TitleIcon.Position = UDim2.new(0, 10, 0.5, -15)
+TitleIcon.BackgroundTransparency = 1
+TitleIcon.Image = "rbxassetid://" .. NHYQ_IMAGE_ID
+TitleIcon.ScaleType = Enum.ScaleType.Fit
+TitleIcon.Parent = TitleBar
+createGlow(TitleIcon, C.accent, 0.3, 16)
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Size = UDim2.new(1, -70, 0, 20)
+TitleLabel.Position = UDim2.new(0, 48, 0, 6)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "لوحة أوامر NHYQ"
+TitleLabel.Font = Enum.Font.GothamBlack
+TitleLabel.TextSize = 15
+TitleLabel.TextColor3 = C.text
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.Parent = TitleBar
+
+local SubLabel = Instance.new("TextLabel")
+SubLabel.Size = UDim2.new(1, -70, 0, 14)
+SubLabel.Position = UDim2.new(0, 48, 0, 27)
+SubLabel.BackgroundTransparency = 1
+SubLabel.Text = "by NHYQ HUB • shs09qp23"
+SubLabel.Font = Enum.Font.GothamBold
+SubLabel.TextSize = 9
+SubLabel.TextColor3 = C.accent2
+SubLabel.TextXAlignment = Enum.TextXAlignment.Left
+SubLabel.Parent = TitleBar
+
+-- زر الإغلاق
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0, 28, 0, 28)
+CloseBtn.Position = UDim2.new(1, -36, 0.5, -14)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(180, 25, 25)
+CloseBtn.Text = "✕"
+CloseBtn.TextColor3 = C.white
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.TextSize = 15
+CloseBtn.Parent = TitleBar
+Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 8)
+
+CloseBtn.MouseEnter:Connect(function()
+    CloseBtn.BackgroundColor3 = Color3.fromRGB(230, 35, 35)
+end)
+CloseBtn.MouseLeave:Connect(function()
+    CloseBtn.BackgroundColor3 = Color3.fromRGB(180, 25, 25)
+end)
+
+-- ====== محتوى القائمة ======
+local Content = Instance.new("Frame")
+Content.Size = UDim2.new(1, -16, 1, -56)
+Content.Position = UDim2.new(0, 8, 0, 54)
+Content.BackgroundTransparency = 1
+Content.Parent = MainFrame
+
+-- صندوق الإدخال للأوامر
+local InputFrame = createGlassFrame(Content, UDim2.new(1, 0, 0, 38), UDim2.new(0, 0, 0, 0), C.glass)
+InputFrame.BackgroundTransparency = 0.88
+
+local CommandBox = Instance.new("TextBox")
+CommandBox.Size = UDim2.new(1, -14, 1, 0)
+CommandBox.Position = UDim2.new(0, 7, 0, 0)
+CommandBox.BackgroundTransparency = 1
+CommandBox.Text = ""
+CommandBox.PlaceholderText = "اكتب أمر HDAdmin هنا..."
+CommandBox.PlaceholderColor3 = C.sub
+CommandBox.TextColor3 = C.text
+CommandBox.Font = Enum.Font.GothamBold
+CommandBox.TextSize = 12
+CommandBox.ClearTextOnFocus = false
+CommandBox.Parent = InputFrame
+
+-- خانة التجهيز السريع للاعب
+local PrepFrame = Instance.new("Frame")
+PrepFrame.Size = UDim2.new(1, 0, 0, 28)
+PrepFrame.Position = UDim2.new(0, 0, 0, 44)
+PrepFrame.BackgroundTransparency = 1
+PrepFrame.Parent = Content
+
+local PlayerNameBox = Instance.new("TextBox")
+PlayerNameBox.Size = UDim2.new(0, 120, 1, 0)
+PlayerNameBox.BackgroundColor3 = C.bg2
+PlayerNameBox.BackgroundTransparency = 0.3
+PlayerNameBox.Text = ""
+PlayerNameBox.PlaceholderText = "اسم اللاعب المستهدف"
+PlayerNameBox.PlaceholderColor3 = C.sub
+PlayerNameBox.TextColor3 = C.text
+PlayerNameBox.Font = Enum.Font.GothamBold
+PlayerNameBox.TextSize = 10
+PlayerNameBox.ClearTextOnFocus = false
+PlayerNameBox.Parent = PrepFrame
+Instance.new("UICorner", PlayerNameBox).CornerRadius = UDim.new(0, 8)
+
+local PrepButton = Instance.new("TextButton")
+PrepButton.Size = UDim2.new(0, 55, 1, 0)
+PrepButton.Position = UDim2.new(0, 126, 0, 0)
+PrepButton.BackgroundColor3 = C.accent
+PrepButton.Text = "تجهيز"
+PrepButton.TextColor3 = C.white
+PrepButton.Font = Enum.Font.GothamBlack
+PrepButton.TextSize = 10
+PrepButton.Parent = PrepFrame
+Instance.new("UICorner", PrepButton).CornerRadius = UDim.new(0, 8)
+createGlow(PrepButton, C.accent, 0.35, 10)
+
+local preparedCommand = "/explode na /re na /res na /explode na /re na /res na /clogs na /logs na /nv na /re na /res na /kill na /logs na /clogs na /re na /res na /explode na /res na /re na /logs na /clogs na /re na /res na /re na /res na /re na /res na /re na "
+
+PrepButton.MouseButton1Click:Connect(function()
+    local pName = PlayerNameBox.Text
+    if pName == "" then
+        CommandBox.Text = preparedCommand
+    else
+        CommandBox.Text = preparedCommand:gsub("na", pName)
+    end
+end)
+
+-- أزرار تحكم السرعة
+local SpeedFrame = Instance.new("Frame")
+SpeedFrame.Size = UDim2.new(1, 0, 0, 22)
+SpeedFrame.Position = UDim2.new(0, 0, 0, 76)
+SpeedFrame.BackgroundTransparency = 1
+SpeedFrame.Parent = Content
+
+local speeds = {0.01, 0.03, 0.05, 0.1, 0.2}
+local speedBtns = {}
+local xPos = 0
+
+for _, sp in ipairs(speeds) do
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 30, 0, 20)
+    btn.Position = UDim2.new(0, xPos, 0.5, -10)
+    btn.BackgroundColor3 = (sp == spamSpeed) and C.accent or C.bg2
+    btn.Text = string.format("%.2f", sp)
+    btn.TextColor3 = C.white
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 8
+    btn.Parent = SpeedFrame
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
+    speedBtns[sp] = btn
+
+    btn.MouseButton1Click:Connect(function()
+        spamSpeed = sp
+        for v, b in pairs(speedBtns) do
+            b.BackgroundColor3 = (v == sp) and C.accent or C.bg2
+        end
+    end)
+
+    xPos = xPos + 34
+end
+
+-- أزرار الأكشن الرئيسية (إرسال، سبام، إيقاف)
+local BtnFrame = Instance.new("Frame")
+BtnFrame.Size = UDim2.new(1, 0, 0, 105)
+BtnFrame.Position = UDim2.new(0, 0, 0, 104)
+BtnFrame.BackgroundTransparency = 1
+BtnFrame.Parent = Content
+
+local function createActionButton(parent, yPos, color, text, glowColor)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, 0, 0, 30)
+    btn.Position = UDim2.new(0, 0, 0, yPos)
+    btn.BackgroundColor3 = color
+    btn.Text = text
+    btn.TextColor3 = C.white
+    btn.Font = Enum.Font.GothamBlack
+    btn.TextSize = 13
+    btn.Parent = parent
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+    createGlow(btn, glowColor or color, 0.4, 12)
+
+    btn.MouseEnter:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.1), { Size = UDim2.new(1, 0, 0, 32) }):Play()
+    end)
+    btn.MouseLeave:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.1), { Size = UDim2.new(1, 0, 0, 30) }):Play()
+    end)
+    return btn
+end
+
+local SendButton = createActionButton(BtnFrame, 0, C.green, "▶ تنفيذ الأمر", C.green)
+local SpamButton = createActionButton(BtnFrame, 36, C.red, "♻ تكرار مستمر", C.red)
+local StopButton = createActionButton(BtnFrame, 72, C.orange, "⏹ إيقاف التكرار", C.orange)
+StopButton.Visible = false
+
+-- ====== الأحداث والوظائف ======
+SendButton.MouseButton1Click:Connect(function()
+    local cmd = CommandBox.Text
+    if cmd ~= "" then sendHDAdminCommand(cmd) end
+end)
+
+local spamConnection = nil
+
+local function startSpam()
+    if isSpamming then return end
+    local cmd = CommandBox.Text
+    if cmd == "" then return end
+    isSpamming = true
+    spamActive = true
+    SpamButton.Text = "⏳ جاري التكرار..."
+    SpamButton.BackgroundColor3 = C.orange
+    StopButton.Visible = true
+
+    spamConnection = RunService.Heartbeat:Connect(function()
+        if spamActive then
+            sendHDAdminCommand(cmd)
+        end
+    end)
+end
+
+local function stopSpam()
+    if not isSpamming then return end
+    isSpamming = false
+    spamActive = false
+    SpamButton.Text = "♻ تكرار مستمر"
+    SpamButton.BackgroundColor3 = C.red
+    StopButton.Visible = false
+    if spamConnection then
+        spamConnection:Disconnect()
+        spamConnection = nil
+    end
+end
+
+SpamButton.MouseButton1Click:Connect(startSpam)
+StopButton.MouseButton1Click:Connect(stopSpam)
+
+CommandBox.FocusLost:Connect(function(enterPressed)
+    if enterPressed and CommandBox.Text ~= "" then
+        sendHDAdminCommand(CommandBox.Text)
+    end
+end)
+
+-- ====== أنيميشن الفتح والإغلاق ======
+local function OpenAnimation()
+    MainFrame.Visible = true
+    MainFrame.Size = UDim2.new(0, 0, 0, 0)
+    MainFrame.BackgroundTransparency = 1
+    TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, 300, 0, 290),
+        BackgroundTransparency = 0.08
+    }):Play()
+end
+
+local function CloseAnimation()
+    TweenService:Create(MainFrame, TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+        Size = UDim2.new(0, 0, 0, 0),
+        BackgroundTransparency = 1
+    }):Play()
+    task.wait(0.22)
+    MainFrame.Visible = false
+    MainFrame.Size = UDim2.new(0, 300, 0, 290)
+    MainFrame.BackgroundTransparency = 0.08
+end
+
+CloseBtn.MouseButton1Click:Connect(function()
+    if isPanelVisible then CloseAnimation() end
+    isPanelVisible = false
+    ToggleText.Text = "أوامر"
+end)
+
+-- فتح وإغلاق الواحدة الرئيسية
+ToggleButton.MouseButton1Click:Connect(function()
+    isPanelVisible = not isPanelVisible
+    if isPanelVisible then
+        OpenAnimation()
+        ToggleText.Text = "إغلاق"
+    else
+        CloseAnimation()
+        ToggleText.Text = "أوامر"
+    end
+end)
+
+-- ====== دالة السحب والسحب السلس للوحة ======
+local dragData = {active = false, start = nil, pos = nil}
+TitleBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragData.active = true
+        dragData.start = input.Position
+        dragData.pos = MainFrame.Position
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if dragData.active and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragData.start
+        MainFrame.Position = UDim2.new(dragData.pos.X.Scale, dragData.pos.X.Offset + delta.X, dragData.pos.Y.Scale, dragData.pos.Y.Offset + delta.Y)
+    end
+end)
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragData.active = false
+    end
+end)
+
+print("✅ NHYQ COMMAND PANEL • ULTRA EDITION LOADED SUCCESSFULLY")
+print("🔥 تصميم أحمر وأسود فاخر • حقوقك محفوظة بالكامل")
+print("👤 by NHYQ HUB • shs09qp23")
