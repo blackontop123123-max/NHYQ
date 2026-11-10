@@ -1,0 +1,1095 @@
+--[[
+	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
+]]
+-- ========================================================================
+--              💥 VEX HUB • ULTIMATE EDITION 💥
+--    نظام تسجيل اسم + جنس (مرة واحدة فقط)، ثم كلمة مرور بنفسجية فخمة
+--    طرد فوري عند خطأ كلمة المرور، تصميم عصري
+--    + عداد FPS صغير في اليمين (بدون إطار بنفسجي)
+-- ========================================================================
+
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local HttpService = game:GetService("HttpService")
+local SoundService = game:GetService("SoundService")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+-- ================= كلمة المرور =================
+local PASSWORD = "NHYQ"
+
+-- ================= الألوان (بنفسجية فاخرة) =================
+local Colors = {
+    Background = Color3.fromRGB(10, 6, 20),
+    Panel = Color3.fromRGB(20, 14, 36),
+    Accent = Color3.fromRGB(170, 100, 255),
+    Accent2 = Color3.fromRGB(120, 50, 220),
+    AccentGlow = Color3.fromRGB(200, 150, 255),
+    Text = Color3.fromRGB(245, 240, 255),
+    TextDim = Color3.fromRGB(190, 180, 215),
+    Card = Color3.fromRGB(28, 20, 44),
+    CardHover = Color3.fromRGB(55, 40, 85),
+    Border = Color3.fromRGB(90, 60, 160),
+    Success = Color3.fromRGB(0, 220, 130),
+    Error = Color3.fromRGB(255, 60, 80),
+    SearchBg = Color3.fromRGB(16, 10, 30),
+    Shadow = Color3.fromRGB(0, 0, 0),
+    PurpleLight = Color3.fromRGB(200, 150, 255),
+    PurpleDark = Color3.fromRGB(80, 30, 160)
+}
+
+-- ================= قائمة السكربتات =================
+local ScriptList = {
+    {"نسخ تلقائي", "SPAM COPY", "https://pastefy.app/QuNRhHM2/raw"},
+    {"سبام اوامر الأدمن", "https://pastefy.app/mpcYiTJf/raw"},
+    {"حمايه من النسخ", "ANTI COPY", "https://pastefy.app/s49lCaZM/raw"},
+    {"DEDSEC", "DEDSEC Script", "loadstring(game:HttpGet("https://raw.githubusercontent.com/Fsclor/Wa7eed/refs/heads/main/DEDSEC%20Script"))()"},
+    {"لوق دخول وخروج", "JOIN/LEAVE LOG", "https://pastebin.com/raw/WZSMKrPh"},
+    {"سبام شات الماب", "MAP CHAT SPAM", "https://pastebin.com/raw/mpFrdRSh"},
+    {"تخريب لوحات", "CRASH PANELS", "https://pastebin.com/raw/KLTrYEKj"},
+    {"تخفيف لاق", "REDUCE LAG", "https://pastebin.com/raw/TUHZi2GM"},
+    {"مضاد VR7", "ANTI VR7", "https://pastebin.com/raw/Xap5PfES"},
+    {"رقصات", "AFEM MAX", "https://rawscripts.net/raw/Universal-Script-AFEM-Max-Open-Alpha-50210"},
+    {"سكاي بوكس", "SKYBOX", "https://pastebin.com/raw/3RTk1imF"},
+    {"بانق 1", "BANG 1", "https://pastebin.com/raw/v1xh9HYc"}
+}
+
+-- ================= أدوات التخزين =================
+local function SaveData(key, value)
+    pcall(function()
+        if writefile then
+            local json = HttpService:JSONEncode(value)
+            writefile("VEXHUB_ULTIMATE_" .. LocalPlayer.UserId .. "_" .. key .. ".txt", json)
+        end
+    end)
+end
+
+local function LoadData(key, defaultValue)
+    local success, result = pcall(function()
+        if isfile and readfile then
+            local fileName = "VEXHUB_ULTIMATE_" .. LocalPlayer.UserId .. "_" .. key .. ".txt"
+            if isfile(fileName) then
+                local data = readfile(fileName)
+                if data ~= "" then
+                    return HttpService:JSONDecode(data)
+                end
+            end
+        end
+        return nil
+    end)
+    if success and result ~= nil then
+        return result
+    end
+    return defaultValue
+end
+
+-- ================= أدوات مساعدة =================
+local function PlaySound(id)
+    pcall(function()
+        local s = Instance.new("Sound")
+        s.SoundId = "rbxassetid://" .. id
+        s.Volume = 0.2
+        s.Parent = SoundService
+        s:Play()
+        s.Ended:Once(function() s:Destroy() end)
+    end)
+end
+
+local function ExecuteScript(url)
+    local success = pcall(function()
+        loadstring(game:HttpGet(url))()
+    end)
+    return success
+end
+
+local function CreateUICorner(obj, radius)
+    local corner = Instance.new("UICorner", obj)
+    corner.CornerRadius = UDim.new(0, radius)
+    return corner
+end
+
+local function CreateUIStroke(obj, color, thickness, transparency)
+    local stroke = Instance.new("UIStroke", obj)
+    stroke.Color = color
+    stroke.Thickness = thickness or 1.5
+    stroke.Transparency = transparency or 0
+    return stroke
+end
+
+local function CreateShadow(obj, size, transparency)
+    local shadow = Instance.new("ImageLabel", obj)
+    shadow.Size = UDim2.new(1, size*2, 1, size*2)
+    shadow.Position = UDim2.new(-size/obj.AbsoluteSize.X, 0, -size/obj.AbsoluteSize.Y, 0)
+    shadow.BackgroundTransparency = 1
+    shadow.Image = "rbxassetid://1316045739"
+    shadow.ImageColor3 = Colors.Shadow
+    shadow.ImageTransparency = transparency or 0.6
+    shadow.ZIndex = -1
+    return shadow
+end
+
+-- =============================================================
+--              عداد FPS صغير في اليمين
+-- =============================================================
+local function CreateFPSDisplay()
+    -- ننظف أي عدادات قديمة
+    for _, child in ipairs(PlayerGui:GetChildren()) do
+        if child.Name == "VEX_FPS_COUNTER" then
+            child:Destroy()
+        end
+    end
+
+    local gui = Instance.new("ScreenGui", PlayerGui)
+    gui.Name = "VEX_FPS_COUNTER"
+    gui.ResetOnSpawn = false
+    gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    gui.DisplayOrder = 9999
+
+    -- الإطار الصغير
+    local frame = Instance.new("Frame", gui)
+    frame.Size = UDim2.new(0, 70, 0, 24)
+    frame.Position = UDim2.new(1, -80, 0, 8)  -- في الزاوية اليمنى العليا
+    frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    frame.BackgroundTransparency = 0.4
+    frame.ZIndex = 1
+    CreateUICorner(frame, 6)
+    CreateUIStroke(frame, Colors.Accent, 1, 0.3)
+
+    -- نص FPS
+    local label = Instance.new("TextLabel", frame)
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.BackgroundTransparency = 1
+    label.Text = "FPS: 0"
+    label.Font = Enum.Font.GothamBold
+    label.TextSize = 12
+    label.TextColor3 = Colors.Accent
+    label.TextXAlignment = "Center"
+    label.TextYAlignment = "Center"
+    label.ZIndex = 2
+
+    -- تحديث FPS كل 0.3 ثانية
+    local lastUpdate = 0
+    local fps = 0
+    local frameCount = 0
+
+    RunService.Heartbeat:Connect(function(deltaTime)
+        frameCount = frameCount + 1
+        lastUpdate = lastUpdate + deltaTime
+        if lastUpdate >= 0.5 then
+            fps = math.floor(frameCount / lastUpdate)
+            frameCount = 0
+            lastUpdate = 0
+            label.Text = "FPS: " .. fps
+        end
+    end)
+
+    -- تأثير نبض بسيط
+    task.spawn(function()
+        while gui and gui.Parent do
+            local pulse = (math.sin(tick() * 2) + 1) / 2
+            local trans = 0.25 + pulse * 0.2
+            frame.BackgroundTransparency = trans
+            label.TextColor3 = Colors.Accent:lerp(Colors.AccentGlow, pulse * 0.3)
+            task.wait(0.05)
+        end
+    end)
+
+    -- جعل الإطار قابلاً للسحب (اختياري)
+    local isDragging = false
+    local dragStartPos, dragStartMouse
+
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            isDragging = true
+            dragStartPos = frame.Position
+            dragStartMouse = input.Position
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if isDragging and (input.UserInputType == Enum.UserInputType.MouseMovement) then
+            local delta = input.Position - dragStartMouse
+            frame.Position = UDim2.new(
+                dragStartPos.X.Scale,
+                dragStartPos.X.Offset + delta.X,
+                dragStartPos.Y.Scale,
+                dragStartPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            isDragging = false
+        end
+    end)
+
+    return gui
+end
+
+-- =============================================================
+--              واجهة طلب الاسم والجنس (تظهر مرة واحدة فقط)
+-- =============================================================
+local function ShowProfileSetup(onComplete)
+    local gui = Instance.new("ScreenGui", PlayerGui)
+    gui.Name = "VEX_PROFILE_SETUP"
+    gui.ResetOnSpawn = false
+    gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    gui.DisplayOrder = 9999
+
+    -- الخلفية
+    local backdrop = Instance.new("Frame", gui)
+    backdrop.Size = UDim2.new(1, 0, 1, 0)
+    backdrop.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    backdrop.BackgroundTransparency = 0.7
+
+    -- الإطار الرئيسي
+    local frame = Instance.new("Frame", gui)
+    frame.Size = UDim2.new(0, 420, 0, 320)
+    frame.Position = UDim2.new(0.5, -210, 0.5, -160)
+    frame.BackgroundColor3 = Colors.Background
+    frame.ClipsDescendants = true
+    frame.ZIndex = 1
+    CreateUICorner(frame, 30)
+    CreateUIStroke(frame, Colors.Accent, 2, 0.1)
+    CreateShadow(frame, 40, 0.5)
+
+    -- شريط علوي بنفسجي
+    local topBar = Instance.new("Frame", frame)
+    topBar.Size = UDim2.new(1, 0, 0, 70)
+    topBar.BackgroundColor3 = Colors.Accent2
+    topBar.BackgroundTransparency = 0.25
+    CreateUICorner(topBar, 30, 0, 0)
+
+    -- أيقونة ملف شخصي
+    local icon = Instance.new("ImageLabel", frame)
+    icon.Size = UDim2.new(0, 50, 0, 50)
+    icon.Position = UDim2.new(0.5, -25, 0, 10)
+    icon.Image = "rbxassetid://12278724002"  -- أيقونة مستخدم
+    icon.ImageColor3 = Colors.Accent
+    icon.BackgroundTransparency = 1
+    icon.ZIndex = 2
+
+    -- عنوان
+    local title = Instance.new("TextLabel", frame)
+    title.Size = UDim2.new(1, -40, 0, 30)
+    title.Position = UDim2.new(0, 20, 0, 70)
+    title.Text = "إنشاء الملف الشخصي"
+    title.Font = Enum.Font.GothamBlack
+    title.TextSize = 22
+    title.TextColor3 = Colors.Accent
+    title.BackgroundTransparency = 1
+    title.TextXAlignment = "Center"
+
+    -- حقل الاسم
+    local nameFrame = Instance.new("Frame", frame)
+    nameFrame.Size = UDim2.new(1, -60, 0, 44)
+    nameFrame.Position = UDim2.new(0, 30, 0, 115)
+    nameFrame.BackgroundColor3 = Colors.SearchBg
+    CreateUICorner(nameFrame, 12)
+    CreateUIStroke(nameFrame, Colors.Accent2, 2)
+
+    local nameBox = Instance.new("TextBox", nameFrame)
+    nameBox.Size = UDim2.new(1, -20, 1, 0)
+    nameBox.Position = UDim2.new(0, 10, 0, 0)
+    nameBox.PlaceholderText = "أدخل اسمك هنا..."
+    nameBox.PlaceholderColor3 = Colors.TextDim
+    nameBox.Text = ""
+    nameBox.TextColor3 = Colors.Text
+    nameBox.Font = Enum.Font.GothamMedium
+    nameBox.TextSize = 16
+    nameBox.TextXAlignment = "Center"
+    nameBox.BackgroundTransparency = 1
+    nameBox.ClearTextOnFocus = false
+
+    -- اختيار الجنس
+    local genderLabel = Instance.new("TextLabel", frame)
+    genderLabel.Size = UDim2.new(1, -40, 0, 22)
+    genderLabel.Position = UDim2.new(0, 20, 0, 175)
+    genderLabel.Text = "اختر جنسك:"
+    genderLabel.Font = Enum.Font.GothamBold
+    genderLabel.TextSize = 15
+    genderLabel.TextColor3 = Colors.Text
+    genderLabel.BackgroundTransparency = 1
+    genderLabel.TextXAlignment = "Center"
+
+    local genderFrame = Instance.new("Frame", frame)
+    genderFrame.Size = UDim2.new(1, -60, 0, 44)
+    genderFrame.Position = UDim2.new(0, 30, 0, 200)
+    genderFrame.BackgroundTransparency = 1
+
+    -- زر ولد
+    local maleBtn = Instance.new("TextButton", genderFrame)
+    maleBtn.Size = UDim2.new(0.45, 0, 1, 0)
+    maleBtn.Position = UDim2.new(0, 0, 0, 0)
+    maleBtn.Text = "ولد"
+    maleBtn.Font = Enum.Font.GothamBold
+    maleBtn.TextSize = 16
+    maleBtn.TextColor3 = Colors.Text
+    maleBtn.BackgroundColor3 = Colors.Accent2
+    CreateUICorner(maleBtn, 10)
+    maleBtn.AutoButtonColor = false
+
+    -- زر بنت
+    local femaleBtn = Instance.new("TextButton", genderFrame)
+    femaleBtn.Size = UDim2.new(0.45, 0, 1, 0)
+    femaleBtn.Position = UDim2.new(0.55, 0, 0, 0)
+    femaleBtn.Text = "بنت"
+    femaleBtn.Font = Enum.Font.GothamBold
+    femaleBtn.TextSize = 16
+    femaleBtn.TextColor3 = Colors.Text
+    femaleBtn.BackgroundColor3 = Colors.Accent2
+    CreateUICorner(femaleBtn, 10)
+    femaleBtn.AutoButtonColor = false
+
+    local selectedGender = nil
+
+    maleBtn.MouseButton1Click:Connect(function()
+        selectedGender = "ولد"
+        maleBtn.BackgroundColor3 = Colors.Accent
+        femaleBtn.BackgroundColor3 = Colors.Accent2
+        PlaySound(12221967)
+    end)
+
+    femaleBtn.MouseButton1Click:Connect(function()
+        selectedGender = "بنت"
+        femaleBtn.BackgroundColor3 = Colors.Accent
+        maleBtn.BackgroundColor3 = Colors.Accent2
+        PlaySound(12221967)
+    end)
+
+    maleBtn.MouseEnter:Connect(function()
+        if selectedGender ~= "ولد" then
+            maleBtn.BackgroundColor3 = Colors.AccentGlow
+        end
+    end)
+    maleBtn.MouseLeave:Connect(function()
+        if selectedGender ~= "ولد" then
+            maleBtn.BackgroundColor3 = Colors.Accent2
+        end
+    end)
+
+    femaleBtn.MouseEnter:Connect(function()
+        if selectedGender ~= "بنت" then
+            femaleBtn.BackgroundColor3 = Colors.AccentGlow
+        end
+    end)
+    femaleBtn.MouseLeave:Connect(function()
+        if selectedGender ~= "بنت" then
+            femaleBtn.BackgroundColor3 = Colors.Accent2
+        end
+    end)
+
+    -- زر المتابعة
+    local continueBtn = Instance.new("TextButton", frame)
+    continueBtn.Size = UDim2.new(0, 200, 0, 44)
+    continueBtn.Position = UDim2.new(0.5, -100, 0, 260)
+    continueBtn.Text = "متابعة"
+    continueBtn.Font = Enum.Font.GothamBold
+    continueBtn.TextSize = 16
+    continueBtn.TextColor3 = Colors.Text
+    continueBtn.BackgroundColor3 = Colors.Accent2
+    CreateUICorner(continueBtn, 12)
+    continueBtn.AutoButtonColor = false
+
+    local btnGlow = Instance.new("ImageLabel", continueBtn)
+    btnGlow.Size = UDim2.new(1.4, 0, 1.4, 0)
+    btnGlow.Position = UDim2.new(-0.2, 0, -0.2, 0)
+    btnGlow.BackgroundTransparency = 1
+    btnGlow.Image = "rbxassetid://5554236805"
+    btnGlow.ImageColor3 = Colors.Accent
+    btnGlow.ImageTransparency = 0.85
+    btnGlow.ScaleType = Enum.ScaleType.Slice
+    btnGlow.SliceCenter = Rect.new(24, 24, 276, 276)
+    btnGlow.ZIndex = -1
+
+    continueBtn.MouseEnter:Connect(function()
+        TweenService:Create(continueBtn, TweenInfo.new(0.15), {BackgroundColor3 = Colors.Accent}):Play()
+        TweenService:Create(btnGlow, TweenInfo.new(0.15), {ImageTransparency = 0.4}):Play()
+    end)
+    continueBtn.MouseLeave:Connect(function()
+        TweenService:Create(continueBtn, TweenInfo.new(0.15), {BackgroundColor3 = Colors.Accent2}):Play()
+        TweenService:Create(btnGlow, TweenInfo.new(0.15), {ImageTransparency = 0.85}):Play()
+    end)
+
+    continueBtn.MouseButton1Click:Connect(function()
+        local name = nameBox.Text:gsub("^%s*(.-)%s*$", "%1")  -- trim
+        if name == "" then
+            nameBox.PlaceholderText = "❌ يرجى إدخال اسمك!"
+            nameBox.PlaceholderColor3 = Colors.Error
+            return
+        end
+        if not selectedGender then
+            genderLabel.Text = "❌ يرجى اختيار جنسك!"
+            genderLabel.TextColor3 = Colors.Error
+            return
+        end
+
+        -- حفظ البيانات
+        local profile = {
+            name = name,
+            gender = selectedGender
+        }
+        SaveData("UserProfile", profile)
+        PlaySound(12221967)
+
+        -- إخفاء هذه الواجهة
+        TweenService:Create(frame, TweenInfo.new(0.3), {Size = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 1}):Play()
+        TweenService:Create(backdrop, TweenInfo.new(0.3), {BackgroundTransparency = 1}):Play()
+        task.delay(0.4, function()
+            gui:Destroy()
+            if onComplete then onComplete() end
+        end)
+    end)
+
+    -- تأثير ظهور
+    frame.Size = UDim2.new(0, 0, 0, 0)
+    frame.BackgroundTransparency = 1
+    TweenService:Create(frame, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, 420, 0, 320),
+        BackgroundTransparency = 0
+    }):Play()
+end
+
+-- =============================================================
+--              واجهة كلمة المرور (بنفسجية + طرد فوري)
+-- =============================================================
+local function ShowPasswordPrompt(onSuccess)
+    local gui = Instance.new("ScreenGui", PlayerGui)
+    gui.Name = "VEX_PASSWORD_PROMPT"
+    gui.ResetOnSpawn = false
+    gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    gui.DisplayOrder = 9999
+
+    local backdrop = Instance.new("Frame", gui)
+    backdrop.Size = UDim2.new(1, 0, 1, 0)
+    backdrop.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    backdrop.BackgroundTransparency = 0.7
+    backdrop.ZIndex = 0
+
+    local frame = Instance.new("Frame", gui)
+    frame.Size = UDim2.new(0, 440, 0, 300)
+    frame.Position = UDim2.new(0.5, -220, 0.5, -150)
+    frame.BackgroundColor3 = Colors.Background
+    frame.ClipsDescendants = true
+    frame.ZIndex = 1
+    CreateUICorner(frame, 30)
+    CreateUIStroke(frame, Colors.Accent, 2.5, 0.1)
+    CreateShadow(frame, 40, 0.5)
+
+    local topBar = Instance.new("Frame", frame)
+    topBar.Size = UDim2.new(1, 0, 0, 70)
+    topBar.BackgroundColor3 = Colors.Accent2
+    topBar.BackgroundTransparency = 0.25
+    CreateUICorner(topBar, 30, 0, 0)
+
+    local lockIcon = Instance.new("ImageLabel", frame)
+    lockIcon.Size = UDim2.new(0, 50, 0, 50)
+    lockIcon.Position = UDim2.new(0.5, -25, 0, 10)
+    lockIcon.Image = "rbxassetid://12278724002"
+    lockIcon.ImageColor3 = Colors.Accent
+    lockIcon.BackgroundTransparency = 1
+    lockIcon.ZIndex = 2
+
+    local iconGlow = Instance.new("ImageLabel", frame)
+    iconGlow.Size = UDim2.new(0, 80, 0, 80)
+    iconGlow.Position = UDim2.new(0.5, -40, 0, -5)
+    iconGlow.BackgroundTransparency = 1
+    iconGlow.Image = "rbxassetid://5554236805"
+    iconGlow.ImageColor3 = Colors.Accent
+    iconGlow.ImageTransparency = 0.7
+    iconGlow.ScaleType = Enum.ScaleType.Slice
+    iconGlow.SliceCenter = Rect.new(24, 24, 276, 276)
+    iconGlow.ZIndex = 0
+
+    local title = Instance.new("TextLabel", frame)
+    title.Size = UDim2.new(1, -40, 0, 34)
+    title.Position = UDim2.new(0, 20, 0, 70)
+    title.Text = "🔐 ACCESS REQUIRED"
+    title.Font = Enum.Font.GothamBlack
+    title.TextSize = 22
+    title.TextColor3 = Colors.Accent
+    title.BackgroundTransparency = 1
+    title.TextXAlignment = "Center"
+
+    local subTitle = Instance.new("TextLabel", frame)
+    subTitle.Size = UDim2.new(1, -40, 0, 22)
+    subTitle.Position = UDim2.new(0, 20, 0, 104)
+    subTitle.Text = "أدخل كلمة المرور للدخول إلى VEX HUB"
+    subTitle.Font = Enum.Font.GothamMedium
+    subTitle.TextSize = 14
+    subTitle.TextColor3 = Colors.TextDim
+    subTitle.BackgroundTransparency = 1
+    subTitle.TextXAlignment = "Center"
+
+    local inputFrame = Instance.new("Frame", frame)
+    inputFrame.Size = UDim2.new(1, -60, 0, 52)
+    inputFrame.Position = UDim2.new(0, 30, 0, 140)
+    inputFrame.BackgroundColor3 = Colors.SearchBg
+    CreateUICorner(inputFrame, 14)
+    CreateUIStroke(inputFrame, Colors.Accent2, 2)
+
+    local input = Instance.new("TextBox", inputFrame)
+    input.Size = UDim2.new(1, -20, 1, 0)
+    input.Position = UDim2.new(0, 10, 0, 0)
+    input.PlaceholderText = "••••••••••••"
+    input.PlaceholderColor3 = Colors.TextDim
+    input.Text = ""
+    input.TextColor3 = Colors.Text
+    input.Font = Enum.Font.GothamBold
+    input.TextSize = 18
+    input.TextXAlignment = "Center"
+    input.BackgroundTransparency = 1
+    input.ClearTextOnFocus = false
+
+    local confirmBtn = Instance.new("TextButton", frame)
+    confirmBtn.Size = UDim2.new(0, 200, 0, 48)
+    confirmBtn.Position = UDim2.new(0.5, -100, 0, 210)
+    confirmBtn.Text = "دخول"
+    confirmBtn.Font = Enum.Font.GothamBold
+    confirmBtn.TextSize = 17
+    confirmBtn.TextColor3 = Colors.Text
+    confirmBtn.BackgroundColor3 = Colors.Accent2
+    CreateUICorner(confirmBtn, 14)
+    confirmBtn.AutoButtonColor = false
+
+    local btnGlow = Instance.new("ImageLabel", confirmBtn)
+    btnGlow.Size = UDim2.new(1.4, 0, 1.4, 0)
+    btnGlow.Position = UDim2.new(-0.2, 0, -0.2, 0)
+    btnGlow.BackgroundTransparency = 1
+    btnGlow.Image = "rbxassetid://5554236805"
+    btnGlow.ImageColor3 = Colors.Accent
+    btnGlow.ImageTransparency = 0.85
+    btnGlow.ScaleType = Enum.ScaleType.Slice
+    btnGlow.SliceCenter = Rect.new(24, 24, 276, 276)
+    btnGlow.ZIndex = -1
+
+    confirmBtn.MouseEnter:Connect(function()
+        TweenService:Create(confirmBtn, TweenInfo.new(0.15), {BackgroundColor3 = Colors.Accent}):Play()
+        TweenService:Create(btnGlow, TweenInfo.new(0.15), {ImageTransparency = 0.3}):Play()
+    end)
+    confirmBtn.MouseLeave:Connect(function()
+        TweenService:Create(confirmBtn, TweenInfo.new(0.15), {BackgroundColor3 = Colors.Accent2}):Play()
+        TweenService:Create(btnGlow, TweenInfo.new(0.15), {ImageTransparency = 0.85}):Play()
+    end)
+
+    local function KickPlayer()
+        local kickMessage = "تم طردك بسبب محاولة دخول غير مصرح بها إلى VEX HUB.\nكلمة المرور غير صحيحة."
+        LocalPlayer:Kick(kickMessage)
+    end
+
+    local function VerifyPassword()
+        local entered = input.Text
+        if entered == PASSWORD then
+            PlaySound(12221967)
+            TweenService:Create(frame, TweenInfo.new(0.3), {
+                Size = UDim2.new(0, 0, 0, 0),
+                BackgroundTransparency = 1
+            }):Play()
+            TweenService:Create(backdrop, TweenInfo.new(0.3), {BackgroundTransparency = 1}):Play()
+            task.delay(0.4, function()
+                gui:Destroy()
+                if onSuccess then onSuccess() end
+            end)
+        else
+            PlaySound(12221967)
+            local errorLabel = Instance.new("TextLabel", frame)
+            errorLabel.Size = UDim2.new(1, -40, 0, 30)
+            errorLabel.Position = UDim2.new(0, 20, 0, 265)
+            errorLabel.Text = "كلمة المرور غير صحيحة! جارٍ الطرد..."
+            errorLabel.Font = Enum.Font.GothamBold
+            errorLabel.TextSize = 14
+            errorLabel.TextColor3 = Colors.Error
+            errorLabel.BackgroundTransparency = 1
+            errorLabel.TextXAlignment = "Center"
+
+            for i = 1, 3 do
+                TweenService:Create(frame, TweenInfo.new(0.06), {Position = UDim2.new(0.5, -220 + 8, 0.5, -150)}):Play()
+                task.wait(0.06)
+                TweenService:Create(frame, TweenInfo.new(0.06), {Position = UDim2.new(0.5, -220 - 8, 0.5, -150)}):Play()
+                task.wait(0.06)
+            end
+            TweenService:Create(frame, TweenInfo.new(0.06), {Position = UDim2.new(0.5, -220, 0.5, -150)}):Play()
+            task.wait(0.5)
+            KickPlayer()
+        end
+    end
+
+    confirmBtn.MouseButton1Click:Connect(VerifyPassword)
+    input.FocusLost:Connect(function(enter)
+        if enter then VerifyPassword() end
+    end)
+
+    frame.Size = UDim2.new(0, 0, 0, 0)
+    frame.BackgroundTransparency = 1
+    TweenService:Create(frame, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, 440, 0, 300),
+        BackgroundTransparency = 0
+    }):Play()
+end
+
+-- =============================================================
+--              الزر العائم الأحمر
+-- =============================================================
+local function CreateFloatingButton()
+    for _, child in ipairs(PlayerGui:GetChildren()) do
+        if child.Name and (child.Name:find("VEX_ULTIMATE") or child.Name:find("Floating") or child.Name:find("ULTIMATE")) then
+            child:Destroy()
+        end
+    end
+
+    local gui = Instance.new("ScreenGui", PlayerGui)
+    gui.Name = "VEX_ULTIMATE_BTN"
+    gui.ResetOnSpawn = false
+    gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    gui.DisplayOrder = 9999
+
+    local btn = Instance.new("ImageButton", gui)
+    btn.Size = UDim2.new(0, 58, 0, 58)
+    btn.Position = LoadData("BPos", UDim2.new(0.92, 0, 0.07, 0))
+    btn.BackgroundColor3 = Color3.fromRGB(10, 3, 3)
+    btn.BackgroundTransparency = 0.2
+    btn.Image = "rbxassetid://91316725307654"
+    btn.ScaleType = Enum.ScaleType.Fit
+    btn.AutoButtonColor = false
+    CreateUICorner(btn, 16)
+
+    local shadow = CreateShadow(btn, 20, 0.5)
+    local stroke = CreateUIStroke(btn, Color3.fromRGB(200, 30, 30), 3, 0.2)
+
+    local glow = Instance.new("ImageLabel", btn)
+    glow.Size = UDim2.new(2, 0, 2, 0)
+    glow.Position = UDim2.new(-0.5, 0, -0.5, 0)
+    glow.BackgroundTransparency = 1
+    glow.Image = "rbxassetid://5554236805"
+    glow.ImageColor3 = Color3.fromRGB(255, 50, 50)
+    glow.ImageTransparency = 0.7
+    glow.ScaleType = Enum.ScaleType.Slice
+    glow.SliceCenter = Rect.new(24, 24, 276, 276)
+    glow.SliceScale = 0.8
+    glow.ZIndex = -1
+
+    local label = Instance.new("TextLabel", btn)
+    label.Size = UDim2.new(0, 80, 0, 18)
+    label.Position = UDim2.new(0.5, -40, 1, 6)
+    label.BackgroundTransparency = 1
+    label.Text = "VEX HUB"
+    label.Font = Enum.Font.GothamBold
+    label.TextSize = 12
+    label.TextColor3 = Color3.fromRGB(200, 30, 30)
+    label.TextStrokeTransparency = 0.5
+    label.TextStrokeColor3 = Color3.new(0, 0, 0)
+
+    local isDragging = false
+    local dragStartMouse, dragStartPos
+
+    btn.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            isDragging = true
+            dragStartMouse = input.Position
+            dragStartPos = btn.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    isDragging = false
+                    SaveData("BPos", btn.Position)
+                end
+            end)
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if isDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - dragStartMouse
+            btn.Position = UDim2.new(
+                dragStartPos.X.Scale,
+                dragStartPos.X.Offset + delta.X,
+                dragStartPos.Y.Scale,
+                dragStartPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+
+    btn.MouseEnter:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.2), {Size = UDim2.new(0, 64, 0, 64)}):Play()
+        TweenService:Create(stroke, TweenInfo.new(0.2), {Thickness = 4, Transparency = 0.05}):Play()
+        TweenService:Create(glow, TweenInfo.new(0.2), {ImageTransparency = 0.4}):Play()
+        label.TextColor3 = Color3.fromRGB(255, 80, 80)
+    end)
+    btn.MouseLeave:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.2), {Size = UDim2.new(0, 58, 0, 58)}):Play()
+        TweenService:Create(stroke, TweenInfo.new(0.2), {Thickness = 3, Transparency = 0.2}):Play()
+        TweenService:Create(glow, TweenInfo.new(0.2), {ImageTransparency = 0.7}):Play()
+        label.TextColor3 = Color3.fromRGB(200, 30, 30)
+    end)
+
+    task.spawn(function()
+        while btn and btn.Parent do
+            local pulse = (math.sin(tick() * 2) + 1) / 2
+            stroke.Transparency = 0.1 + pulse * 0.25
+            glow.ImageTransparency = 0.5 + pulse * 0.3
+            label.TextColor3 = Color3.fromRGB(200, 30, 30):lerp(Color3.fromRGB(255, 100, 100), pulse * 0.5)
+            task.wait(0.04)
+        end
+    end)
+
+    local mainFrame = nil
+    local isOpen = false
+
+    btn.MouseButton1Click:Connect(function()
+        if isDragging then return end
+        PlaySound(12221967)
+
+        if not mainFrame then
+            mainFrame = CreateMainUI(btn)
+        end
+
+        if isOpen then
+            TweenService:Create(mainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0, 0, 0, 0),
+                Position = UDim2.new(0.5, 0, 0.5, 0),
+                BackgroundTransparency = 1
+            }):Play()
+            isOpen = false
+        else
+            mainFrame.Visible = true
+            mainFrame.Size = UDim2.new(0, 0, 0, 0)
+            mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+            mainFrame.BackgroundTransparency = 1
+            TweenService:Create(mainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                Size = UDim2.new(0, 440, 0, 540),
+                Position = LoadData("Pos", UDim2.new(0.5, -220, 0.5, -260)),
+                BackgroundTransparency = 0
+            }):Play()
+            isOpen = true
+        end
+    end)
+
+    return btn
+end
+
+-- =============================================================
+--              القائمة الرئيسية
+-- =============================================================
+function CreateMainUI(parent)
+    local gui = parent.Parent
+    local frame = Instance.new("Frame", gui)
+    frame.Name = "VEX_ULTIMATE_UI"
+    frame.Size = UDim2.new(0, 0, 0, 0)
+    frame.Position = UDim2.new(0.5, 0, 0.5, 0)
+    frame.BackgroundColor3 = Colors.Background
+    frame.ClipsDescendants = true
+    frame.Visible = false
+    frame.ZIndex = 2
+    CreateUICorner(frame, 24)
+    CreateUIStroke(frame, Colors.Accent, 2, 0.3)
+    CreateShadow(frame, 30, 0.7)
+
+    local header = Instance.new("Frame", frame)
+    header.Size = UDim2.new(1, 0, 0, 70)
+    header.BackgroundColor3 = Colors.Panel
+    CreateUICorner(header, 24, 0, 0)
+
+    local icon = Instance.new("ImageLabel", header)
+    icon.Size = UDim2.new(0, 40, 0, 40)
+    icon.Position = UDim2.new(0, 16, 0.5, -20)
+    icon.Image = "rbxassetid://91316725307654"
+    icon.ImageColor3 = Colors.Accent
+    icon.BackgroundTransparency = 1
+
+    local title = Instance.new("TextLabel", header)
+    title.Size = UDim2.new(0, 200, 0, 28)
+    title.Position = UDim2.new(0, 68, 0, 10)
+    title.Text = "VEX HUB"
+    title.Font = Enum.Font.GothamBlack
+    title.TextSize = 22
+    title.TextColor3 = Colors.Accent
+    title.TextXAlignment = "Left"
+    title.BackgroundTransparency = 1
+
+    local sub = Instance.new("TextLabel", header)
+    sub.Size = UDim2.new(0, 200, 0, 18)
+    sub.Position = UDim2.new(0, 68, 0, 42)
+    sub.Text = "Ultimate Edition • v3.2 (No Close)"
+    sub.Font = Enum.Font.GothamMedium
+    sub.TextSize = 11
+    sub.TextColor3 = Colors.TextDim
+    sub.TextXAlignment = "Left"
+    sub.BackgroundTransparency = 1
+
+    local searchFrame = Instance.new("Frame", frame)
+    searchFrame.Size = UDim2.new(1, -30, 0, 44)
+    searchFrame.Position = UDim2.new(0, 15, 0, 80)
+    searchFrame.BackgroundColor3 = Colors.SearchBg
+    CreateUICorner(searchFrame, 12)
+    CreateUIStroke(searchFrame, Colors.Border, 1.5)
+
+    local searchBox = Instance.new("TextBox", searchFrame)
+    searchBox.Size = UDim2.new(1, -20, 1, 0)
+    searchBox.Position = UDim2.new(0, 10, 0, 0)
+    searchBox.PlaceholderText = "🔍 ابحث عن سكربت..."
+    searchBox.PlaceholderColor3 = Colors.TextDim
+    searchBox.Text = ""
+    searchBox.TextColor3 = Colors.Text
+    searchBox.Font = Enum.Font.GothamMedium
+    searchBox.TextSize = 14
+    searchBox.TextXAlignment = "Left"
+    searchBox.BackgroundTransparency = 1
+    searchBox.ClearTextOnFocus = false
+
+    local scroll = Instance.new("ScrollingFrame", frame)
+    scroll.Size = UDim2.new(1, -20, 1, -150)
+    scroll.Position = UDim2.new(0, 10, 0, 135)
+    scroll.BackgroundTransparency = 1
+    scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+    scroll.ScrollBarThickness = 4
+    scroll.ScrollBarImageColor3 = Colors.Accent
+    scroll.ScrollBarImageTransparency = 0.4
+
+    local grid = Instance.new("UIGridLayout", scroll)
+    grid.CellSize = UDim2.new(0, 195, 0, 125)
+    grid.CellPadding = UDim2.new(0, 12, 0, 14)
+    grid.SortOrder = Enum.SortOrder.LayoutOrder
+
+    local AutoExecuteSettings = LoadData("Auto", {})
+    local cardData = {}
+    for i, data in ipairs(ScriptList) do
+        local card = Instance.new("Frame", scroll)
+        card.Size = UDim2.new(0, 195, 0, 125)
+        card.BackgroundColor3 = Colors.Card
+        card.ClipsDescendants = true
+        CreateUICorner(card, 14)
+        local cardStroke = CreateUIStroke(card, Colors.Border, 1.5)
+        CreateShadow(card, 15, 0.5)
+
+        local num = Instance.new("TextLabel", card)
+        num.Size = UDim2.new(0, 28, 0, 28)
+        num.Position = UDim2.new(0, 10, 0, 8)
+        num.Text = tostring(i)
+        num.Font = Enum.Font.GothamBlack
+        num.TextSize = 16
+        num.TextColor3 = Colors.Accent
+        num.BackgroundTransparency = 1
+
+        local nameLabel = Instance.new("TextLabel", card)
+        nameLabel.Size = UDim2.new(1, -50, 0, 22)
+        nameLabel.Position = UDim2.new(0, 46, 0, 8)
+        nameLabel.Text = data[1]
+        nameLabel.Font = Enum.Font.GothamBold
+        nameLabel.TextSize = 14
+        nameLabel.TextColor3 = Colors.Text
+        nameLabel.TextXAlignment = "Left"
+        nameLabel.BackgroundTransparency = 1
+
+        local descLabel = Instance.new("TextLabel", card)
+        descLabel.Size = UDim2.new(1, -12, 0, 18)
+        descLabel.Position = UDim2.new(0, 6, 0, 34)
+        descLabel.Text = data[2]
+        descLabel.Font = Enum.Font.GothamMedium
+        descLabel.TextSize = 10
+        descLabel.TextColor3 = Colors.TextDim
+        descLabel.TextXAlignment = "Left"
+        descLabel.BackgroundTransparency = 1
+
+        local btnFrame = Instance.new("Frame", card)
+        btnFrame.Size = UDim2.new(1, -14, 0, 38)
+        btnFrame.Position = UDim2.new(0, 7, 0, 72)
+        btnFrame.BackgroundTransparency = 1
+
+        local execBtn = Instance.new("TextButton", btnFrame)
+        execBtn.Size = UDim2.new(0, 85, 1, 0)
+        execBtn.Position = UDim2.new(0, 0, 0, 0)
+        execBtn.Text = "▶ EXECUTE"
+        execBtn.Font = Enum.Font.GothamBold
+        execBtn.TextSize = 11
+        execBtn.TextColor3 = Colors.Text
+        execBtn.BackgroundColor3 = Colors.Accent2
+        CreateUICorner(execBtn, 8)
+
+        local autoBtn = Instance.new("TextButton", btnFrame)
+        autoBtn.Size = UDim2.new(0, 75, 1, 0)
+        autoBtn.Position = UDim2.new(1, -75, 0, 0)
+        autoBtn.Text = "AUTO"
+        autoBtn.Font = Enum.Font.GothamBold
+        autoBtn.TextSize = 11
+        autoBtn.TextColor3 = Colors.TextDim
+        autoBtn.BackgroundColor3 = Color3.fromRGB(15, 12, 28)
+        CreateUICorner(autoBtn, 8)
+        local autoStroke = CreateUIStroke(autoBtn, Color3.fromRGB(40, 40, 65), 1)
+
+        if AutoExecuteSettings[data[1]] then
+            autoBtn.BackgroundColor3 = Color3.fromRGB(0, 35, 25)
+            autoBtn.TextColor3 = Colors.Success
+            autoStroke.Color = Colors.Success
+        end
+
+        card.MouseEnter:Connect(function()
+            TweenService:Create(card, TweenInfo.new(0.15), {BackgroundColor3 = Colors.CardHover}):Play()
+            TweenService:Create(cardStroke, TweenInfo.new(0.15), {Color = Colors.Accent, Thickness = 2.5}):Play()
+        end)
+        card.MouseLeave:Connect(function()
+            TweenService:Create(card, TweenInfo.new(0.15), {BackgroundColor3 = Colors.Card}):Play()
+            TweenService:Create(cardStroke, TweenInfo.new(0.15), {Color = Colors.Border, Thickness = 1.5}):Play()
+        end)
+
+        execBtn.MouseEnter:Connect(function()
+            TweenService:Create(execBtn, TweenInfo.new(0.15), {BackgroundColor3 = Colors.Accent}):Play()
+        end)
+        execBtn.MouseLeave:Connect(function()
+            TweenService:Create(execBtn, TweenInfo.new(0.15), {BackgroundColor3 = Colors.Accent2}):Play()
+        end)
+
+        execBtn.MouseButton1Click:Connect(function()
+            PlaySound(12221967)
+            execBtn.Text = "⏳"
+            execBtn.BackgroundColor3 = Colors.Success
+            local success = ExecuteScript(data[3])
+            if success then
+                execBtn.Text = "✓ DONE"
+            else
+                execBtn.Text = "✕ FAIL"
+                execBtn.BackgroundColor3 = Colors.Error
+            end
+            task.delay(1.5, function()
+                execBtn.Text = "▶ EXECUTE"
+                execBtn.BackgroundColor3 = Colors.Accent2
+            end)
+        end)
+
+        autoBtn.MouseEnter:Connect(function()
+            if not AutoExecuteSettings[data[1]] then
+                autoBtn.BackgroundColor3 = Color3.fromRGB(28, 22, 45)
+            end
+        end)
+        autoBtn.MouseLeave:Connect(function()
+            if AutoExecuteSettings[data[1]] then
+                autoBtn.BackgroundColor3 = Color3.fromRGB(0, 35, 25)
+            else
+                autoBtn.BackgroundColor3 = Color3.fromRGB(15, 12, 28)
+            end
+        end)
+
+        autoBtn.MouseButton1Click:Connect(function()
+            PlaySound(12221967)
+            AutoExecuteSettings[data[1]] = not AutoExecuteSettings[data[1]]
+            if AutoExecuteSettings[data[1]] then
+                autoBtn.BackgroundColor3 = Color3.fromRGB(0, 35, 25)
+                autoBtn.TextColor3 = Colors.Success
+                autoStroke.Color = Colors.Success
+            else
+                autoBtn.BackgroundColor3 = Color3.fromRGB(15, 12, 28)
+                autoBtn.TextColor3 = Colors.TextDim
+                autoStroke.Color = Color3.fromRGB(40, 40, 65)
+            end
+            SaveData("Auto", AutoExecuteSettings)
+        end)
+
+        table.insert(cardData, {card = card, name = data[1], desc = data[2]})
+    end
+
+    grid:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        scroll.CanvasSize = UDim2.new(0, 0, 0, grid.AbsoluteContentSize.Y + 30)
+    end)
+    task.wait(0.1)
+    scroll.CanvasSize = UDim2.new(0, 0, 0, grid.AbsoluteContentSize.Y + 30)
+
+    searchBox:GetPropertyChangedSignal("Text"):Connect(function()
+        local query = searchBox.Text:lower()
+        for _, elem in ipairs(cardData) do
+            if query == "" then
+                elem.card.Visible = true
+            else
+                local found = elem.name:lower():find(query) or elem.desc:lower():find(query)
+                elem.card.Visible = found ~= nil
+            end
+        end
+    end)
+
+    local drag = {active = false, start = nil, pos = nil}
+    header.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            drag.active = true
+            drag.start = input.Position
+            drag.pos = frame.Position
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if drag.active and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - drag.start
+            frame.Position = UDim2.new(
+                drag.pos.X.Scale,
+                drag.pos.X.Offset + delta.X,
+                drag.pos.Y.Scale,
+                drag.pos.Y.Offset + delta.Y
+            )
+            SaveData("Pos", frame.Position)
+        end
+    end)
+    header.InputEnded:Connect(function()
+        if drag.active then
+            drag.active = false
+            SaveData("Pos", frame.Position)
+        end
+    end)
+
+    return frame
+end
+
+-- =============================================================
+--                    بدء التشغيل الرئيسي
+-- =============================================================
+task.spawn(function()
+    -- إنشاء عداد FPS
+    CreateFPSDisplay()
+    
+    -- تحقق من وجود ملف تعريف المستخدم
+    local profile = LoadData("UserProfile", nil)
+    
+    if not profile then
+        -- أول مرة: عرض واجهة الاسم والجنس
+        ShowProfileSetup(function()
+            -- بعد إكمال الملف الشخصي، نعرض كلمة المرور
+            ShowPasswordPrompt(function()
+                print("✅ تم التحقق من كلمة المرور بنجاح")
+                PlaySound(12221967)
+                CreateFloatingButton()
+                local AutoExecuteSettings = LoadData("Auto", {})
+                task.wait(1)
+                for i, scriptData in ipairs(ScriptList) do
+                    if AutoExecuteSettings[scriptData[1]] then
+                        task.spawn(function()
+                            task.wait(i * 0.25)
+                            ExecuteScript(scriptData[3])
+                        end)
+                    end
+                end
+            end)
+        end)
+    else
+        -- لدينا ملف تعريف: نعرض كلمة المرور مباشرة
+        ShowPasswordPrompt(function()
+            print("✅ تم التحقق من كلمة المرور بنجاح")
+            PlaySound(12221967)
+            CreateFloatingButton()
+            local AutoExecuteSettings = LoadData("Auto", {})
+            task.wait(1)
+            for i, scriptData in ipairs(ScriptList) do
+                if AutoExecuteSettings[scriptData[1]] then
+                    task.spawn(function()
+                        task.wait(i * 0.25)
+                        ExecuteScript(scriptData[3])
+                    end)
+                end
+            end
+        end)
+    end
+end)
+
+print("✅ VEX HUB • ULTIMATE EDITION (WITH FPS, NO BORDER) LOADED")
+print("🔐 كلمة المرور: " .. PASSWORD)
+print("⚠️ إذا أدخلت كلمة مرور خاطئة سيتم طردك فوراً!")
+print("👤 أول مرة سيطلب منك اسمك وجنسك (مرة واحدة فقط)")
+print("📊 عداد FPS في الزاوية اليمنى العليا")
