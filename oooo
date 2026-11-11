@@ -158,7 +158,8 @@ local Whitelist = {
     "addddm6reeepro1",
     "nojopnoprob",
     "TMAX_015",
-    "uddhdhh670", 
+    "uddhdhh670",
+    "sha",
 }
 
 local isAllowed = false
