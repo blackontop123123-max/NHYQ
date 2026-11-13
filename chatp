@@ -1,92 +1,285 @@
 --==================================================
--- أبسط شات فوق الرأس (يشتغل إذا اللعبة تسمح)
+-- NHYQ FLOATING MINI CHAT BAR (WEBSOCKET GLOBAL)
+-- تصميمك الأصلي + اتصال عالمي بين كل السيرفرات
 --==================================================
 
-local Players = game:GetService("Players")
-local localPlayer = Players.LocalPlayer
+local players = game:GetService("Players")
+local coreGui = game:GetService("CoreGui")
+local httpService = game:GetService("HttpService")
+local localPlayer = players.LocalPlayer
 
--- إنشاء واجهة صغيرة للكتابة
-local gui = Instance.new("ScreenGui")
-gui.Name = "SimpleChat"
-gui.ResetOnSpawn = false
-gui.Parent = localPlayer:WaitForChild("PlayerGui")
+-- إعدادات الاتصال العالمي
+local ROOM_NAME = "NHYQ-Global-Chat-Room-1"
+local ENDPOINT = "wss://openfunproxy.zerdgeservers.workers.dev/ws"
+local Username = localPlayer.Name
 
-local btn = Instance.new("TextButton", gui)
-btn.Size = UDim2.new(0, 60, 0, 60)
-btn.Position = UDim2.new(0, 20, 0.5, -30)
-btn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-btn.Text = "شات"
-btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-btn.TextSize = 16
-btn.Font = Enum.Font.GothamBold
-btn.Draggable = true
-Instance.new("UICorner", btn).CornerRadius = UDim.new(1, 0)
+local Env = (getgenv and getgenv()) or _G
+if Env.NHYQChatClose then pcall(Env.NHYQChatClose) end
 
-local input = Instance.new("TextBox", gui)
-input.Size = UDim2.new(0, 200, 0, 40)
-input.Position = UDim2.new(0, 90, 0.5, -20)
-input.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-input.PlaceholderText = "اكتب هنا..."
-input.Text = ""
-input.TextColor3 = Color3.fromRGB(255, 255, 255)
-input.TextSize = 14
-input.Visible = false
-Instance.new("UICorner", input).CornerRadius = UDim.new(0, 8)
+-- إغلاق أي واجهة قديمة
+local OldGui = coreGui:FindFirstChild("NHYQ_FloatingChat_GUI")
+if OldGui then OldGui:Destroy() end
 
-btn.MouseButton1Click:Connect(function()
-    input.Visible = not input.Visible
-    if input.Visible then input:CaptureFocus() end
+local Closed = false
+local Socket = nil
+local Generation = 0
+
+--==================================================
+-- 1. واجهة المستخدم الرئيسية (نفس تصميمك)
+--==================================================
+local chatGui = Instance.new("ScreenGui")
+chatGui.Name = "NHYQ_FloatingChat_GUI"
+chatGui.Parent = coreGui
+chatGui.ResetOnSpawn = false
+
+local ChatBarFrame = Instance.new("Frame")
+ChatBarFrame.Name = "ChatBarFrame"
+ChatBarFrame.Size = UDim2.new(0, 280, 0, 150)
+ChatBarFrame.Position = UDim2.new(1, -295, 0, 15)
+ChatBarFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+ChatBarFrame.BackgroundTransparency = 0.15
+ChatBarFrame.BorderSizePixel = 0
+ChatBarFrame.Active = true
+ChatBarFrame.Draggable = true
+ChatBarFrame.Visible = false -- مخفية افتراضياً
+ChatBarFrame.Parent = chatGui
+
+Instance.new("UICorner", ChatBarFrame).CornerRadius = UDim.new(0, 8)
+local BarStroke = Instance.new("UIStroke", ChatBarFrame)
+BarStroke.Color = Color3.fromRGB(180, 0, 0)
+BarStroke.Thickness = 1.5
+
+local MiniScroll = Instance.new("ScrollingFrame", ChatBarFrame)
+MiniScroll.Size = UDim2.new(1, -10, 1, -45)
+MiniScroll.Position = UDim2.new(0, 5, 0, 5)
+MiniScroll.BackgroundTransparency = 1
+MiniScroll.BorderSizePixel = 0
+MiniScroll.ScrollBarThickness = 2
+MiniScroll.ScrollBarImageColor3 = Color3.fromRGB(180, 0, 0)
+MiniScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+MiniScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+
+local MiniList = Instance.new("UIListLayout", MiniScroll)
+MiniList.SortOrder = Enum.SortOrder.LayoutOrder
+MiniList.Padding = UDim.new(0, 3)
+
+-- صندوق الكتابة
+local InputBox = Instance.new("TextBox", ChatBarFrame)
+InputBox.Size = UDim2.new(1, -75, 0, 30)
+InputBox.Position = UDim2.new(0, 5, 1, -35)
+InputBox.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+InputBox.BorderSizePixel = 0
+InputBox.ClearTextOnFocus = false
+InputBox.PlaceholderText = "اكتب رسالتك هنا..."
+InputBox.PlaceholderColor3 = Color3.fromRGB(120, 50, 50)
+InputBox.Text = ""
+InputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+InputBox.TextSize = 9
+InputBox.Font = Enum.Font.GothamMedium
+Instance.new("UICorner", InputBox).CornerRadius = UDim.new(0, 5)
+Instance.new("UIStroke", InputBox).Color = Color3.fromRGB(100, 0, 0)
+
+-- زر الإرسال
+local SendBtn = Instance.new("TextButton", ChatBarFrame)
+SendBtn.Size = UDim2.new(0, 60, 0, 30)
+SendBtn.Position = UDim2.new(1, -65, 1, -35)
+SendBtn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+SendBtn.Text = "إرسال 🚀"
+SendBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+SendBtn.TextSize = 9
+SendBtn.Font = Enum.Font.GothamBold
+Instance.new("UICorner", SendBtn).CornerRadius = UDim.new(0, 5)
+
+-- زر الفتح والإغلاق
+local ToggleBarBtn = Instance.new("TextButton")
+ToggleBarBtn.Size = UDim2.new(0, 38, 0, 38)
+ToggleBarBtn.Position = UDim2.new(0, 12, 0.5, -19)
+ToggleBarBtn.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+ToggleBarBtn.Text = "💬"
+ToggleBarBtn.TextColor3 = Color3.fromRGB(255, 0, 0)
+ToggleBarBtn.TextSize = 15
+ToggleBarBtn.Active = true
+ToggleBarBtn.Draggable = true
+ToggleBarBtn.Parent = chatGui
+Instance.new("UICorner", ToggleBarBtn).CornerRadius = UDim.new(1, 0)
+Instance.new("UIStroke", ToggleBarBtn).Color = Color3.fromRGB(180, 0, 0)
+
+ToggleBarBtn.MouseButton1Click:Connect(function()
+	ChatBarFrame.Visible = not ChatBarFrame.Visible
 end)
 
--- الدالة اللي تظهر الفقاعة فوق راسك
-local function showBubble(text)
-    local char = localPlayer.Character
-    if not char then return end
-    local head = char:FindFirstChild("Head")
-    if not head then return end
+--==================================================
+-- 2. نظام الفقاعة فوق الرأس (مثل الصورة)
+--==================================================
+local function showBubbleOnHead(playerName, msgText)
+	local targetPlayer = players:FindFirstChild(playerName)
+	if not targetPlayer or not targetPlayer.Character then return end
+	local head = targetPlayer.Character:FindFirstChild("Head")
+	if not head then return end
 
-    -- إزالة الفقاعة القديمة
-    local old = head:FindFirstChild("MyBubble")
-    if old then old:Destroy() end
+	local old = head:FindFirstChild("NHYQ_Bubble")
+	if old then old:Destroy() end
 
-    -- إنشاء الفقاعة
-    local billboard = Instance.new("BillboardGui")
-    billboard.Name = "MyBubble"
-    billboard.Size = UDim2.new(0, 200, 0, 50)
-    billboard.StudsOffset = Vector3.new(0, 3, 0)
-    billboard.AlwaysOnTop = true
-    billboard.Parent = head
+	local billboard = Instance.new("BillboardGui")
+	billboard.Name = "NHYQ_Bubble"
+	billboard.Size = UDim2.new(0, 160, 0, 50) 
+	billboard.StudsOffset = Vector3.new(0, 2.5, 0) 
+	billboard.AlwaysOnTop = true
+	billboard.Parent = head
 
-    local bg = Instance.new("Frame", billboard)
-    bg.Size = UDim2.new(1, 0, 1, 0)
-    bg.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-    bg.BackgroundTransparency = 0.2
-    Instance.new("UICorner", bg).CornerRadius = UDim.new(0, 8)
-    Instance.new("UIStroke", bg).Color = Color3.fromRGB(200, 0, 0)
+	local bg = Instance.new("Frame", billboard)
+	bg.Size = UDim2.new(1, 0, 1, 0)
+	bg.BackgroundColor3 = Color3.fromRGB(245, 245, 245)
+	bg.BackgroundTransparency = 0.1
+	bg.BorderSizePixel = 0
+	Instance.new("UICorner", bg).CornerRadius = UDim.new(0, 8)
 
-    local lbl = Instance.new("TextLabel", bg)
-    lbl.Size = UDim2.new(1, -10, 1, -10)
-    lbl.Position = UDim2.new(0, 5, 0, 5)
-    lbl.BackgroundTransparency = 1
-    lbl.Text = text
-    lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
-    lbl.TextSize = 14
-    lbl.Font = Enum.Font.GothamBold
-    lbl.TextWrapped = true
+	local stroke = Instance.new("UIStroke", bg)
+	stroke.Color = Color3.fromRGB(0, 0, 0)
+	stroke.Thickness = 1.5
+	stroke.Transparency = 0
 
-    -- تختفي بعد 5 ثواني
-    task.delay(5, function()
-        if billboard and billboard.Parent then
-            billboard:Destroy()
-        end
-    end)
+	local lbl = Instance.new("TextLabel", bg)
+	lbl.Size = UDim2.new(1, -12, 1, -12)
+	lbl.Position = UDim2.new(0, 6, 0, 6)
+	lbl.BackgroundTransparency = 1
+	lbl.Text = msgText
+	lbl.TextColor3 = Color3.fromRGB(0, 0, 0)
+	lbl.TextSize = 13
+	lbl.Font = Enum.Font.GothamBold
+	lbl.TextWrapped = true
+	lbl.TextXAlignment = Enum.TextXAlignment.Center
+	lbl.TextYAlignment = Enum.TextYAlignment.Center
+
+	task.delay(5, function()
+		if billboard and billboard.Parent then billboard:Destroy() end
+	end)
 end
 
--- عند الضغط على Enter
-input.FocusLost:Connect(function(enterPressed)
-    if enterPressed and input.Text ~= "" then
-        showBubble(input.Text)
-        input.Text = ""
-        input.Visible = false
-    end
+-- إضافة الرسائل داخل المستطيل المصغر
+local function addMessageToBar(senderName, msgText, isSystem)
+	local label = Instance.new("TextLabel", MiniScroll)
+	label.Size = UDim2.new(1, 0, 0, 15)
+	label.AutomaticSize = Enum.AutomaticSize.Y
+	label.BackgroundTransparency = 1
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.Font = Enum.Font.GothamBold
+	label.TextSize = 9
+	label.TextWrapped = true
+	
+	if isSystem then
+		label.Text = "🔧 " .. msgText
+		label.TextColor3 = Color3.fromRGB(150, 150, 150)
+	else
+		label.Text = "🔥 " .. senderName .. ": " .. msgText
+		label.TextColor3 = Color3.fromRGB(255, 150, 100)
+	end
+
+	if #MiniScroll:GetChildren() > 15 then
+		local firstChild = MiniScroll:FindFirstChildOfClass("TextLabel")
+		if firstChild then firstChild:Destroy() end
+	end
+
+	task.defer(function()
+		MiniScroll.CanvasPosition = Vector2.new(0, math.max(0, MiniScroll.AbsoluteCanvasSize.Y - MiniScroll.AbsoluteSize.Y))
+	end)
+end
+
+--==================================================
+-- 3. محرك الاتصال (WebSocket)
+--==================================================
+local function SendPacket(Packet)
+	if Closed or not Socket then return false end
+	local Success = pcall(function() Socket:Send(httpService:JSONEncode(Packet)) end)
+	return Success
+end
+
+local function Disconnect()
+	Generation += 1
+	local OldSocket = Socket
+	Socket = nil
+	if OldSocket then pcall(function() OldSocket:Close() end) end
+end
+
+local function HandleMessage(RawMessage)
+	local Success, Data = pcall(function() return httpService:JSONDecode(tostring(RawMessage)) end)
+	if not Success or type(Data) ~= "table" then return end
+
+	if Data.type == "joined" then
+		addMessageToBar("", "متصل بالشات العالمي ✅", true)
+		showBubbleOnHead(Username, "متصل ✅")
+		
+	elseif Data.type == "say" then
+		local Payload = Data.payload
+		if type(Payload) == "table" and type(Payload.text) == "string" then
+			local senderName = tostring(Data.username)
+			local msgText = Payload.text
+			
+			addMessageToBar(senderName, msgText, false)
+			showBubbleOnHead(senderName, msgText)
+		end
+	end
+end
+
+local function JoinChat()
+	if Closed then return end
+	Disconnect()
+	
+	addMessageToBar("", "جاري الاتصال...", true)
+	local MyGeneration = Generation
+
+	local ConnectSuccess, ConnectResult = pcall(function() return WebSocket.connect(ENDPOINT) end)
+	if not ConnectSuccess or not ConnectResult then
+		addMessageToBar("", "فشل الاتصال!", true)
+		return
+	end
+
+	if Closed or MyGeneration ~= Generation then
+		pcall(function() ConnectResult:Close() end)
+		return
+	end
+
+	Socket = ConnectResult
+
+	Socket.OnMessage:Connect(function(RawMessage)
+		if Closed or MyGeneration ~= Generation then return end
+		HandleMessage(RawMessage)
+	end)
+
+	Socket.OnClose:Connect(function()
+		if Closed or MyGeneration ~= Generation then return end
+		Socket = nil
+		addMessageToBar("", "تم قطع الاتصال.", true)
+	end)
+
+	SendPacket({
+		type = "join",
+		room = ROOM_NAME,
+		username = Username
+	})
+end
+
+-- إرسال الرسالة
+local function handleSendMessage()
+	local text = InputBox.Text
+	if text == "" then return end
+	if #text > 100 then text = text:sub(1, 100) end
+
+	showBubbleOnHead(Username, text)
+	addMessageToBar(Username, text, false)
+
+	local Success = SendPacket({
+		type = "say",
+		payload = { type = "chat", text = text }
+	})
+
+	if Success then InputBox.Text = "" else addMessageToBar("", "فشل الإرسال", true) end
+end
+
+SendBtn.MouseButton1Click:Connect(handleSendMessage)
+InputBox.FocusLost:Connect(function(enterPressed)
+	if enterPressed then handleSendMessage() end
 end)
+
+-- بدء الاتصال فوراً عند التشغيل
+JoinChat()
