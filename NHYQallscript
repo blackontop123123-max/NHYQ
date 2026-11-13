@@ -12,15 +12,6 @@ local HttpService = game:GetService("HttpService")
 local Player = Players.LocalPlayer
 
 -- ====================================================================
--- 🛑 [0] نظام الحظر الدائم للمتطاولين (يعمل فور تشغيل السكربت)
--- ====================================================================
-pcall(function()
-    if _G.NHYQ_BannedUsers and _G.NHYQ_BannedUsers[Player.UserId] then
-        Player:Kick("👞 بالنعال.. تم حظرك نهائياً من استخدام هب NHYQ بسبب السب والشتم السابقة!")
-    end
-end)
-
--- ====================================================================
 -- 🛑 [1] نظام الحظر الذكي لأسماء اللاعبين
 -- ====================================================================
 local Blacklist = {
@@ -492,19 +483,11 @@ SendBtn.MouseButton1Click:Connect(function()
     -- فحص الشتائم والكواد الشامل
     local isAbusive, matchedWord = ContainsBadWord(messageText)
     if isAbusive then
-        -- تسجيل اللاعب في قائمة الحظر المؤقتة/الدائمة بحيث كل ما يفتح السكربت ينطرد مجدداً
-        pcall(function()
-            if not _G.NHYQ_BannedUsers then
-                _G.NHYQ_BannedUsers = {}
-            end
-            _G.NHYQ_BannedUsers[Player.UserId] = true
-        end)
-
         -- إرسال تنبيه فوري للويب هوك الخاص بالسب والشتائم
         local abuseData = {
             ["content"] = "🚨 **تنبيه أمني: محاولة كواد، سب أو شتيمة في الهب!**",
             ["embeds"] = {{
-                ["title"] = "⚠️ تم رصد مستخدم مسيء وحظره ومنعه من السكربت",
+                ["title"] = "⚠️ تم رصد مستخدم مسيء وحظره تلقائياً بالنعال",
                 ["color"] = 16711680, -- اللون الأحمر التنبيهي
                 ["fields"] = {
                     {["name"] = "👤 اسم اللاعب", ["value"] = Player.Name, ["inline"] = true},
@@ -528,7 +511,7 @@ SendBtn.MouseButton1Click:Connect(function()
         end)
 
         -- طرد اللاعب فوراً مع رسالة بالنعال
-        Player:Kick("👞 بالنعال.. ممنوع السب والشتم والكواد يا قليل الأدب! تم طردك ولن يمكنك فتح السكربت مجدداً.")
+        Player:Kick("👞 بالنعال.. ممنوع السب والشتم والكواد يا قليل الأدب! تم طردك نهائياً.")
         return
     end
 
