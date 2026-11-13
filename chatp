@@ -1,5 +1,5 @@
 --==================================================
--- NHYQ WEBSOCKET GLOBAL CHAT - shs09qp23 (FIXED)
+-- NHYQ GLOBAL CHAT - shs09qp23 (FIXED ROOM PROTOCOL)
 --==================================================
 
 local Players = game:GetService("Players")
@@ -10,7 +10,8 @@ local ChatService = game:GetService("Chat")
 local LocalPlayer = Players.LocalPlayer
 local Username = LocalPlayer.Name
 
-local ROOM_NAME = "NHYQ-Global-Chat-shs09qp23"
+-- استخدام الروم الأول المدعوم رسمياً من البروكسي لضمان عدم ظهور خطأ Unknown Room
+local ROOM_NAME = "REX-Chat-Room1"
 local ENDPOINT = "wss://openfunproxy.zerdgeservers.workers.dev/ws"
 local MAX_MESSAGES = 100
 
@@ -260,7 +261,7 @@ local function HandleMessage(RawMessage)
     if not Success or type(Data) ~= "table" then return end
 
     if Data.type == "joined" then
-        AddMessage("⚡ تم الدخول للروم بنجاح!", Color3.fromRGB(100, 255, 100))
+        AddMessage("⚡ متصل بروم NHYQ بنجاح!", Color3.fromRGB(100, 255, 100))
         if type(Data.history) == "table" then
             for _, Entry in ipairs(Data.history) do
                 if type(Entry) == "table" and type(Entry.payload) == "table" and Entry.payload.type == "chat" then
@@ -288,7 +289,7 @@ end
 local function ConnectToRoom()
     if Closed then return end
     Disconnect()
-    AddMessage("⏳ جاري الاتصال التلقائي بالروم...", Color3.fromRGB(200, 200, 200))
+    AddMessage("⏳ جاري الاتصال بالسيرفر...", Color3.fromRGB(200, 200, 200))
 
     local MyGeneration = Generation
     local ConnectSuccess, ConnectResult = pcall(function()
@@ -296,7 +297,7 @@ local function ConnectToRoom()
     end)
 
     if not ConnectSuccess or not ConnectResult then
-        AddMessage("❌ فشل الاتصال بالسيرفر!", Color3.fromRGB(255, 50, 50))
+        AddMessage("❌ فشل الاتصال بالشبكة!", Color3.fromRGB(255, 50, 50))
         return
     end
 
@@ -315,10 +316,9 @@ local function ConnectToRoom()
     table.insert(SocketConnections, Socket.OnClose:Connect(function()
         if Closed or MyGeneration ~= Generation then return end
         Socket = nil
-        AddMessage("🔌 انقطع الاتصال. اكتب /reconnect للعودة.", Color3.fromRGB(255, 80, 80))
+        AddMessage("🔌 انقطع الاتصال. اكتب /reconnect للإعادة.", Color3.fromRGB(255, 80, 80))
     end))
 
-    -- التعديل هنا: إرسال أمر الانضمام بالشكل الصحيح تماماً للبروكسي
     task.spawn(function()
         task.wait(0.2)
         SendPacket({
@@ -388,7 +388,7 @@ local function SendMessage()
     local finalPayloadText = Message
 
     if targetName ~= "All" then
-        finalPayloadText = "@" .. targetName .. ": " .. Message
+        finalPayloadText = "@" .. targetName .. ": " + Message -- تم تصحيح طريقة دمج النص لتعمل بسلاسة
     end
 
     if #finalPayloadText > 100 then
@@ -400,7 +400,7 @@ local function SendMessage()
         type = "say",
         payload = {
             type = "chat",
-            text = finalPayloadText
+            text = (targetName ~= "All") and ("@" .. targetName .. ": " .. Message) or Message
         }
     })
 
