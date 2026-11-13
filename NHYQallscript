@@ -12,12 +12,25 @@ local HttpService = game:GetService("HttpService")
 local Player = Players.LocalPlayer
 
 -- ====================================================================
--- 🛑 [1] نظام الحظر الذكي (Blacklist System)
--- إذا كتبـت هنا أي كلمة أو اسم، سيتم حظر أي لاعب يحتوي اسمه على هذه الكلمة
+-- 🛑 [0] نظام الطرد المؤقت لمدة 5 دقائق بسبب السب
+-- ====================================================================
+pcall(function()
+    if _G.NHYQ_BanTimers and _G.NHYQ_BanTimers[Player.UserId] then
+        local remainingTime = _G.NHYQ_BanTimers[Player.UserId] - os.time()
+        if remainingTime > 0 then
+            local mins = math.ceil(remainingTime / 60)
+            Player:Kick("⏳ مطرود مؤقتاً بسبب السب والشتم! تبقى على حظرك " .. mins .. " دقائق.")
+        else
+            _G.NHYQ_BanTimers[Player.UserId] = nil -- انقضت الـ 5 دقائق
+        end
+    end
+end)
+
+-- ====================================================================
+-- 🛑 [1] نظام الحظر الذكي لأسماء اللاعبين
 -- ====================================================================
 local Blacklist = {
-    "ABC", -- مثال لحظر أي لاعب يحتوي اسمه على ABC (مثل ABC_Player أو TestABC)
-    --"اسم_آخر_للحظر",
+    "ABC", -- مثال لحظر أي لاعب يحتوي اسمه على ABC
 }
 
 local function CheckBlacklist()
@@ -55,14 +68,6 @@ if not ok then
     ScreenGui.Parent = Player:WaitForChild("PlayerGui")
 end
 
--- لوحة الألوان البنفسجية الملكية الفخمة
-local Colors = {
-    AccentPurple = Color3.fromRGB(138, 43, 226),
-    AccentRed = Color3.fromRGB(255, 50, 50),
-    AccentGold = Color3.fromRGB(255, 215, 0),
-    AccentGreen = Color3.fromRGB(0, 230, 118)
-}
-
 local Theme = {
     BgDark = Color3.fromRGB(8, 6, 12),
     SidebarBg = Color3.fromRGB(13, 10, 20),
@@ -77,7 +82,7 @@ local Theme = {
 }
 
 -- ==========================================
--- الإطار الرئيسي بحواف دائرية بالكامل
+-- الإطار الرئيسي
 -- ==========================================
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
@@ -89,58 +94,27 @@ MainFrame.ClipsDescendants = true
 MainFrame.Active = true
 MainFrame.Parent = ScreenGui
 
-local MainCorner = Instance.new("UICorner")
-MainCorner.CornerRadius = UDim.new(0, 22)
-MainCorner.Parent = MainFrame
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 22)
 
--- ==========================================
--- خلفية نجوم المجرة الواقعية (Realistic Starfield)
--- ==========================================
+-- خلفية نجوم المجرة
 local StarsHolder = Instance.new("Folder")
 StarsHolder.Name = "RealisticStars"
 StarsHolder.Parent = MainFrame
 
 math.randomseed(tick())
-for i = 1, 55 do
+for i = 1, 45 do
     local star = Instance.new("Frame")
-    local size = math.random(2, 5)
+    local size = math.random(2, 4)
     star.Size = UDim2.new(0, size, 0, size)
     star.Position = UDim2.new(math.random(2, 98)/100, 0, math.random(2, 98)/100, 0)
-    
-    local colorChoice = math.random(1, 3)
-    if colorChoice == 1 then
-        star.BackgroundColor3 = Theme.NeonCyan
-    elseif colorChoice == 2 then
-        star.BackgroundColor3 = Theme.GalaxyPurple
-    else
-        star.BackgroundColor3 = Theme.TextWhite
-    end
-    
+    star.BackgroundColor3 = (math.random(1, 2) == 1) and Theme.NeonCyan or Theme.GalaxyPurple
     star.BorderSizePixel = 0
-    star.BackgroundTransparency = math.random(10, 60)/100
+    star.BackgroundTransparency = math.random(20, 70)/100
     star.Parent = StarsHolder
-    
     Instance.new("UICorner", star).CornerRadius = UDim.new(1, 0)
-    
-    task.spawn(function()
-        while star and star.Parent do
-            local fadeTime = math.random(15, 35) / 10
-            TweenService:Create(star, TweenInfo.new(fadeTime, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
-                BackgroundTransparency = math.random(5, 30)/100,
-                Size = UDim2.new(0, size + 1, 0, size + 1)
-            }):Play()
-            task.wait(fadeTime)
-            
-            TweenService:Create(star, TweenInfo.new(fadeTime, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
-                BackgroundTransparency = math.random(60, 90)/100,
-                Size = UDim2.new(0, size, 0, size)
-            }):Play()
-            task.wait(fadeTime)
-        end
-    end)
 end
 
--- إطار النيون الخارجي المتوهج المتدرج
+-- إطار النيون الخارجي
 local OuterStroke = Instance.new("UIStroke")
 OuterStroke.Color = Theme.GalaxyPurple
 OuterStroke.Thickness = 2.5
@@ -164,7 +138,7 @@ task.spawn(function()
 end)
 
 -- ==========================================
--- الشريط الجانبي الفخم (Sidebar)
+-- الشريط الجانبي (Sidebar)
 -- ==========================================
 local Sidebar = Instance.new("Frame")
 Sidebar.Name = "Sidebar"
@@ -173,10 +147,7 @@ Sidebar.BackgroundColor3 = Theme.SidebarBg
 Sidebar.BorderSizePixel = 0
 Sidebar.ClipsDescendants = true
 Sidebar.Parent = MainFrame
-
-local SidebarCorner = Instance.new("UICorner")
-SidebarCorner.CornerRadius = UDim.new(0, 22)
-SidebarCorner.Parent = Sidebar
+Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 22)
 
 local FixRightCorner = Instance.new("Frame")
 FixRightCorner.Size = UDim2.new(0, 10, 1, 0)
@@ -192,7 +163,7 @@ SideDivider.BackgroundColor3 = Theme.GalaxyPurple
 SideDivider.BorderSizePixel = 0
 SideDivider.Parent = Sidebar
 
--- صندوق الشعار والتاج
+-- الشعار
 local BrandBox = Instance.new("Frame")
 BrandBox.Size = UDim2.new(1, 0, 0, 85)
 BrandBox.BackgroundTransparency = 1
@@ -238,7 +209,8 @@ DevStroke.Color = Theme.CardStroke
 DevStroke.Thickness = 1
 
 local DevText = Instance.new("TextLabel")
-DevText.Size = UDim2.new(1, 0, 1, 0)
+DevText.Size = UDim2.new(1, -16, 1, 0)
+DevText.Position = UDim2.new(0, 8, 0, 0)
 DevText.BackgroundTransparency = 1
 DevText.Text = "🌌 shs09qp23"
 DevText.TextColor3 = Theme.NeonCyan
@@ -263,7 +235,6 @@ HeaderBar.Parent = ContentArea
 
 local CurrentTabLabel = Instance.new("TextLabel")
 CurrentTabLabel.Size = UDim2.new(1, -110, 1, 0)
-CurrentTabLabel.Position = UDim2.new(0, 0, 0, 0)
 CurrentTabLabel.BackgroundTransparency = 1
 CurrentTabLabel.Text = "● القائمة الرئيسية"
 CurrentTabLabel.TextColor3 = Theme.NeonCyan
@@ -272,7 +243,7 @@ CurrentTabLabel.TextSize = 13
 CurrentTabLabel.TextXAlignment = Enum.TextXAlignment.Left
 CurrentTabLabel.Parent = HeaderBar
 
--- مربع البحث (يظهر في تبويب الفعاليات فقط)
+-- مربع البحث (للإفعاليات)
 local SearchFrame = Instance.new("Frame")
 SearchFrame.Name = "SearchFrame"
 SearchFrame.Size = UDim2.new(1, -100, 1, 0)
@@ -317,7 +288,7 @@ MinBtn.Parent = HeaderBar
 Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0, 12)
 Instance.new("UIStroke", MinBtn).Color = Theme.CardStroke
 
--- زر الإغلاق / إخفاء الهب
+-- زر الإغلاق (✕)
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Size = UDim2.new(0, 34, 0, 36)
 CloseBtn.Position = UDim2.new(1, -56, 0.5, -18)
@@ -337,7 +308,7 @@ local PagesFolder = Instance.new("Folder")
 PagesFolder.Name = "PagesFolder"
 PagesFolder.Parent = ContentArea
 
--- صفحة القائمة الرئيسية
+-- 🏠 القائمة الرئيسية (تتضمن ScrollingFrame لترتيب كل شيء بشكل مثالي)
 local MainInfoPage = Instance.new("ScrollingFrame")
 MainInfoPage.Name = "MainInfoPage"
 MainInfoPage.Size = UDim2.new(1, -20, 1, -65)
@@ -359,15 +330,141 @@ InfoPadding.PaddingBottom = UDim.new(0, 15)
 InfoPadding.PaddingRight = UDim.new(0, 4)
 InfoPadding.Parent = MainInfoPage
 
-local function GetDeviceType()
-    if UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled then
-        return "📱 هاتف محمول (Mobile)"
-    elseif UserInputService.GamepadEnabled then
-        return "🎮 وحدة تحكم (Console)"
-    else
-        return "💻 حاسوب شخصي (PC)"
+-- ====================================================================
+-- 1. بطاقة ديسكورد الإدارة (في البداية)
+-- ====================================================================
+local DiscordCard = Instance.new("Frame")
+DiscordCard.Size = UDim2.new(1, 0, 0, 62)
+DiscordCard.BackgroundColor3 = Theme.CardBg
+DiscordCard.Parent = MainInfoPage
+Instance.new("UICorner", DiscordCard).CornerRadius = UDim.new(0, 12)
+local DiscordStroke = Instance.new("UIStroke", DiscordCard)
+DiscordStroke.Color = Theme.NeonCyan
+DiscordStroke.Thickness = 1.2
+
+local DiscordTitle = Instance.new("TextLabel")
+DiscordTitle.Size = UDim2.new(1, -20, 0, 20)
+DiscordTitle.Position = UDim2.new(0, 12, 0, 6)
+DiscordTitle.BackgroundTransparency = 1
+DiscordTitle.Text = "💬 تواصل دسكورد الإدارة الأساسي"
+DiscordTitle.TextColor3 = Theme.NeonCyan
+DiscordTitle.Font = Enum.Font.GothamBold
+DiscordTitle.TextSize = 11
+DiscordTitle.TextXAlignment = Enum.TextXAlignment.Left
+DiscordTitle.Parent = DiscordCard
+
+local DiscordBtn = Instance.new("TextButton")
+DiscordBtn.Size = UDim2.new(1, -24, 0, 28)
+DiscordBtn.Position = UDim2.new(0, 12, 0, 28)
+DiscordBtn.BackgroundColor3 = Theme.DeepIndigo
+DiscordBtn.Text = "📋 h_h4242000 (اضغط للنسخ السريع)"
+DiscordBtn.TextColor3 = Theme.TextWhite
+DiscordBtn.Font = Enum.Font.GothamBold
+DiscordBtn.TextSize = 12
+DiscordBtn.Parent = DiscordCard
+Instance.new("UICorner", DiscordBtn).CornerRadius = UDim.new(0, 8)
+
+local CopyNotice = Instance.new("TextLabel")
+CopyNotice.Size = UDim2.new(1, 0, 0, 20)
+CopyNotice.Position = UDim2.new(0, 0, 0, -22)
+CopyNotice.BackgroundTransparency = 1
+CopyNotice.Text = "✔ تم النسخ بنجاح!"
+CopyNotice.TextColor3 = Theme.Success
+CopyNotice.Font = Enum.Font.GothamBold
+CopyNotice.TextSize = 11
+CopyNotice.Visible = false
+CopyNotice.Parent = DiscordCard
+
+DiscordBtn.MouseButton1Click:Connect(function()
+    pcall(function() setclipboard("h_h4242000") end)
+    CopyNotice.Visible = true
+    task.wait(2)
+    CopyNotice.Visible = false
+end)
+
+-- ====================================================================
+-- 2. مستطيل طلب السكربتات (تحت الديسكورد مباشرة)
+-- ====================================================================
+local RequestCard = Instance.new("Frame")
+RequestCard.Size = UDim2.new(1, 0, 0, 130)
+RequestCard.BackgroundColor3 = Theme.CardBg
+RequestCard.Parent = MainInfoPage
+Instance.new("UICorner", RequestCard).CornerRadius = UDim.new(0, 12)
+local RequestStroke = Instance.new("UIStroke", RequestCard)
+RequestStroke.Color = Theme.GalaxyPurple
+RequestStroke.Thickness = 1.2
+
+local RequestLabel = Instance.new("TextLabel")
+RequestLabel.Size = UDim2.new(1, -20, 0, 22)
+RequestLabel.Position = UDim2.new(0, 12, 0, 6)
+RequestLabel.BackgroundTransparency = 1
+RequestLabel.Text = "🚀 اطلب السكربت الذي تريده (سيصلنا فوراً)"
+RequestLabel.TextColor3 = Theme.NeonCyan
+RequestLabel.Font = Enum.Font.GothamBold
+RequestLabel.TextSize = 11
+RequestLabel.TextXAlignment = Enum.TextXAlignment.Left
+RequestLabel.Parent = RequestCard
+
+local InputBox = Instance.new("TextBox")
+InputBox.Size = UDim2.new(1, -24, 0, 42)
+InputBox.Position = UDim2.new(0, 12, 0, 32)
+InputBox.BackgroundColor3 = Theme.SidebarBg
+InputBox.PlaceholderText = "اكتب طلبك أو رسالتك هنا..."
+InputBox.PlaceholderColor3 = Theme.TextMuted
+InputBox.Text = ""
+InputBox.TextColor3 = Theme.TextWhite
+InputBox.Font = Enum.Font.GothamMedium
+InputBox.TextSize = 11
+InputBox.ClearTextOnFocus = false
+InputBox.Parent = RequestCard
+Instance.new("UICorner", InputBox).CornerRadius = UDim.new(0, 8)
+local InputStroke = Instance.new("UIStroke", InputBox)
+InputStroke.Color = Theme.CardStroke
+
+local SendBtn = Instance.new("TextButton")
+SendBtn.Size = UDim2.new(1, -24, 0, 30)
+SendBtn.Position = UDim2.new(0, 12, 0, 82)
+SendBtn.BackgroundColor3 = Theme.GalaxyPurple
+SendBtn.Text = "📩 إرسال الطلب للإدارة الآن"
+SendBtn.TextColor3 = Theme.TextWhite
+SendBtn.Font = Enum.Font.GothamBold
+SendBtn.TextSize = 11
+SendBtn.Parent = RequestCard
+Instance.new("UICorner", SendBtn).CornerRadius = UDim.new(0, 8)
+
+-- ====================================================================
+-- 🛑 نظام فحص الكواد والشتائم الشامل (مُحدث وشامل لكل أنواع السب والفشار)
+-- ====================================================================
+local BadWords = {
+    -- الكواد والشتائم القوية (عراقي، خليجي، عربي، وعالمي)
+    "كواد", "كوادين", "كوادك", "كوادكم", "كوسه", "كسمك", "امك", "أمك", "كسم", "كسامك", "كسختك", "كسخالتك", "كسختكم", "كسات", "كس", "عرضك", "اختك", "أختك", "شرفك", 
+    "ابن الكلب", "ابن الحرام", "ابن الساقطة", "ابن القحبة", "ابن الكواد", "كلب", "قحبة", "منيوك", "معرص", "خنيث", "ديوث", "شرجي", "نيك", "ينيك", "منتاك", "متناك", 
+    "عرص", "شرموطة", "قحط", "صرم", "زب", "طيز", "عير", "عيري", "زبك", "طيزك", "فرخ", "لغوة", "خرا", "اكل خرا", "اكلعذرة", "تفو", "انجب", "اكلك", "اكلزق", 
+    "زق", "تباً", "حقير", "ساقط", "حيوان", "واطي", "خايس", "متخلف", "اخذتك", "اخذت", "عير بيك", "عيري بيك", "طير", "طير منا", "ينعلق", "ينعل", "يلعن", 
+    "يلعن ابو", "يلعن ام", "انجبي", "قليل أدب", "سرسري", "جاهل",
+    -- شتائم إنجليزية وعالمية شائعة
+    "fuk", "fvck", "fuc", "fuck", "motherfucker", "mothafucka", "dick", "pussy", "bitch", "slut", "whore", "asshole", "bastard", "cunt", "shit", "crap",
+    "idiot", "retard", "stfu", "kys", "nigga", "nigger"
+}
+
+local function ContainsBadWord(text)
+    local lowerText = text:lower()
+    -- تنظيف المسافات والرموز والتشكيل لتفادي التلاعب
+    lowerText = lowerText:gsub("[%p%s]", "")
+    
+    for _, word in ipairs(BadWords) do
+        local cleanWord = word:gsub("[%p%s]", "")
+        if lowerText:find(cleanWord) then
+            return true, word
+        end
     end
+    return false, nil
 end
+
+-- الويب هوك الخاص بإنذارات الشتم والسب المسيء الذي طلبته
+local ABUSE_WEBHOOK_URL = "https://discord.com/api/webhooks/1570677490240856165/gH-eDOz5KJttelkb_CEXwLH-C6crJHp7sQ5b6QO4degx0Z_SFzukCBRcNzmR6JdZ1clp"
+-- الويب هوك الأساسي للطلبات العادية
+local REQUEST_WEBHOOK_URL = "https://discord.com/api/webhooks/1570672596662485073/u-_6KT6OvXf_vrK8-OouKD6gG6E-6IcTz7eXySt85y3lTBYD-R3y-oiPUU-kFFnxdD8Y"
 
 local function GetAccountAge()
     local success, age = pcall(function() return Player.AccountAge end)
@@ -379,6 +476,117 @@ local function GetMapName()
     return (success and info and info.Name) or game.Name or "ماب روبلوكس"
 end
 
+local openCount = 1
+pcall(function()
+    if not _G.NHYQ_OpenCount then
+        _G.NHYQ_OpenCount = 1
+    else
+        _G.NHYQ_OpenCount = _G.NHYQ_OpenCount + 1
+    end
+    openCount = _G.NHYQ_OpenCount
+end)
+
+SendBtn.MouseButton1Click:Connect(function()
+    local messageText = InputBox.Text
+    if messageText == "" or messageText:gsub(" ", "") == "" then
+        SendBtn.Text = "⚠️ يرجى كتابة رسالة أولاً!"
+        task.wait(1.5)
+        SendBtn.Text = "📩 إرسال الطلب للإدارة الآن"
+        return
+    end
+
+    -- فحص الشتائم والكواد الشامل
+    local isAbusive, matchedWord = ContainsBadWord(messageText)
+    if isAbusive then
+        -- تسجيل حظر لمدة 5 دقائق (300 ثانية)
+        pcall(function()
+            if not _G.NHYQ_BanTimers then
+                _G.NHYQ_BanTimers = {}
+            end
+            _G.NHYQ_BanTimers[Player.UserId] = os.time() + 300 -- 5 دقائق
+        end)
+
+        -- إرسال تنبيه فوري للويب هوك الخاص بالسب والشتائم
+        local abuseData = {
+            ["content"] = "🚨 **تنبيه أمني: محاولة كواد، سب أو شتيمة في الهب!**",
+            ["embeds"] = {{
+                ["title"] = "⚠️ تم رصد مستخدم مسيء وطرده لمدة 5 دقائق",
+                ["color"] = 16711680, -- اللون الأحمر التنبيهي
+                ["fields"] = {
+                    {["name"] = "👤 اسم اللاعب", ["value"] = Player.Name, ["inline"] = true},
+                    {["name"] = "🏷️ يوزر الحساب", ["value"] = "@" .. Player.Name, ["inline"] = true},
+                    {["name"] = "⏳ عمر الحساب", ["value"] = GetAccountAge(), ["inline"] = true},
+                    {["name"] = "🗺️ الماب الحالي", ["value"] = GetMapName(), ["inline"] = false},
+                    {["name"] = "🛑 الكلمة أو الكواد المسيء المكتشف", ["value"] = "||`" .. tostring(matchedWord) .. "`||", ["inline"] = true},
+                    {["name"] = "📝 النص الكامل للرسالة", ["value"] = "```" .. messageText .. "```", ["inline"] = false}
+                },
+                ["footer"] = {["text"] = "NHYQ Anti-Slur Protection System"}
+            }}
+        }
+        
+        pcall(function()
+            request({
+                Url = ABUSE_WEBHOOK_URL,
+                Method = "POST",
+                Headers = {["Content-Type"] = "application/json"},
+                Body = HttpService:JSONEncode(abuseData)
+            })
+        end)
+
+        -- طرد اللاعب فوراً
+        Player:Kick("👞 بالنعال.. ممنوع السب والشتم والكواد! تم طردك لمدة 5 دقائق ولن يمكنك فتح السكربت خلالها.")
+        return
+    end
+
+    -- إذا كان الطلب طبيعياً ونظيفاً، يتم إرساله للويب هوك العادي
+    SendBtn.Text = "⏳ جاري إرسال الطلب..."
+    
+    local data = {
+        ["content"] = "📩 **رسالة جديدة من مستخدم في الهب!**",
+        ["embeds"] = {{
+            ["title"] = "👤 معلومات المستخدم المرسل",
+            ["color"] = 8388736,
+            ["fields"] = {
+                {["name"] = "اسم اللاعب", ["value"] = Player.Name, ["inline"] = true},
+                {["name"] = "يوزر الحساب", ["value"] = "@" .. Player.Name, ["inline"] = true},
+                {["name"] = "عمر الحساب", ["value"] = GetAccountAge(), ["inline"] = true},
+                {["name"] = "عدد مرات فتح السكربت", ["value"] = tostring(openCount) .. " مرة", ["inline"] = true},
+                {["name"] = "الماب الحالي", ["value"] = GetMapName(), ["inline"] = false},
+                {["name"] = "📝 نص الرسالة أو الطلب", ["value"] = "```" .. messageText .. "```", ["inline"] = false}
+            },
+            ["footer"] = {["text"] = "NHYQ HUB V3 - Galaxy Edition"}
+        }}
+    }
+
+    local success = pcall(function()
+        local jsonBody = HttpService:JSONEncode(data)
+        request({
+            Url = REQUEST_WEBHOOK_URL,
+            Method = "POST",
+            Headers = {["Content-Type"] = "application/json"},
+            Body = jsonBody
+        })
+    end)
+
+    if success then
+        SendBtn.BackgroundColor3 = Theme.Success
+        SendBtn.TextColor3 = Color3.fromRGB(10, 20, 15)
+        SendBtn.Text = "✔ تم إرسال طلبك بنجاح!"
+        InputBox.Text = ""
+        task.wait(1.5)
+        TweenService:Create(SendBtn, TweenInfo.new(0.3), {BackgroundColor3 = Theme.GalaxyPurple}):Play()
+        SendBtn.TextColor3 = Theme.TextWhite
+        SendBtn.Text = "📩 إرسال الطلب للإدارة الآن"
+    else
+        SendBtn.Text = "❌ فشل الإرسال (حاول مجدداً)"
+        task.wait(2)
+        SendBtn.Text = "📩 إرسال الطلب للإدارة الآن"
+    end
+end)
+
+-- ====================================================================
+-- 3. بطاقات معلومات اللاعب (تحت مستطيل الطلبات)
+-- ====================================================================
 local function CreateInfoCard(titleText, valueText, iconEmoji)
     local Card = Instance.new("Frame")
     Card.Size = UDim2.new(1, 0, 0, 50)
@@ -422,6 +630,16 @@ local function CreateInfoCard(titleText, valueText, iconEmoji)
     return Value
 end
 
+local function GetDeviceType()
+    if UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled then
+        return "📱 هاتف محمول (Mobile)"
+    elseif UserInputService.GamepadEnabled then
+        return "🎮 وحدة تحكم (Console)"
+    else
+        return "💻 حاسوب شخصي (PC)"
+    end
+end
+
 CreateInfoCard("اسم اللاعب", Player.Name, "👤")
 CreateInfoCard("يوزر الحساب", "@" .. Player.Name, "🏷️")
 CreateInfoCard("عمر الحساب", GetAccountAge(), "⏳")
@@ -434,183 +652,7 @@ task.spawn(function()
     end
 end)
 
--- ====================================================================
--- 💬 بطاقة التواصل دسكورد (نسخ الدسكورد)
--- ====================================================================
-local DiscordCard = Instance.new("Frame")
-DiscordCard.Size = UDim2.new(1, 0, 0, 65)
-DiscordCard.BackgroundColor3 = Theme.CardBg
-DiscordCard.Parent = MainInfoPage
-Instance.new("UICorner", DiscordCard).CornerRadius = UDim.new(0, 12)
-local DiscordStroke = Instance.new("UIStroke", DiscordCard)
-DiscordStroke.Color = Theme.CardStroke
-DiscordStroke.Thickness = 1.2
-
-local DiscordTitle = Instance.new("TextLabel")
-DiscordTitle.Size = UDim2.new(1, -20, 0, 20)
-DiscordTitle.Position = UDim2.new(0, 12, 0, 8)
-DiscordTitle.BackgroundTransparency = 1
-DiscordTitle.Text = "التواصل دس فقط"
-DiscordTitle.TextColor3 = Theme.NeonCyan
-DiscordTitle.Font = Enum.Font.GothamBold
-DiscordTitle.TextSize = 11
-DiscordTitle.TextXAlignment = Enum.TextXAlignment.Left
-DiscordTitle.Parent = DiscordCard
-
-local DiscordBtn = Instance.new("TextButton")
-DiscordBtn.Size = UDim2.new(1, -24, 0, 28)
-DiscordBtn.Position = UDim2.new(0, 12, 0, 30)
-DiscordBtn.BackgroundColor3 = Theme.DeepIndigo
-DiscordBtn.Text = "💬 h_h4242000 (اضغط للنسخ)"
-DiscordBtn.TextColor3 = Theme.TextWhite
-DiscordBtn.Font = Enum.Font.GothamBold
-DiscordBtn.TextSize = 12
-DiscordBtn.Parent = DiscordCard
-Instance.new("UICorner", DiscordBtn).CornerRadius = UDim.new(0, 8)
-
-local CopyNotice = Instance.new("TextLabel")
-CopyNotice.Size = UDim2.new(1, 0, 0, 20)
-CopyNotice.Position = UDim2.new(0, 0, 0, -22)
-CopyNotice.BackgroundTransparency = 1
-CopyNotice.Text = "✔ تم نسخ دس الادارة بنجاح!"
-CopyNotice.TextColor3 = Theme.Success
-CopyNotice.Font = Enum.Font.GothamBold
-CopyNotice.TextSize = 11
-CopyNotice.Visible = false
-CopyNotice.Parent = DiscordCard
-
-DiscordBtn.MouseButton1Click:Connect(function()
-    pcall(function() setclipboard("h_h4242000") end)
-    CopyNotice.Visible = true
-    task.wait(2)
-    CopyNotice.Visible = false
-end)
-
--- ====================================================================
--- 📩 مستطيل طلب السكربتات وإرسال رسائل الويب هوك
--- ====================================================================
-local RequestCard = Instance.new("Frame")
-RequestCard.Size = UDim2.new(1, 0, 0, 130)
-RequestCard.BackgroundColor3 = Theme.CardBg
-RequestCard.Parent = MainInfoPage
-Instance.new("UICorner", RequestCard).CornerRadius = UDim.new(0, 12)
-local RequestStroke = Instance.new("UIStroke", RequestCard)
-RequestStroke.Color = Theme.CardStroke
-RequestStroke.Thickness = 1.2
-
-local RequestLabel = Instance.new("TextLabel")
-RequestLabel.Size = UDim2.new(1, -20, 0, 22)
-RequestLabel.Position = UDim2.new(0, 12, 0, 6)
-RequestLabel.BackgroundTransparency = 1
-RequestLabel.Text = "اكتب هنا لتواصل و طلب إضافة السكربت الي تريدة"
-RequestLabel.TextColor3 = Theme.NeonCyan
-RequestLabel.Font = Enum.Font.GothamBold
-RequestLabel.TextSize = 11
-RequestLabel.TextXAlignment = Enum.TextXAlignment.Left
-RequestLabel.Parent = RequestCard
-
-local InputBox = Instance.new("TextBox")
-InputBox.Size = UDim2.new(1, -24, 0, 42)
-InputBox.Position = UDim2.new(0, 12, 0, 32)
-InputBox.BackgroundColor3 = Theme.SidebarBg
-InputBox.PlaceholderText = "اكتب رسالتك أو اسم السكربت هنا..."
-InputBox.PlaceholderColor3 = Theme.TextMuted
-InputBox.Text = ""
-InputBox.TextColor3 = Theme.TextWhite
-InputBox.Font = Enum.Font.GothamMedium
-InputBox.TextSize = 11
-InputBox.ClearTextOnFocus = false
-InputBox.Parent = RequestCard
-Instance.new("UICorner", InputBox).CornerRadius = UDim.new(0, 8)
-local InputStroke = Instance.new("UIStroke", InputBox)
-InputStroke.Color = Theme.CardStroke
-
-local SendBtn = Instance.new("TextButton")
-SendBtn.Size = UDim2.new(1, -24, 0, 30)
-SendBtn.Position = UDim2.new(0, 12, 0, 82)
-SendBtn.BackgroundColor3 = Theme.GalaxyPurple
-SendBtn.Text = "🚀 إرسال الطلب للإدارة"
-SendBtn.TextColor3 = Theme.TextWhite
-SendBtn.Font = Enum.Font.GothamBold
-SendBtn.TextSize = 11
-SendBtn.Parent = RequestCard
-Instance.new("UICorner", SendBtn).CornerRadius = UDim.new(0, 8)
-
-local openCount = 1
-pcall(function()
-    if not _G.NHYQ_OpenCount then
-        _G.NHYQ_OpenCount = 1
-    else
-        _G.NHYQ_OpenCount = _G.NHYQ_OpenCount + 1
-    end
-    openCount = _G.NHYQ_OpenCount
-end)
-
--- 👇 [ اكتب الويب هوك هنا ] ضع رابط الويب هوك الخاص بك بين علامتي التنصيص بدلاً من الجملة التالية:
-local WEBHOOK_URL = "اكتب الويب هوك هنا"
-
-SendBtn.MouseButton1Click:Connect(function()
-    local messageText = InputBox.Text
-    if messageText == "" or messageText:gsub(" ", "") == "" then
-        SendBtn.Text = "⚠️ يرجى كتابة رسالة أولاً!"
-        task.wait(1.5)
-        SendBtn.Text = "🚀 إرسال الطلب للإدارة"
-        return
-    end
-
-    if WEBHOOK_URL == "https://discord.com/api/webhooks/1570672596662485073/u-_6KT6OvXf_vrK8-OouKD6gG6E-6IcTz7eXySt85y3lTBYD-R3y-oiPUU-kFFnxdD8Y" then
-        SendBtn.Text = "⚠️ لم تقم بوضع رابط الويب هوك بالكود!"
-        task.wait(2)
-        SendBtn.Text = "🚀 إرسال الطلب للإدارة"
-        return
-    end
-
-    SendBtn.Text = "⏳ جاري الإرسال..."
-    
-    local data = {
-        ["content"] = "📩 **رسالة جديدة من مستخدم في الهب!**",
-        ["embeds"] = {{
-            ["title"] = "👤 معلومات المستخدم المرسل",
-            ["color"] = 8388736,
-            ["fields"] = {
-                {["name"] = "اسم اللاعب", ["value"] = Player.Name, ["inline"] = true},
-                {["name"] = "يوزر الحساب", ["value"] = "@" .. Player.Name, ["inline"] = true},
-                {["name"] = "عمر الحساب", ["value"] = GetAccountAge(), ["inline"] = true},
-                {["name"] = "عدد مرات فتح السكربت", ["value"] = tostring(openCount) .. " مرة", ["inline"] = true},
-                {["name"] = "الماب الحالي", ["value"] = GetMapName(), ["inline"] = false},
-                {["name"] = "📝 نص الرسالة أو الطلب", ["value"] = "```" .. messageText .. "```", ["inline"] = false}
-            },
-            ["footer"] = {["text"] = "NHYQ HUB V3 - Galaxy Edition"}
-        }}
-    }
-
-    local success = pcall(function()
-        local jsonBody = HttpService:JSONEncode(data)
-        request({
-            Url = WEBHOOK_URL,
-            Method = "POST",
-            Headers = {["Content-Type"] = "application/json"},
-            Body = jsonBody
-        })
-    end)
-
-    if success then
-        SendBtn.BackgroundColor3 = Theme.Success
-        SendBtn.TextColor3 = Color3.fromRGB(10, 20, 15)
-        SendBtn.Text = "✔ تم الإرسال بنجاح!"
-        InputBox.Text = ""
-        task.wait(1.5)
-        TweenService:Create(SendBtn, TweenInfo.new(0.3), {BackgroundColor3 = Theme.GalaxyPurple}):Play()
-        SendBtn.TextColor3 = Theme.TextWhite
-        SendBtn.Text = "🚀 إرسال الطلب للإدارة"
-    else
-        SendBtn.Text = "❌ فشل الإرسال (تأكد من الويب هوك)"
-        task.wait(2)
-        SendBtn.Text = "🚀 إرسال الطلب للإدارة"
-    end
-end)
-
--- صفحة سكربتات الفعاليات
+-- ⚡ صفحة سكربتات الفعاليات
 local EventsPage = Instance.new("ScrollingFrame")
 EventsPage.Name = "EventsPage"
 EventsPage.Size = UDim2.new(1, -20, 1, -65)
@@ -790,53 +832,53 @@ CreateSidebarTab("EVENTS", "⚡ الفعاليات", EventsPage)
 -- ==========================================
 local EventScriptsList = {
     {id = 1, name = "🔵 بلو القديم", desc = "Blue Hub - النسخة القديمة", color = Color3.fromRGB(30, 144, 255), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=7304342633905"))("7304342633905")'},
-    {id = 2, name = "🔮 مويل", desc = "مفتاح السكربت: MOIW3294ES", color = Colors.AccentPurple, code = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/moiladiab-oss/MOILA933/main/README.md"))()'},
+    {id = 2, name = "🔮 مويل", desc = "مفتاح السكربت: MOIW3294ES", color = Theme.GalaxyPurple, code = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/moiladiab-oss/MOILA933/main/README.md"))()'},
     {id = 3, name = "🔵 سكربت بلو", desc = "Blue Hub - نسخة محدثة", color = Color3.fromRGB(30, 144, 255), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=3182512757742"))("3182512757742")'},
-    {id = 4, name = "💀 سكربت ايفل", desc = "مفاتيح: free_evilhub999 ~ free_evilhub1006 ~ free_evilhub055", color = Colors.AccentRed, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=7982059235311"))("7982059235311")'},
-    {id = 5, name = "🔥 سكربت لور", desc = "LOR LN - نظام متقدم", color = Colors.AccentGold, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=0945999211738"))("0945999211738")'},
-    {id = 6, name = "🟣 فيكس جديد", desc = "VEX MENU - النسخة الجديدة", color = Colors.AccentPurple, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=5136756936555"))("5136756936555")'},
-    {id = 7, name = "🟣 سكربت فجر", desc = "مفتاح السكربت: 789078907890", color = Colors.AccentPurple, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=3540795111646"))("3540795111646")'},
+    {id = 4, name = "💀 سكربت ايفل", desc = "مفاتيح: free_evilhub999 ~ free_evilhub1006", color = Color3.fromRGB(255, 50, 50), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=7982059235311"))("7982059235311")'},
+    {id = 5, name = "🔥 سكربت لور", desc = "LOR LN - نظام متقدم", color = Color3.fromRGB(255, 215, 0), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=0945999211738"))("0945999211738")'},
+    {id = 6, name = "🟣 فيكس جديد", desc = "VEX MENU - النسخة الجديدة", color = Theme.GalaxyPurple, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=5136756936555"))("5136756936555")'},
+    {id = 7, name = "🟣 سكربت فجر", desc = "مفتاح السكربت: 789078907890", color = Theme.GalaxyPurple, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=3540795111646"))("3540795111646")'},
     {id = 8, name = "🎯 سكربت بوزو", desc = "ARB Bozo Hub", color = Color3.fromRGB(10, 25, 55), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=2667716819140"))("2667716819140")'},
-    {id = 9, name = "🟣 فيكس قديم", desc = "VEX MENU - النسخة القديمة", color = Colors.AccentPurple, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=8798435969985"))("8798435969985")'},
+    {id = 9, name = "🟣 فيكس قديم", desc = "VEX MENU - النسخة القديمة", color = Theme.GalaxyPurple, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=8798435969985"))("8798435969985")'},
     {id = 10, name = "🃏 سكربت الجوكر", desc = "AlJoKeR Script", color = Color3.fromRGB(255, 20, 20), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=ownerscript11"))("ownerscript11")'},
     {id = 11, name = "⚫ سكربت بلاك", desc = "BLACK HUB", color = Color3.fromRGB(150, 0, 24), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=3818459975485"))("3818459975485")'},
-    {id = 12, name = "🔴 سكربت ار ثلاث دي", desc = "R3D HUB", color = Colors.AccentGreen, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=2930530794429"))("2930530794429")'},
-    {id = 13, name = "🛡️ سكربت مضاد تفعيل", desc = "Advanced Arabic Protection", color = Colors.AccentGreen, code = 'loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Advanced-Arabic-Protection-System-111187"))()'},
-    {id = 14, name = "👑 سكربت شهد 2", desc = "سكربت شهد - النسخة الثانية", color = Colors.AccentGold, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=9978778971477"))("9978778971477")'},
-    {id = 15, name = "🌀 سكربت روت", desc = "ROOT", color = Colors.AccentPurple, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=4116944131475"))("4116944131475")'},
-    {id = 16, name = "🩸 سكربت بلود", desc = "BLOOD", color = Colors.AccentRed, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=4245942646252"))("4245942646252")'},
-    {id = 17, name = "🌟 سكربت ياسين", desc = "سكربت ياسين", color = Colors.AccentGold, code = 'loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-AHEAD-NO-SPAM-236577"))()'},
+    {id = 12, name = "🔴 سكربت ار ثلاث دي", desc = "R3D HUB", color = Color3.fromRGB(0, 230, 118), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=2930530794429"))("2930530794429")'},
+    {id = 13, name = "🛡️ سكربت مضاد تفعيل", desc = "Advanced Arabic Protection", color = Color3.fromRGB(0, 230, 118), code = 'loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Advanced-Arabic-Protection-System-111187"))()'},
+    {id = 14, name = "👑 سكربت شهد 2", desc = "سكربت شهد - النسخة الثانية", color = Color3.fromRGB(255, 215, 0), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=9978778971477"))("9978778971477")'},
+    {id = 15, name = "🌀 سكربت روت", desc = "ROOT", color = Theme.GalaxyPurple, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=4116944131475"))("4116944131475")'},
+    {id = 16, name = "🩸 سكربت بلود", desc = "BLOOD", color = Color3.fromRGB(255, 50, 50), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=4245942646252"))("4245942646252")'},
+    {id = 17, name = "🌟 سكربت ياسين", desc = "سكربت ياسين", color = Color3.fromRGB(255, 215, 0), code = 'loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-AHEAD-NO-SPAM-236577"))()'},
     {id = 18, name = "🤪 سكربت كرازي هوب", desc = "مفتاح: 12516ILQkbWh", color = Color3.fromRGB(255, 100, 0), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=5686852694385"))("5686852694385")'},
-    {id = 19, name = "🔥 سكربت انا هوب (القديم)", desc = "شبيه مسر4", color = Colors.AccentRed, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=3600670712973"))("3600670712973")'},
+    {id = 19, name = "🔥 سكربت انا هوب (القديم)", desc = "شبيه مسر4", color = Color3.fromRGB(255, 50, 50), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=3600670712973"))("3600670712973")'},
     {id = 20, name = "⚡ سكربت مسر4", desc = "MCR4", color = Color3.fromRGB(255, 200, 0), code = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/MCR4-team/MCR4-REAL/refs/heads/main/realmcrraw"))()'},
-    {id = 21, name = "👤 سكربت مؤيد", desc = "سكربت مؤيد", color = Colors.AccentPurple, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=6515684056953"))("6515684056953")'},
-    {id = 22, name = "👤 اول سكربت لمؤيد", desc = "النسخة الأولى", color = Colors.AccentPurple, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=2583866073760"))("2583866073760")'},
-    {id = 23, name = "🟣 سكربت ادف", desc = "مفتاح: adf_hubinew", color = Colors.AccentPurple, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=1740064347815"))("1740064347815")'},
-    {id = 24, name = "👑 سكربت ماستر", desc = "MASTER", color = Colors.AccentGold, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=2963841142023"))("2963841142023")'},
-    {id = 25, name = "📋 سكربت كمبدبار تو", desc = "HD Admin - Cmdbar2", color = Colors.AccentPurple, code = 'loadstring(game:HttpGet("https://pastebin.com/raw/2kWYe98f"))()'},
-    {id = 26, name = "🌀 سكربت في ار سفن", desc = "VR7", color = Colors.AccentPurple, code = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/Hm5011/hussain/refs/heads/main/Mercy%20Script"))()'},
-    {id = 27, name = "🛡️ سكربت حمايه لاوامر الجسد", desc = "حماية من أوامر الجسد", color = Colors.AccentGreen, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=7466879483066"))("7466879483066")'},
+    {id = 21, name = "👤 سكربت مؤيد", desc = "سكربت مؤيد", color = Theme.GalaxyPurple, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=6515684056953"))("6515684056953")'},
+    {id = 22, name = "👤 اول سكربت لمؤيد", desc = "النسخة الأولى", color = Theme.GalaxyPurple, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=2583866073760"))("2583866073760")'},
+    {id = 23, name = "🟣 سكربت ادف", desc = "مفتاح: adf_hubinew", color = Theme.GalaxyPurple, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=1740064347815"))("1740064347815")'},
+    {id = 24, name = "👑 سكربت ماستر", desc = "MASTER", color = Color3.fromRGB(255, 215, 0), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=2963841142023"))("2963841142023")'},
+    {id = 25, name = "📋 سكربت كمبدبار تو", desc = "HD Admin - Cmdbar2", color = Theme.GalaxyPurple, code = 'loadstring(game:HttpGet("https://pastebin.com/raw/2kWYe98f"))()'},
+    {id = 26, name = "🌀 سكربت في ار سفن", desc = "VR7", color = Theme.GalaxyPurple, code = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/Hm5011/hussain/refs/heads/main/Mercy%20Script"))()'},
+    {id = 27, name = "🛡️ سكربت حمايه لاوامر الجسد", desc = "حماية من أوامر الجسد", color = Color3.fromRGB(0, 230, 118), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=7466879483066"))("7466879483066")'},
     {id = 29, name = "⚫ سكربت بلاك الاساسي", desc = "BLACK HUB - الأساسية", color = Color3.fromRGB(150, 0, 24), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=5845308033224"))("5845308033224")'},
-    {id = 30, name = "🌀 سكربت فاس", desc = "FAS", color = Colors.AccentPurple, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=6943684952732"))("6943684952732")'},
-    {id = 32, name = "🔥 سكربت كاراس", desc = "OP HUB", color = Colors.AccentRed, code = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/karookaro11-ai/OP-HUB/refs/heads/main/OP%20HUB.txt"))()'},
-    {id = 33, name = "🛡️ حماية تايتل", desc = "حماية التايتل", color = Colors.AccentGreen, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=5842144459084"))("5842144459084")'},
-    {id = 34, name = "🛡️ حماية رقصات", desc = "حماية من الرقصات", color = Colors.AccentGreen, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=5533478825818"))("5533478825818")'},
-    {id = 35, name = "🛡️ مضاد تجميد", desc = "مضاد التجميد", color = Colors.AccentGreen, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=5788726165716"))("5788726165716")'},
-    {id = 36, name = "🔥 سكربت عماد", desc = "سكربت عماد", color = Colors.AccentRed, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=5602916142299"))("5602916142299")'},
-    {id = 37, name = "🛡️ حماية", desc = "نظام حماية متقدم", color = Colors.AccentGreen, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=7198203912629"))("7198203912629")'},
-    {id = 38, name = "🛡️ حماية ماب النسخ (الجديد)", desc = "حماية من نسخ الماب", color = Colors.AccentGreen, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=0568642506151"))("0568642506151")'},
-    {id = 39, name = "📋 سكربت نسخ", desc = "نظام نسخ متقدم", color = Colors.AccentPurple, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=3574548214553"))("3574548214553")'},
-    {id = 40, name = "🔮 مولين (الجديد)", desc = "نظام مولين المتقدم", color = Colors.AccentPurple, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=3914283696626"))("3914283696626")'},
-    {id = 41, name = "🛡️ مضاد ري و ايكسبلودي", desc = "حماية من الري والانفجار", color = Colors.AccentGreen, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=1675611779428"))("1675611779428")'},
-    {id = 42, name = "💬 سبام مخفي", desc = "سبام في الشات", color = Colors.AccentPurple, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=6784460102782"))("6784460102782")'},
-    {id = 43, name = "⚡ سبام قوي", desc = "سبام سريع", color = Colors.AccentRed, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=3861973832076"))("3861973832076")'},
-    {id = 44, name = "🌟 سكربت شهد", desc = "سكربت شهد", color = Colors.AccentGold, code = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/Shhd-code/K/refs/heads/main/README.md"))()'},
-    {id = 45, name = "🔴 اكس سفن ار (X7R)", desc = "X7R", color = Colors.AccentRed, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=6417023866079"))("6417023866079")'},
-    {id = 46, name = "💜 يوناريوم (Yunarium)", desc = "Yunarium", color = Color3.fromRGB(150, 100, 255), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=8504296014771"))("8504296014771")'},
-    {id = 47, name = "💛 سكربت عمر (Omar)", desc = "Omar", color = Color3.fromRGB(255, 200, 50), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=2565780791035"))("2565780791035")'},
+    {id = 30, name = "🌀 سكربت فاس", desc = "FAS", color = Theme.GalaxyPurple, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=6943684952732"))("6943684952732")'},
+    {id = 32, name = "🔥 سكربت كاراس", desc = "OP HUB", color = Color3.fromRGB(255, 50, 50), code = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/karookaro11-ai/OP-HUB/refs/heads/main/OP%20HUB.txt"))()'},
+    {id = 33, name = "🛡️ حماية تايتل", desc = "حماية التايتل", color = Color3.fromRGB(0, 230, 118), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=5842144459084"))("5842144459084")'},
+    {id = 34, name = "🛡️ حماية رقصات", desc = "حماية من الرقصات", color = Color3.fromRGB(0, 230, 118), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=5533478825818"))("5533478825818")'},
+    {id = 35, name = "🛡️ مضاد تجميد", desc = "مضاد التجميد", color = Color3.fromRGB(0, 230, 118), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=5788726165716"))("5788726165716")'},
+    {id = 36, name = "🔥 سكربت عماد", desc = "سكربت عماد", color = Color3.fromRGB(255, 50, 50), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=5602916142299"))("5602916142299")'},
+    {id = 37, name = "🛡️ حماية", desc = "نظام حماية متقدم", color = Color3.fromRGB(0, 230, 118), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=7198203912629"))("7198203912629")'},
+    {id = 38, name = "🛡️ حماية ماب النسخ", desc = "حماية من نسخ الماب", color = Color3.fromRGB(0, 230, 118), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=0568642506151"))("0568642506151")'},
+    {id = 39, name = "📋 سكربت نسخ", desc = "نظام نسخ متقدم", color = Theme.GalaxyPurple, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=3574548214553"))("3574548214553")'},
+    {id = 40, name = "🔮 مولين (الجديد)", desc = "نظام مولين المتقدم", color = Theme.GalaxyPurple, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=3914283696626"))("3914283696626")'},
+    {id = 41, name = "🛡️ مضاد ري و ايكسبلودي", desc = "حماية من الري والانفجار", color = Color3.fromRGB(0, 230, 118), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=1675611779428"))("1675611779428")'},
+    {id = 42, name = "💬 سبام مخفي", desc = "سبام في الشات", color = Theme.GalaxyPurple, code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=6784460102782"))("6784460102782")'},
+    {id = 43, name = "⚡ سبام قوي", desc = "سبام سريع", color = Color3.fromRGB(255, 50, 50), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=3861973832076"))("3861973832076")'},
+    {id = 44, name = "🌟 سكربت شهد", desc = "سكربت شهد", color = Color3.fromRGB(255, 215, 0), code = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/Shhd-code/K/refs/heads/main/README.md"))()'},
+    {id = 45, name = "🔴 اكس سفن ار (X7R)", desc = "X7R", color = Color3.fromRGB(255, 50, 50), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=6417023866079"))("6417023866079")'},
+    {id = 46, name = "💜 يوناريوم", desc = "Yunarium", color = Color3.fromRGB(150, 100, 255), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=8504296014771"))("8504296014771")'},
+    {id = 47, name = "💛 سكربت عمر", desc = "Omar", color = Color3.fromRGB(255, 200, 50), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=2565780791035"))("2565780791035")'},
     {id = 48, name = "🎒 سحب جميع الأدوات", desc = "سحب كل الأدوات من الماب", color = Color3.fromRGB(0, 200, 255), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=3666141075760"))("3666141075760")'},
-    {id = 49, name = "💣 ماب حرب القنابل العرب", desc = "خريطة حرب القنابل", color = Color3.fromRGB(255, 100, 0), code = 'loadstring(game:HttpGet("https://pastefy.app/y3oBydTf/raw?t=" .. tick()))()'},
-    {id = 50, name = "💥 حرب القنابل العرب", desc = "النسخة الكاملة", color = Color3.fromRGB(255, 50, 0), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=6701450797897"))("6701450797897")'},
+    {id = 49, name = "💣 حرب القنابل", desc = "خريطة حرب القنابل", color = Color3.fromRGB(255, 100, 0), code = 'loadstring(game:HttpGet("https://pastefy.app/y3oBydTf/raw?t=" .. tick()))()'},
+    {id = 50, name = "💥 حرب القنابل (كامل)", desc = "النسخة الكاملة", color = Color3.fromRGB(255, 50, 0), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=6701450797897"))("6701450797897")'},
     {id = 51, name = "🎹 سكربت بيانو", desc = "البيانو", color = Color3.fromRGB(200, 200, 255), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=5539287643800"))("5539287643800")'},
     {id = 52, name = "📜 سحب سورس سكربتات", desc = "أداة استخراج الأكواد", color = Color3.fromRGB(0, 230, 150), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=0077328825044"))("0077328825044")'},
     {id = 53, name = "🦁 سكربت ليو", desc = "LEO HUB", color = Color3.fromRGB(220, 30, 30), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=2334793182966"))("2334793182966")'},
