@@ -1,6 +1,5 @@
 --==================================================
--- NHYQ Chat — يستخدم SayMessageRequest الرسمي
--- يشتغل بينك وبين صاحبك بنفس السيرفر
+-- NHYQ Private Chat V4 — يستخدم ReplicateEffect
 --==================================================
 
 local Players = game:GetService("Players")
@@ -8,22 +7,27 @@ local RS = game:GetService("ReplicatedStorage")
 local CoreGui = game:GetService("CoreGui")
 local localPlayer = Players.LocalPlayer
 
--- البحث عن SayMessageRequest
-local SayMsg
-for _, obj in ipairs(RS:GetDescendants()) do
-    if obj:IsA("RemoteEvent") and obj.Name == "SayMessageRequest" then
-        SayMsg = obj
-        break
+-- البحث عن RemoteEvent
+local function findRemote(name)
+    for _, obj in ipairs(RS:GetDescendants()) do
+        if obj:IsA("RemoteEvent") and obj.Name == name then
+            return obj
+        end
     end
+    return nil
 end
 
-print("SayMessageRequest:", SayMsg and "✅ موجود" or "❌ ما لقاه")
+local ReplicateEffect = findRemote("ReplicateEffect")
+local Notification = findRemote("Notification")
+
+print("ReplicateEffect:", ReplicateEffect and "✅" or "❌")
+print("Notification:", Notification and "✅" or "❌")
 
 --==================================================
 -- الواجهة
 --==================================================
 local gui = Instance.new("ScreenGui")
-gui.Name = "NHYQ_Chat_V3"
+gui.Name = "NHYQ_PrivateChat"
 gui.ResetOnSpawn = false
 gui.IgnoreGuiInset = true
 pcall(function() gui.Parent = CoreGui end)
@@ -46,8 +50,8 @@ Instance.new("UIStroke", btn).Thickness = 2
 
 -- الإطار
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 320, 0, 200)
-frame.Position = UDim2.new(1, -335, 0, 15)
+frame.Size = UDim2.new(0, 340, 0, 340)
+frame.Position = UDim2.new(1, -355, 0, 15)
 frame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 frame.BackgroundTransparency = 0.1
 frame.BorderSizePixel = 0
@@ -62,7 +66,7 @@ local title = Instance.new("TextLabel", frame)
 title.Size = UDim2.new(1, -50, 0, 26)
 title.Position = UDim2.new(0, 10, 0, 5)
 title.BackgroundTransparency = 1
-title.Text = "💬 NHYQ CHAT"
+title.Text = "💬 NHYQ PRIVATE CHAT"
 title.TextColor3 = Color3.fromRGB(255, 60, 60)
 title.TextSize = 13
 title.Font = Enum.Font.GothamBold
@@ -79,44 +83,47 @@ closeBtn.TextSize = 13
 closeBtn.Font = Enum.Font.GothamBold
 Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 4)
 
+-- قائمة الرسائل
+local scroll = Instance.new("ScrollingFrame", frame)
+scroll.Size = UDim2.new(1, -16, 1, -140)
+scroll.Position = UDim2.new(0, 8, 0, 35)
+scroll.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+scroll.BorderSizePixel = 0
+scroll.ScrollBarThickness = 3
+scroll.ScrollBarImageColor3 = Color3.fromRGB(200, 0, 0)
+scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+Instance.new("UICorner", scroll).CornerRadius = UDim.new(0, 5)
+
+local layout = Instance.new("UIListLayout", scroll)
+layout.SortOrder = Enum.SortOrder.LayoutOrder
+layout.Padding = UDim.new(0, 4)
+
 -- صندوق الكتابة
 local input = Instance.new("TextBox", frame)
-input.Size = UDim2.new(1, -20, 0, 70)
-input.Position = UDim2.new(0, 10, 0, 40)
+input.Size = UDim2.new(1, -80, 0, 38)
+input.Position = UDim2.new(0, 8, 1, -50)
 input.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 input.BorderSizePixel = 0
-input.PlaceholderText = "اكتب رسالتك هنا..."
+input.PlaceholderText = "اكتب رسالتك..."
 input.PlaceholderColor3 = Color3.fromRGB(150, 50, 50)
 input.Text = ""
 input.TextColor3 = Color3.fromRGB(255, 255, 255)
-input.TextSize = 13
+input.TextSize = 12
 input.ClearTextOnFocus = false
-input.MultiLine = true
 input.Font = Enum.Font.GothamMedium
 Instance.new("UICorner", input).CornerRadius = UDim.new(0, 5)
 Instance.new("UIStroke", input).Color = Color3.fromRGB(120, 0, 0)
 
 -- زر الإرسال
 local sendBtn = Instance.new("TextButton", frame)
-sendBtn.Size = UDim2.new(1, -20, 0, 50)
-sendBtn.Position = UDim2.new(0, 10, 1, -60)
+sendBtn.Size = UDim2.new(0, 64, 0, 38)
+sendBtn.Position = UDim2.new(1, -72, 1, -50)
 sendBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-sendBtn.Text = "🚀 إرسال الرسالة"
+sendBtn.Text = "إرسال 🚀"
 sendBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-sendBtn.TextSize = 13
+sendBtn.TextSize = 12
 sendBtn.Font = Enum.Font.GothamBold
 Instance.new("UICorner", sendBtn).CornerRadius = UDim.new(0, 5)
-
--- معلومة
-local info = Instance.new("TextLabel", frame)
-info.Size = UDim2.new(1, -20, 0, 20)
-info.Position = UDim2.new(0, 10, 1, -85)
-info.BackgroundTransparency = 1
-info.Text = "SayMessageRequest: " .. (SayMsg and "✅" or "❌")
-info.TextColor3 = SayMsg and Color3.fromRGB(100, 255, 100) or Color3.fromRGB(255, 100, 100)
-info.TextSize = 10
-info.Font = Enum.Font.Gotham
-info.TextXAlignment = Enum.TextXAlignment.Left
 
 -- فتح/إغلاق
 btn.MouseButton1Click:Connect(function()
@@ -127,41 +134,110 @@ closeBtn.MouseButton1Click:Connect(function()
 end)
 
 --==================================================
--- 🔥 الإرسال عبر SayMessageRequest
+-- إضافة رسالة للواجهة
+--==================================================
+local function addMessage(sender, msg, isMe)
+    local lbl = Instance.new("TextLabel", scroll)
+    lbl.Size = UDim2.new(1, -8, 0, 0)
+    lbl.AutomaticSize = Enum.AutomaticSize.Y
+    lbl.BackgroundTransparency = 1
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.TextYAlignment = Enum.TextYAlignment.Top
+    lbl.Font = Enum.Font.GothamMedium
+    lbl.TextSize = 12
+    lbl.TextWrapped = true
+    lbl.Text = "  " .. sender .. ": " .. msg
+    lbl.TextColor3 = isMe and Color3.fromRGB(100, 200, 255) or Color3.fromRGB(255, 150, 100)
+    
+    task.wait()
+    local totalH = 0
+    for _, c in ipairs(scroll:GetChildren()) do
+        if c:IsA("TextLabel") then totalH = totalH + c.AbsoluteSize.Y + 4 end
+    end
+    scroll.CanvasSize = UDim2.new(0, 0, 0, totalH + 10)
+    scroll.CanvasPosition = Vector2.new(0, math.max(0, totalH))
+end
+
+--==================================================
+-- 🔥 إرسال عبر RemoteEvents المختلفة
 --==================================================
 local lastSend = 0
 
-local function sendMsg()
-    if not SayMsg then
-        print("❌ SayMessageRequest مو موجود")
-        return
-    end
-    
+local function sendMessage()
     local txt = input.Text
     if txt == "" then return end
-    if #txt > 200 then txt = txt:sub(1, 200) end
+    if #txt > 100 then txt = txt:sub(1, 100) end
     
-    -- منع الباند (سيرفر يرفض لو أرسلنا بسرعة)
+    -- منع الباند
     local now = tick()
-    if now - lastSend < 1.5 then
-        print("⏳ انتظر شوي قبل الإرسال التالي")
+    if now - lastSend < 2 then
+        addMessage("⚠️", "انتظر شوية قبل الإرسال التالي", false)
         return
     end
     lastSend = now
     
-    -- إرسال بصيغة Legacy Chat الرسمية
-    pcall(function()
-        SayMsg:FireServer(txt, "All")
-    end)
+    -- عرض محلي
+    addMessage(localPlayer.Name, txt, true)
     
-    print("📤 أرسلت:", txt)
+    -- جرّب RemoteEvents بطرق مختلفة
+    local sent = false
+    
+    if ReplicateEffect then
+        pcall(function()
+            ReplicateEffect:FireServer("NHYQ_CHAT", localPlayer.Name, txt)
+            sent = true
+        end)
+    end
+    
+    if not sent and Notification then
+        pcall(function()
+            Notification:FireServer("NHYQ_CHAT", localPlayer.Name, txt)
+            sent = true
+        end)
+    end
+    
+    if not sent then
+        addMessage("⚠️ النظام", "ما في RemoteEvent متاح", false)
+    end
+    
     input.Text = ""
 end
 
-sendBtn.MouseButton1Click:Connect(sendMsg)
+sendBtn.MouseButton1Click:Connect(sendMessage)
 input.FocusLost:Connect(function(enter)
-    if enter then sendMsg() end
+    if enter then sendMessage() end
 end)
 
-print("✅ NHYQ Chat V3 Loaded")
-print("SayMessageRequest:", SayMsg and SayMsg:GetFullName() or "NONE")
+--==================================================
+-- استقبال (إذا الـ RemoteEvent يوزع للجميع)
+--==================================================
+if ReplicateEffect then
+    ReplicateEffect.OnClientEvent:Connect(function(...)
+        local args = {...}
+        -- نتحقق إذا الرسالة تخصنا
+        for i, v in ipairs(args) do
+            if v == "NHYQ_CHAT" and args[i+1] and args[i+2] then
+                if args[i+1] ~= localPlayer.Name then
+                    addMessage(args[i+1], tostring(args[i+2]), false)
+                end
+                break
+            end
+        end
+    end)
+end
+
+if Notification then
+    Notification.OnClientEvent:Connect(function(...)
+        local args = {...}
+        for i, v in ipairs(args) do
+            if v == "NHYQ_CHAT" and args[i+1] and args[i+2] then
+                if args[i+1] ~= localPlayer.Name then
+                    addMessage(args[i+1], tostring(args[i+2]), false)
+                end
+                break
+            end
+        end
+    end)
+end
+
+print("✅ NHYQ Private Chat V4 Loaded")
