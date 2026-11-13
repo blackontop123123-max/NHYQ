@@ -1,5 +1,5 @@
 --==================================================
--- NHYQ GLOBAL CHAT - shs09qp23 (FIXED ROOM PROTOCOL)
+-- NHYQ GLOBAL CHAT - shs09qp23 (FIXED CLOSE & LARGER FONT)
 --==================================================
 
 local Players = game:GetService("Players")
@@ -10,7 +10,6 @@ local ChatService = game:GetService("Chat")
 local LocalPlayer = Players.LocalPlayer
 local Username = LocalPlayer.Name
 
--- استخدام الروم الأول المدعوم رسمياً من البروكسي لضمان عدم ظهور خطأ Unknown Room
 local ROOM_NAME = "REX-Chat-Room1"
 local ENDPOINT = "wss://openfunproxy.zerdgeservers.workers.dev/ws"
 local MAX_MESSAGES = 100
@@ -44,8 +43,8 @@ ChatGui.Parent = CoreGui
 
 local ChatBarFrame = Instance.new("Frame")
 ChatBarFrame.Name = "ChatBarFrame"
-ChatBarFrame.Size = UDim2.new(0, 285, 0, 165)
-ChatBarFrame.Position = UDim2.new(1, -300, 0, 15)
+ChatBarFrame.Size = UDim2.new(0, 300, 0, 175)
+ChatBarFrame.Position = UDim2.new(1, -315, 0, 15)
 ChatBarFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 ChatBarFrame.BackgroundTransparency = 0.1
 ChatBarFrame.BorderSizePixel = 0
@@ -59,7 +58,7 @@ BarStroke.Color = Color3.fromRGB(180, 0, 0)
 BarStroke.Thickness = 1.5
 
 local HeaderBar = Instance.new("Frame", ChatBarFrame)
-HeaderBar.Size = UDim2.new(1, 0, 0, 20)
+HeaderBar.Size = UDim2.new(1, 0, 0, 22)
 HeaderBar.BackgroundColor3 = Color3.fromRGB(18, 5, 5)
 HeaderBar.BorderSizePixel = 0
 Instance.new("UICorner", HeaderBar).CornerRadius = UDim.new(0, 8)
@@ -70,70 +69,73 @@ HeaderTitle.Position = UDim2.new(0, 8, 0, 0)
 HeaderTitle.BackgroundTransparency = 1
 HeaderTitle.Text = "🔥 NHYQ CHAT | shs09qp23"
 HeaderTitle.TextColor3 = Color3.fromRGB(255, 60, 60)
-HeaderTitle.TextSize = 9
+HeaderTitle.TextSize = 10
 HeaderTitle.Font = Enum.Font.GothamBold
 HeaderTitle.TextXAlignment = Enum.TextXAlignment.Left
 
-local DestroyBtn = Instance.new("TextButton", HeaderBar)
-DestroyBtn.Size = UDim2.new(0, 20, 0, 16)
-DestroyBtn.Position = UDim2.new(1, -24, 0.5, -8)
-DestroyBtn.BackgroundColor3 = Color3.fromRGB(160, 0, 0)
-DestroyBtn.Text = "✕"
-DestroyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-DestroyBtn.TextSize = 9
-DestroyBtn.Font = Enum.Font.GothamBold
-Instance.new("UICorner", DestroyBtn).CornerRadius = UDim.new(0, 4)
+-- زر الإغلاق الأحمر (الآن يقوم بإخفاء القائمة فقط دون إنهاء السكربت)
+local HideBtn = Instance.new("TextButton", HeaderBar)
+HideBtn.Size = UDim2.new(0, 22, 0, 18)
+HideBtn.Position = UDim2.new(1, -25, 0.5, -9)
+HideBtn.BackgroundColor3 = Color3.fromRGB(160, 0, 0)
+HideBtn.Text = "✕"
+HideBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+HideBtn.TextSize = 10
+HideBtn.Font = Enum.Font.GothamBold
+Instance.new("UICorner", HideBtn).CornerRadius = UDim.new(0, 4)
 
 local MiniScroll = Instance.new("ScrollingFrame", ChatBarFrame)
-MiniScroll.Size = UDim2.new(1, -10, 1, -65)
-MiniScroll.Position = UDim2.new(0, 5, 0, 23)
+MiniScroll.Size = UDim2.new(1, -10, 1, -70)
+MiniScroll.Position = UDim2.new(0, 5, 0, 26)
 MiniScroll.BackgroundTransparency = 1
 MiniScroll.BorderSizePixel = 0
-MiniScroll.ScrollBarThickness = 2
+MiniScroll.ScrollBarThickness = 3
 MiniScroll.ScrollBarImageColor3 = Color3.fromRGB(180, 0, 0)
 MiniScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
 MiniScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
 
 local MiniList = Instance.new("UIListLayout", MiniScroll)
 MiniList.SortOrder = Enum.SortOrder.LayoutOrder
-MiniList.Padding = UDim.new(0, 3)
+MiniList.Padding = UDim.new(0, 4)
 
 local TargetSelectorBtn = Instance.new("TextButton", ChatBarFrame)
-TargetSelectorBtn.Size = UDim2.new(0, 72, 0, 30)
-TargetSelectorBtn.Position = UDim2.new(0, 5, 1, -35)
+TargetSelectorBtn.Size = UDim2.new(0, 75, 0, 32)
+TargetSelectorBtn.Position = UDim2.new(0, 5, 1, -37)
 TargetSelectorBtn.BackgroundColor3 = Color3.fromRGB(20, 10, 10)
 TargetSelectorBtn.Text = "🌐 All"
 TargetSelectorBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
-TargetSelectorBtn.TextSize = 8.5
+TargetSelectorBtn.TextSize = 10
 TargetSelectorBtn.Font = Enum.Font.GothamBold
 Instance.new("UICorner", TargetSelectorBtn).CornerRadius = UDim.new(0, 5)
 Instance.new("UIStroke", TargetSelectorBtn).Color = Color3.fromRGB(180, 0, 0)
 
+-- صندوق الكتابة بخط أكبر وأوضح
 local InputBox = Instance.new("TextBox", ChatBarFrame)
-InputBox.Size = UDim2.new(1, -142, 0, 30)
-InputBox.Position = UDim2.new(0, 80, 1, -35)
+InputBox.Size = UDim2.new(1, -145, 0, 32)
+InputBox.Position = UDim2.new(0, 84, 1, -37)
 InputBox.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
 InputBox.BorderSizePixel = 0
 InputBox.ClearTextOnFocus = false
 InputBox.PlaceholderText = "اكتب رسالتك هنا..."
-InputBox.PlaceholderColor3 = Color3.fromRGB(120, 50, 50)
+InputBox.PlaceholderColor3 = Color3.fromRGB(140, 60, 60)
 InputBox.Text = ""
 InputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-InputBox.TextSize = 9
+InputBox.TextSize = 11 -- خط أكبر للكتابة
 InputBox.Font = Enum.Font.GothamMedium
 Instance.new("UICorner", InputBox).CornerRadius = UDim.new(0, 5)
 Instance.new("UIStroke", InputBox).Color = Color3.fromRGB(100, 0, 0)
 
 local SendBtn = Instance.new("TextButton", ChatBarFrame)
-SendBtn.Size = UDim2.new(0, 54, 0, 30)
-SendBtn.Position = UDim2.new(1, -59, 1, -35)
+SendBtn.Size = UDim2.new(0, 54, 0, 32)
+SendBtn.Position = UDim2.new(1, -59, 1, -37)
 SendBtn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
 SendBtn.Text = "إرسال 🚀"
 SendBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-SendBtn.TextSize = 9
+SendBtn.TextSize = 10
 SendBtn.Font = Enum.Font.GothamBold
 Instance.new("UICorner", SendBtn).CornerRadius = UDim.new(0, 5)
 
+-- الزر العائم الأصلي على اليسار بالمنتصف لفتح وإغلاق القائمة
 local ToggleBarBtn = Instance.new("TextButton")
 ToggleBarBtn.Size = UDim2.new(0, 38, 0, 38)
 ToggleBarBtn.Position = UDim2.new(0, 12, 0.5, -19)
@@ -184,11 +186,11 @@ local function AddMessage(Text, ColorOverride)
     Label.Name = "ChatMessage"
     Label.LayoutOrder = MessageOrder
     Label.BackgroundTransparency = 1
-    Label.Size = UDim2.new(1, -4, 0, 15)
+    Label.Size = UDim2.new(1, -4, 0, 18)
     Label.AutomaticSize = Enum.AutomaticSize.Y
     Label.Text = tostring(Text)
     Label.TextColor3 = ColorOverride or Color3.fromRGB(255, 160, 120)
-    Label.TextSize = 8.5
+    Label.TextSize = 10.5 -- خط أكبر وأوضح للرسائل الواردة
     Label.Font = Enum.Font.GothamBold
     Label.TextXAlignment = Enum.TextXAlignment.Left
     Label.TextWrapped = true
@@ -329,27 +331,14 @@ local function ConnectToRoom()
     end)
 end
 
-local function CloseChat()
-    if Closed then return end
-    Closed = true
-    Disconnect()
-    for _, Conn in ipairs(Connections) do
-        pcall(function() Conn:Disconnect() end)
-    end
-    table.clear(Connections)
-    if Env.NHYQChatClose == CloseChat then
-        Env.NHYQChatClose = nil
-    end
-    ChatGui:Destroy()
-end
-
-Env.NHYQChatClose = CloseChat
+-- زر الإخفاء الأحمر (يخفي القائمة فقط ولا يغلق السكربت)
+table.insert(Connections, HideBtn.MouseButton1Click:Connect(function()
+    ChatBarFrame.Visible = false
+end))
 
 table.insert(Connections, ToggleBarBtn.MouseButton1Click:Connect(function()
     ChatBarFrame.Visible = not ChatBarFrame.Visible
 end))
-
-table.insert(Connections, DestroyBtn.MouseButton1Click:Connect(CloseChat))
 
 table.insert(Connections, TargetSelectorBtn.MouseButton1Click:Connect(function()
     updateTargetList()
@@ -388,7 +377,7 @@ local function SendMessage()
     local finalPayloadText = Message
 
     if targetName ~= "All" then
-        finalPayloadText = "@" .. targetName .. ": " + Message -- تم تصحيح طريقة دمج النص لتعمل بسلاسة
+        finalPayloadText = "@" .. targetName .. ": " .. Message
     end
 
     if #finalPayloadText > 100 then
@@ -400,7 +389,7 @@ local function SendMessage()
         type = "say",
         payload = {
             type = "chat",
-            text = (targetName ~= "All") and ("@" .. targetName .. ": " .. Message) or Message
+            text = finalPayloadText
         }
     })
 
