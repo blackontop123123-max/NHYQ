@@ -19,6 +19,7 @@ local isPanelVisible = false
 local isSpamming = false
 local spamActive = false
 local spamSpeed = 0.03
+local currentMode = "logs" -- تحديد التبويب الافتراضي ('logs' أو 'newsys')
 
 -- ====== ألوان حمراء وسوداء متطورة ======
 local C = {
@@ -271,7 +272,7 @@ CommandBox.TextSize = 12
 CommandBox.ClearTextOnFocus = false
 CommandBox.Parent = InputFrame
 
--- خانة التجهيز السريع للاعب
+-- خانة التجهيز السريع للاعب والتبويبين
 local PrepFrame = Instance.new("Frame")
 PrepFrame.Size = UDim2.new(1, 0, 0, 28)
 PrepFrame.Position = UDim2.new(0, 0, 0, 44)
@@ -279,11 +280,11 @@ PrepFrame.BackgroundTransparency = 1
 PrepFrame.Parent = Content
 
 local PlayerNameBox = Instance.new("TextBox")
-PlayerNameBox.Size = UDim2.new(0, 120, 1, 0)
+PlayerNameBox.Size = UDim2.new(0, 90, 1, 0)
 PlayerNameBox.BackgroundColor3 = C.bg2
 PlayerNameBox.BackgroundTransparency = 0.3
 PlayerNameBox.Text = ""
-PlayerNameBox.PlaceholderText = "اسم اللاعب المستهدف"
+PlayerNameBox.PlaceholderText = "اسم اللاعب"
 PlayerNameBox.PlaceholderColor3 = C.sub
 PlayerNameBox.TextColor3 = C.text
 PlayerNameBox.Font = Enum.Font.GothamBold
@@ -293,8 +294,8 @@ PlayerNameBox.Parent = PrepFrame
 Instance.new("UICorner", PlayerNameBox).CornerRadius = UDim.new(0, 8)
 
 local PrepButton = Instance.new("TextButton")
-PrepButton.Size = UDim2.new(0, 55, 1, 0)
-PrepButton.Position = UDim2.new(0, 126, 0, 0)
+PrepButton.Size = UDim2.new(0, 45, 1, 0)
+PrepButton.Position = UDim2.new(0, 94, 0, 0)
 PrepButton.BackgroundColor3 = C.accent
 PrepButton.Text = "تجهيز"
 PrepButton.TextColor3 = C.white
@@ -304,14 +305,59 @@ PrepButton.Parent = PrepFrame
 Instance.new("UICorner", PrepButton).CornerRadius = UDim.new(0, 8)
 createGlow(PrepButton, C.accent, 0.35, 10)
 
-local preparedCommand = "/explode na /re na /res na /explode na /re na /res na /clogs na /logs na /nv na /re na /res na /kill na /logs na /clogs na /re na /res na /explode na /res na /re na /logs na /clogs na /re na /res na /re na /res na /re na /res na /re na "
+-- زر تبويب: نسخ logs
+local LogsTabBtn = Instance.new("TextButton")
+LogsTabBtn.Size = UDim2.new(0, 72, 1, 0)
+LogsTabBtn.Position = UDim2.new(0, 143, 0, 0)
+LogsTabBtn.BackgroundColor3 = C.accent
+LogsTabBtn.Text = "نسخ logs"
+LogsTabBtn.TextColor3 = C.white
+LogsTabBtn.Font = Enum.Font.GothamBold
+LogsTabBtn.TextSize = 9
+LogsTabBtn.Parent = PrepFrame
+Instance.new("UICorner", LogsTabBtn).CornerRadius = UDim.new(0, 8)
+
+-- زر تبويب: نسخ نظام جديد
+local NewSysTabBtn = Instance.new("TextButton")
+NewSysTabBtn.Size = UDim2.new(0, 78, 1, 0)
+NewSysTabBtn.Position = UDim2.new(0, 219, 0, 0)
+NewSysTabBtn.BackgroundColor3 = C.bg2
+NewSysTabBtn.Text = "نسخ نظام جديد"
+NewSysTabBtn.TextColor3 = C.sub
+NewSysTabBtn.Font = Enum.Font.GothamBold
+NewSysTabBtn.TextSize = 8
+NewSysTabBtn.Parent = PrepFrame
+Instance.new("UICorner", NewSysTabBtn).CornerRadius = UDim.new(0, 8)
+
+-- تحديث شكل التبويبات عند الضغط
+LogsTabBtn.MouseButton1Click:Connect(function()
+    currentMode = "logs"
+    LogsTabBtn.BackgroundColor3 = C.accent
+    LogsTabBtn.TextColor3 = C.white
+    NewSysTabBtn.BackgroundColor3 = C.bg2
+    NewSysTabBtn.TextColor3 = C.sub
+end)
+
+NewSysTabBtn.MouseButton1Click:Connect(function()
+    currentMode = "newsys"
+    NewSysTabBtn.BackgroundColor3 = C.accent
+    NewSysTabBtn.TextColor3 = C.white
+    LogsTabBtn.BackgroundColor3 = C.bg2
+    LogsTabBtn.TextColor3 = C.sub
+end)
+
+-- تعريف الأوامر لكل تبويب
+local preparedCommandLogs = "/explode na /re na /res na /explode na /re na /res na /clogs na /logs na /nv na /re na /res na /kill na /logs na /clogs na /re na /res na /explode na /res na /re na /logs na /clogs na /re na /res na /re na /res na /re na /res na /re na "
+local preparedCommandNewSys = "/re na /explode na /warp na /kill na /damage na /fling na /res na /r6 na /r15 na /res na /nv na /re na /explode na /warp na /kill na /damage na /fling na /res na /r6 na /r15 na /res na /nv na /re na /explode na /warp na /kill na /damage na /fling na /res na /r6 na /r15 na /res na /nv na /re na /explode na /warp na /kill na /damage na /fling na /res na /r6 na /r15 na /res na /nv na "
 
 PrepButton.MouseButton1Click:Connect(function()
     local pName = PlayerNameBox.Text
+    local targetCmd = (currentMode == "logs") and preparedCommandLogs or preparedCommandNewSys
+    
     if pName == "" then
-        CommandBox.Text = preparedCommand
+        CommandBox.Text = targetCmd
     else
-        CommandBox.Text = preparedCommand:gsub("na", pName)
+        CommandBox.Text = targetCmd:gsub("na", pName)
     end
 end)
 
