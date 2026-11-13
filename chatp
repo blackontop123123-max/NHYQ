@@ -1,5 +1,5 @@
 --==================================================
--- NHYQ FLOATING MINI CHAT BAR (FIXED SERVER SYNC)
+-- NHYQ FLOATING MINI CHAT BAR (FIXED SERVER SYNC + PRIVATE FIX)
 --==================================================
 
 local players = game:GetService("Players")
@@ -9,7 +9,7 @@ local chatService = game:GetService("Chat")
 local runService = game:GetService("RunService")
 local localPlayer = players.LocalPlayer
 
--- 1. إنشاء قناة الاتصال تلقائياً من جهة الخادم والكل
+-- 1. إنشاء قناة الاتصال تلقائياً من جهة الخادم
 local folderName = "NHYQ_FloatingChat_Network_2026_FIXED"
 local remoteEvent = replicatedStorage:FindFirstChild(folderName)
 
@@ -22,35 +22,37 @@ if runService:IsServer() then
 	
 	-- استقبال الرسائل من أي لاعب وتوجيهها للجميع أو للاعب المخصص
 	remoteEvent.OnServerEvent:Connect(function(sender, targetMode, msg)
+		if typeof(msg) \~= "string" or #msg > 200 then return end -- حماية بسيطة
+		
 		if targetMode == "All" then
+			-- أي شخص فاتح السكربت راح يستلم الرسالة
 			remoteEvent:FireAllClients("Receive", sender.Name, "All", msg)
 		else
 			local targetP = players:FindFirstChild(targetMode)
 			if targetP then
+				-- نرسل للمستلم + للمرسل عشان يشوف رسالته
 				remoteEvent:FireClient(targetP, "Receive", sender.Name, targetMode, msg)
-				if targetP ~= sender then
+				if targetP \~= sender then
 					remoteEvent:FireClient(sender, "Receive", sender.Name, targetMode, msg)
 				end
 			end
 		end
 	end)
-	return -- إيقاف تشغيل الكود المتبقي في السيرفر ليعمل الواجهة فقط عند اللاعبين
+	return -- إيقاف تشغيل الكود المتبقي في السيرفر
 end
 
--- كود الواجهة والعميل (Client Side)
+-- ==================== كود الواجهة والعميل ====================
 if not remoteEvent then
-	-- انتظار قصير ريثما يتم إنشاؤها
-	task.wait(1)
+	task.wait(1.5)
 	remoteEvent = replicatedStorage:FindFirstChild(folderName)
 end
 
--- واجهة المستخدم الرئيسية
 local chatGui = Instance.new("ScreenGui")
 chatGui.Name = "NHYQ_FloatingChat_GUI"
 chatGui.Parent = coreGui
 chatGui.ResetOnSpawn = false
 
--- المستطيل المصغر العائم (في الأعلى على اليمين)
+-- المستطيل المصغر العائم
 local ChatBarFrame = Instance.new("Frame")
 ChatBarFrame.Name = "ChatBarFrame"
 ChatBarFrame.Size = UDim2.new(0, 280, 0, 150)
@@ -67,7 +69,7 @@ local BarStroke = Instance.new("UIStroke", ChatBarFrame)
 BarStroke.Color = Color3.fromRGB(180, 0, 0)
 BarStroke.Thickness = 1.5
 
--- شاشة عرض الرسائل المصغرة داخل المستطيل
+-- شاشة عرض الرسائل
 local MiniScroll = Instance.new("ScrollingFrame", ChatBarFrame)
 MiniScroll.Size = UDim2.new(1, -10, 1, -45)
 MiniScroll.Position = UDim2.new(0, 5, 0, 5)
@@ -81,7 +83,7 @@ local MiniList = Instance.new("UIListLayout", MiniScroll)
 MiniList.SortOrder = Enum.SortOrder.LayoutOrder
 MiniList.Padding = UDim.new(0, 3)
 
--- قائمة بأسماء الأهداف
+-- قائمة الأهداف
 local targetList = {"All"}
 local currentIndex = 1
 
@@ -103,7 +105,7 @@ end
 
 updateTargetList()
 
--- زر عرض الهدف الحالي مع سهم التبديل
+-- زر اختيار الهدف
 local TargetSelectorBtn = Instance.new("TextButton", ChatBarFrame)
 TargetSelectorBtn.Size = UDim2.new(0, 72, 0, 30)
 TargetSelectorBtn.Position = UDim2.new(0, 5, 1, -35)
@@ -132,7 +134,7 @@ TargetSelectorBtn.MouseButton1Click:Connect(function()
 	end
 end)
 
--- صندوق الكتابة السريع للرسالة
+-- صندوق الكتابة
 local InputBox = Instance.new("TextBox", ChatBarFrame)
 InputBox.Size = UDim2.new(1, -142, 0, 30)
 InputBox.Position = UDim2.new(0, 80, 1, -35)
@@ -159,7 +161,7 @@ SendBtn.TextSize = 9
 SendBtn.Font = Enum.Font.GothamBold
 Instance.new("UICorner", SendBtn).CornerRadius = UDim.new(0, 5)
 
--- زر الفتح والإغلاق (على اليسار في المنتصف)
+-- زر الفتح والإغلاق
 local ToggleBarBtn = Instance.new("TextButton")
 ToggleBarBtn.Size = UDim2.new(0, 38, 0, 38)
 ToggleBarBtn.Position = UDim2.new(0, 12, 0.5, -19)
@@ -177,7 +179,7 @@ ToggleBarBtn.MouseButton1Click:Connect(function()
 	ChatBarFrame.Visible = not ChatBarFrame.Visible
 end)
 
--- وظيفة إظهار فقاعة الكلام فوق الرأس بدقة
+-- فقاعة الكلام فوق الرأس
 local function showBubbleOnHead(targetPlayer, msgText)
 	pcall(function()
 		local char = targetPlayer.Character
@@ -190,7 +192,7 @@ local function showBubbleOnHead(targetPlayer, msgText)
 	end)
 end
 
--- إضافة الرسائل داخل المستطيل المصغر
+-- إضافة رسالة في الشات المصغر
 local function addMessageToBar(senderName, msgText, isPrivate)
 	local label = Instance.new("TextLabel", MiniScroll)
 	label.Size = UDim2.new(1, 0, 0, 15)
@@ -203,9 +205,15 @@ local function addMessageToBar(senderName, msgText, isPrivate)
 	label.Text = badge .. " " .. senderName .. ": " .. msgText
 	label.TextColor3 = isPrivate and Color3.fromRGB(255, 80, 80) or Color3.fromRGB(255, 150, 100)
 
-	if #MiniScroll:GetChildren() > 10 then
-		local firstChild = MiniScroll:FindFirstChildOfClass("TextLabel")
-		if firstChild then firstChild:Destroy() end
+	-- حذف الرسائل القديمة إذا زاد العدد
+	local labels = {}
+	for _, child in ipairs(MiniScroll:GetChildren()) do
+		if child:IsA("TextLabel") then
+			table.insert(labels, child)
+		end
+	end
+	if #labels > 12 then
+		labels[1]:Destroy()
 	end
 
 	local totalH = 0
@@ -213,21 +221,18 @@ local function addMessageToBar(senderName, msgText, isPrivate)
 		if child:IsA("TextLabel") then totalH = totalH + 16 end
 	end
 	MiniScroll.CanvasSize = UDim2.new(0, 0, 0, totalH)
-	MiniScroll.CanvasPosition = Vector2.new(0, MiniScroll.CanvasSize.Y.Offset)
+	MiniScroll.CanvasPosition = Vector2.new(0, totalH)
 end
 
--- إرسال الرسالة للخادم
+-- إرسال الرسالة
 local function handleSendMessage()
 	local text = InputBox.Text
-	if text == "" then return end
+	if text == "" or not remoteEvent then return end
 
 	updateTargetList()
 	local targetName = targetList[currentIndex] or "All"
 
-	if remoteEvent then
-		remoteEvent:FireServer(targetName, text)
-	end
-
+	remoteEvent:FireServer(targetName, text)
 	InputBox.Text = ""
 end
 
@@ -238,18 +243,30 @@ InputBox.FocusLost:Connect(function(enterPressed)
 	end
 end)
 
--- استقبال الرسائل الموزعة من الخادم
+-- استقبال الرسائل (هنا كان الخلل)
 if remoteEvent then
 	remoteEvent.OnClientEvent:Connect(function(action, sName, targetMode, msg)
 		if action == "Receive" then
-			if targetMode == "All" or targetMode == localPlayer.Name then
-				local isPriv = (targetMode ~= "All")
+			-- الشرط المعدل: يظهر للجميع في حالة All، وللمرسل والمستلم في حالة الخاص
+			if targetMode == "All" or targetMode == localPlayer.Name or sName == localPlayer.Name then
+				local isPriv = (targetMode \~= "All")
 				local pObj = players:FindFirstChild(sName)
 				if pObj then
 					showBubbleOnHead(pObj, msg)
 				end
-				local displayTarget = isPriv and (sName .. " ➔ " .. targetMode) or sName
-				addMessageToBar(displayTarget, msg, isPriv)
+				
+				local displayName
+				if isPriv then
+					if sName == localPlayer.Name then
+						displayName = "أنت ➔ " .. targetMode
+					else
+						displayName = sName .. " ➔ أنت"
+					end
+				else
+					displayName = sName
+				end
+				
+				addMessageToBar(displayName, msg, isPriv)
 			end
 		end
 	end)
