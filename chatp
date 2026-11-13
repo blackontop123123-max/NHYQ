@@ -1,246 +1,228 @@
 --==================================================
--- NHYQ FLOATING MINI CHAT BAR (WORKING VERSION)
--- يعمل بين لاعبين مختلفين في نفس السيرفر
+-- NHYQ Chat — يشتغل مع Legacy + TextChatService
+-- شغّله عندك وعند صاحبك بنفس السيرفر
 --==================================================
 
-local players = game:GetService("Players")
-local replicatedStorage = game:GetService("ReplicatedStorage")
-local coreGui = game:GetService("CoreGui")
-local chatService = game:GetService("Chat")
-local localPlayer = players.LocalPlayer
-
--- محاولة إيجاد RemoteEvent موجود مسبقاً
-local remoteEvent = replicatedStorage:FindFirstChild("NHYQ_Chat_Remote")
-
--- إذا ما موجود، نبحث عن أي RemoteEvent عام
-if not remoteEvent then
-	for _, obj in ipairs(replicatedStorage:GetDescendants()) do
-		if obj:IsA("RemoteEvent") then
-			remoteEvent = obj
-			break
-		end
-	end
-end
-
--- ⚠️ تنبيه: إذا ما فيه RemoteEvent موجود، السكربت راح يستخدم ChatService فقط
--- لكن الرسائل ما راح تنعرض في الشريط المصغر لصاحبك إلا إذا كان موجود RemoteEvent
+local Players     = game:GetService("Players")
+local ChatSvc     = game:GetService("Chat")
+local TextChat    = game:GetService("TextChatService")
+local CoreGui     = game:GetService("CoreGui")
+local localPlayer = Players.LocalPlayer
 
 --==================================================
--- الواجهة (تعمل عندك وعند صاحبك)
+-- الواجهة
 --==================================================
+local gui = Instance.new("ScreenGui")
+gui.Name = "NHYQ_Chat_V2"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+pcall(function() gui.Parent = CoreGui end)
+if not gui.Parent then gui.Parent = localPlayer:WaitForChild("PlayerGui") end
 
-local chatGui = Instance.new("ScreenGui")
-chatGui.Name = "NHYQ_FloatingChat_GUI"
-chatGui.Parent = coreGui
-chatGui.ResetOnSpawn = false
-chatGui.IgnoreGuiInset = true
+-- زر عائم
+local btn = Instance.new("TextButton", gui)
+btn.Size = UDim2.new(0, 44, 0, 44)
+btn.Position = UDim2.new(0, 15, 0.5, -22)
+btn.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+btn.Text = "💬"
+btn.TextColor3 = Color3.fromRGB(255, 60, 60)
+btn.TextSize = 18
+btn.Font = Enum.Font.GothamBold
+btn.Draggable = true
+btn.Active = true
+Instance.new("UICorner", btn).CornerRadius = UDim.new(1, 0)
+Instance.new("UIStroke", btn).Color = Color3.fromRGB(200, 0, 0)
 
-local ChatBarFrame = Instance.new("Frame")
-ChatBarFrame.Size = UDim2.new(0, 280, 0, 150)
-ChatBarFrame.Position = UDim2.new(1, -295, 0, 15)
-ChatBarFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-ChatBarFrame.BackgroundTransparency = 0.15
-ChatBarFrame.BorderSizePixel = 0
-ChatBarFrame.Active = true
-ChatBarFrame.Draggable = true
-ChatBarFrame.Parent = chatGui
+-- الإطار
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 280, 0, 130)
+frame.Position = UDim2.new(1, -295, 0, 15)
+frame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+frame.BackgroundTransparency = 0.1
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Draggable = true
+frame.Visible = false
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
+Instance.new("UIStroke", frame).Color = Color3.fromRGB(200, 0, 0)
 
-Instance.new("UICorner", ChatBarFrame).CornerRadius = UDim.new(0, 8)
-local BarStroke = Instance.new("UIStroke", ChatBarFrame)
-BarStroke.Color = Color3.fromRGB(180, 0, 0)
-BarStroke.Thickness = 1.5
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1, -10, 0, 22)
+title.Position = UDim2.new(0, 8, 0, 3)
+title.BackgroundTransparency = 1
+title.Text = "💬 NHYQ CHAT"
+title.TextColor3 = Color3.fromRGB(255, 60, 60)
+title.TextSize = 12
+title.Font = Enum.Font.GothamBold
+title.TextXAlignment = Enum.TextXAlignment.Left
 
-local MiniScroll = Instance.new("ScrollingFrame", ChatBarFrame)
-MiniScroll.Size = UDim2.new(1, -10, 1, -45)
-MiniScroll.Position = UDim2.new(0, 5, 0, 5)
-MiniScroll.BackgroundTransparency = 1
-MiniScroll.BorderSizePixel = 0
-MiniScroll.ScrollBarThickness = 2
-MiniScroll.ScrollBarImageColor3 = Color3.fromRGB(180, 0, 0)
-MiniScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+local input = Instance.new("TextBox", frame)
+input.Size = UDim2.new(1, -80, 0, 34)
+input.Position = UDim2.new(0, 8, 0, 32)
+input.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+input.BorderSizePixel = 0
+input.PlaceholderText = "اكتب رسالتك..."
+input.PlaceholderColor3 = Color3.fromRGB(150, 50, 50)
+input.Text = ""
+input.TextColor3 = Color3.fromRGB(255, 255, 255)
+input.TextSize = 11
+input.ClearTextOnFocus = false
+input.Font = Enum.Font.GothamMedium
+Instance.new("UICorner", input).CornerRadius = UDim.new(0, 5)
+Instance.new("UIStroke", input).Color = Color3.fromRGB(120, 0, 0)
 
-local MiniList = Instance.new("UIListLayout", MiniScroll)
-MiniList.SortOrder = Enum.SortOrder.LayoutOrder
-MiniList.Padding = UDim.new(0, 3)
+local sendBtn = Instance.new("TextButton", frame)
+sendBtn.Size = UDim2.new(0, 64, 0, 34)
+sendBtn.Position = UDim2.new(1, -72, 0, 32)
+sendBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+sendBtn.Text = "إرسال 🚀"
+sendBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+sendBtn.TextSize = 11
+sendBtn.Font = Enum.Font.GothamBold
+Instance.new("UICorner", sendBtn).CornerRadius = UDim.new(0, 5)
 
--- قائمة الأهداف
-local targetList = {"All"}
-local currentIndex = 1
+-- زر إرسال بصيغة "عادي" احتياطي
+local sendNormal = Instance.new("TextButton", frame)
+sendNormal.Size = UDim2.new(1, -16, 0, 24)
+sendNormal.Position = UDim2.new(0, 8, 0, 72)
+sendNormal.BackgroundColor3 = Color3.fromRGB(40, 20, 20)
+sendNormal.Text = "إرسال عبر الشات الرسمي 📢"
+sendNormal.TextColor3 = Color3.fromRGB(255, 150, 150)
+sendNormal.TextSize = 10
+sendNormal.Font = Enum.Font.GothamBold
+Instance.new("UICorner", sendNormal).CornerRadius = UDim.new(0, 5)
 
-local function updateTargetList()
-	local currentSelected = targetList[currentIndex] or "All"
-	targetList = {"All"}
-	for _, p in ipairs(players:GetPlayers()) do
-		if p ~= localPlayer then
-			table.insert(targetList, p.Name)
-		end
-	end
-	for i, name in ipairs(targetList) do
-		if name == currentSelected then
-			currentIndex = i
-			return
-		end
-	end
-	currentIndex = 1
-end
-updateTargetList()
+local info = Instance.new("TextLabel", frame)
+info.Size = UDim2.new(1, -16, 0, 20)
+info.Position = UDim2.new(0, 8, 1, -25)
+info.BackgroundTransparency = 1
+info.Text = "ChatVersion: " .. tostring(ChatSvc.ChatVersion)
+info.TextColor3 = Color3.fromRGB(140, 140, 140)
+info.TextSize = 9
+info.Font = Enum.Font.Gotham
+info.TextXAlignment = Enum.TextXAlignment.Left
 
-local TargetSelectorBtn = Instance.new("TextButton", ChatBarFrame)
-TargetSelectorBtn.Size = UDim2.new(0, 72, 0, 30)
-TargetSelectorBtn.Position = UDim2.new(0, 5, 1, -35)
-TargetSelectorBtn.BackgroundColor3 = Color3.fromRGB(20, 10, 10)
-TargetSelectorBtn.Text = "🌐 All"
-TargetSelectorBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
-TargetSelectorBtn.TextSize = 8.5
-TargetSelectorBtn.Font = Enum.Font.GothamBold
-Instance.new("UICorner", TargetSelectorBtn).CornerRadius = UDim.new(0, 5)
-Instance.new("UIStroke", TargetSelectorBtn).Color = Color3.fromRGB(180, 0, 0)
-
-TargetSelectorBtn.MouseButton1Click:Connect(function()
-	updateTargetList()
-	currentIndex = currentIndex + 1
-	if currentIndex > #targetList then currentIndex = 1 end
-	local selected = targetList[currentIndex]
-	if selected == "All" then
-		TargetSelectorBtn.Text = "🌐 All"
-		TargetSelectorBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
-	else
-		TargetSelectorBtn.Text = "🔒 " .. selected:sub(1, 5)
-		TargetSelectorBtn.TextColor3 = Color3.fromRGB(255, 50, 50)
-	end
+btn.MouseButton1Click:Connect(function()
+    frame.Visible = not frame.Visible
 end)
 
-local InputBox = Instance.new("TextBox", ChatBarFrame)
-InputBox.Size = UDim2.new(1, -142, 0, 30)
-InputBox.Position = UDim2.new(0, 80, 1, -35)
-InputBox.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
-InputBox.BorderSizePixel = 0
-InputBox.ClearTextOnFocus = false
-InputBox.PlaceholderText = "اكتب رسالتك هنا..."
-InputBox.PlaceholderColor3 = Color3.fromRGB(120, 50, 50)
-InputBox.Text = ""
-InputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-InputBox.TextSize = 9
-InputBox.Font = Enum.Font.GothamMedium
-Instance.new("UICorner", InputBox).CornerRadius = UDim.new(0, 5)
-Instance.new("UIStroke", InputBox).Color = Color3.fromRGB(100, 0, 0)
+--==================================================
+-- 🔥 دوال الإرسال (الطريقة الأساسية)
+--==================================================
 
-local SendBtn = Instance.new("TextButton", ChatBarFrame)
-SendBtn.Size = UDim2.new(0, 54, 0, 30)
-SendBtn.Position = UDim2.new(1, -59, 1, -35)
-SendBtn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
-SendBtn.Text = "إرسال 🚀"
-SendBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-SendBtn.TextSize = 9
-SendBtn.Font = Enum.Font.GothamBold
-Instance.new("UICorner", SendBtn).CornerRadius = UDim.new(0, 5)
-
-local ToggleBarBtn = Instance.new("TextButton")
-ToggleBarBtn.Size = UDim2.new(0, 38, 0, 38)
-ToggleBarBtn.Position = UDim2.new(0, 12, 0.5, -19)
-ToggleBarBtn.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-ToggleBarBtn.Text = "💬"
-ToggleBarBtn.TextColor3 = Color3.fromRGB(255, 0, 0)
-ToggleBarBtn.TextSize = 15
-ToggleBarBtn.Active = true
-ToggleBarBtn.Draggable = true
-ToggleBarBtn.Parent = chatGui
-Instance.new("UICorner", ToggleBarBtn).CornerRadius = UDim.new(1, 0)
-Instance.new("UIStroke", ToggleBarBtn).Color = Color3.fromRGB(180, 0, 0)
-
-ToggleBarBtn.MouseButton1Click:Connect(function()
-	ChatBarFrame.Visible = not ChatBarFrame.Visible
-end)
-
--- إظهار فقاعة الكلام
-local function showBubbleOnHead(targetPlayer, msgText)
-	pcall(function()
-		local char = targetPlayer.Character
-		if char then
-			local head = char:FindFirstChild("Head")
-			if head then
-				chatService:Chat(head, "[NHYQ] " .. msgText, Enum.ChatColor.Red)
-			end
-		end
-	end)
+-- الطريقة 1: ChatService (Legacy)
+local function sendViaLegacy(txt)
+    pcall(function()
+        local char = localPlayer.Character
+        local head = char and char:FindFirstChild("Head")
+        if head then
+            ChatSvc:Chat(head, "[NHYQ] " .. txt, Enum.ChatColor.Red)
+            return true
+        end
+    end)
+    return false
 end
 
-local function addMessageToBar(senderName, msgText, isPrivate)
-	local label = Instance.new("TextLabel", MiniScroll)
-	label.Size = UDim2.new(1, 0, 0, 15)
-	label.BackgroundTransparency = 1
-	label.TextXAlignment = Enum.TextXAlignment.Left
-	label.Font = Enum.Font.GothamBold
-	label.TextSize = 8.5
-	local badge = isPrivate and "🔒" or "🔥"
-	label.Text = badge .. " " .. senderName .. ": " .. msgText
-	label.TextColor3 = isPrivate and Color3.fromRGB(255, 80, 80) or Color3.fromRGB(255, 150, 100)
+-- الطريقة 2: TextChatService (النظام الجديد)
+local function sendViaTextChat(txt)
+    local ok = pcall(function()
+        local channels = TextChat:FindFirstChild("TextChannels")
+        local general = channels and channels:FindFirstChild("RBXGeneral")
+        if general then
+            general:SendAsync("[NHYQ] " .. txt)
+        end
+    end)
+    return ok
+end
 
-	if #MiniScroll:GetChildren() > 10 then
-		local firstChild = MiniScroll:FindFirstChildOfClass("TextLabel")
-		if firstChild then firstChild:Destroy() end
-	end
-	local totalH = 0
-	for _, child in ipairs(MiniScroll:GetChildren()) do
-		if child:IsA("TextLabel") then totalH = totalH + 16 end
-	end
-	MiniScroll.CanvasSize = UDim2.new(0, 0, 0, totalH)
-	MiniScroll.CanvasPosition = Vector2.new(0, MiniScroll.CanvasSize.Y.Offset)
+-- الطريقة 3: TextBox الأصلي في اللعبة (الحل الأخير — يشتغل دائماً)
+local function sendViaMainChatBox(txt)
+    pcall(function()
+        -- نلاقي TextBox الشات الرسمي في اللعبة
+        local chatInput
+        -- Legacy chat
+        local legacy = game:GetService("CoreGui"):FindFirstChild("RobloxGui")
+        if legacy then
+            local chat = legacy:FindFirstChild("Chat")
+            if chat then
+                local textBox = chat:FindFirstChild("ChatBarParentFrame")
+                if textBox then
+                    textBox = textBox:FindFirstChild("Frame")
+                    if textBox then
+                        textBox = textBox:FindFirstChild("TextButton")
+                        if textBox then
+                            chatInput = textBox:FindFirstChild("TextBox")
+                        end
+                    end
+                end
+            end
+        end
+
+        -- TextChatService chat box
+        if not chatInput then
+            local playerGui = localPlayer:FindFirstChild("PlayerGui")
+            if playerGui then
+                local chatGui = playerGui:FindFirstChild("Chat")
+                if chatGui then
+                    for _, v in ipairs(chatGui:GetDescendants()) do
+                        if v:IsA("TextBox") then
+                            chatInput = v
+                            break
+                        end
+                    end
+                end
+            end
+        end
+
+        if chatInput then
+            chatInput.Text = "[NHYQ] " .. txt
+            chatInput:CaptureFocus()
+            task.wait(0.05)
+            chatInput:ReleaseFocus(true)
+        end
+    end)
 end
 
 --==================================================
--- 🔥 إرسال الرسالة (الحل الأساسي)
+-- إرسال موحّد (يجرّب كل الطرق)
 --==================================================
-local function handleSendMessage()
-	local text = InputBox.Text
-	if text == "" then return end
+local function sendMessage()
+    local txt = input.Text
+    if txt == "" then return end
+    if #txt > 200 then txt = txt:sub(1, 200) end
 
-	updateTargetList()
-	local targetName = targetList[currentIndex] or "All"
+    print("📤 إرسال:", txt)
+    print("   ChatVersion:", ChatSvc.ChatVersion)
 
-	-- الخيار 1: إذا فيه RemoteEvent موجود نستخدمه
-	if remoteEvent then
-		pcall(function()
-			remoteEvent:FireServer(targetName, text)
-		end)
-	end
+    -- جرّب Legacy أولاً (أسرع)
+    if ChatSvc.ChatVersion == Enum.ChatVersion.LegacyChatService then
+        sendViaLegacy(txt)
+    else
+        -- النظام الجديد
+        sendViaTextChat(txt)
+        -- وبرضه جرّب Legacy (بعض الألعاب تستخدم الاثنين)
+        sendViaLegacy(txt)
+    end
 
-	-- الخيار 2: نستخدم ChatService (يظهر فوق الرأس للجميع)
-	local myChar = localPlayer.Character
-	if myChar then
-		local myHead = myChar:FindFirstChild("Head")
-		if myHead then
-			local displayMsg = targetName == "All" and ("[All] " .. text) or ("[" .. targetName .. "] " .. text)
-			chatService:Chat(myHead, "[NHYQ] " .. displayMsg, Enum.ChatColor.Red)
-		end
-	end
-
-	-- إضافة الرسالة في الشريط المحلي
-	addMessageToBar(localPlayer.Name .. " ➔ " .. targetName, text, targetName ~= "All")
-
-	InputBox.Text = ""
+    input.Text = ""
 end
 
-SendBtn.MouseButton1Click:Connect(handleSendMessage)
-InputBox.FocusLost:Connect(function(enterPressed)
-	if enterPressed then handleSendMessage() end
+-- زر إرسال عبر الشات الرسمي (مضمون 100%)
+local function sendViaOfficialChat()
+    local txt = input.Text
+    if txt == "" then return end
+    if #txt > 200 then txt = txt:sub(1, 200) end
+
+    print("📢 إرسال عبر الشات الرسمي:", txt)
+    sendViaMainChatBox("[NHYQ] " .. txt)
+    input.Text = ""
+end
+
+sendBtn.MouseButton1Click:Connect(sendMessage)
+sendNormal.MouseButton1Click:Connect(sendViaOfficialChat)
+
+input.FocusLost:Connect(function(enter)
+    if enter then sendMessage() end
 end)
 
--- استقبال (إذا فيه RemoteEvent يعمل)
-if remoteEvent then
-	remoteEvent.OnClientEvent:Connect(function(action, sName, targetMode, msg)
-		if action == "Receive" and type(sName) == "string" then
-			if targetMode == "All" or targetMode == localPlayer.Name then
-				local isPriv = (targetMode ~= "All")
-				local pObj = players:FindFirstChild(sName)
-				if pObj then
-					showBubbleOnHead(pObj, msg)
-				end
-				local displayTarget = isPriv and (sName .. " ➔ " .. targetMode) or sName
-				addMessageToBar(displayTarget, msg, isPriv)
-			end
-		end
-	end)
-end
-
-print("NHYQ Chat Bar Loaded!")
+print("✅ NHYQ Chat V2 Loaded — ChatVersion:", ChatSvc.ChatVersion)
