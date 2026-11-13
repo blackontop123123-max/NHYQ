@@ -1,198 +1,92 @@
 --==================================================
--- NHYQ PRIVATE CHAT (TextChatService)
--- شات خاص يشوفه فقط اللي شغالين السكربت
+-- أبسط شات فوق الرأس (يشتغل إذا اللعبة تسمح)
 --==================================================
 
 local Players = game:GetService("Players")
-local TextChatService = game:GetService("TextChatService")
-local CoreGui = game:GetService("CoreGui")
 local localPlayer = Players.LocalPlayer
 
--- 1) إنشاء قناة شات خاصة
-local channelName = "NHYQ_Private_Chat"
-local channel
-
--- نحاول نلقى القناة إذا موجودة، أو ننشئها
-local textChannels = TextChatService:FindFirstChild("TextChannels")
-if textChannels then
-    channel = textChannels:FindFirstChild(channelName)
-    if not channel then
-        channel = Instance.new("TextChannel")
-        channel.Name = channelName
-        channel.Parent = textChannels
-    end
-end
-
---==================================================
--- 2) الواجهة
---==================================================
+-- إنشاء واجهة صغيرة للكتابة
 local gui = Instance.new("ScreenGui")
-gui.Name = "NHYQ_PrivateChat_GUI"
+gui.Name = "SimpleChat"
 gui.ResetOnSpawn = false
-gui.IgnoreGuiInset = true
-pcall(function() gui.Parent = CoreGui end)
-if not gui.Parent then gui.Parent = localPlayer:WaitForChild("PlayerGui") end
+gui.Parent = localPlayer:WaitForChild("PlayerGui")
 
--- زر عائم
 local btn = Instance.new("TextButton", gui)
-btn.Size = UDim2.new(0, 50, 0, 50)
-btn.Position = UDim2.new(0, 20, 0.5, -25)
-btn.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-btn.Text = "💬"
-btn.TextColor3 = Color3.fromRGB(255, 60, 60)
-btn.TextSize = 22
+btn.Size = UDim2.new(0, 60, 0, 60)
+btn.Position = UDim2.new(0, 20, 0.5, -30)
+btn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+btn.Text = "شات"
+btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+btn.TextSize = 16
 btn.Font = Enum.Font.GothamBold
 btn.Draggable = true
-btn.Active = true
 Instance.new("UICorner", btn).CornerRadius = UDim.new(1, 0)
-Instance.new("UIStroke", btn).Color = Color3.fromRGB(200, 0, 0)
-Instance.new("UIStroke", btn).Thickness = 2
 
--- الإطار
-local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 340, 0, 340)
-frame.Position = UDim2.new(1, -355, 0, 15)
-frame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-frame.BackgroundTransparency = 0.1
-frame.BorderSizePixel = 0
-frame.Active = true
-frame.Draggable = true
-frame.Visible = false
-Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
-Instance.new("UIStroke", frame).Color = Color3.fromRGB(200, 0, 0)
-
--- عنوان
-local title = Instance.new("TextLabel", frame)
-title.Size = UDim2.new(1, -50, 0, 26)
-title.Position = UDim2.new(0, 10, 0, 5)
-title.BackgroundTransparency = 1
-title.Text = "💬 NHYQ PRIVATE CHAT"
-title.TextColor3 = Color3.fromRGB(255, 60, 60)
-title.TextSize = 13
-title.Font = Enum.Font.GothamBold
-title.TextXAlignment = Enum.TextXAlignment.Left
-
--- زر إغلاق
-local closeBtn = Instance.new("TextButton", frame)
-closeBtn.Size = UDim2.new(0, 30, 0, 24)
-closeBtn.Position = UDim2.new(1, -35, 0, 6)
-closeBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-closeBtn.Text = "✕"
-closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-closeBtn.TextSize = 13
-closeBtn.Font = Enum.Font.GothamBold
-Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 4)
-
--- قائمة الرسائل
-local scroll = Instance.new("ScrollingFrame", frame)
-scroll.Size = UDim2.new(1, -16, 1, -140)
-scroll.Position = UDim2.new(0, 8, 0, 35)
-scroll.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-scroll.BorderSizePixel = 0
-scroll.ScrollBarThickness = 3
-scroll.ScrollBarImageColor3 = Color3.fromRGB(200, 0, 0)
-scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-Instance.new("UICorner", scroll).CornerRadius = UDim.new(0, 5)
-
-local layout = Instance.new("UIListLayout", scroll)
-layout.SortOrder = Enum.SortOrder.LayoutOrder
-layout.Padding = UDim.new(0, 4)
-
--- صندوق الكتابة
-local input = Instance.new("TextBox", frame)
-input.Size = UDim2.new(1, -80, 0, 38)
-input.Position = UDim2.new(0, 8, 1, -50)
+local input = Instance.new("TextBox", gui)
+input.Size = UDim2.new(0, 200, 0, 40)
+input.Position = UDim2.new(0, 90, 0.5, -20)
 input.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-input.BorderSizePixel = 0
-input.PlaceholderText = "اكتب رسالتك هنا..."
-input.PlaceholderColor3 = Color3.fromRGB(150, 50, 50)
+input.PlaceholderText = "اكتب هنا..."
 input.Text = ""
 input.TextColor3 = Color3.fromRGB(255, 255, 255)
-input.TextSize = 12
-input.ClearTextOnFocus = false
-input.Font = Enum.Font.GothamMedium
-Instance.new("UICorner", input).CornerRadius = UDim.new(0, 5)
-Instance.new("UIStroke", input).Color = Color3.fromRGB(120, 0, 0)
+input.TextSize = 14
+input.Visible = false
+Instance.new("UICorner", input).CornerRadius = UDim.new(0, 8)
 
--- زر الإرسال
-local sendBtn = Instance.new("TextButton", frame)
-sendBtn.Size = UDim2.new(0, 64, 0, 38)
-sendBtn.Position = UDim2.new(1, -72, 1, -50)
-sendBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-sendBtn.Text = "إرسال 🚀"
-sendBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-sendBtn.TextSize = 12
-sendBtn.Font = Enum.Font.GothamBold
-Instance.new("UICorner", sendBtn).CornerRadius = UDim.new(0, 5)
+btn.MouseButton1Click:Connect(function()
+    input.Visible = not input.Visible
+    if input.Visible then input:CaptureFocus() end
+end)
 
-btn.MouseButton1Click:Connect(function() frame.Visible = not frame.Visible end)
-closeBtn.MouseButton1Click:Connect(function() frame.Visible = false end)
+-- الدالة اللي تظهر الفقاعة فوق راسك
+local function showBubble(text)
+    local char = localPlayer.Character
+    if not char then return end
+    local head = char:FindFirstChild("Head")
+    if not head then return end
 
---==================================================
--- 3) وظائف الشات
---==================================================
-local function addMessage(sender, msg, isMe)
-    local lbl = Instance.new("TextLabel", scroll)
-    lbl.Size = UDim2.new(1, -8, 0, 0)
-    lbl.AutomaticSize = Enum.AutomaticSize.Y
+    -- إزالة الفقاعة القديمة
+    local old = head:FindFirstChild("MyBubble")
+    if old then old:Destroy() end
+
+    -- إنشاء الفقاعة
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "MyBubble"
+    billboard.Size = UDim2.new(0, 200, 0, 50)
+    billboard.StudsOffset = Vector3.new(0, 3, 0)
+    billboard.AlwaysOnTop = true
+    billboard.Parent = head
+
+    local bg = Instance.new("Frame", billboard)
+    bg.Size = UDim2.new(1, 0, 1, 0)
+    bg.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+    bg.BackgroundTransparency = 0.2
+    Instance.new("UICorner", bg).CornerRadius = UDim.new(0, 8)
+    Instance.new("UIStroke", bg).Color = Color3.fromRGB(200, 0, 0)
+
+    local lbl = Instance.new("TextLabel", bg)
+    lbl.Size = UDim2.new(1, -10, 1, -10)
+    lbl.Position = UDim2.new(0, 5, 0, 5)
     lbl.BackgroundTransparency = 1
-    lbl.TextXAlignment = Enum.TextXAlignment.Left
-    lbl.TextYAlignment = Enum.TextYAlignment.Top
-    lbl.Font = Enum.Font.GothamMedium
-    lbl.TextSize = 12
+    lbl.Text = text
+    lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+    lbl.TextSize = 14
+    lbl.Font = Enum.Font.GothamBold
     lbl.TextWrapped = true
-    lbl.Text = "  " .. sender .. ": " .. msg
-    lbl.TextColor3 = isMe and Color3.fromRGB(100, 200, 255) or Color3.fromRGB(255, 150, 100)
-    
-    task.wait()
-    local totalH = 0
-    for _, c in ipairs(scroll:GetChildren()) do
-        if c:IsA("TextLabel") then totalH = totalH + c.AbsoluteSize.Y + 4 end
-    end
-    scroll.CanvasSize = UDim2.new(0, 0, 0, totalH + 10)
-    scroll.CanvasPosition = Vector2.new(0, math.max(0, totalH))
-end
 
--- إرسال الرسالة عبر قناة TextChatService
-local function sendMessage()
-    local txt = input.Text
-    if txt == "" then return end
-    if #txt > 200 then txt = txt:sub(1, 200) end
-
-    -- عرض محلي
-    addMessage(localPlayer.Name, txt, true)
-
-    -- الإرسال عبر القناة الخاصة
-    if channel then
-        pcall(function()
-            channel:SendAsync(txt)
-        end)
-    end
-
-    input.Text = ""
-end
-
-sendBtn.MouseButton1Click:Connect(sendMessage)
-input.FocusLost:Connect(function(enter) if enter then sendMessage() end end)
-
---==================================================
--- 4) استقبال الرسائل من القناة
---==================================================
-if channel then
-    channel.MessageReceived:Connect(function(message)
-        -- نتأكد إن الرسالة مو مننا (عشان ما نكررها)
-        if message.TextSource and message.TextSource.UserId == localPlayer.UserId then
-            return
+    -- تختفي بعد 5 ثواني
+    task.delay(5, function()
+        if billboard and billboard.Parent then
+            billboard:Destroy()
         end
-        
-        local senderName = "Player"
-        if message.TextSource then
-            local p = Players:GetPlayerByUserId(message.TextSource.UserId)
-            if p then senderName = p.Name end
-        end
-        
-        addMessage(senderName, message.Text, false)
     end)
 end
 
-print("✅ NHYQ Private Chat Loaded via TextChatService")
+-- عند الضغط على Enter
+input.FocusLost:Connect(function(enterPressed)
+    if enterPressed and input.Text ~= "" then
+        showBubble(input.Text)
+        input.Text = ""
+        input.Visible = false
+    end
+end)
