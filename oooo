@@ -1383,6 +1383,12 @@ local function LoadMainScript()
     AddButtonToTab(TabCopy, "نسخ خرافي", function()
         loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/woww'))()
     end)
+    AddButtonToTab(TabCopy, "سبام قوي", function()
+     loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/omggggg'))()
+    end)
+    AddButtonToTab(TabCopy, "ماب نسخ", function()
+    loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/chat'))()
+    end)
 
     -- 2. تبويب حماية
     local TabProtect = MakeTab("حماية")
