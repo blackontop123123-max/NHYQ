@@ -1,6 +1,6 @@
 --==================================================
 -- NHYQ WEBSOCKET GLOBAL CHAT - shs09qp23
--- SINGLE ROOM | TOP-RIGHT UI | BUBBLE CHAT
+-- AUTO-CONNECT SINGLE ROOM | TOP-RIGHT UI
 --==================================================
 
 local Players = game:GetService("Players")
@@ -11,7 +11,7 @@ local ChatService = game:GetService("Chat")
 local LocalPlayer = Players.LocalPlayer
 local Username = LocalPlayer.Name
 
--- إعدادات الروم الواحد والاتصال
+-- إعدادات الروم الواحد والاتصال (الدخول التلقائي)
 local ROOM_NAME = "NHYQ-Global-Chat-shs09qp23"
 local ENDPOINT = "wss://openfunproxy.zerdgeservers.workers.dev/ws"
 local MAX_MESSAGES = 100
@@ -232,7 +232,7 @@ local function ClearMessages()
 end
 
 --==================================================
--- 3. نظام الاتصال (WebSocket) وإرسال واستقبال الرسائل
+-- 3. نظام الاتصال (WebSocket) والإرسال والاستقبال
 --==================================================
 local function SendPacket(Packet)
     if Closed or not Socket then return false end
@@ -261,17 +261,14 @@ end
 local function ProcessIncomingChat(senderName, rawText)
     if IsMuted(senderName) then return end
 
-    -- التحقق إذا كانت الرسالة موجهة للاعب محدد أو للجميع
     local targetUser, actualMsg = rawText:match("^@([^:]+):%s*(.+)$")
     
     if targetUser and actualMsg then
-        -- رسالة خاصة: تظهر فقط للمرسل والمستلم المحدد
         if targetUser:lower() == Username:lower() or senderName:lower() == Username:lower() then
             AddMessage("🔒 [" .. senderName .. " ➔ " .. targetUser .. "]: " .. actualMsg, Color3.fromRGB(255, 70, 70))
             showBubbleOnHead(senderName, actualMsg)
         end
     else
-        -- رسالة عامة للجميع (All)
         AddMessage("🔥 " .. senderName .. ": " .. rawText, Color3.fromRGB(255, 160, 120))
         showBubbleOnHead(senderName, rawText)
     end
@@ -284,7 +281,7 @@ local function HandleMessage(RawMessage)
     if not Success or type(Data) ~= "table" then return end
 
     if Data.type == "joined" then
-        AddMessage("⚡ تم الاتصال بشات NHYQ بنجاح!", Color3.fromRGB(100, 255, 100))
+        AddMessage("⚡ تم الدخول للروم بنجاح!", Color3.fromRGB(100, 255, 100))
         if type(Data.history) == "table" then
             for _, Entry in ipairs(Data.history) do
                 if type(Entry) == "table" and type(Entry.payload) == "table" and Entry.payload.type == "chat" then
@@ -299,10 +296,10 @@ local function HandleMessage(RawMessage)
         end
 
     elseif Data.type == "user-joined" then
-        AddMessage("➕ دخل الشات: " .. tostring(Data.username), Color3.fromRGB(180, 180, 180))
+        AddMessage("➕ دخل: " .. tostring(Data.username), Color3.fromRGB(180, 180, 180))
 
     elseif Data.type == "user-left" then
-        AddMessage("➖ غادر الشات: " .. tostring(Data.username), Color3.fromRGB(150, 150, 150))
+        AddMessage("➖ غادر: " .. tostring(Data.username), Color3.fromRGB(150, 150, 150))
 
     elseif Data.type == "error" then
         AddMessage("⚠️ خطأ: " .. tostring(Data.message), Color3.fromRGB(255, 50, 50))
@@ -312,7 +309,7 @@ end
 local function ConnectToRoom()
     if Closed then return end
     Disconnect()
-    AddMessage("⏳ جاري الاتصال بسيرفر NHYQ...", Color3.fromRGB(200, 200, 200))
+    AddMessage("⏳ جاري الاتصال التلقائي بالروم...", Color3.fromRGB(200, 200, 200))
 
     local MyGeneration = Generation
     local ConnectSuccess, ConnectResult = pcall(function()
@@ -320,7 +317,7 @@ local function ConnectToRoom()
     end)
 
     if not ConnectSuccess or not ConnectResult then
-        AddMessage("❌ فشل الاتصال! تأكد من دعم الـ WebSocket.", Color3.fromRGB(255, 50, 50))
+        AddMessage("❌ فشل الاتصال بالسيرفر!", Color3.fromRGB(255, 50, 50))
         return
     end
 
@@ -339,7 +336,7 @@ local function ConnectToRoom()
     table.insert(SocketConnections, Socket.OnClose:Connect(function()
         if Closed or MyGeneration ~= Generation then return end
         Socket = nil
-        AddMessage("🔌 انقطع الاتصال. اكتب /reconnect لإعادة الاتصال.", Color3.fromRGB(255, 80, 80))
+        AddMessage("🔌 انقطع الاتصال. اكتب /reconnect للعودة.", Color3.fromRGB(255, 80, 80))
     end))
 
     SendPacket({
@@ -394,7 +391,6 @@ local function SendMessage()
     local Message = InputBox.Text
     if not Message:match("%S") then return end
 
-    -- أوامر محلية سريعة
     if Message:lower():match("^%s*/clear%s*$") then
         ClearMessages()
         InputBox.Text = ""
@@ -407,25 +403,6 @@ local function SendMessage()
         return
     end
 
-    local MuteName = Message:lower():match("^%s*/mute%s+(%S+)%s*$")
-    if MuteName then
-        InputBox.Text = ""
-        if MuteName ~= Username:lower() then
-            Muted[MuteName] = true
-            AddMessage("🔇 تم كتم: " .. MuteName, Color3.fromRGB(200, 200, 200))
-        end
-        return
-    end
-
-    local UnmuteName = Message:lower():match("^%s*/unmute%s+(%S+)%s*$")
-    if UnmuteName then
-        InputBox.Text = ""
-        Muted[UnmuteName] = nil
-        AddMessage("🔊 تم إلغاء الكتم عن: " .. UnmuteName, Color3.fromRGB(200, 200, 200))
-        return
-    end
-
-    -- تجهيز الرسالة (عامة أو خاصة للاعب المحدد)
     updateTargetList()
     local targetName = targetList[currentIndex] or "All"
     local finalPayloadText = Message
@@ -435,7 +412,7 @@ local function SendMessage()
     end
 
     if #finalPayloadText > 100 then
-        AddMessage("⚠️ الرسالة طويلة جداً (الحد الأقصى 100 حرف).", Color3.fromRGB(255, 80, 80))
+        AddMessage("⚠️ الرسالة أطول من 100 حرف.", Color3.fromRGB(255, 80, 80))
         return
     end
 
@@ -450,7 +427,7 @@ local function SendMessage()
     if Success then
         InputBox.Text = ""
     else
-        AddMessage("❌ تعذر الإرسال، جرب /reconnect", Color3.fromRGB(255, 50, 50))
+        AddMessage("❌ فشل الإرسال، جرب /reconnect", Color3.fromRGB(255, 50, 50))
     end
 end
 
@@ -459,5 +436,5 @@ table.insert(Connections, InputBox.FocusLost:Connect(function(EnterPressed)
     if EnterPressed then SendMessage() end
 end))
 
--- بدء الاتصال التلقائي بالروم الواحد فور التشغيل
+-- الدخول التلقائي للروم فور تشغيل السكربت
 ConnectToRoom()
