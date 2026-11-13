@@ -1,33 +1,33 @@
 --==================================================
--- NHYQ Private Chat V4 — يستخدم ReplicateEffect
+-- NHYQ PRIVATE CHAT (TextChatService)
+-- شات خاص يشوفه فقط اللي شغالين السكربت
 --==================================================
 
 local Players = game:GetService("Players")
-local RS = game:GetService("ReplicatedStorage")
+local TextChatService = game:GetService("TextChatService")
 local CoreGui = game:GetService("CoreGui")
 local localPlayer = Players.LocalPlayer
 
--- البحث عن RemoteEvent
-local function findRemote(name)
-    for _, obj in ipairs(RS:GetDescendants()) do
-        if obj:IsA("RemoteEvent") and obj.Name == name then
-            return obj
-        end
+-- 1) إنشاء قناة شات خاصة
+local channelName = "NHYQ_Private_Chat"
+local channel
+
+-- نحاول نلقى القناة إذا موجودة، أو ننشئها
+local textChannels = TextChatService:FindFirstChild("TextChannels")
+if textChannels then
+    channel = textChannels:FindFirstChild(channelName)
+    if not channel then
+        channel = Instance.new("TextChannel")
+        channel.Name = channelName
+        channel.Parent = textChannels
     end
-    return nil
 end
 
-local ReplicateEffect = findRemote("ReplicateEffect")
-local Notification = findRemote("Notification")
-
-print("ReplicateEffect:", ReplicateEffect and "✅" or "❌")
-print("Notification:", Notification and "✅" or "❌")
-
 --==================================================
--- الواجهة
+-- 2) الواجهة
 --==================================================
 local gui = Instance.new("ScreenGui")
-gui.Name = "NHYQ_PrivateChat"
+gui.Name = "NHYQ_PrivateChat_GUI"
 gui.ResetOnSpawn = false
 gui.IgnoreGuiInset = true
 pcall(function() gui.Parent = CoreGui end)
@@ -104,7 +104,7 @@ input.Size = UDim2.new(1, -80, 0, 38)
 input.Position = UDim2.new(0, 8, 1, -50)
 input.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 input.BorderSizePixel = 0
-input.PlaceholderText = "اكتب رسالتك..."
+input.PlaceholderText = "اكتب رسالتك هنا..."
 input.PlaceholderColor3 = Color3.fromRGB(150, 50, 50)
 input.Text = ""
 input.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -125,16 +125,11 @@ sendBtn.TextSize = 12
 sendBtn.Font = Enum.Font.GothamBold
 Instance.new("UICorner", sendBtn).CornerRadius = UDim.new(0, 5)
 
--- فتح/إغلاق
-btn.MouseButton1Click:Connect(function()
-    frame.Visible = not frame.Visible
-end)
-closeBtn.MouseButton1Click:Connect(function()
-    frame.Visible = false
-end)
+btn.MouseButton1Click:Connect(function() frame.Visible = not frame.Visible end)
+closeBtn.MouseButton1Click:Connect(function() frame.Visible = false end)
 
 --==================================================
--- إضافة رسالة للواجهة
+-- 3) وظائف الشات
 --==================================================
 local function addMessage(sender, msg, isMe)
     local lbl = Instance.new("TextLabel", scroll)
@@ -158,86 +153,46 @@ local function addMessage(sender, msg, isMe)
     scroll.CanvasPosition = Vector2.new(0, math.max(0, totalH))
 end
 
---==================================================
--- 🔥 إرسال عبر RemoteEvents المختلفة
---==================================================
-local lastSend = 0
-
+-- إرسال الرسالة عبر قناة TextChatService
 local function sendMessage()
     local txt = input.Text
     if txt == "" then return end
-    if #txt > 100 then txt = txt:sub(1, 100) end
-    
-    -- منع الباند
-    local now = tick()
-    if now - lastSend < 2 then
-        addMessage("⚠️", "انتظر شوية قبل الإرسال التالي", false)
-        return
-    end
-    lastSend = now
-    
+    if #txt > 200 then txt = txt:sub(1, 200) end
+
     -- عرض محلي
     addMessage(localPlayer.Name, txt, true)
-    
-    -- جرّب RemoteEvents بطرق مختلفة
-    local sent = false
-    
-    if ReplicateEffect then
+
+    -- الإرسال عبر القناة الخاصة
+    if channel then
         pcall(function()
-            ReplicateEffect:FireServer("NHYQ_CHAT", localPlayer.Name, txt)
-            sent = true
+            channel:SendAsync(txt)
         end)
     end
-    
-    if not sent and Notification then
-        pcall(function()
-            Notification:FireServer("NHYQ_CHAT", localPlayer.Name, txt)
-            sent = true
-        end)
-    end
-    
-    if not sent then
-        addMessage("⚠️ النظام", "ما في RemoteEvent متاح", false)
-    end
-    
+
     input.Text = ""
 end
 
 sendBtn.MouseButton1Click:Connect(sendMessage)
-input.FocusLost:Connect(function(enter)
-    if enter then sendMessage() end
-end)
+input.FocusLost:Connect(function(enter) if enter then sendMessage() end end)
 
 --==================================================
--- استقبال (إذا الـ RemoteEvent يوزع للجميع)
+-- 4) استقبال الرسائل من القناة
 --==================================================
-if ReplicateEffect then
-    ReplicateEffect.OnClientEvent:Connect(function(...)
-        local args = {...}
-        -- نتحقق إذا الرسالة تخصنا
-        for i, v in ipairs(args) do
-            if v == "NHYQ_CHAT" and args[i+1] and args[i+2] then
-                if args[i+1] ~= localPlayer.Name then
-                    addMessage(args[i+1], tostring(args[i+2]), false)
-                end
-                break
-            end
+if channel then
+    channel.MessageReceived:Connect(function(message)
+        -- نتأكد إن الرسالة مو مننا (عشان ما نكررها)
+        if message.TextSource and message.TextSource.UserId == localPlayer.UserId then
+            return
         end
+        
+        local senderName = "Player"
+        if message.TextSource then
+            local p = Players:GetPlayerByUserId(message.TextSource.UserId)
+            if p then senderName = p.Name end
+        end
+        
+        addMessage(senderName, message.Text, false)
     end)
 end
 
-if Notification then
-    Notification.OnClientEvent:Connect(function(...)
-        local args = {...}
-        for i, v in ipairs(args) do
-            if v == "NHYQ_CHAT" and args[i+1] and args[i+2] then
-                if args[i+1] ~= localPlayer.Name then
-                    addMessage(args[i+1], tostring(args[i+2]), false)
-                end
-                break
-            end
-        end
-    end)
-end
-
-print("✅ NHYQ Private Chat V4 Loaded")
+print("✅ NHYQ Private Chat Loaded via TextChatService")
