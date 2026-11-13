@@ -1,0 +1,251 @@
+--==================================================
+-- NHYQ FLOATING MINI CHAT BAR (FINAL POSITIONING)
+--==================================================
+
+local players = game:GetService("Players")
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local coreGui = game:GetService("CoreGui")
+local chatService = game:GetService("Chat")
+local localPlayer = players.LocalPlayer
+
+-- قناة الاتصال بين مستخدمي السكربت فقط
+local folderName = "NHYQ_FloatingChat_Network_2026_V6"
+local remoteEvent = replicatedStorage:FindFirstChild(folderName)
+
+if not remoteEvent and game:GetService("RunService"):IsStudio() then
+	remoteEvent = Instance.new("RemoteEvent")
+	remoteEvent.Name = folderName
+	remoteEvent.Parent = replicatedStorage
+elseif not remoteEvent then
+	remoteEvent = replicatedStorage:FindFirstChild(folderName) or Instance.new("RemoteEvent", replicatedStorage)
+	remoteEvent.Name = folderName
+end
+
+-- واجهة المستخدم الرئيسية
+local chatGui = Instance.new("ScreenGui")
+chatGui.Name = "NHYQ_FloatingChat_GUI"
+chatGui.Parent = coreGui
+chatGui.ResetOnSpawn = false
+
+-- 1. المستطيل المصغر العائم (في الأعلى على اليمين)
+local ChatBarFrame = Instance.new("Frame")
+ChatBarFrame.Name = "ChatBarFrame"
+ChatBarFrame.Size = UDim2.new(0, 280, 0, 150)
+ChatBarFrame.Position = UDim2.new(1, -295, 0, 15) -- الأعلى على اليمين
+ChatBarFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+ChatBarFrame.BackgroundTransparency = 0.15
+ChatBarFrame.BorderSizePixel = 0
+ChatBarFrame.Active = true
+ChatBarFrame.Draggable = true
+ChatBarFrame.Parent = chatGui
+
+Instance.new("UICorner", ChatBarFrame).CornerRadius = UDim.new(0, 8)
+local BarStroke = Instance.new("UIStroke", ChatBarFrame)
+BarStroke.Color = Color3.fromRGB(180, 0, 0)
+BarStroke.Thickness = 1.5
+
+-- شاشة عرض الرسائل المصغرة داخل المستطيل
+local MiniScroll = Instance.new("ScrollingFrame", ChatBarFrame)
+MiniScroll.Size = UDim2.new(1, -10, 1, -45)
+MiniScroll.Position = UDim2.new(0, 5, 0, 5)
+MiniScroll.BackgroundTransparency = 1
+MiniScroll.BorderSizePixel = 0
+MiniScroll.ScrollBarThickness = 2
+MiniScroll.ScrollBarImageColor3 = Color3.fromRGB(180, 0, 0)
+MiniScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+
+local MiniList = Instance.new("UIListLayout", MiniScroll)
+MiniList.SortOrder = Enum.SortOrder.LayoutOrder
+MiniList.Padding = UDim.new(0, 3)
+
+-- قائمة بأسماء الأهداف (يبدأ بـ All ثم أسماء اللاعبين بالسيرفر)
+local targetList = {"All"}
+local currentIndex = 1
+
+local function updateTargetList()
+	local currentSelected = targetList[currentIndex] or "All"
+	targetList = {"All"}
+	for _, p in ipairs(players:GetPlayers()) do
+		table.insert(targetList, p.Name)
+	end
+	
+	for i, name in ipairs(targetList) do
+		if name == currentSelected then
+			currentIndex = i
+			return
+		end
+	end
+	currentIndex = 1
+end
+
+updateTargetList()
+
+-- 2. زر عرض الهدف الحالي مع سهم التبديل
+local TargetSelectorBtn = Instance.new("TextButton", ChatBarFrame)
+TargetSelectorBtn.Size = UDim2.new(0, 72, 0, 30)
+TargetSelectorBtn.Position = UDim2.new(0, 5, 1, -35)
+TargetSelectorBtn.BackgroundColor3 = Color3.fromRGB(20, 10, 10)
+TargetSelectorBtn.Text = "🌐 All"
+TargetSelectorBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+TargetSelectorBtn.TextSize = 8.5
+TargetSelectorBtn.Font = Enum.Font.GothamBold
+Instance.new("UICorner", TargetSelectorBtn).CornerRadius = UDim.new(0, 5)
+Instance.new("UIStroke", TargetSelectorBtn).Color = Color3.fromRGB(180, 0, 0)
+
+TargetSelectorBtn.MouseButton1Click:Connect(function()
+	updateTargetList()
+	currentIndex = currentIndex + 1
+	if currentIndex > #targetList then
+		currentIndex = 1
+	end
+	
+	local selected = targetList[currentIndex]
+	if selected == "All" then
+		TargetSelectorBtn.Text = "🌐 All"
+		TargetSelectorBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+	else
+		TargetSelectorBtn.Text = "🔒 " .. selected:sub(1, 5)
+		TargetSelectorBtn.TextColor3 = Color3.fromRGB(255, 50, 50)
+	end
+end)
+
+-- 3. صندوق الكتابة السريع للرسالة
+local InputBox = Instance.new("TextBox", ChatBarFrame)
+InputBox.Size = UDim2.new(1, -142, 0, 30)
+InputBox.Position = UDim2.new(0, 80, 1, -35)
+InputBox.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+InputBox.BorderSizePixel = 0
+InputBox.ClearTextOnFocus = false
+InputBox.PlaceholderText = "اكتب رسالتك هنا..."
+InputBox.PlaceholderColor3 = Color3.fromRGB(120, 50, 50)
+InputBox.Text = ""
+InputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+InputBox.TextSize = 9
+InputBox.Font = Enum.Font.GothamMedium
+Instance.new("UICorner", InputBox).CornerRadius = UDim.new(0, 5)
+Instance.new("UIStroke", InputBox).Color = Color3.fromRGB(100, 0, 0)
+
+-- 4. زر الإرسال
+local SendBtn = Instance.new("TextButton", ChatBarFrame)
+SendBtn.Size = UDim2.new(0, 54, 0, 30)
+SendBtn.Position = UDim2.new(1, -59, 1, -35)
+SendBtn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+SendBtn.Text = "إرسال 🚀"
+SendBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+SendBtn.TextSize = 9
+SendBtn.Font = Enum.Font.GothamBold
+Instance.new("UICorner", SendBtn).CornerRadius = UDim.new(0, 5)
+
+-- 5. زر الفتح والإغلاق (على اليسار في المنتصف تماماً)
+local ToggleBarBtn = Instance.new("TextButton")
+ToggleBarBtn.Size = UDim2.new(0, 38, 0, 38)
+ToggleBarBtn.Position = UDim2.new(0, 12, 0.5, -19) -- اليسار في المنتصف
+ToggleBarBtn.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+ToggleBarBtn.Text = "💬"
+ToggleBarBtn.TextColor3 = Color3.fromRGB(255, 0, 0)
+ToggleBarBtn.TextSize = 15
+ToggleBarBtn.Active = true
+ToggleBarBtn.Draggable = true
+ToggleBarBtn.Parent = chatGui
+Instance.new("UICorner", ToggleBarBtn).CornerRadius = UDim.new(1, 0)
+Instance.new("UIStroke", ToggleBarBtn).Color = Color3.fromRGB(180, 0, 0)
+
+ToggleBarBtn.MouseButton1Click:Connect(function()
+	ChatBarFrame.Visible = not ChatBarFrame.Visible
+end)
+
+-- وظيفة إظهار فقاعة الكلام فوق الرأس بدقة
+local function showBubbleOnHead(targetPlayer, msgText)
+	pcall(function()
+		local char = targetPlayer.Character
+		if char then
+			local head = char:FindFirstChild("Head")
+			if head then
+				chatService:Chat(head, "[NHYQ] " .. msgText, Enum.ChatColor.Red)
+			end
+		end
+	end)
+end
+
+-- إضافة الرسائل داخل المستطيل المصغر
+local function addMessageToBar(senderName, msgText, isPrivate)
+	local label = Instance.new("TextLabel", MiniScroll)
+	label.Size = UDim2.new(1, 0, 0, 15)
+	label.BackgroundTransparency = 1
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.Font = Enum.Font.GothamBold
+	label.TextSize = 8.5
+	
+	local badge = isPrivate and "🔒" or "🔥"
+	label.Text = badge .. " " .. senderName .. ": " .. msgText
+	label.TextColor3 = isPrivate and Color3.fromRGB(255, 80, 80) or Color3.fromRGB(255, 150, 100)
+
+	if #MiniScroll:GetChildren() > 10 then
+		local firstChild = MiniScroll:FindFirstChildOfClass("TextLabel")
+		if firstChild then firstChild:Destroy() end
+	end
+
+	local totalH = 0
+	for _, child in ipairs(MiniScroll:GetChildren()) do
+		if child:IsA("TextLabel") then totalH = totalH + 16 end
+	end
+	MiniScroll.CanvasSize = UDim2.new(0, 0, 0, totalH)
+	MiniScroll.CanvasPosition = Vector2.new(0, MiniScroll.CanvasSize.Y.Offset)
+end
+
+-- إرسال الرسالة
+local function handleSendMessage()
+	local text = InputBox.Text
+	if text == "" then return end
+
+	updateTargetList()
+	local targetName = targetList[currentIndex] or "All"
+
+	if remoteEvent then
+		remoteEvent:FireServer("Send", targetName, text)
+	end
+
+	local isPriv = (targetName ~= "All")
+	local displayTarget = isPriv and (localPlayer.Name .. " ➔ " .. targetName) or localPlayer.Name
+	addMessageToBar(displayTarget, text, isPriv)
+	showBubbleOnHead(localPlayer, text)
+
+	InputBox.Text = ""
+end
+
+SendBtn.MouseButton1Click:Connect(handleSendMessage)
+InputBox.FocusLost:Connect(function(enterPressed)
+	if enterPressed then
+		handleSendMessage()
+	end
+end)
+
+-- استقبال الرسائل وعرضها للجميع أو للاعب المحدد
+if remoteEvent then
+	remoteEvent.OnServerEvent:Connect(function(sender, targetMode, msg)
+		if targetMode == "All" then
+			remoteEvent:FireAllClients("Receive", sender.Name, "All", msg)
+		else
+			local targetP = players:FindFirstChild(targetMode)
+			if targetP then
+				remoteEvent:FireClient(targetP, "Receive", sender.Name, targetMode, msg)
+				remoteEvent:FireClient(sender, "Receive", sender.Name, targetMode, msg)
+			end
+		end
+	end)
+
+	remoteEvent.OnClientEvent:Connect(function(action, sName, targetMode, msg)
+		if action == "Receive" then
+			if targetMode == "All" or targetMode == localPlayer.Name then
+				local isPriv = (targetMode ~= "All")
+				local pObj = players:FindFirstChild(sName)
+				if pObj then
+					showBubbleOnHead(pObj, msg)
+				end
+				addMessageToBar(sName, msg, isPriv)
+			end
+		end
+	end)
+end
+
+print("NHYQ Final Edition Chat Bar Loaded Successfully!")
