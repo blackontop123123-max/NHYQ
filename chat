@@ -143,6 +143,7 @@ local v7 = false
 local selectedDelay = 0
 
 local baseTabs = {
+  { name = "نسخ نظام جديد", commands = "/re sa /explode sa /kill sa /damage sa /res sa /re sa /r6 sa /fling sa /r15 sa /warp sa /nv sa /re sa /cmdbar sa" },
   { name = "عادي", commands = "/logs sa /re sa /nv sa /clogs sa /logs sa /re sa /nv sa /clogs sa" },
   { name = "قوي", commands = "/logs sa /re sa /logs sa /re sa /logs sa /re sa /logs sa /re sa" },
   { name = "اهانه", commands = "/char sa miri /dog sa /sit sa /jp sa /tp sa /titlepk sa فحبه" },
@@ -266,7 +267,7 @@ InputBox.BorderSizePixel = 0
 InputBox.ClearTextOnFocus = false
 InputBox.PlaceholderText = "...اكتب الأمر هنا"
 InputBox.PlaceholderColor3 = Color3.fromRGB(150, 60, 60)
-InputBox.Text = "/logs sa /re sa /nv sa /clogs sa"
+InputBox.Text = "/re sa /explode sa /kill sa /damage sa /res sa"
 InputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 InputBox.TextSize = 11
 InputBox.Font = Enum.Font.GothamMedium
@@ -277,7 +278,7 @@ local InputCorner = Instance.new("UICorner")
 InputCorner.CornerRadius = UDim.new(0, 6)
 InputCorner.Parent = InputBox
 
--- نظام تكرار الأسطر الجديد (أزرار 10، 40، 100 + الإدخال المخصص حتى 150)
+-- نظام تكرار الأسطر (أزرار 10، 40، 100 + الإدخال المخصص حتى 150)
 local RepeaterContainer = Instance.new("Frame")
 RepeaterContainer.Size = UDim2.new(1, -14, 0, 68)
 RepeaterContainer.Position = UDim2.new(0, 7, 0, 52)
@@ -289,7 +290,6 @@ local RepContainerCorner = Instance.new("UICorner")
 RepContainerCorner.CornerRadius = UDim.new(0, 6)
 RepContainerCorner.Parent = RepeaterContainer
 
--- أزرار سريعة للأسطر (10، 40، 100)
 local Btn10 = Instance.new("TextButton")
 Btn10.Size = UDim2.new(0.31, 0, 0, 24)
 Btn10.Position = UDim2.new(0, 5, 0, 6)
@@ -323,7 +323,6 @@ Btn100.TextSize = 9.5
 Btn100.Parent = RepeaterContainer
 Instance.new("UICorner", Btn100).CornerRadius = UDim.new(0, 4)
 
--- حقل إدخال عدد الاسطر المخصص + زر التنفيذ
 local LineCountBox = Instance.new("TextBox")
 LineCountBox.Size = UDim2.new(0.55, 0, 0, 28)
 LineCountBox.Position = UDim2.new(0, 5, 0, 34)
@@ -348,19 +347,17 @@ ExecuteLinesBtn.TextSize = 9.5
 ExecuteLinesBtn.Parent = RepeaterContainer
 Instance.new("UICorner", ExecuteLinesBtn).CornerRadius = UDim.new(0, 4)
 
--- دالة لتطبيق التكرار على السكربت حسب العدد المحدد
 local function applyLineMultiplication(targetCount)
   local currentText = InputBox.Text
   if currentText == "" then return end
   
-  -- تنظيف النص من أي تكرارات سابقة أو أخذ السطر الأساسي الأول لتجنب التضخم التراكمي
   local lines = {}
   for line in currentText:gmatch("[^\r\n]+") do
     table.insert(lines, line)
   end
   
   if #lines == 0 then return end
-  local baseCommand = lines[1] -- أخذ أول سطر كمرجع للتكرار
+  local baseCommand = lines[1]
   
   local repeatedLines = {}
   for i = 1, targetCount do
@@ -390,7 +387,7 @@ ExecuteLinesBtn.MouseButton1Click:Connect(function()
   if not num or num < 1 then
     num = 1
   elseif num > 150 then
-    num = 150 -- أقصى حد مسموح به
+    num = 150
   end
   LineCountBox.Text = tostring(num)
   applyLineMultiplication(num)
@@ -492,7 +489,7 @@ uiGridLayout.CellSize = UDim2.new(0, 50, 0, 24)
 uiGridLayout.CellPadding = UDim2.new(0, 4, 0, 4)
 uiGridLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
--- نافذة منبثقة بخانتين (اسم التبويب + إضافة الأوامر)
+-- نافذة منبثقة لإضافة تبويب جديد
 local function showAddTabPrompt()
   local promptGui = Instance.new("ScreenGui")
   promptGui.Name = "NHYQ_Prompt"
@@ -514,7 +511,6 @@ local function showAddTabPrompt()
   pStroke.Thickness = 1.5
   pStroke.Parent = pFrame
 
-  -- خانة اسم التبويب
   local pLabel1 = Instance.new("TextLabel")
   pLabel1.Size = UDim2.new(1, -20, 0, 20)
   pLabel1.Position = UDim2.new(0, 10, 0, 10)
@@ -542,7 +538,6 @@ local function showAddTabPrompt()
   bCorner1.CornerRadius = UDim.new(0, 5)
   bCorner1.Parent = pBoxName
 
-  -- خانة إضافة الأوامر
   local pLabel2 = Instance.new("TextLabel")
   pLabel2.Size = UDim2.new(1, -20, 0, 20)
   pLabel2.Position = UDim2.new(0, 10, 0, 62)
@@ -790,12 +785,15 @@ local StatusCorner = Instance.new("UICorner")
 StatusCorner.CornerRadius = UDim.new(0, 5)
 StatusCorner.Parent = TargetStatus
 
+-- زر الفتح والإغلاق الجانبي القابل للحركة (Draggable + Active)
 local ToggleBtn = Instance.new("ImageButton")
 ToggleBtn.Name = "NHYQ_SideToggle"
 ToggleBtn.Size = UDim2.new(0, 45, 0, 45)
 ToggleBtn.Position = UDim2.new(0, 15, 0.5, -22)
 ToggleBtn.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 ToggleBtn.BorderSizePixel = 0
+ToggleBtn.Active = true
+ToggleBtn.Draggable = true
 ToggleBtn.Parent = evilHubCustomGui
 
 local ToggleCorner = Instance.new("UICorner")
@@ -852,41 +850,44 @@ local function f8()
   local count3 = 0
   for index3, value7 in ipairs(players:GetPlayers()) do
     local v14 = value7
-    if v14 ~= localPlayer then
-      local textButton12 = Instance.new("TextButton")
-      textButton12.Size = UDim2.new(1, -5, 0, 22)
-      textButton12.Position = UDim2.new(0, 2, 0, count3 * 24 + 2)
+    local textButton12 = Instance.new("TextButton")
+    textButton12.Size = UDim2.new(1, -5, 0, 22)
+    textButton12.Position = UDim2.new(0, 2, 0, count3 * 24 + 2)
 
-      if v2[v14.Name] then
-        textButton12.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
-        textButton12.TextColor3 = Color3.fromRGB(255, 255, 255)
-        textButton12.Text = "✓ " .. v14.Name
-      else
-        textButton12.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-        textButton12.TextColor3 = Color3.fromRGB(200, 200, 200)
-        textButton12.Text = v14.Name
-      end
-
-      textButton12.Font = Enum.Font.Gotham
-      textButton12.TextSize = 10
-      textButton12.Parent = scrollingFrame2
-
-      local uiCorner27 = Instance.new("UICorner")
-      uiCorner27.CornerRadius = UDim.new(0, 4)
-      uiCorner27.Parent = textButton12
-
-      textButton12.MouseButton1Click:Connect(function()
-        if v2[v14.Name] then
-          v2[v14.Name] = nil
-        else
-          v2[v14.Name] = true
-        end
-        f8()
-        f5()
-      end)
-
-      count3 = count3 + 1
+    local displayName = v14.Name
+    if v14 == localPlayer then
+      displayName = displayName .. " (أنت)"
     end
+
+    if v2[v14.Name] then
+      textButton12.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+      textButton12.TextColor3 = Color3.fromRGB(255, 255, 255)
+      textButton12.Text = "✓ " .. displayName
+    else
+      textButton12.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+      textButton12.TextColor3 = Color3.fromRGB(200, 200, 200)
+      textButton12.Text = displayName
+    end
+
+    textButton12.Font = Enum.Font.Gotham
+    textButton12.TextSize = 10
+    textButton12.Parent = scrollingFrame2
+
+    local uiCorner27 = Instance.new("UICorner")
+    uiCorner27.CornerRadius = UDim.new(0, 4)
+    uiCorner27.Parent = textButton12
+
+    textButton12.MouseButton1Click:Connect(function()
+      if v2[v14.Name] then
+        v2[v14.Name] = nil
+      else
+        v2[v14.Name] = true
+      end
+      f8()
+      f5()
+    end)
+
+    count3 = count3 + 1
   end
   scrollingFrame2.CanvasSize = UDim2.new(0, 0, 0, count3 * 24 + 5)
 end
@@ -1002,7 +1003,7 @@ StartBtn.MouseButton1Click:Connect(function()
 
             if not v22 then
               v4 = false
-              StartBtn.Test = "بدأ تفعيل"
+              StartBtn.Text = "بدأ تفعيل"
               StartBtn.BackgroundColor3 = Color3.fromRGB(130, 0, 0)
               break
             end
