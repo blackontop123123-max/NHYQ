@@ -1,57 +1,102 @@
 --==================================================
--- NHYQ FLOATING MINI CHAT BAR (WEBSOCKET GLOBAL)
--- تصميمك الأصلي + اتصال عالمي بين كل السيرفرات
+-- NHYQ WEBSOCKET GLOBAL CHAT - shs09qp23
+-- SINGLE ROOM | TOP-RIGHT UI | BUBBLE CHAT
 --==================================================
 
-local players = game:GetService("Players")
-local coreGui = game:GetService("CoreGui")
-local httpService = game:GetService("HttpService")
-local localPlayer = players.LocalPlayer
+local Players = game:GetService("Players")
+local HttpService = game:GetService("HttpService")
+local CoreGui = game:GetService("CoreGui")
+local ChatService = game:GetService("Chat")
 
--- إعدادات الاتصال العالمي
-local ROOM_NAME = "NHYQ-Global-Chat-Room-1"
+local LocalPlayer = Players.LocalPlayer
+local Username = LocalPlayer.Name
+
+-- إعدادات الروم الواحد والاتصال
+local ROOM_NAME = "NHYQ-Global-Chat-shs09qp23"
 local ENDPOINT = "wss://openfunproxy.zerdgeservers.workers.dev/ws"
-local Username = localPlayer.Name
+local MAX_MESSAGES = 100
 
+-- تنظيف أي تشغيل سابق للسكربت
 local Env = (getgenv and getgenv()) or _G
-if Env.NHYQChatClose then pcall(Env.NHYQChatClose) end
+if Env.NHYQChatClose then
+    pcall(Env.NHYQChatClose)
+end
+local OldGui = CoreGui:FindFirstChild("NHYQ_FloatingChat_GUI")
+if OldGui then
+    OldGui:Destroy()
+end
 
--- إغلاق أي واجهة قديمة
-local OldGui = coreGui:FindFirstChild("NHYQ_FloatingChat_GUI")
-if OldGui then OldGui:Destroy() end
-
+-- متغيرات الحالة
 local Closed = false
 local Socket = nil
 local Generation = 0
+local Connections = {}
+local SocketConnections = {}
+local Labels = {}
+local MessageOrder = 0
+local Muted = {}
+
+-- قائمة الأهداف (All أو لاعب محدد)
+local targetList = {"All"}
+local currentIndex = 1
 
 --==================================================
--- 1. واجهة المستخدم الرئيسية (نفس تصميمك)
+-- 1. التصميم (تصميم NHYQ الأسود والأحمر - أعلى اليمين)
 --==================================================
-local chatGui = Instance.new("ScreenGui")
-chatGui.Name = "NHYQ_FloatingChat_GUI"
-chatGui.Parent = coreGui
-chatGui.ResetOnSpawn = false
+local ChatGui = Instance.new("ScreenGui")
+ChatGui.Name = "NHYQ_FloatingChat_GUI"
+ChatGui.ResetOnSpawn = false
+ChatGui.Parent = CoreGui
 
+-- المستطيل المصغر العائم (أعلى اليمين)
 local ChatBarFrame = Instance.new("Frame")
 ChatBarFrame.Name = "ChatBarFrame"
-ChatBarFrame.Size = UDim2.new(0, 280, 0, 150)
-ChatBarFrame.Position = UDim2.new(1, -295, 0, 15)
+ChatBarFrame.Size = UDim2.new(0, 285, 0, 165)
+ChatBarFrame.Position = UDim2.new(1, -300, 0, 15)
 ChatBarFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-ChatBarFrame.BackgroundTransparency = 0.15
+ChatBarFrame.BackgroundTransparency = 0.1
 ChatBarFrame.BorderSizePixel = 0
 ChatBarFrame.Active = true
 ChatBarFrame.Draggable = true
-ChatBarFrame.Visible = false -- مخفية افتراضياً
-ChatBarFrame.Parent = chatGui
+ChatBarFrame.Parent = ChatGui
 
 Instance.new("UICorner", ChatBarFrame).CornerRadius = UDim.new(0, 8)
 local BarStroke = Instance.new("UIStroke", ChatBarFrame)
 BarStroke.Color = Color3.fromRGB(180, 0, 0)
 BarStroke.Thickness = 1.5
 
+-- شريط الحقوق العلوي الصغير
+local HeaderBar = Instance.new("Frame", ChatBarFrame)
+HeaderBar.Size = UDim2.new(1, 0, 0, 20)
+HeaderBar.BackgroundColor3 = Color3.fromRGB(18, 5, 5)
+HeaderBar.BorderSizePixel = 0
+Instance.new("UICorner", HeaderBar).CornerRadius = UDim.new(0, 8)
+
+local HeaderTitle = Instance.new("TextLabel", HeaderBar)
+HeaderTitle.Size = UDim2.new(1, -30, 1, 0)
+HeaderTitle.Position = UDim2.new(0, 8, 0, 0)
+HeaderTitle.BackgroundTransparency = 1
+HeaderTitle.Text = "🔥 NHYQ CHAT | shs09qp23"
+HeaderTitle.TextColor3 = Color3.fromRGB(255, 60, 60)
+HeaderTitle.TextSize = 9
+HeaderTitle.Font = Enum.Font.GothamBold
+HeaderTitle.TextXAlignment = Enum.TextXAlignment.Left
+
+-- زر الإغلاق النهائي (X)
+local DestroyBtn = Instance.new("TextButton", HeaderBar)
+DestroyBtn.Size = UDim2.new(0, 20, 0, 16)
+DestroyBtn.Position = UDim2.new(1, -24, 0.5, -8)
+DestroyBtn.BackgroundColor3 = Color3.fromRGB(160, 0, 0)
+DestroyBtn.Text = "✕"
+DestroyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+DestroyBtn.TextSize = 9
+DestroyBtn.Font = Enum.Font.GothamBold
+Instance.new("UICorner", DestroyBtn).CornerRadius = UDim.new(0, 4)
+
+-- شاشة عرض الرسائل
 local MiniScroll = Instance.new("ScrollingFrame", ChatBarFrame)
-MiniScroll.Size = UDim2.new(1, -10, 1, -45)
-MiniScroll.Position = UDim2.new(0, 5, 0, 5)
+MiniScroll.Size = UDim2.new(1, -10, 1, -65)
+MiniScroll.Position = UDim2.new(0, 5, 0, 23)
 MiniScroll.BackgroundTransparency = 1
 MiniScroll.BorderSizePixel = 0
 MiniScroll.ScrollBarThickness = 2
@@ -63,10 +108,22 @@ local MiniList = Instance.new("UIListLayout", MiniScroll)
 MiniList.SortOrder = Enum.SortOrder.LayoutOrder
 MiniList.Padding = UDim.new(0, 3)
 
+-- زر اختيار الهدف (All أو لاعب محدد)
+local TargetSelectorBtn = Instance.new("TextButton", ChatBarFrame)
+TargetSelectorBtn.Size = UDim2.new(0, 72, 0, 30)
+TargetSelectorBtn.Position = UDim2.new(0, 5, 1, -35)
+TargetSelectorBtn.BackgroundColor3 = Color3.fromRGB(20, 10, 10)
+TargetSelectorBtn.Text = "🌐 All"
+TargetSelectorBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+TargetSelectorBtn.TextSize = 8.5
+TargetSelectorBtn.Font = Enum.Font.GothamBold
+Instance.new("UICorner", TargetSelectorBtn).CornerRadius = UDim.new(0, 5)
+Instance.new("UIStroke", TargetSelectorBtn).Color = Color3.fromRGB(180, 0, 0)
+
 -- صندوق الكتابة
 local InputBox = Instance.new("TextBox", ChatBarFrame)
-InputBox.Size = UDim2.new(1, -75, 0, 30)
-InputBox.Position = UDim2.new(0, 5, 1, -35)
+InputBox.Size = UDim2.new(1, -142, 0, 30)
+InputBox.Position = UDim2.new(0, 80, 1, -35)
 InputBox.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
 InputBox.BorderSizePixel = 0
 InputBox.ClearTextOnFocus = false
@@ -81,8 +138,8 @@ Instance.new("UIStroke", InputBox).Color = Color3.fromRGB(100, 0, 0)
 
 -- زر الإرسال
 local SendBtn = Instance.new("TextButton", ChatBarFrame)
-SendBtn.Size = UDim2.new(0, 60, 0, 30)
-SendBtn.Position = UDim2.new(1, -65, 1, -35)
+SendBtn.Size = UDim2.new(0, 54, 0, 30)
+SendBtn.Position = UDim2.new(1, -59, 1, -35)
 SendBtn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
 SendBtn.Text = "إرسال 🚀"
 SendBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -90,7 +147,7 @@ SendBtn.TextSize = 9
 SendBtn.Font = Enum.Font.GothamBold
 Instance.new("UICorner", SendBtn).CornerRadius = UDim.new(0, 5)
 
--- زر الفتح والإغلاق
+-- زر الفتح والإغلاق العائم (على اليسار بالمنتصف)
 local ToggleBarBtn = Instance.new("TextButton")
 ToggleBarBtn.Size = UDim2.new(0, 38, 0, 38)
 ToggleBarBtn.Position = UDim2.new(0, 12, 0.5, -19)
@@ -100,186 +157,307 @@ ToggleBarBtn.TextColor3 = Color3.fromRGB(255, 0, 0)
 ToggleBarBtn.TextSize = 15
 ToggleBarBtn.Active = true
 ToggleBarBtn.Draggable = true
-ToggleBarBtn.Parent = chatGui
+ToggleBarBtn.Parent = ChatGui
 Instance.new("UICorner", ToggleBarBtn).CornerRadius = UDim.new(1, 0)
 Instance.new("UIStroke", ToggleBarBtn).Color = Color3.fromRGB(180, 0, 0)
 
-ToggleBarBtn.MouseButton1Click:Connect(function()
-	ChatBarFrame.Visible = not ChatBarFrame.Visible
-end)
-
 --==================================================
--- 2. نظام الفقاعة فوق الرأس (مثل الصورة)
+-- 2. الوظائف (الفقاعات فوق الرأس + قائمة اللاعبين)
 --==================================================
-local function showBubbleOnHead(playerName, msgText)
-	local targetPlayer = players:FindFirstChild(playerName)
-	if not targetPlayer or not targetPlayer.Character then return end
-	local head = targetPlayer.Character:FindFirstChild("Head")
-	if not head then return end
-
-	local old = head:FindFirstChild("NHYQ_Bubble")
-	if old then old:Destroy() end
-
-	local billboard = Instance.new("BillboardGui")
-	billboard.Name = "NHYQ_Bubble"
-	billboard.Size = UDim2.new(0, 160, 0, 50) 
-	billboard.StudsOffset = Vector3.new(0, 2.5, 0) 
-	billboard.AlwaysOnTop = true
-	billboard.Parent = head
-
-	local bg = Instance.new("Frame", billboard)
-	bg.Size = UDim2.new(1, 0, 1, 0)
-	bg.BackgroundColor3 = Color3.fromRGB(245, 245, 245)
-	bg.BackgroundTransparency = 0.1
-	bg.BorderSizePixel = 0
-	Instance.new("UICorner", bg).CornerRadius = UDim.new(0, 8)
-
-	local stroke = Instance.new("UIStroke", bg)
-	stroke.Color = Color3.fromRGB(0, 0, 0)
-	stroke.Thickness = 1.5
-	stroke.Transparency = 0
-
-	local lbl = Instance.new("TextLabel", bg)
-	lbl.Size = UDim2.new(1, -12, 1, -12)
-	lbl.Position = UDim2.new(0, 6, 0, 6)
-	lbl.BackgroundTransparency = 1
-	lbl.Text = msgText
-	lbl.TextColor3 = Color3.fromRGB(0, 0, 0)
-	lbl.TextSize = 13
-	lbl.Font = Enum.Font.GothamBold
-	lbl.TextWrapped = true
-	lbl.TextXAlignment = Enum.TextXAlignment.Center
-	lbl.TextYAlignment = Enum.TextYAlignment.Center
-
-	task.delay(5, function()
-		if billboard and billboard.Parent then billboard:Destroy() end
-	end)
+local function updateTargetList()
+    local currentSelected = targetList[currentIndex] or "All"
+    targetList = {"All"}
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer then
+            table.insert(targetList, p.Name)
+        end
+    end
+    for i, name in ipairs(targetList) do
+        if name == currentSelected then
+            currentIndex = i
+            return
+        end
+    end
+    currentIndex = 1
 end
 
--- إضافة الرسائل داخل المستطيل المصغر
-local function addMessageToBar(senderName, msgText, isSystem)
-	local label = Instance.new("TextLabel", MiniScroll)
-	label.Size = UDim2.new(1, 0, 0, 15)
-	label.AutomaticSize = Enum.AutomaticSize.Y
-	label.BackgroundTransparency = 1
-	label.TextXAlignment = Enum.TextXAlignment.Left
-	label.Font = Enum.Font.GothamBold
-	label.TextSize = 9
-	label.TextWrapped = true
-	
-	if isSystem then
-		label.Text = "🔧 " .. msgText
-		label.TextColor3 = Color3.fromRGB(150, 150, 150)
-	else
-		label.Text = "🔥 " .. senderName .. ": " .. msgText
-		label.TextColor3 = Color3.fromRGB(255, 150, 100)
-	end
+local function showBubbleOnHead(targetName, msgText)
+    pcall(function()
+        local targetPlayer = Players:FindFirstChild(targetName)
+        if targetPlayer and targetPlayer.Character then
+            local head = targetPlayer.Character:FindFirstChild("Head")
+            if head then
+                ChatService:Chat(head, "[NHYQ] " .. msgText, Enum.ChatColor.Red)
+            end
+        end
+    end)
+end
 
-	if #MiniScroll:GetChildren() > 15 then
-		local firstChild = MiniScroll:FindFirstChildOfClass("TextLabel")
-		if firstChild then firstChild:Destroy() end
-	end
+local function AddMessage(Text, ColorOverride)
+    if Closed or not ChatGui.Parent then return end
+    MessageOrder += 1
 
-	task.defer(function()
-		MiniScroll.CanvasPosition = Vector2.new(0, math.max(0, MiniScroll.AbsoluteCanvasSize.Y - MiniScroll.AbsoluteSize.Y))
-	end)
+    local Label = Instance.new("TextLabel")
+    Label.Name = "ChatMessage"
+    Label.LayoutOrder = MessageOrder
+    Label.BackgroundTransparency = 1
+    Label.Size = UDim2.new(1, -4, 0, 15)
+    Label.AutomaticSize = Enum.AutomaticSize.Y
+    Label.Text = tostring(Text)
+    Label.TextColor3 = ColorOverride or Color3.fromRGB(255, 160, 120)
+    Label.TextSize = 8.5
+    Label.Font = Enum.Font.GothamBold
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.TextWrapped = true
+    Label.Parent = MiniScroll
+
+    table.insert(Labels, Label)
+    while #Labels > MAX_MESSAGES do
+        local Oldest = table.remove(Labels, 1)
+        if Oldest then Oldest:Destroy() end
+    end
+
+    task.defer(function()
+        if Closed or not MiniScroll.Parent then return end
+        MiniScroll.CanvasPosition = Vector2.new(0, math.max(0, MiniScroll.AbsoluteCanvasSize.Y - MiniScroll.AbsoluteSize.Y))
+    end)
+end
+
+local function ClearMessages()
+    for _, Label in ipairs(Labels) do
+        Label:Destroy()
+    end
+    table.clear(Labels)
+    MiniScroll.CanvasPosition = Vector2.zero
 end
 
 --==================================================
--- 3. محرك الاتصال (WebSocket)
+-- 3. نظام الاتصال (WebSocket) وإرسال واستقبال الرسائل
 --==================================================
 local function SendPacket(Packet)
-	if Closed or not Socket then return false end
-	local Success = pcall(function() Socket:Send(httpService:JSONEncode(Packet)) end)
-	return Success
+    if Closed or not Socket then return false end
+    local Success = pcall(function()
+        Socket:Send(HttpService:JSONEncode(Packet))
+    end)
+    return Success
 end
 
 local function Disconnect()
-	Generation += 1
-	local OldSocket = Socket
-	Socket = nil
-	if OldSocket then pcall(function() OldSocket:Close() end) end
+    Generation += 1
+    for _, Conn in ipairs(SocketConnections) do
+        pcall(function() Conn:Disconnect() end)
+    end
+    table.clear(SocketConnections)
+    if Socket then
+        pcall(function() Socket:Close() end)
+        Socket = nil
+    end
+end
+
+local function IsMuted(Name)
+    return Muted[tostring(Name):lower()] == true
+end
+
+local function ProcessIncomingChat(senderName, rawText)
+    if IsMuted(senderName) then return end
+
+    -- التحقق إذا كانت الرسالة موجهة للاعب محدد أو للجميع
+    local targetUser, actualMsg = rawText:match("^@([^:]+):%s*(.+)$")
+    
+    if targetUser and actualMsg then
+        -- رسالة خاصة: تظهر فقط للمرسل والمستلم المحدد
+        if targetUser:lower() == Username:lower() or senderName:lower() == Username:lower() then
+            AddMessage("🔒 [" .. senderName .. " ➔ " .. targetUser .. "]: " .. actualMsg, Color3.fromRGB(255, 70, 70))
+            showBubbleOnHead(senderName, actualMsg)
+        end
+    else
+        -- رسالة عامة للجميع (All)
+        AddMessage("🔥 " .. senderName .. ": " .. rawText, Color3.fromRGB(255, 160, 120))
+        showBubbleOnHead(senderName, rawText)
+    end
 end
 
 local function HandleMessage(RawMessage)
-	local Success, Data = pcall(function() return httpService:JSONDecode(tostring(RawMessage)) end)
-	if not Success or type(Data) ~= "table" then return end
+    local Success, Data = pcall(function()
+        return HttpService:JSONDecode(tostring(RawMessage))
+    end)
+    if not Success or type(Data) ~= "table" then return end
 
-	if Data.type == "joined" then
-		addMessageToBar("", "متصل بالشات العالمي ✅", true)
-		showBubbleOnHead(Username, "متصل ✅")
-		
-	elseif Data.type == "say" then
-		local Payload = Data.payload
-		if type(Payload) == "table" and type(Payload.text) == "string" then
-			local senderName = tostring(Data.username)
-			local msgText = Payload.text
-			
-			addMessageToBar(senderName, msgText, false)
-			showBubbleOnHead(senderName, msgText)
-		end
-	end
+    if Data.type == "joined" then
+        AddMessage("⚡ تم الاتصال بشات NHYQ بنجاح!", Color3.fromRGB(100, 255, 100))
+        if type(Data.history) == "table" then
+            for _, Entry in ipairs(Data.history) do
+                if type(Entry) == "table" and type(Entry.payload) == "table" and Entry.payload.type == "chat" then
+                    ProcessIncomingChat(tostring(Entry.username), tostring(Entry.payload.text))
+                end
+            end
+        end
+
+    elseif Data.type == "say" then
+        if type(Data.payload) == "table" and Data.payload.type == "chat" then
+            ProcessIncomingChat(tostring(Data.username), tostring(Data.payload.text))
+        end
+
+    elseif Data.type == "user-joined" then
+        AddMessage("➕ دخل الشات: " .. tostring(Data.username), Color3.fromRGB(180, 180, 180))
+
+    elseif Data.type == "user-left" then
+        AddMessage("➖ غادر الشات: " .. tostring(Data.username), Color3.fromRGB(150, 150, 150))
+
+    elseif Data.type == "error" then
+        AddMessage("⚠️ خطأ: " .. tostring(Data.message), Color3.fromRGB(255, 50, 50))
+    end
 end
 
-local function JoinChat()
-	if Closed then return end
-	Disconnect()
-	
-	addMessageToBar("", "جاري الاتصال...", true)
-	local MyGeneration = Generation
+local function ConnectToRoom()
+    if Closed then return end
+    Disconnect()
+    AddMessage("⏳ جاري الاتصال بسيرفر NHYQ...", Color3.fromRGB(200, 200, 200))
 
-	local ConnectSuccess, ConnectResult = pcall(function() return WebSocket.connect(ENDPOINT) end)
-	if not ConnectSuccess or not ConnectResult then
-		addMessageToBar("", "فشل الاتصال!", true)
-		return
-	end
+    local MyGeneration = Generation
+    local ConnectSuccess, ConnectResult = pcall(function()
+        return WebSocket.connect(ENDPOINT)
+    end)
 
-	if Closed or MyGeneration ~= Generation then
-		pcall(function() ConnectResult:Close() end)
-		return
-	end
+    if not ConnectSuccess or not ConnectResult then
+        AddMessage("❌ فشل الاتصال! تأكد من دعم الـ WebSocket.", Color3.fromRGB(255, 50, 50))
+        return
+    end
 
-	Socket = ConnectResult
+    if Closed or MyGeneration ~= Generation then
+        pcall(function() ConnectResult:Close() end)
+        return
+    end
 
-	Socket.OnMessage:Connect(function(RawMessage)
-		if Closed or MyGeneration ~= Generation then return end
-		HandleMessage(RawMessage)
-	end)
+    Socket = ConnectResult
 
-	Socket.OnClose:Connect(function()
-		if Closed or MyGeneration ~= Generation then return end
-		Socket = nil
-		addMessageToBar("", "تم قطع الاتصال.", true)
-	end)
+    table.insert(SocketConnections, Socket.OnMessage:Connect(function(RawMessage)
+        if Closed or MyGeneration ~= Generation then return end
+        HandleMessage(RawMessage)
+    end))
 
-	SendPacket({
-		type = "join",
-		room = ROOM_NAME,
-		username = Username
-	})
+    table.insert(SocketConnections, Socket.OnClose:Connect(function()
+        if Closed or MyGeneration ~= Generation then return end
+        Socket = nil
+        AddMessage("🔌 انقطع الاتصال. اكتب /reconnect لإعادة الاتصال.", Color3.fromRGB(255, 80, 80))
+    end))
+
+    SendPacket({
+        type = "join",
+        room = ROOM_NAME,
+        username = Username
+    })
 end
 
--- إرسال الرسالة
-local function handleSendMessage()
-	local text = InputBox.Text
-	if text == "" then return end
-	if #text > 100 then text = text:sub(1, 100) end
-
-	showBubbleOnHead(Username, text)
-	addMessageToBar(Username, text, false)
-
-	local Success = SendPacket({
-		type = "say",
-		payload = { type = "chat", text = text }
-	})
-
-	if Success then InputBox.Text = "" else addMessageToBar("", "فشل الإرسال", true) end
+local function CloseChat()
+    if Closed then return end
+    Closed = true
+    Disconnect()
+    for _, Conn in ipairs(Connections) do
+        pcall(function() Conn:Disconnect() end)
+    end
+    table.clear(Connections)
+    if Env.NHYQChatClose == CloseChat then
+        Env.NHYQChatClose = nil
+    end
+    ChatGui:Destroy()
 end
 
-SendBtn.MouseButton1Click:Connect(handleSendMessage)
-InputBox.FocusLost:Connect(function(enterPressed)
-	if enterPressed then handleSendMessage() end
-end)
+Env.NHYQChatClose = CloseChat
 
--- بدء الاتصال فوراً عند التشغيل
-JoinChat()
+--==================================================
+-- 4. ربط الأزرار والأوامر
+--==================================================
+table.insert(Connections, ToggleBarBtn.MouseButton1Click:Connect(function()
+    ChatBarFrame.Visible = not ChatBarFrame.Visible
+end))
+
+table.insert(Connections, DestroyBtn.MouseButton1Click:Connect(CloseChat))
+
+table.insert(Connections, TargetSelectorBtn.MouseButton1Click:Connect(function()
+    updateTargetList()
+    currentIndex = currentIndex + 1
+    if currentIndex > #targetList then currentIndex = 1 end
+    
+    local selected = targetList[currentIndex]
+    if selected == "All" then
+        TargetSelectorBtn.Text = "🌐 All"
+        TargetSelectorBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+    else
+        TargetSelectorBtn.Text = "🔒 " .. selected:sub(1, 5)
+        TargetSelectorBtn.TextColor3 = Color3.fromRGB(255, 50, 50)
+    end
+end))
+
+local function SendMessage()
+    if Closed then return end
+    local Message = InputBox.Text
+    if not Message:match("%S") then return end
+
+    -- أوامر محلية سريعة
+    if Message:lower():match("^%s*/clear%s*$") then
+        ClearMessages()
+        InputBox.Text = ""
+        return
+    end
+
+    if Message:lower():match("^%s*/reconnect%s*$") then
+        InputBox.Text = ""
+        ConnectToRoom()
+        return
+    end
+
+    local MuteName = Message:lower():match("^%s*/mute%s+(%S+)%s*$")
+    if MuteName then
+        InputBox.Text = ""
+        if MuteName ~= Username:lower() then
+            Muted[MuteName] = true
+            AddMessage("🔇 تم كتم: " .. MuteName, Color3.fromRGB(200, 200, 200))
+        end
+        return
+    end
+
+    local UnmuteName = Message:lower():match("^%s*/unmute%s+(%S+)%s*$")
+    if UnmuteName then
+        InputBox.Text = ""
+        Muted[UnmuteName] = nil
+        AddMessage("🔊 تم إلغاء الكتم عن: " .. UnmuteName, Color3.fromRGB(200, 200, 200))
+        return
+    end
+
+    -- تجهيز الرسالة (عامة أو خاصة للاعب المحدد)
+    updateTargetList()
+    local targetName = targetList[currentIndex] or "All"
+    local finalPayloadText = Message
+
+    if targetName ~= "All" then
+        finalPayloadText = "@" .. targetName .. ": " .. Message
+    end
+
+    if #finalPayloadText > 100 then
+        AddMessage("⚠️ الرسالة طويلة جداً (الحد الأقصى 100 حرف).", Color3.fromRGB(255, 80, 80))
+        return
+    end
+
+    local Success = SendPacket({
+        type = "say",
+        payload = {
+            type = "chat",
+            text = finalPayloadText
+        }
+    })
+
+    if Success then
+        InputBox.Text = ""
+    else
+        AddMessage("❌ تعذر الإرسال، جرب /reconnect", Color3.fromRGB(255, 50, 50))
+    end
+end
+
+table.insert(Connections, SendBtn.MouseButton1Click:Connect(SendMessage))
+table.insert(Connections, InputBox.FocusLost:Connect(function(EnterPressed)
+    if EnterPressed then SendMessage() end
+end))
+
+-- بدء الاتصال التلقائي بالروم الواحد فور التشغيل
+ConnectToRoom()
