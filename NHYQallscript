@@ -228,7 +228,7 @@ CurrentTabLabel.TextSize = 13
 CurrentTabLabel.TextXAlignment = Enum.TextXAlignment.Left
 CurrentTabLabel.Parent = HeaderBar
 
--- مربع البحث (للإفعاليات)
+-- مربع البحث
 local SearchFrame = Instance.new("Frame")
 SearchFrame.Name = "SearchFrame"
 SearchFrame.Size = UDim2.new(1, -100, 1, 0)
@@ -251,7 +251,7 @@ local SearchBox = Instance.new("TextBox")
 SearchBox.Size = UDim2.new(1, -34, 1, 0)
 SearchBox.Position = UDim2.new(0, 30, 0, 0)
 SearchBox.BackgroundTransparency = 1
-SearchBox.PlaceholderText = "ابحث بين سكربتات الفعاليات..."
+SearchBox.PlaceholderText = "ابحث بين السكربتات..."
 SearchBox.PlaceholderColor3 = Theme.TextMuted
 SearchBox.Text = ""
 SearchBox.TextColor3 = Theme.TextWhite
@@ -293,7 +293,7 @@ local PagesFolder = Instance.new("Folder")
 PagesFolder.Name = "PagesFolder"
 PagesFolder.Parent = ContentArea
 
--- 🏠 القائمة الرئيسية (تتضمن ScrollingFrame لترتيب كل شيء بشكل مثالي)
+-- 🏠 القائمة الرئيسية
 local MainInfoPage = Instance.new("ScrollingFrame")
 MainInfoPage.Name = "MainInfoPage"
 MainInfoPage.Size = UDim2.new(1, -20, 1, -65)
@@ -315,9 +315,7 @@ InfoPadding.PaddingBottom = UDim.new(0, 15)
 InfoPadding.PaddingRight = UDim.new(0, 4)
 InfoPadding.Parent = MainInfoPage
 
--- ====================================================================
--- 1. بطاقة ديسكورد الإدارة (في البداية)
--- ====================================================================
+-- 1. بطاقة ديسكورد الإدارة
 local DiscordCard = Instance.new("Frame")
 DiscordCard.Size = UDim2.new(1, 0, 0, 62)
 DiscordCard.BackgroundColor3 = Theme.CardBg
@@ -367,9 +365,7 @@ DiscordBtn.MouseButton1Click:Connect(function()
     CopyNotice.Visible = false
 end)
 
--- ====================================================================
--- 2. مستطيل طلب السكربتات (تحت الديسكورد مباشرة)
--- ====================================================================
+-- 2. مستطيل طلب السكربتات
 local RequestCard = Instance.new("Frame")
 RequestCard.Size = UDim2.new(1, 0, 0, 130)
 RequestCard.BackgroundColor3 = Theme.CardBg
@@ -417,26 +413,20 @@ SendBtn.TextSize = 11
 SendBtn.Parent = RequestCard
 Instance.new("UICorner", SendBtn).CornerRadius = UDim.new(0, 8)
 
--- ====================================================================
--- 🛑 نظام فحص الكواد والشتائم الشامل (مُحدث وشامل لكل أنواع السب والفشار)
--- ====================================================================
+-- نظام الحماية والشتائم
 local BadWords = {
-    -- الكواد والشتائم القوية (عراقي، خليجي، عربي، وعالمي)
     "كواد", "كوادين", "كوادك", "كوادكم", "كوسه", "كسمك", "امك", "أمك", "كسم", "كسامك", "كسختك", "كسخالتك", "كسختكم", "كسات", "كس", "عرضك", "اختك", "أختك", "شرفك", 
     "ابن الكلب", "ابن الحرام", "ابن الساقطة", "ابن القحبة", "ابن الكواد", "كلب", "قحبة", "منيوك", "معرص", "خنيث", "ديوث", "شرجي", "نيك", "ينيك", "منتاك", "متناك", 
     "عرص", "شرموطة", "قحط", "صرم", "زب", "طيز", "عير", "عيري", "زبك", "طيزك", "فرخ", "لغوة", "خرا", "اكل خرا", "اكلعذرة", "تفو", "انجب", "اكلك", "اكلزق", 
     "زق", "تباً", "حقير", "ساقط", "حيوان", "واطي", "خايس", "متخلف", "اخذتك", "اخذت", "عير بيك", "عيري بيك", "طير", "طير منا", "ينعلق", "ينعل", "يلعن", 
     "يلعن ابو", "يلعن ام", "انجبي", "قليل أدب", "سرسري", "جاهل",
-    -- شتائم إنجليزية وعالمية شائعة
     "fuk", "fvck", "fuc", "fuck", "motherfucker", "mothafucka", "dick", "pussy", "bitch", "slut", "whore", "asshole", "bastard", "cunt", "shit", "crap",
     "idiot", "retard", "stfu", "kys", "nigga", "nigger"
 }
 
 local function ContainsBadWord(text)
     local lowerText = text:lower()
-    -- تنظيف المسافات والرموز والتشكيل لتفادي التلاعب
     lowerText = lowerText:gsub("[%p%s]", "")
-    
     for _, word in ipairs(BadWords) do
         local cleanWord = word:gsub("[%p%s]", "")
         if lowerText:find(cleanWord) then
@@ -446,9 +436,7 @@ local function ContainsBadWord(text)
     return false, nil
 end
 
--- الويب هوك الخاص بإنذارات الشتم والسب المسيء الذي طلبته
 local ABUSE_WEBHOOK_URL = "https://discord.com/api/webhooks/1570677490240856165/gH-eDOz5KJttelkb_CEXwLH-C6crJHp7sQ5b6QO4degx0Z_SFzukCBRcNzmR6JdZ1clp"
--- الويب هوك الأساسي للطلبات العادية
 local REQUEST_WEBHOOK_URL = "https://discord.com/api/webhooks/1570672596662485073/u-_6KT6OvXf_vrK8-OouKD6gG6E-6IcTz7eXySt85y3lTBYD-R3y-oiPUU-kFFnxdD8Y"
 
 local function GetAccountAge()
@@ -480,15 +468,13 @@ SendBtn.MouseButton1Click:Connect(function()
         return
     end
 
-    -- فحص الشتائم والكواد الشامل
     local isAbusive, matchedWord = ContainsBadWord(messageText)
     if isAbusive then
-        -- إرسال تنبيه فوري للويب هوك الخاص بالسب والشتائم
         local abuseData = {
             ["content"] = "🚨 **تنبيه أمني: محاولة كواد، سب أو شتيمة في الهب!**",
             ["embeds"] = {{
                 ["title"] = "⚠️ تم رصد مستخدم مسيء وحظره تلقائياً بالنعال",
-                ["color"] = 16711680, -- اللون الأحمر التنبيهي
+                ["color"] = 16711680,
                 ["fields"] = {
                     {["name"] = "👤 اسم اللاعب", ["value"] = Player.Name, ["inline"] = true},
                     {["name"] = "🏷️ يوزر الحساب", ["value"] = "@" .. Player.Name, ["inline"] = true},
@@ -500,7 +486,6 @@ SendBtn.MouseButton1Click:Connect(function()
                 ["footer"] = {["text"] = "NHYQ Anti-Slur Protection System"}
             }}
         }
-        
         pcall(function()
             request({
                 Url = ABUSE_WEBHOOK_URL,
@@ -509,15 +494,11 @@ SendBtn.MouseButton1Click:Connect(function()
                 Body = HttpService:JSONEncode(abuseData)
             })
         end)
-
-        -- طرد اللاعب فوراً مع رسالة بالنعال
         Player:Kick("👞 بالنعال.. ممنوع السب والشتم والكواد يا قليل الأدب! تم طردك نهائياً.")
         return
     end
 
-    -- إذا كان الطلب طبيعياً ونظيفاً، يتم إرساله للويب هوك العادي
     SendBtn.Text = "⏳ جاري إرسال الطلب..."
-    
     local data = {
         ["content"] = "📩 **رسالة جديدة من مستخدم في الهب!**",
         ["embeds"] = {{
@@ -536,12 +517,11 @@ SendBtn.MouseButton1Click:Connect(function()
     }
 
     local success = pcall(function()
-        local jsonBody = HttpService:JSONEncode(data)
         request({
             Url = REQUEST_WEBHOOK_URL,
             Method = "POST",
             Headers = {["Content-Type"] = "application/json"},
-            Body = jsonBody
+            Body = HttpService:JSONEncode(data)
         })
     end)
 
@@ -561,9 +541,7 @@ SendBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- ====================================================================
--- 3. بطاقات معلومات اللاعب (تحت مستطيل الطلبات)
--- ====================================================================
+-- 3. معلومات اللاعب
 local function CreateInfoCard(titleText, valueText, iconEmoji)
     local Card = Instance.new("Frame")
     Card.Size = UDim2.new(1, 0, 0, 50)
@@ -629,7 +607,7 @@ task.spawn(function()
     end
 end)
 
--- ⚡ صفحة سكربتات الفعاليات
+-- ⚡ صفحة الفعاليات
 local EventsPage = Instance.new("ScrollingFrame")
 EventsPage.Name = "EventsPage"
 EventsPage.Size = UDim2.new(1, -20, 1, -65)
@@ -653,9 +631,31 @@ EventsPadding.PaddingBottom = UDim.new(0, 10)
 EventsPadding.PaddingRight = UDim.new(0, 4)
 EventsPadding.Parent = EventsPage
 
--- ==========================================
--- زر أيقونة عائم دائرى متحرك (MiniOrb)
--- ==========================================
+-- 🥚 صفحة سرقة البيض الجديدة
+local EggStealPage = Instance.new("ScrollingFrame")
+EggStealPage.Name = "EggStealPage"
+EggStealPage.Size = UDim2.new(1, -20, 1, -65)
+EggStealPage.Position = UDim2.new(0, 10, 0, 56)
+EggStealPage.BackgroundTransparency = 1
+EggStealPage.BorderSizePixel = 0
+EggStealPage.ScrollBarThickness = 4
+EggStealPage.ScrollBarImageColor3 = Theme.NeonCyan
+EggStealPage.AutomaticCanvasSize = Enum.AutomaticSize.Y
+EggStealPage.Visible = false
+EggStealPage.Parent = PagesFolder
+
+local EggLayout = Instance.new("UIListLayout")
+EggLayout.Padding = UDim.new(0, 9)
+EggLayout.SortOrder = Enum.SortOrder.LayoutOrder
+EggLayout.Parent = EggStealPage
+
+local EggPadding = Instance.new("UIPadding")
+EggPadding.PaddingTop = UDim.new(0, 2)
+EggPadding.PaddingBottom = UDim.new(0, 10)
+EggPadding.PaddingRight = UDim.new(0, 4)
+EggPadding.Parent = EggStealPage
+
+-- زر الأيقونة العائم (MiniOrb)
 local MiniOrb = Instance.new("TextButton")
 MiniOrb.Name = "NHYQ_GalaxyOrb"
 MiniOrb.Size = UDim2.new(0, 60, 0, 60)
@@ -746,10 +746,10 @@ UserInputService.InputChanged:Connect(function(input)
 end)
 
 -- ==========================================
--- إنشاء التبويبات الجانبية
+-- التبويبات الجانبية
 -- ==========================================
 local TabContainer = Instance.new("Frame")
-TabContainer.Size = UDim2.new(1, -16, 0, 80)
+TabContainer.Size = UDim2.new(1, -16, 0, 140)
 TabContainer.Position = UDim2.new(0, 8, 0, 92)
 TabContainer.BackgroundTransparency = 1
 TabContainer.Parent = Sidebar
@@ -759,6 +759,7 @@ TabLayout.Padding = UDim.new(0, 8)
 TabLayout.Parent = TabContainer
 
 local TabButtons = {}
+local CurrentActiveTab = "MAIN"
 
 local function CreateSidebarTab(tabId, displayName, targetPage)
     local TabBtn = Instance.new("TextButton")
@@ -767,7 +768,7 @@ local function CreateSidebarTab(tabId, displayName, targetPage)
     TabBtn.Text = displayName
     TabBtn.TextColor3 = Theme.TextWhite
     TabBtn.Font = Enum.Font.GothamBold
-    TabBtn.TextSize = 12
+    TabBtn.TextSize = 11
     TabBtn.AutoButtonColor = false
     TabBtn.Parent = TabContainer
 
@@ -779,14 +780,21 @@ local function CreateSidebarTab(tabId, displayName, targetPage)
     TabButtons[tabId] = {Btn = TabBtn, Stroke = tStroke}
 
     TabBtn.MouseButton1Click:Connect(function()
+        CurrentActiveTab = tabId
         MainInfoPage.Visible = (tabId == "MAIN")
         EventsPage.Visible = (tabId == "EVENTS")
-        SearchFrame.Visible = (tabId == "EVENTS")
+        EggStealPage.Visible = (tabId == "EGGS")
+        SearchFrame.Visible = (tabId == "EVENTS" or tabId == "EGGS")
+        SearchBox.Text = ""
         
         if tabId == "MAIN" then
             CurrentTabLabel.Text = "● القائمة الرئيسية"
-        else
+        elseif tabId == "EVENTS" then
             CurrentTabLabel.Text = "● سكربتات الفعاليات"
+            SearchBox.PlaceholderText = "ابحث بين سكربتات الفعاليات..."
+        elseif tabId == "EGGS" then
+            CurrentTabLabel.Text = "● سكربتات سرقة البيض"
+            SearchBox.PlaceholderText = "ابحث بين سكربتات سرقة البيض..."
         end
 
         for id, data in pairs(TabButtons) do
@@ -803,6 +811,115 @@ end
 
 CreateSidebarTab("MAIN", "🏠 القائمة", MainInfoPage)
 CreateSidebarTab("EVENTS", "⚡ الفعاليات", EventsPage)
+CreateSidebarTab("EGGS", "🥚 سرقة البيض", EggStealPage)
+
+-- ==========================================
+-- بناء بطاقات السكربتات
+-- ==========================================
+local AllEventScripts = {}
+local AllEggScripts = {}
+
+local function PopulateScripts(scriptList, targetParent, storageTable)
+    for _, data in ipairs(scriptList) do
+        local Card = Instance.new("Frame")
+        Card.Name = data.name
+        Card.Size = UDim2.new(1, 0, 0, 62)
+        Card.BackgroundColor3 = Theme.CardBg
+        Card.BorderSizePixel = 0
+        Card.Parent = targetParent
+
+        Instance.new("UICorner", Card).CornerRadius = UDim.new(0, 12)
+        local CardStroke = Instance.new("UIStroke", Card)
+        CardStroke.Color = Theme.CardStroke
+        CardStroke.Thickness = 1.2
+
+        local AccentBar = Instance.new("Frame")
+        AccentBar.Size = UDim2.new(0, 4, 0, 36)
+        AccentBar.Position = UDim2.new(0, 6, 0.5, -18)
+        AccentBar.BackgroundColor3 = data.color or Theme.NeonCyan
+        AccentBar.BorderSizePixel = 0
+        AccentBar.Parent = Card
+        Instance.new("UICorner", AccentBar).CornerRadius = UDim.new(1, 0)
+
+        local Title = Instance.new("TextLabel")
+        Title.Size = UDim2.new(1, -135, 0, 22)
+        Title.Position = UDim2.new(0, 18, 0, 9)
+        Title.BackgroundTransparency = 1
+        Title.Text = string.format("#%02d  %s", data.id, data.name)
+        Title.TextColor3 = Theme.TextWhite
+        Title.Font = Enum.Font.GothamBold
+        Title.TextSize = 13
+        Title.TextXAlignment = Enum.TextXAlignment.Left
+        Title.Parent = Card
+
+        local Desc = Instance.new("TextLabel")
+        Desc.Size = UDim2.new(1, -135, 0, 18)
+        Desc.Position = UDim2.new(0, 18, 0, 33)
+        Desc.BackgroundTransparency = 1
+        Desc.Text = data.desc
+        Desc.TextColor3 = Theme.TextMuted
+        Desc.Font = Enum.Font.Gotham
+        Desc.TextSize = 11
+        Desc.TextXAlignment = Enum.TextXAlignment.Left
+        Desc.Parent = Card
+
+        local ExeBtn = Instance.new("TextButton")
+        ExeBtn.Size = UDim2.new(0, 96, 0, 36)
+        ExeBtn.Position = UDim2.new(1, -106, 0.5, -18)
+        ExeBtn.BackgroundColor3 = Theme.GalaxyPurple
+        ExeBtn.Text = "⚡ EXECUTE"
+        ExeBtn.TextColor3 = Theme.TextWhite
+        ExeBtn.Font = Enum.Font.GothamBlack
+        ExeBtn.TextSize = 11
+        ExeBtn.AutoButtonColor = false
+        ExeBtn.Parent = Card
+
+        Instance.new("UICorner", ExeBtn).CornerRadius = UDim.new(0, 10)
+        local ExeStroke = Instance.new("UIStroke", ExeBtn)
+        ExeStroke.Color = Theme.NeonCyan
+        ExeStroke.Thickness = 1.2
+
+        Card.MouseEnter:Connect(function()
+            TweenService:Create(CardStroke, TweenInfo.new(0.2), {Color = Theme.NeonCyan}):Play()
+        end)
+        Card.MouseLeave:Connect(function()
+            TweenService:Create(CardStroke, TweenInfo.new(0.2), {Color = Theme.CardStroke}):Play()
+        end)
+
+        ExeBtn.MouseButton1Click:Connect(function()
+            ExeBtn:TweenSize(UDim2.new(0, 90, 0, 32), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.08, true)
+            ExeBtn.BackgroundColor3 = Theme.TextWhite
+            ExeBtn.TextColor3 = Theme.GalaxyPurple
+            ExeBtn.Text = "LOAD..."
+
+            task.spawn(function()
+                local successRun, err = pcall(function()
+                    loadstring(data.code)()
+                end)
+                if not successRun then
+                    warn("NHYQ Script Error [" .. data.name .. "]: " .. tostring(err))
+                end
+            end)
+
+            task.wait(0.15)
+            ExeBtn:TweenSize(UDim2.new(0, 96, 0, 36), Enum.EasingDirection.Out, Enum.EasingStyle.Back, 0.15, true)
+            ExeBtn.BackgroundColor3 = Theme.Success
+            ExeBtn.TextColor3 = Color3.fromRGB(10, 20, 15)
+            ExeBtn.Text = "✔ DONE"
+
+            task.wait(1.2)
+            TweenService:Create(ExeBtn, TweenInfo.new(0.3), {BackgroundColor3 = Theme.GalaxyPurple}):Play()
+            ExeBtn.TextColor3 = Theme.TextWhite
+            ExeBtn.Text = "⚡ EXECUTE"
+        end)
+
+        table.insert(storageTable, {
+            Card = Card,
+            Name = data.name:lower(),
+            Desc = data.desc:lower()
+        })
+    end
+end
 
 -- ==========================================
 -- قائمة سكربتات الفعاليات
@@ -867,114 +984,38 @@ local EventScriptsList = {
     {id = 60, name = " سكربت NHYQ ", desc = "NHYQ HUB— النسخة الحديثة", color = Color3.fromRGB(90, 0, 0), code = 'loadstring(game:HttpGet("https://encrypt-x.pages.dev/Scripts?Id=6532227090901"))("6532227090901")'},
 }
 
-local AllEventScripts = {}
+-- ==========================================
+-- قائمة سكربتات سرقة البيض
+-- ==========================================
+local EggStealScriptsList = {
+    {id = 1, name = "chilli", desc = "Chilli Hub - Steal An Egg", color = Color3.fromRGB(255, 60, 60), code = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/tienkhanh1/spicy/main/Chilli.lua"))()'},
+    {id = 2, name = "sena", desc = "Sena Exclusive Hub", color = Theme.NeonCyan, code = 'loadstring(game:HttpGet("https://senahub.xyz/senaexclusive"))()'},
+    {id = 3, name = "سرقة بيض حلو", desc = "Linkhive - Steal An Egg", color = Color3.fromRGB(255, 215, 0), code = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/afkar-gg/sc/refs/heads/main/Linkhive/Steal-An-Egg/main.lua"))()'},
+    {id = 4, name = "سيرفر خاص سرقة بيض ولكل المابات", desc = "سيرفرات خاصة مجانية لجميع المابات", color = Color3.fromRGB(0, 230, 118), code = 'loadstring(game:HttpGet("https://pastefy.app/YoZocJ8O/raw"))()'},
+    {id = 5, name = "lukz", desc = "Lukz MiHubs V3", color = Theme.GalaxyPurple, code = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/lukzscript/mihubs/main/stealaneggv3.lua"))()'},
+    {id = 6, name = "pulse", desc = "PulseZax Loader", color = Color3.fromRGB(0, 180, 255), code = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/PulseZax/Loader/refs/heads/main/.lua"))()'},
+    {id = 7, name = "chilli v6", desc = "يحتاج الى مفتاح 🔑", color = Color3.fromRGB(255, 100, 0), code = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/kadit9999/stealanegg/refs/heads/main/ChilliV5BaKhi.lua"))()'},
+    {id = 8, name = "ماب سرقة البيض A", desc = "Luarmor Loader A", color = Theme.GalaxyPurple, code = 'loadstring(game:HttpGet("https://api.luarmor.net/files/v4/loaders/271f96ca25f29ae395be1c0f9e6f4ead.lua"))()'},
+    {id = 9, name = "ماب سرقة البيض اسطوري", desc = "نسخة اسطورية متكاملة", color = Color3.fromRGB(255, 215, 0), code = 'loadstring(game:HttpGet("https://pastefy.app/6klOloFc/raw"))()'},
+    {id = 10, name = "ماب سرقة البيض قوي", desc = "Luarmor Loader Strong", color = Color3.fromRGB(255, 50, 50), code = 'loadstring(game:HttpGet("https://api.luarmor.net/files/v4/loaders/e7b41cde728aa3ec3dcd8e8993eae0db.lua"))()'},
+    {id = 11, name = "ماب سرقة البيض حلو2", desc = "TeddyHub Edition", color = Color3.fromRGB(255, 140, 180), code = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/teddyhubdev/diepvy/refs/heads/main/TeddyHub.lua"))()'},
+    {id = 12, name = "سكربت ماب سرقة البيض", desc = "(يطول شوية علمود ينفتح)", color = Theme.NeonCyan, code = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/PulseZax/Loader/refs/heads/main/.lua"))()'},
+}
 
-local function UpdateEventFilter()
+PopulateScripts(EventScriptsList, EventsPage, AllEventScripts)
+PopulateScripts(EggStealScriptsList, EggStealPage, AllEggScripts)
+
+-- ==========================================
+-- فلتر البحث
+-- ==========================================
+local function UpdateSearchFilter()
     local query = SearchBox.Text:lower()
-    for _, item in ipairs(AllEventScripts) do
+    local targetList = (CurrentActiveTab == "EVENTS") and AllEventScripts or AllEggScripts
+
+    for _, item in ipairs(targetList) do
         local matchSearch = (query == "") or item.Name:find(query) or item.Desc:find(query)
         item.Card.Visible = matchSearch
     end
 end
 
-for _, data in ipairs(EventScriptsList) do
-    local Card = Instance.new("Frame")
-    Card.Name = data.name
-    Card.Size = UDim2.new(1, 0, 0, 62)
-    Card.BackgroundColor3 = Theme.CardBg
-    Card.BorderSizePixel = 0
-    Card.Parent = EventsPage
-
-    Instance.new("UICorner", Card).CornerRadius = UDim.new(0, 12)
-    local CardStroke = Instance.new("UIStroke", Card)
-    CardStroke.Color = Theme.CardStroke
-    CardStroke.Thickness = 1.2
-
-    local AccentBar = Instance.new("Frame")
-    AccentBar.Size = UDim2.new(0, 4, 0, 36)
-    AccentBar.Position = UDim2.new(0, 6, 0.5, -18)
-    AccentBar.BackgroundColor3 = data.color or Theme.NeonCyan
-    AccentBar.BorderSizePixel = 0
-    AccentBar.Parent = Card
-    Instance.new("UICorner", AccentBar).CornerRadius = UDim.new(1, 0)
-
-    local Title = Instance.new("TextLabel")
-    Title.Size = UDim2.new(1, -135, 0, 22)
-    Title.Position = UDim2.new(0, 18, 0, 9)
-    Title.BackgroundTransparency = 1
-    Title.Text = string.format("#%02d  %s", data.id, data.name)
-    Title.TextColor3 = Theme.TextWhite
-    Title.Font = Enum.Font.GothamBold
-    Title.TextSize = 13
-    Title.TextXAlignment = Enum.TextXAlignment.Left
-    Title.Parent = Card
-
-    local Desc = Instance.new("TextLabel")
-    Desc.Size = UDim2.new(1, -135, 0, 18)
-    Desc.Position = UDim2.new(0, 18, 0, 33)
-    Desc.BackgroundTransparency = 1
-    Desc.Text = data.desc
-    Desc.TextColor3 = Theme.TextMuted
-    Desc.Font = Enum.Font.Gotham
-    Desc.TextSize = 11
-    Desc.TextXAlignment = Enum.TextXAlignment.Left
-    Desc.Parent = Card
-
-    local ExeBtn = Instance.new("TextButton")
-    ExeBtn.Size = UDim2.new(0, 96, 0, 36)
-    ExeBtn.Position = UDim2.new(1, -106, 0.5, -18)
-    ExeBtn.BackgroundColor3 = Theme.GalaxyPurple
-    ExeBtn.Text = "⚡ EXECUTE"
-    ExeBtn.TextColor3 = Theme.TextWhite
-    ExeBtn.Font = Enum.Font.GothamBlack
-    ExeBtn.TextSize = 11
-    ExeBtn.AutoButtonColor = false
-    ExeBtn.Parent = Card
-
-    Instance.new("UICorner", ExeBtn).CornerRadius = UDim.new(0, 10)
-    local ExeStroke = Instance.new("UIStroke", ExeBtn)
-    ExeStroke.Color = Theme.NeonCyan
-    ExeStroke.Thickness = 1.2
-
-    Card.MouseEnter:Connect(function()
-        TweenService:Create(CardStroke, TweenInfo.new(0.2), {Color = Theme.NeonCyan}):Play()
-    end)
-    Card.MouseLeave:Connect(function()
-        TweenService:Create(CardStroke, TweenInfo.new(0.2), {Color = Theme.CardStroke}):Play()
-    end)
-
-    ExeBtn.MouseButton1Click:Connect(function()
-        ExeBtn:TweenSize(UDim2.new(0, 90, 0, 32), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.08, true)
-        ExeBtn.BackgroundColor3 = Theme.TextWhite
-        ExeBtn.TextColor3 = Theme.GalaxyPurple
-        ExeBtn.Text = "LOAD..."
-
-        task.spawn(function()
-            local successRun, err = pcall(function()
-                loadstring(data.code)()
-            end)
-            if not successRun then
-                warn("NHYQ Event Error [" .. data.name .. "]: " .. tostring(err))
-            end
-        end)
-
-        task.wait(0.15)
-        ExeBtn:TweenSize(UDim2.new(0, 96, 0, 36), Enum.EasingDirection.Out, Enum.EasingStyle.Back, 0.15, true)
-        ExeBtn.BackgroundColor3 = Theme.Success
-        ExeBtn.TextColor3 = Color3.fromRGB(10, 20, 15)
-        ExeBtn.Text = "✔ DONE"
-
-        task.wait(1.2)
-        TweenService:Create(ExeBtn, TweenInfo.new(0.3), {BackgroundColor3 = Theme.GalaxyPurple}):Play()
-        ExeBtn.TextColor3 = Theme.TextWhite
-        ExeBtn.Text = "⚡ EXECUTE"
-    end)
-
-    table.insert(AllEventScripts, {
-        Card = Card,
-        Name = data.name:lower(),
-        Desc = data.desc:lower()
-    })
-end
-
-SearchBox:GetPropertyChangedSignal("Text"):Connect(UpdateEventFilter)
+SearchBox:GetPropertyChangedSignal("Text"):Connect(UpdateSearchFilter)
