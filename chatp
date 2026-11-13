@@ -1,6 +1,5 @@
 --==================================================
--- NHYQ WEBSOCKET GLOBAL CHAT - shs09qp23
--- AUTO-CONNECT SINGLE ROOM | TOP-RIGHT UI
+-- NHYQ WEBSOCKET GLOBAL CHAT - shs09qp23 (FIXED)
 --==================================================
 
 local Players = game:GetService("Players")
@@ -11,12 +10,10 @@ local ChatService = game:GetService("Chat")
 local LocalPlayer = Players.LocalPlayer
 local Username = LocalPlayer.Name
 
--- إعدادات الروم الواحد والاتصال (الدخول التلقائي)
 local ROOM_NAME = "NHYQ-Global-Chat-shs09qp23"
 local ENDPOINT = "wss://openfunproxy.zerdgeservers.workers.dev/ws"
 local MAX_MESSAGES = 100
 
--- تنظيف أي تشغيل سابق للسكربت
 local Env = (getgenv and getgenv()) or _G
 if Env.NHYQChatClose then
     pcall(Env.NHYQChatClose)
@@ -26,7 +23,6 @@ if OldGui then
     OldGui:Destroy()
 end
 
--- متغيرات الحالة
 local Closed = false
 local Socket = nil
 local Generation = 0
@@ -36,19 +32,15 @@ local Labels = {}
 local MessageOrder = 0
 local Muted = {}
 
--- قائمة الأهداف (All أو لاعب محدد)
 local targetList = {"All"}
 local currentIndex = 1
 
---==================================================
--- 1. التصميم (تصميم NHYQ الأسود والأحمر - أعلى اليمين)
---==================================================
+-- واجهة المستخدم
 local ChatGui = Instance.new("ScreenGui")
 ChatGui.Name = "NHYQ_FloatingChat_GUI"
 ChatGui.ResetOnSpawn = false
 ChatGui.Parent = CoreGui
 
--- المستطيل المصغر العائم (أعلى اليمين)
 local ChatBarFrame = Instance.new("Frame")
 ChatBarFrame.Name = "ChatBarFrame"
 ChatBarFrame.Size = UDim2.new(0, 285, 0, 165)
@@ -65,7 +57,6 @@ local BarStroke = Instance.new("UIStroke", ChatBarFrame)
 BarStroke.Color = Color3.fromRGB(180, 0, 0)
 BarStroke.Thickness = 1.5
 
--- شريط الحقوق العلوي الصغير
 local HeaderBar = Instance.new("Frame", ChatBarFrame)
 HeaderBar.Size = UDim2.new(1, 0, 0, 20)
 HeaderBar.BackgroundColor3 = Color3.fromRGB(18, 5, 5)
@@ -82,7 +73,6 @@ HeaderTitle.TextSize = 9
 HeaderTitle.Font = Enum.Font.GothamBold
 HeaderTitle.TextXAlignment = Enum.TextXAlignment.Left
 
--- زر الإغلاق النهائي (X)
 local DestroyBtn = Instance.new("TextButton", HeaderBar)
 DestroyBtn.Size = UDim2.new(0, 20, 0, 16)
 DestroyBtn.Position = UDim2.new(1, -24, 0.5, -8)
@@ -93,7 +83,6 @@ DestroyBtn.TextSize = 9
 DestroyBtn.Font = Enum.Font.GothamBold
 Instance.new("UICorner", DestroyBtn).CornerRadius = UDim.new(0, 4)
 
--- شاشة عرض الرسائل
 local MiniScroll = Instance.new("ScrollingFrame", ChatBarFrame)
 MiniScroll.Size = UDim2.new(1, -10, 1, -65)
 MiniScroll.Position = UDim2.new(0, 5, 0, 23)
@@ -108,7 +97,6 @@ local MiniList = Instance.new("UIListLayout", MiniScroll)
 MiniList.SortOrder = Enum.SortOrder.LayoutOrder
 MiniList.Padding = UDim.new(0, 3)
 
--- زر اختيار الهدف (All أو لاعب محدد)
 local TargetSelectorBtn = Instance.new("TextButton", ChatBarFrame)
 TargetSelectorBtn.Size = UDim2.new(0, 72, 0, 30)
 TargetSelectorBtn.Position = UDim2.new(0, 5, 1, -35)
@@ -120,7 +108,6 @@ TargetSelectorBtn.Font = Enum.Font.GothamBold
 Instance.new("UICorner", TargetSelectorBtn).CornerRadius = UDim.new(0, 5)
 Instance.new("UIStroke", TargetSelectorBtn).Color = Color3.fromRGB(180, 0, 0)
 
--- صندوق الكتابة
 local InputBox = Instance.new("TextBox", ChatBarFrame)
 InputBox.Size = UDim2.new(1, -142, 0, 30)
 InputBox.Position = UDim2.new(0, 80, 1, -35)
@@ -136,7 +123,6 @@ InputBox.Font = Enum.Font.GothamMedium
 Instance.new("UICorner", InputBox).CornerRadius = UDim.new(0, 5)
 Instance.new("UIStroke", InputBox).Color = Color3.fromRGB(100, 0, 0)
 
--- زر الإرسال
 local SendBtn = Instance.new("TextButton", ChatBarFrame)
 SendBtn.Size = UDim2.new(0, 54, 0, 30)
 SendBtn.Position = UDim2.new(1, -59, 1, -35)
@@ -147,7 +133,6 @@ SendBtn.TextSize = 9
 SendBtn.Font = Enum.Font.GothamBold
 Instance.new("UICorner", SendBtn).CornerRadius = UDim.new(0, 5)
 
--- زر الفتح والإغلاق العائم (على اليسار بالمنتصف)
 local ToggleBarBtn = Instance.new("TextButton")
 ToggleBarBtn.Size = UDim2.new(0, 38, 0, 38)
 ToggleBarBtn.Position = UDim2.new(0, 12, 0.5, -19)
@@ -161,9 +146,6 @@ ToggleBarBtn.Parent = ChatGui
 Instance.new("UICorner", ToggleBarBtn).CornerRadius = UDim.new(1, 0)
 Instance.new("UIStroke", ToggleBarBtn).Color = Color3.fromRGB(180, 0, 0)
 
---==================================================
--- 2. الوظائف (الفقاعات فوق الرأس + قائمة اللاعبين)
---==================================================
 local function updateTargetList()
     local currentSelected = targetList[currentIndex] or "All"
     targetList = {"All"}
@@ -231,9 +213,6 @@ local function ClearMessages()
     MiniScroll.CanvasPosition = Vector2.zero
 end
 
---==================================================
--- 3. نظام الاتصال (WebSocket) والإرسال والاستقبال
---==================================================
 local function SendPacket(Packet)
     if Closed or not Socket then return false end
     local Success = pcall(function()
@@ -339,11 +318,15 @@ local function ConnectToRoom()
         AddMessage("🔌 انقطع الاتصال. اكتب /reconnect للعودة.", Color3.fromRGB(255, 80, 80))
     end))
 
-    SendPacket({
-        type = "join",
-        room = ROOM_NAME,
-        username = Username
-    })
+    -- التعديل هنا: إرسال أمر الانضمام بالشكل الصحيح تماماً للبروكسي
+    task.spawn(function()
+        task.wait(0.2)
+        SendPacket({
+            type = "join",
+            room = ROOM_NAME,
+            username = Username
+        })
+    end)
 end
 
 local function CloseChat()
@@ -362,9 +345,6 @@ end
 
 Env.NHYQChatClose = CloseChat
 
---==================================================
--- 4. ربط الأزرار والأوامر
---==================================================
 table.insert(Connections, ToggleBarBtn.MouseButton1Click:Connect(function()
     ChatBarFrame.Visible = not ChatBarFrame.Visible
 end))
@@ -436,5 +416,4 @@ table.insert(Connections, InputBox.FocusLost:Connect(function(EnterPressed)
     if EnterPressed then SendMessage() end
 end))
 
--- الدخول التلقائي للروم فور تشغيل السكربت
 ConnectToRoom()
