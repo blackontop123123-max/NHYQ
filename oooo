@@ -1,5 +1,5 @@
 --==================================================
--- NHYQ SCRIPT (Loader + Key System + Modern UI + Security Webhook)
+-- NHYQ SCRIPT (Loader + Key System + Modern UI + Security Webhook + Live Script Users Counter)
 --==================================================
 
 local _P = game:GetService("Players")
@@ -1312,6 +1312,70 @@ local function LoadMainScript()
         RichText = true,
         Text = string.format("👤 يوزر اللاعب: <font color=\"#FF3333\">%s</font>\n📛 اسم اللاعب: <font color=\"#FF3333\">%s</font>\n🗺️ اسم الماب: <font color=\"#FF3333\">%s</font>\n📅 عمر الحساب: <font color=\"#FF3333\">%d يوم</font>\n📱 نوع الجهاز: <font color=\"#FF3333\">%s</font>", _L.Name, _L.DisplayName, gameNameStr, _L.AccountAge, deviceTypeStr)
     })
+
+    -- عداد المتصلين بالسكربت مباشرة فوق زري التيك توك والديسكورد
+    local ScriptUsersLabel = Create("TextLabel", HomeCard, {
+        Size = UDim2.new(1, -16, 0, 22),
+        Position = UDim2.new(0, 8, 1, -62),
+        BackgroundTransparency = 1,
+        Font = Configs_HUB.Text_Font,
+        TextSize = 11,
+        TextColor3 = Color3.fromRGB(255, 80, 80),
+        TextXAlignment = Enum.TextXAlignment.Center,
+        Text = "⚡ المتصلين بالسكربت حالياً: 1",
+        ZIndex = 3006
+    })
+
+    -- نظام الاتصال المباشر عبر الـ WebSocket لجلب عدد مستخدمي السكربت لحظياً وتحديث النص تلقائياً
+    task.spawn(function()
+        pcall(function()
+            local wsConnect = WebSocket and WebSocket.connect or syn and syn.websocket and syn.websocket.connect or Krnl and Krnl.WebSocket and Krnl.WebSocket.connect
+            if wsConnect then
+                local ws = wsConnect("wss://openfunproxy.zerdgeservers.workers.dev/ws")
+                if ws then
+                    local roomPlayers = {}
+                    roomPlayers[_L.Name] = true
+
+                    ws.OnMessage:Connect(function(msg)
+                        local success, data = pcall(function() return _H:JSONDecode(msg) end)
+                        if success and type(data) == "table" then
+                            if data.type == "joined" then
+                                roomPlayers[_L.Name] = true
+                                if type(data.history) == "table" then
+                                    for _, entry in ipairs(data.history) do
+                                        if type(entry) == "table" and type(entry.username) == "string" then
+                                            roomPlayers[entry.username] = true
+                                        end
+                                    end
+                                end
+                            elseif data.type == "say" and type(data.username) == "string" then
+                                roomPlayers[data.username] = true
+                            elseif data.type == "user-joined" and type(data.username) == "string" then
+                                roomPlayers[data.username] = true
+                            elseif data.type == "user-left" and type(data.username) == "string" then
+                                roomPlayers[data.username] = nil
+                            end
+
+                            local count = 0
+                            for _ in pairs(roomPlayers) do count = count + 1 end
+                            ScriptUsersLabel.Text = "⚡ المتصلين بالسكربت حالياً: " .. math.max(1, count)
+                        end
+                    end)
+
+                    task.spawn(function()
+                        task.wait(0.5)
+                        pcall(function()
+                            ws:Send(_H:JSONEncode({
+                                type = "join",
+                                room = "REX-Chat-Room8",
+                                username = _L.Name
+                            }))
+                        end)
+                    end)
+                end
+            end
+        end)
+    end)
 
     -- زر الديسكورد والتيك توك جنباً إلى جنب مع مسافة بينهما
     local DiscordCopyBtn = Create("TextButton", HomeCard, {
