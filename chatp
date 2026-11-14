@@ -1,5 +1,5 @@
 --==================================================
--- NHYQ GLOBAL CHAT - shs09qp23 (ROOM 8 + ROOM PLAYERS)
+-- NHYQ GLOBAL CHAT - shs09qp23 (DUAL PERSISTENT BACKGROUND SOCKETS)
 --==================================================
 
 local Players = game:GetService("Players")
@@ -11,7 +11,10 @@ local SoundService = game:GetService("SoundService")
 local LocalPlayer = Players.LocalPlayer
 local Username = LocalPlayer.Name
 
-local ROOM_NAME = "REX-Chat-Room8"
+local ROOM_NAME_1 = "REX-Chat-Room8" -- نفس السيرفر
+local ROOM_NAME_2 = "REX-Chat-Room4" -- بغير سيرفر / غير ماب
+local ACTIVE_ROOM = ROOM_NAME_1
+
 local ENDPOINT = "wss://openfunproxy.zerdgeservers.workers.dev/ws"
 local MAX_MESSAGES = 100
 local SOUND_ID = "rbxassetid://89068385567682"
@@ -26,14 +29,22 @@ if OldGui then
 end
 
 local Closed = false
-local Socket = nil
 local Generation = 0
 local Connections = {}
-local SocketConnections = {}
-local Labels = {}
+
+-- نظام سوكيت منفصل لكل روم لتبقى الاتصالات حية في الخلفية معاً
+local Socket1 = nil
+local Socket2 = nil
+local SocketConnections1 = {}
+local SocketConnections2 = {}
+
+local HistoryRoom1 = {}
+local HistoryRoom2 = {}
+
 local MessageOrder = 0
 local BlockedPlayers = {}
-local RoomActivePlayers = {} -- قائمة اللاعبين الفعليين في الروم
+local RoomActivePlayers1 = {} 
+local RoomActivePlayers2 = {} 
 local IsNotificationsMuted = false
 local UnreadCount = 0
 
@@ -47,8 +58,8 @@ ChatGui.Parent = CoreGui
 
 local ChatBarFrame = Instance.new("Frame")
 ChatBarFrame.Name = "ChatBarFrame"
-ChatBarFrame.Size = UDim2.new(0, 300, 0, 175)
-ChatBarFrame.Position = UDim2.new(1, -315, 0, 15)
+ChatBarFrame.Size = UDim2.new(0, 310, 0, 195)
+ChatBarFrame.Position = UDim2.new(1, -325, 0, 15)
 ChatBarFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 ChatBarFrame.BackgroundTransparency = 0.1
 ChatBarFrame.BorderSizePixel = 0
@@ -68,45 +79,55 @@ HeaderBar.BorderSizePixel = 0
 Instance.new("UICorner", HeaderBar).CornerRadius = UDim.new(0, 8)
 
 local HeaderTitle = Instance.new("TextLabel", HeaderBar)
-HeaderTitle.Size = UDim2.new(1, -75, 1, 0)
+HeaderTitle.Size = UDim2.new(1, -145, 1, 0)
 HeaderTitle.Position = UDim2.new(0, 8, 0, 0)
 HeaderTitle.BackgroundTransparency = 1
-HeaderTitle.Text = "🔥 NHYQ CHAT | shs09qp23"
+HeaderTitle.Text = "🔥 NHYQ CHAT"
 HeaderTitle.TextColor3 = Color3.fromRGB(255, 60, 60)
 HeaderTitle.TextSize = 9.5
 HeaderTitle.Font = Enum.Font.GothamBold
 HeaderTitle.TextXAlignment = Enum.TextXAlignment.Left
 
-local SettingsBtn = Instance.new("TextButton", HeaderBar)
-SettingsBtn.Size = UDim2.new(0, 22, 0, 18)
-SettingsBtn.Position = UDim2.new(1, -74, 0.5, -9)
-SettingsBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-SettingsBtn.Text = "⚙️"
-SettingsBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-SettingsBtn.TextSize = 10
-Instance.new("UICorner", SettingsBtn).CornerRadius = UDim.new(0, 4)
+local Room1Btn = Instance.new("TextButton", HeaderBar)
+Room1Btn.Size = UDim2.new(0, 52, 0, 16)
+Room1Btn.Position = UDim2.new(1, -142, 0.5, -8)
+Room1Btn.BackgroundColor3 = Color3.fromRGB(160, 20, 20)
+Room1Btn.Text = "نفس السيرفر"
+Room1Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+Room1Btn.TextSize = 7.5
+Room1Btn.Font = Enum.Font.GothamBold
+Instance.new("UICorner", Room1Btn).CornerRadius = UDim.new(0, 4)
+
+local Room2Btn = Instance.new("TextButton", HeaderBar)
+Room2Btn.Size = UDim2.new(0, 52, 0, 16)
+Room2Btn.Position = UDim2.new(1, -86, 0.5, -8)
+Room2Btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Room2Btn.Text = "غير سيرفر"
+Room2Btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+Room2Btn.TextSize = 7.5
+Room2Btn.Font = Enum.Font.GothamBold
+Instance.new("UICorner", Room2Btn).CornerRadius = UDim.new(0, 4)
 
 local MuteNotifBtn = Instance.new("TextButton", HeaderBar)
-MuteNotifBtn.Size = UDim2.new(0, 22, 0, 18)
-MuteNotifBtn.Position = UDim2.new(1, -50, 0.5, -9)
+MuteNotifBtn.Size = UDim2.new(0, 18, 0, 16)
+MuteNotifBtn.Position = UDim2.new(1, -50, 0.5, -8)
 MuteNotifBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 MuteNotifBtn.Text = "🔔"
 MuteNotifBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-MuteNotifBtn.TextSize = 10
+MuteNotifBtn.TextSize = 8.5
 Instance.new("UICorner", MuteNotifBtn).CornerRadius = UDim.new(0, 4)
 
-local HideBtn = Instance.new("TextButton", HeaderBar)
-HideBtn.Size = UDim2.new(0, 22, 0, 18)
-HideBtn.Position = UDim2.new(1, -24, 0.5, -9)
-HideBtn.BackgroundColor3 = Color3.fromRGB(160, 0, 0)
-HideBtn.Text = "✕"
-HideBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-HideBtn.TextSize = 10
-HideBtn.Font = Enum.Font.GothamBold
-Instance.new("UICorner", HideBtn).CornerRadius = UDim.new(0, 4)
+local SettingsBtn = Instance.new("TextButton", HeaderBar)
+SettingsBtn.Size = UDim2.new(0, 18, 0, 16)
+SettingsBtn.Position = UDim2.new(1, -26, 0.5, -8)
+SettingsBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+SettingsBtn.Text = "⚙️"
+SettingsBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+SettingsBtn.TextSize = 8.5
+Instance.new("UICorner", SettingsBtn).CornerRadius = UDim.new(0, 4)
 
 local MiniScroll = Instance.new("ScrollingFrame", ChatBarFrame)
-MiniScroll.Size = UDim2.new(1, -10, 1, -70)
+MiniScroll.Size = UDim2.new(1, -10, 1, -90)
 MiniScroll.Position = UDim2.new(0, 5, 0, 26)
 MiniScroll.BackgroundTransparency = 1
 MiniScroll.BorderSizePixel = 0
@@ -119,9 +140,31 @@ local MiniList = Instance.new("UIListLayout", MiniScroll)
 MiniList.SortOrder = Enum.SortOrder.LayoutOrder
 MiniList.Padding = UDim.new(0, 4)
 
+local ActiveUsersBar = Instance.new("ScrollingFrame", ChatBarFrame)
+ActiveUsersBar.Size = UDim2.new(1, -10, 0, 20)
+ActiveUsersBar.Position = UDim2.new(0, 5, 1, -62)
+ActiveUsersBar.BackgroundTransparency = 0.4
+ActiveUsersBar.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+ActiveUsersBar.CanvasSize = UDim2.new(0, 0, 0, 0)
+ActiveUsersBar.AutomaticCanvasSize = Enum.AutomaticSize.XY
+ActiveUsersBar.ScrollingDirection = Enum.ScrollingDirection.XY
+ActiveUsersBar.ScrollBarThickness = 2
+Instance.new("UICorner", ActiveUsersBar).CornerRadius = UDim.new(0, 4)
+
+local ActiveUsersLabel = Instance.new("TextLabel", ActiveUsersBar)
+ActiveUsersLabel.Size = UDim2.new(1, 0, 1, 0)
+ActiveUsersLabel.Position = UDim2.new(0, 4, 0, 0)
+ActiveUsersLabel.BackgroundTransparency = 1
+ActiveUsersLabel.Text = "⚡ المتصلين: جاري التحميل..."
+ActiveUsersLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+ActiveUsersLabel.TextSize = 9.5
+ActiveUsersLabel.Font = Enum.Font.GothamBold
+ActiveUsersLabel.TextXAlignment = Enum.TextXAlignment.Left
+ActiveUsersLabel.RichText = true
+
 local TargetSelectorBtn = Instance.new("TextButton", ChatBarFrame)
-TargetSelectorBtn.Size = UDim2.new(0, 75, 0, 32)
-TargetSelectorBtn.Position = UDim2.new(0, 5, 1, -37)
+TargetSelectorBtn.Size = UDim2.new(0, 65, 0, 30)
+TargetSelectorBtn.Position = UDim2.new(0, 5, 1, -36)
 TargetSelectorBtn.BackgroundColor3 = Color3.fromRGB(20, 10, 10)
 TargetSelectorBtn.Text = "🌐 All"
 TargetSelectorBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
@@ -131,8 +174,8 @@ Instance.new("UICorner", TargetSelectorBtn).CornerRadius = UDim.new(0, 5)
 Instance.new("UIStroke", TargetSelectorBtn).Color = Color3.fromRGB(180, 0, 0)
 
 local InputBox = Instance.new("TextBox", ChatBarFrame)
-InputBox.Size = UDim2.new(1, -145, 0, 32)
-InputBox.Position = UDim2.new(0, 84, 1, -37)
+InputBox.Size = UDim2.new(1, -135, 0, 30)
+InputBox.Position = UDim2.new(0, 74, 1, -36)
 InputBox.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
 InputBox.BorderSizePixel = 0
 InputBox.ClearTextOnFocus = false
@@ -146,8 +189,8 @@ Instance.new("UICorner", InputBox).CornerRadius = UDim.new(0, 5)
 Instance.new("UIStroke", InputBox).Color = Color3.fromRGB(100, 0, 0)
 
 local SendBtn = Instance.new("TextButton", ChatBarFrame)
-SendBtn.Size = UDim2.new(0, 54, 0, 32)
-SendBtn.Position = UDim2.new(1, -59, 1, -37)
+SendBtn.Size = UDim2.new(0, 52, 0, 30)
+SendBtn.Position = UDim2.new(1, -56, 1, -36)
 SendBtn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
 SendBtn.Text = "إرسال 🚀"
 SendBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -211,64 +254,29 @@ UnblockMenuBtn.TextSize = 10
 UnblockMenuBtn.Font = Enum.Font.GothamBold
 Instance.new("UICorner", UnblockMenuBtn).CornerRadius = UDim.new(0, 5)
 
-local PlayerListModal = Instance.new("Frame", ChatGui)
-PlayerListModal.Size = UDim2.new(0, 220, 0, 210)
-PlayerListModal.Position = UDim2.new(0.5, -110, 0.5, -105)
-PlayerListModal.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
-PlayerListModal.Visible = false
-PlayerListModal.Active = true
-PlayerListModal.Draggable = true
-PlayerListModal.BorderSizePixel = 0
-Instance.new("UICorner", PlayerListModal).CornerRadius = UDim.new(0, 8)
-Instance.new("UIStroke", PlayerListModal).Color = Color3.fromRGB(200, 0, 0)
+local function GetUniqueColorForName(name)
+    local hash = 0
+    for i = 1, #name do
+        hash = (hash * 31 + string.byte(name, i)) % 360
+    end
+    local hue = hash / 360
+    local c = Color3.fromHSV(hue, 0.9, 1)
+    return c
+end
 
-local ModalTitle = Instance.new("TextLabel", PlayerListModal)
-ModalTitle.Size = UDim2.new(1, 0, 0, 25)
-ModalTitle.BackgroundTransparency = 1
-ModalTitle.Text = "اختر اللاعب"
-ModalTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-ModalTitle.TextSize = 11
-ModalTitle.Font = Enum.Font.GothamBold
-
-local ModalScroll = Instance.new("ScrollingFrame", PlayerListModal)
-ModalScroll.Size = UDim2.new(1, -16, 0, 120)
-ModalScroll.Position = UDim2.new(0, 8, 0, 30)
-ModalScroll.BackgroundTransparency = 1
-ModalScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-ModalScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-ModalScroll.ScrollBarThickness = 3
-
-local ModalScrollList = Instance.new("UIListLayout", ModalScroll)
-ModalScrollList.SortOrder = Enum.SortOrder.LayoutOrder
-ModalScrollList.Padding = UDim.new(0, 3)
-
-local ConfirmActionBtn = Instance.new("TextButton", PlayerListModal)
-ConfirmActionBtn.Size = UDim2.new(0, 95, 0, 28)
-ConfirmActionBtn.Position = UDim2.new(0, 10, 1, -35)
-ConfirmActionBtn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
-ConfirmActionBtn.Text = "Block 🚫"
-ConfirmActionBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-ConfirmActionBtn.TextSize = 10
-ConfirmActionBtn.Font = Enum.Font.GothamBold
-Instance.new("UICorner", ConfirmActionBtn).CornerRadius = UDim.new(0, 5)
-
-local CancelModalBtn = Instance.new("TextButton", PlayerListModal)
-CancelModalBtn.Size = UDim2.new(0, 95, 0, 28)
-CancelModalBtn.Position = UDim2.new(1, -105, 1, -35)
-CancelModalBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-CancelModalBtn.Text = "cancel"
-CancelModalBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-CancelModalBtn.TextSize = 10
-CancelModalBtn.Font = Enum.Font.GothamBold
-Instance.new("UICorner", CancelModalBtn).CornerRadius = UDim.new(0, 5)
-
-local selectedTargetPlayer = nil
-local currentModalMode = "block"
+local function GetUniqueColorHex(name)
+    local c = GetUniqueColorForName(name)
+    local r = math.floor(c.R * 255)
+    local g = math.floor(c.G * 255)
+    local b = math.floor(c.B * 255)
+    return string.format("#%02X%02X%02X", r, g, b)
+end
 
 local function updateTargetList()
+    local currentActivePlayers = (ACTIVE_ROOM == ROOM_NAME_1) and RoomActivePlayers1 or RoomActivePlayers2
     local currentSelected = targetList[currentIndex] or "All"
     targetList = {"All"}
-    for pName, _ in pairs(RoomActivePlayers) do
+    for pName, _ in pairs(currentActivePlayers) do
         if pName:lower() ~= Username:lower() then
             table.insert(targetList, pName)
         end
@@ -282,7 +290,25 @@ local function updateTargetList()
     currentIndex = 1
 end
 
+local function updateActiveUsersDisplay()
+    local currentActivePlayers = (ACTIVE_ROOM == ROOM_NAME_1) and RoomActivePlayers1 or RoomActivePlayers2
+    local namesTable = {}
+    for pName, _ in pairs(currentActivePlayers) do
+        local hexColor = GetUniqueColorHex(pName)
+        table.insert(namesTable, string.format("<font color=\"%s\">%s</font>", hexColor, pName))
+    end
+    
+    if #namesTable > 0 then
+        ActiveUsersLabel.Text = "⚡ فاتحي السكربت: " .. table.concat(namesTable, " | ")
+    else
+        local myHex = GetUniqueColorHex(Username)
+        ActiveUsersLabel.Text = "⚡ فاتحي السكربت: " .. string.format("<font color=\"%s\">%s</font>", myHex, Username)
+    end
+    updateTargetList()
+end
+
 local function showBubbleOnHead(targetName, msgText)
+    if ACTIVE_ROOM ~= ROOM_NAME_1 then return end
     pcall(function()
         local targetPlayer = Players:FindFirstChild(targetName)
         if targetPlayer and targetPlayer.Character then
@@ -320,18 +346,11 @@ local function PlayNotificationSoundAndBanner(senderName, msgText)
     stroke.Color = Color3.fromRGB(220, 20, 20)
     stroke.Thickness = 1.8
 
-    local sideBar = Instance.new("Frame", NotifFrame)
-    sideBar.Size = UDim2.new(0, 4, 1, -12)
-    sideBar.Position = UDim2.new(0, 6, 0, 6)
-    sideBar.BackgroundColor3 = Color3.fromRGB(255, 40, 40)
-    sideBar.BorderSizePixel = 0
-    Instance.new("UICorner", sideBar).CornerRadius = UDim.new(1, 0)
-
     local titleLbl = Instance.new("TextLabel", NotifFrame)
     titleLbl.Size = UDim2.new(1, -22, 0, 18)
     titleLbl.Position = UDim2.new(0, 18, 0, 6)
     titleLbl.BackgroundTransparency = 1
-    titleLbl.Text = "💬 رسالة جديدة من: " .. senderName
+    titleLbl.Text = "💬 رسالة من: " .. senderName
     titleLbl.TextColor3 = Color3.fromRGB(255, 90, 90)
     titleLbl.TextSize = 9.5
     titleLbl.Font = Enum.Font.GothamBold
@@ -359,77 +378,105 @@ local function PlayNotificationSoundAndBanner(senderName, msgText)
     end)
 end
 
-local function AddMessage(Text, ColorOverride)
+-- إضافة رسالة وعرضها إذا كان الروم حالياً مفتوحاً، وتخزينها بالذاكرة دائماً
+local function AddMessage(roomName, Text, ColorOverride, isRemoteRoom)
     if Closed or not ChatGui.Parent then return end
-    MessageOrder += 1
 
-    local Label = Instance.new("TextLabel")
-    Label.Name = "ChatMessage"
-    Label.LayoutOrder = MessageOrder
-    Label.BackgroundTransparency = 1
-    Label.Size = UDim2.new(1, -4, 0, 18)
-    Label.AutomaticSize = Enum.AutomaticSize.Y
-    Label.Text = tostring(Text)
-    Label.TextColor3 = ColorOverride or Color3.fromRGB(255, 160, 120)
-    Label.TextSize = 10.5
-    Label.Font = Enum.Font.GothamBold
-    Label.TextXAlignment = Enum.TextXAlignment.Left
-    Label.TextWrapped = true
-    Label.Parent = MiniScroll
+    local targetHistory = (roomName == ROOM_NAME_1) and HistoryRoom1 or HistoryRoom2
+    table.insert(targetHistory, {text = Text, color = ColorOverride, remote = isRemoteRoom})
+    while #targetHistory > MAX_MESSAGES do
+        table.remove(targetHistory, 1)
+    end
 
-    table.insert(Labels, Label)
-    while #Labels > MAX_MESSAGES do
-        local Oldest = table.remove(Labels, 1)
-        if Oldest then Oldest:Destroy() end
+    if ACTIVE_ROOM == roomName then
+        MessageOrder += 1
+        local Label = Instance.new("TextLabel")
+        Label.Name = "ChatMessage"
+        Label.LayoutOrder = MessageOrder
+        Label.BackgroundTransparency = 1
+        Label.Size = UDim2.new(1, -4, 0, isRemoteRoom and 24 or 18)
+        Label.AutomaticSize = Enum.AutomaticSize.Y
+        Label.Text = tostring(Text)
+        Label.TextColor3 = ColorOverride or Color3.fromRGB(255, 160, 120)
+        Label.TextSize = isRemoteRoom and 13 or 10.5
+        Label.Font = Enum.Font.GothamBold
+        Label.TextXAlignment = Enum.TextXAlignment.Left
+        Label.TextWrapped = true
+        Label.RichText = true
+        Label.Parent = MiniScroll
+
+        task.defer(function()
+            if Closed or not MiniScroll.Parent then return end
+            MiniScroll.CanvasPosition = Vector2.new(0, math.max(0, MiniScroll.AbsoluteCanvasSize.Y - MiniScroll.AbsoluteSize.Y))
+        end)
+    end
+end
+
+-- إعادة عرض الرسائل المخزنة عند التبديل بين الرومات
+local function RefreshChatDisplay()
+    for _, child in ipairs(MiniScroll:GetChildren()) do
+        if child:IsA("TextLabel") then
+            child:Destroy()
+        end
+    end
+
+    local currentHistory = (ACTIVE_ROOM == ROOM_NAME_1) and HistoryRoom1 or HistoryRoom2
+
+    for _, msgData in ipairs(currentHistory) do
+        MessageOrder += 1
+        local Label = Instance.new("TextLabel")
+        Label.Name = "ChatMessage"
+        Label.LayoutOrder = MessageOrder
+        Label.BackgroundTransparency = 1
+        Label.Size = UDim2.new(1, -4, 0, msgData.remote and 24 or 18)
+        Label.AutomaticSize = Enum.AutomaticSize.Y
+        Label.Text = tostring(msgData.text)
+        Label.TextColor3 = msgData.color or Color3.fromRGB(255, 160, 120)
+        Label.TextSize = msgData.remote and 13 or 10.5
+        Label.Font = Enum.Font.GothamBold
+        Label.TextXAlignment = Enum.TextXAlignment.Left
+        Label.TextWrapped = true
+        Label.RichText = true
+        Label.Parent = MiniScroll
     end
 
     task.defer(function()
         if Closed or not MiniScroll.Parent then return end
         MiniScroll.CanvasPosition = Vector2.new(0, math.max(0, MiniScroll.AbsoluteCanvasSize.Y - MiniScroll.AbsoluteSize.Y))
     end)
+    updateActiveUsersDisplay()
 end
 
-local function ClearMessages()
-    for _, Label in ipairs(Labels) do
-        Label:Destroy()
-    end
-    table.clear(Labels)
-    MiniScroll.CanvasPosition = Vector2.zero
-end
-
-local function SendPacket(Packet)
-    if Closed or not Socket then return false end
+local function SendPacket(roomName, Packet)
+    if Closed then return false end
+    local socket = (roomName == ROOM_NAME_1) and Socket1 or Socket2
+    if not socket then return false end
     local Success = pcall(function()
-        Socket:Send(HttpService:JSONEncode(Packet))
+        socket:Send(HttpService:JSONEncode(Packet))
     end)
     return Success
-end
-
-local function Disconnect()
-    Generation += 1
-    for _, Conn in ipairs(SocketConnections) do
-        pcall(function() Conn:Disconnect() end)
-    end
-    table.clear(SocketConnections)
-    if Socket then
-        pcall(function() Socket:Close() end)
-        Socket = nil
-    end
 end
 
 local function IsBlocked(Name)
     return BlockedPlayers[tostring(Name):lower()] == true
 end
 
-local function ProcessIncomingChat(senderName, rawText)
+local function ProcessIncomingChat(roomName, senderName, rawText)
     if IsBlocked(senderName) then return end
 
-    local targetUser, actualMsg = rawText:match("^@([^:]+):%s*(.+)$")
+    local userColorHex = GetUniqueColorHex(senderName)
+    local isRemote = (roomName == ROOM_NAME_2)
     
+    local targetUser, actualMsg = rawText:match("^@([^:]+):%s*(.+)$")
+    local formattedText = ""
+
     if targetUser and actualMsg then
         if targetUser:lower() == Username:lower() or senderName:lower() == Username:lower() then
-            AddMessage("🔒 [" .. senderName .. " ➔ " .. targetUser .. "]: " .. actualMsg, Color3.fromRGB(255, 70, 70))
-            showBubbleOnHead(senderName, actualMsg)
+            formattedText = string.format("🔒 [<font color=\"%s\">%s</font> ➔ <font color=\"%s\">%s</font>]: %s", userColorHex, senderName, GetUniqueColorHex(targetUser), targetUser, actualMsg)
+            AddMessage(roomName, formattedText, nil, isRemote)
+            if roomName == ROOM_NAME_1 then
+                showBubbleOnHead(senderName, actualMsg)
+            end
             PlayNotificationSoundAndBanner(senderName, actualMsg)
             
             if not ChatBarFrame.Visible and senderName ~= Username then
@@ -439,11 +486,13 @@ local function ProcessIncomingChat(senderName, rawText)
             end
         end
     else
-        AddMessage("🔥 " .. senderName .. ": " .. rawText, Color3.fromRGB(255, 160, 120))
-        showBubbleOnHead(senderName, rawText)
+        formattedText = string.format("<font color=\"%s\">%s</font>: %s", userColorHex, senderName, rawText)
+        AddMessage(roomName, formattedText, nil, isRemote)
+        if roomName == ROOM_NAME_1 then
+            showBubbleOnHead(senderName, rawText)
+        end
         if senderName ~= Username then
             PlayNotificationSoundAndBanner(senderName, rawText)
-            
             if not ChatBarFrame.Visible then
                 UnreadCount += 1
                 BadgeLabel.Text = tostring(UnreadCount)
@@ -453,101 +502,105 @@ local function ProcessIncomingChat(senderName, rawText)
     end
 end
 
-local function HandleMessage(RawMessage)
+local function HandleMessage(roomName, RawMessage)
     local Success, Data = pcall(function()
         return HttpService:JSONDecode(tostring(RawMessage))
     end)
     if not Success or type(Data) ~= "table" then return end
 
+    local activePlayers = (roomName == ROOM_NAME_1) and RoomActivePlayers1 or RoomActivePlayers2
+
     if Data.type == "joined" then
-        AddMessage("✅ تم الاتصال بنجاح", Color3.fromRGB(100, 255, 100))
-        RoomActivePlayers[Username] = true
+        activePlayers[Username] = true
+        if roomName == ACTIVE_ROOM then updateActiveUsersDisplay() end
         if type(Data.history) == "table" then
             for _, Entry in ipairs(Data.history) do
                 if type(Entry) == "table" and type(Entry.username) == "string" then
-                    RoomActivePlayers[Entry.username] = true
+                    activePlayers[Entry.username] = true
                 end
                 if type(Entry) == "table" and type(Entry.payload) == "table" and Entry.payload.type == "chat" then
-                    ProcessIncomingChat(tostring(Entry.username), tostring(Entry.payload.text))
+                    ProcessIncomingChat(roomName, tostring(Entry.username), tostring(Entry.payload.text))
                 end
             end
         end
+        if roomName == ACTIVE_ROOM then updateActiveUsersDisplay() end
 
     elseif Data.type == "say" then
         if type(Data.username) == "string" then
-            RoomActivePlayers[Data.username] = true
+            activePlayers[Data.username] = true
+            if roomName == ACTIVE_ROOM then updateActiveUsersDisplay() end
         end
         if type(Data.payload) == "table" and Data.payload.type == "chat" then
-            ProcessIncomingChat(tostring(Data.username), tostring(Data.payload.text))
+            ProcessIncomingChat(roomName, tostring(Data.username), tostring(Data.payload.text))
         end
 
     elseif Data.type == "user-joined" then
         local uName = tostring(Data.username)
-        RoomActivePlayers[uName] = true
-        AddMessage("➕ دخل: " .. uName, Color3.fromRGB(180, 180, 180))
+        activePlayers[uName] = true
+        if roomName == ACTIVE_ROOM then updateActiveUsersDisplay() end
 
     elseif Data.type == "user-left" then
         local uName = tostring(Data.username)
-        RoomActivePlayers[uName] = nil
-        AddMessage("➖ غادر: " .. uName, Color3.fromRGB(150, 150, 150))
-
-    elseif Data.type == "error" then
-        AddMessage("⚠️ خطأ: " .. tostring(Data.message), Color3.fromRGB(255, 50, 50))
+        activePlayers[uName] = nil
+        if roomName == ACTIVE_ROOM then updateActiveUsersDisplay() end
     end
 end
 
-local function ConnectToRoom()
-    if Closed then return end
-    Disconnect()
-    AddMessage("⏳ جاري الاتصال بالإنترنت...", Color3.fromRGB(200, 200, 200))
-
-    local MyGeneration = Generation
-    
+-- تشغيل الاتصال الدائم لكل روم في الخلفية بشكل مستقل
+local function InitializeSockets()
     local wsConnect = WebSocket and WebSocket.connect or syn and syn.websocket and syn.websocket.connect or Krnl and Krnl.WebSocket and Krnl.WebSocket.connect
-    if not wsConnect then
-        AddMessage("❌ المنفذ لا يدعم WebSocket!", Color3.fromRGB(255, 50, 50))
-        return
-    end
+    if not wsConnect then return end
 
-    local ConnectSuccess, ConnectResult = pcall(function()
-        return wsConnect(ENDPOINT)
+    -- اتصال روم نفس السيرفر (Room 8)
+    task.spawn(function()
+        local success, res = pcall(function() return wsConnect(ENDPOINT) end)
+        if success and res then
+            Socket1 = res
+            Socket1.OnMessage:Connect(function(msg) HandleMessage(ROOM_NAME_1, msg) end)
+            Socket1.OnClose:Connect(function() Socket1 = nil end)
+            task.wait(0.3)
+            SendPacket(ROOM_NAME_1, {type = "join", room = ROOM_NAME_1, username = Username})
+        end
     end)
 
-    if not ConnectSuccess or not ConnectResult then
-        AddMessage("❌ فشل الاتصال بالشبكة!", Color3.fromRGB(255, 50, 50))
-        return
-    end
-
-    if Closed or MyGeneration ~= Generation then
-        pcall(function() ConnectResult:Close() end)
-        return
-    end
-
-    Socket = ConnectResult
-
-    table.insert(SocketConnections, Socket.OnMessage:Connect(function(RawMessage)
-        if Closed or MyGeneration ~= Generation then return end
-        HandleMessage(RawMessage)
-    end))
-
-    table.insert(SocketConnections, Socket.OnClose:Connect(function()
-        if Closed or MyGeneration ~= Generation then return end
-        Socket = nil
-        AddMessage("🔌 انقطع الاتصال. اكتب /reconnect للإعادة.", Color3.fromRGB(255, 80, 80))
-    end))
-
+    -- اتصال روم غير السيرفر (Room 4)
     task.spawn(function()
-        task.wait(0.2)
-        SendPacket({
-            type = "join",
-            room = ROOM_NAME,
-            username = Username
-        })
+        local success, res = pcall(function() return wsConnect(ENDPOINT) end)
+        if success and res then
+            Socket2 = res
+            Socket2.OnMessage:Connect(function(msg) HandleMessage(ROOM_NAME_2, msg) end)
+            Socket2.OnClose:Connect(function() Socket2 = nil end)
+            task.wait(0.3)
+            SendPacket(ROOM_NAME_2, {type = "join", room = ROOM_NAME_2, username = Username})
+        end
     end)
 end
 
-table.insert(Connections, SettingsBtn.MouseButton1Click:Connect(function()
-    SettingsMenu.Visible = not SettingsMenu.Visible
+-- أزرار التنقل بين الرومين (تبديل عرض الشاشة فقط بدون قطع الاتصالات الخلفية)
+table.insert(Connections, Room1Btn.MouseButton1Click:Connect(function()
+    if ACTIVE_ROOM == ROOM_NAME_1 then return end
+    ACTIVE_ROOM = ROOM_NAME_1
+    
+    ChatBarFrame.Size = UDim2.new(0, 310, 0, 195)
+    Room1Btn.BackgroundColor3 = Color3.fromRGB(160, 20, 20)
+    Room1Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Room2Btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    Room2Btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    
+    RefreshChatDisplay()
+end))
+
+table.insert(Connections, Room2Btn.MouseButton1Click:Connect(function()
+    if ACTIVE_ROOM == ROOM_NAME_2 then return end
+    ACTIVE_ROOM = ROOM_NAME_2
+    
+    ChatBarFrame.Size = UDim2.new(0, 360, 0, 230)
+    Room2Btn.BackgroundColor3 = Color3.fromRGB(160, 20, 20)
+    Room2Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Room1Btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    Room1Btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    
+    RefreshChatDisplay()
 end))
 
 table.insert(Connections, MuteNotifBtn.MouseButton1Click:Connect(function()
@@ -561,105 +614,8 @@ table.insert(Connections, MuteNotifBtn.MouseButton1Click:Connect(function()
     end
 end))
 
-table.insert(Connections, HideBtn.MouseButton1Click:Connect(function()
-    ChatBarFrame.Visible = false
-    SettingsMenu.Visible = false
-end))
-
-table.insert(Connections, ToggleBarBtn.MouseButton1Click:Connect(function()
-    ChatBarFrame.Visible = not ChatBarFrame.Visible
-    if ChatBarFrame.Visible then
-        UnreadCount = 0
-        BadgeLabel.Visible = false
-    end
-end))
-
-local function OpenPlayerModal(mode)
-    currentModalMode = mode
-    SettingsMenu.Visible = false
-    selectedTargetPlayer = nil
-    
-    for _, child in ipairs(ModalScroll:GetChildren()) do
-        if child:IsA("TextButton") then child:Destroy() end
-    end
-    
-    ModalTitle.Text = (mode == "block") and "حظر لاعب (Block)" or "فك الحظر (UnBlock)"
-    ConfirmActionBtn.Text = (mode == "block") and "Block 🚫" or "UnBlock"
-    ConfirmActionBtn.BackgroundColor3 = (mode == "block") and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 140, 0)
-
-    local playersList = {}
-    if mode == "block" then
-        for pName, _ in pairs(RoomActivePlayers) do
-            if pName:lower() ~= Username:lower() then
-                table.insert(playersList, pName)
-            end
-        end
-    else
-        for pName, isBlocked in pairs(BlockedPlayers) do
-            if isBlocked then
-                table.insert(playersList, pName)
-            end
-        end
-    end
-
-    if #playersList == 0 then
-        local lbl = Instance.new("TextLabel", ModalScroll)
-        lbl.Size = UDim2.new(1, 0, 0, 25)
-        lbl.BackgroundTransparency = 1
-        lbl.Text = "لا توجد أسماء متاحة"
-        lbl.TextColor3 = Color3.fromRGB(150, 150, 150)
-        lbl.TextSize = 10
-        lbl.Font = Enum.Font.Gotham
-    else
-        for _, pName in ipairs(playersList) do
-            local pBtn = Instance.new("TextButton", ModalScroll)
-            pBtn.Size = UDim2.new(1, 0, 0, 26)
-            pBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-            pBtn.Text = pName
-            pBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-            pBtn.TextSize = 10
-            pBtn.Font = Enum.Font.GothamMedium
-            Instance.new("UICorner", pBtn).CornerRadius = UDim.new(0, 4)
-            
-            pBtn.MouseButton1Click:Connect(function()
-                for _, btn in ipairs(ModalScroll:GetChildren()) do
-                    if btn:IsA("TextButton") then
-                        btn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-                    end
-                end
-                pBtn.BackgroundColor3 = Color3.fromRGB(120, 20, 20)
-                selectedTargetPlayer = pName
-            end)
-        end
-    end
-
-    PlayerListModal.Visible = true
-end
-
-table.insert(Connections, BlockMenuBtn.MouseButton1Click:Connect(function()
-    OpenPlayerModal("block")
-end))
-
-table.insert(Connections, UnblockMenuBtn.MouseButton1Click:Connect(function()
-    OpenPlayerModal("unblock")
-end))
-
-table.insert(Connections, CancelModalBtn.MouseButton1Click:Connect(function()
-    PlayerListModal.Visible = false
-end))
-
-table.insert(Connections, ConfirmActionBtn.MouseButton1Click:Connect(function()
-    if not selectedTargetPlayer then return end
-    
-    if currentModalMode == "block" then
-        BlockedPlayers[selectedTargetPlayer:lower()] = true
-        AddMessage("🚫 تم حظر اللاعب: " .. selectedTargetPlayer, Color3.fromRGB(255, 60, 60))
-    else
-        BlockedPlayers[selectedTargetPlayer:lower()] = nil
-        AddMessage("✅ تم فك الحظر عن اللاعب: " .. selectedTargetPlayer, Color3.fromRGB(60, 255, 60))
-    end
-    
-    PlayerListModal.Visible = false
+table.insert(Connections, SettingsBtn.MouseButton1Click:Connect(function()
+    SettingsMenu.Visible = not SettingsMenu.Visible
 end))
 
 table.insert(Connections, TargetSelectorBtn.MouseButton1Click:Connect(function()
@@ -677,20 +633,30 @@ table.insert(Connections, TargetSelectorBtn.MouseButton1Click:Connect(function()
     end
 end))
 
+table.insert(Connections, ToggleBarBtn.MouseButton1Click:Connect(function()
+    ChatBarFrame.Visible = not ChatBarFrame.Visible
+    if ChatBarFrame.Visible then
+        UnreadCount = 0
+        BadgeLabel.Visible = false
+    end
+end))
+
 local function SendMessage()
     if Closed then return end
     local Message = InputBox.Text
     if not Message:match("%S") then return end
 
     if Message:lower():match("^%s*/clear%s*$") then
-        ClearMessages()
+        local targetHistory = (ACTIVE_ROOM == ROOM_NAME_1) and HistoryRoom1 or HistoryRoom2
+        table.clear(targetHistory)
+        RefreshChatDisplay()
         InputBox.Text = ""
         return
     end
 
     if Message:lower():match("^%s*/reconnect%s*$") then
         InputBox.Text = ""
-        ConnectToRoom()
+        InitializeSockets()
         return
     end
 
@@ -703,24 +669,22 @@ local function SendMessage()
     end
 
     if #finalPayloadText > 100 then
-        AddMessage("⚠️ الرسالة أطول من 100 حرف.", Color3.fromRGB(255, 80, 80))
+        AddMessage(ACTIVE_ROOM, "⚠️ الرسالة أطول من 100 حرف.", Color3.fromRGB(255, 80, 80), false)
         return
     end
 
-    local SendSuccess = pcall(function()
-        return SendPacket({
-            type = "say",
-            payload = {
-                type = "chat",
-                text = finalPayloadText
-            }
-        })
-    end)
+    local SendSuccess = SendPacket(ACTIVE_ROOM, {
+        type = "say",
+        payload = {
+            type = "chat",
+            text = finalPayloadText
+        }
+    })
 
     if SendSuccess then
         InputBox.Text = ""
     else
-        AddMessage("❌ فشل الإرسال، جرب /reconnect", Color3.fromRGB(255, 50, 50))
+        AddMessage(ACTIVE_ROOM, "❌ فشل الإرسال، جرب /reconnect", Color3.fromRGB(255, 50, 50), false)
     end
 end
 
@@ -729,4 +693,5 @@ table.insert(Connections, InputBox.FocusLost:Connect(function(EnterPressed)
     if EnterPressed then SendMessage() end
 end))
 
-ConnectToRoom()
+-- بدء تشغيل الاتصالات الدائمة في الخلفية فوراً
+InitializeSockets()
