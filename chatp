@@ -1313,7 +1313,7 @@ local function LoadMainScript()
         Text = string.format("👤 يوزر اللاعب: <font color=\"#FF3333\">%s</font>\n📛 اسم اللاعب: <font color=\"#FF3333\">%s</font>\n🗺️ اسم الماب: <font color=\"#FF3333\">%s</font>\n📅 عمر الحساب: <font color=\"#FF3333\">%d يوم</font>\n📱 نوع الجهاز: <font color=\"#FF3333\">%s</font>", _L.Name, _L.DisplayName, gameNameStr, _L.AccountAge, deviceTypeStr)
     })
 
-    -- عداد المتصلين بالسكربت مباشرة فوق زري التيك توك والديسكورد (بخط أخضر كبير وواضح مع دعم الدخول والخروج الحي)
+    -- عداد المتصلين بالسكربت مباشرة فوق زري التيك توك والديسكورد (بخط أخضر كبير وواضح مع دعم الدخول والخروج الحي لكل اللاعبين بالتساوي)
     local ScriptUsersLabel = Create("TextLabel", HomeCard, {
         Size = UDim2.new(1, -16, 0, 24),
         Position = UDim2.new(0, 8, 1, -62),
@@ -1326,7 +1326,7 @@ local function LoadMainScript()
         ZIndex = 3006
     })
 
-    -- نظام الاتصال المباشر عبر الـ WebSocket المحدث لضمان مزامنة العدد لكل اللاعبين الجدد والقدامى بالتساوي
+    -- نظام الاتصال المباشر عبر الـ WebSocket المُحدث والمصحح لمزامنة العدد عند جميع اللاعبين بالتساوي
     task.spawn(function()
         pcall(function()
             local wsConnect = WebSocket and WebSocket.connect or syn and syn.websocket and syn.websocket.connect or Krnl and Krnl.WebSocket and Krnl.WebSocket.connect
