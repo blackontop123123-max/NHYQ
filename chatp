@@ -1,11 +1,12 @@
 --==================================================
--- NHYQ GLOBAL CHAT - shs09qp23 (UNREAD BADGE COUNTER)
+-- NHYQ GLOBAL CHAT - shs09qp23 (CUSTOM SOUND ID APPLIED)
 --==================================================
 
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
 local CoreGui = game:GetService("CoreGui")
 local ChatService = game:GetService("Chat")
+local SoundService = game:GetService("SoundService")
 
 local LocalPlayer = Players.LocalPlayer
 local Username = LocalPlayer.Name
@@ -13,6 +14,9 @@ local Username = LocalPlayer.Name
 local ROOM_NAME = "REX-Chat-Room1"
 local ENDPOINT = "wss://openfunproxy.zerdgeservers.workers.dev/ws"
 local MAX_MESSAGES = 100
+
+-- آيدي الصوت الذي قمت بإرساله
+local SOUND_ID = "rbxassetid://89068385567682"
 
 local Env = (getgenv and getgenv()) or _G
 if Env.NHYQChatClose then
@@ -32,7 +36,7 @@ local Labels = {}
 local MessageOrder = 0
 local Muted = {}
 local IsNotificationsMuted = false
-local UnreadCount = 0 -- عداد الرسائل غير المقروءة
+local UnreadCount = 0
 
 local targetList = {"All"}
 local currentIndex = 1
@@ -75,7 +79,7 @@ HeaderTitle.TextSize = 10
 HeaderTitle.Font = Enum.Font.GothamBold
 HeaderTitle.TextXAlignment = Enum.TextXAlignment.Left
 
--- زر كتم الإشعارات (الجرس)
+-- زر كتم الإشعارات والصوت (الجرس)
 local MuteNotifBtn = Instance.new("TextButton", HeaderBar)
 MuteNotifBtn.Size = UDim2.new(0, 22, 0, 18)
 MuteNotifBtn.Position = UDim2.new(1, -50, 0.5, -9)
@@ -201,35 +205,68 @@ local function showBubbleOnHead(targetName, msgText)
     end)
 end
 
-local function ShowNotificationBanner(senderName, msgText)
+-- تشغيل الصوت والإشعار الأنيق معا (فقط إذا لم يتم كتم الإشعارات)
+local function PlayNotificationSoundAndBanner(senderName, msgText)
     if IsNotificationsMuted then return end
 
+    -- تشغيل الصوت المخصص
+    pcall(function()
+        local sound = Instance.new("Sound")
+        sound.SoundId = SOUND_ID
+        sound.Volume = 1
+        sound.Parent = SoundService
+        sound:Play()
+        sound.Ended:Connect(function()
+            sound:Destroy()
+        end)
+    end)
+
+    -- إظهار الإشعار الأنيق
     local NotifFrame = Instance.new("Frame", ChatGui)
-    NotifFrame.Size = UDim2.new(0, 240, 0, 45)
-    NotifFrame.Position = UDim2.new(1, 260, 0, 60)
-    NotifFrame.BackgroundColor3 = Color3.fromRGB(15, 12, 10)
+    NotifFrame.Size = UDim2.new(0, 260, 0, 52)
+    NotifFrame.Position = UDim2.new(1, 280, 0, 50)
+    NotifFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+    NotifFrame.BackgroundTransparency = 0.05
     NotifFrame.BorderSizePixel = 0
-    Instance.new("UICorner", NotifFrame).CornerRadius = UDim.new(0, 6)
+    Instance.new("UICorner", NotifFrame).CornerRadius = UDim.new(0, 10)
     
     local stroke = Instance.new("UIStroke", NotifFrame)
-    stroke.Color = Color3.fromRGB(200, 0, 0)
-    stroke.Thickness = 1.5
+    stroke.Color = Color3.fromRGB(220, 20, 20)
+    stroke.Thickness = 1.8
 
-    local label = Instance.new("TextLabel", NotifFrame)
-    label.Size = UDim2.new(1, -8, 1, 0)
-    label.Position = UDim2.new(0, 4, 0, 0)
-    label.BackgroundTransparency = 1
-    label.Text = "🔥 [رسالة جديدة]\n" .. senderName .. ": " .. msgText
-    label.TextColor3 = Color3.fromRGB(255, 255, 255)
-    label.TextSize = 9.5
-    label.Font = Enum.Font.GothamBold
-    label.TextWrapped = true
+    local sideBar = Instance.new("Frame", NotifFrame)
+    sideBar.Size = UDim2.new(0, 4, 1, -12)
+    sideBar.Position = UDim2.new(0, 6, 0, 6)
+    sideBar.BackgroundColor3 = Color3.fromRGB(255, 40, 40)
+    sideBar.BorderSizePixel = 0
+    Instance.new("UICorner", sideBar).CornerRadius = UDim.new(1, 0)
 
-    NotifFrame:TweenPosition(UDim2.new(1, -255, 0, 60), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.3, true)
+    local titleLbl = Instance.new("TextLabel", NotifFrame)
+    titleLbl.Size = UDim2.new(1, -22, 0, 18)
+    titleLbl.Position = UDim2.new(0, 18, 0, 6)
+    titleLbl.BackgroundTransparency = 1
+    titleLbl.Text = "💬 رسالة جديدة من: " .. senderName
+    titleLbl.TextColor3 = Color3.fromRGB(255, 90, 90)
+    titleLbl.TextSize = 9.5
+    titleLbl.Font = Enum.Font.GothamBold
+    titleLbl.TextXAlignment = Enum.TextXAlignment.Left
 
-    task.delay(3, function()
+    local msgLbl = Instance.new("TextLabel", NotifFrame)
+    msgLbl.Size = UDim2.new(1, -22, 0, 20)
+    msgLbl.Position = UDim2.new(0, 18, 0, 24)
+    msgLbl.BackgroundTransparency = 1
+    msgLbl.Text = msgText
+    msgLbl.TextColor3 = Color3.fromRGB(235, 235, 235)
+    msgLbl.TextSize = 9.5
+    msgLbl.Font = Enum.Font.Gotham
+    msgLbl.TextXAlignment = Enum.TextXAlignment.Left
+    msgLbl.TextTruncate = Enum.TextTruncate.AtEnd
+
+    NotifFrame:TweenPosition(UDim2.new(1, -275, 0, 50), Enum.EasingDirection.Out, Enum.EasingStyle.Back, 0.4, true)
+
+    task.delay(3.5, function()
         if NotifFrame and NotifFrame.Parent then
-            NotifFrame:TweenPosition(UDim2.new(1, 260, 0, 60), Enum.EasingDirection.In, Enum.EasingStyle.Quad, 0.3, true)
+            NotifFrame:TweenPosition(UDim2.new(1, 280, 0, 50), Enum.EasingDirection.In, Enum.EasingStyle.Quad, 0.3, true)
             task.wait(0.3)
             NotifFrame:Destroy()
         end
@@ -307,9 +344,8 @@ local function ProcessIncomingChat(senderName, rawText)
         if targetUser:lower() == Username:lower() or senderName:lower() == Username:lower() then
             AddMessage("🔒 [" .. senderName .. " ➔ " .. targetUser .. "]: " .. actualMsg, Color3.fromRGB(255, 70, 70))
             showBubbleOnHead(senderName, actualMsg)
-            ShowNotificationBanner(senderName, actualMsg)
+            PlayNotificationSoundAndBanner(senderName, actualMsg)
             
-            -- زيادة العداد إذا كانت القائمة مغلقة
             if not ChatBarFrame.Visible and senderName ~= Username then
                 UnreadCount += 1
                 BadgeLabel.Text = tostring(UnreadCount)
@@ -320,9 +356,8 @@ local function ProcessIncomingChat(senderName, rawText)
         AddMessage("🔥 " .. senderName .. ": " .. rawText, Color3.fromRGB(255, 160, 120))
         showBubbleOnHead(senderName, rawText)
         if senderName ~= Username then
-            ShowNotificationBanner(senderName, rawText)
+            PlayNotificationSoundAndBanner(senderName, rawText)
             
-            -- زيادة العداد إذا كانت القائمة مغلقة
             if not ChatBarFrame.Visible then
                 UnreadCount += 1
                 BadgeLabel.Text = tostring(UnreadCount)
@@ -407,7 +442,6 @@ local function ConnectToRoom()
     end)
 end
 
--- زر تفعيل/كتم الإشعارات (الجرس)
 table.insert(Connections, MuteNotifBtn.MouseButton1Click:Connect(function()
     IsNotificationsMuted = not IsNotificationsMuted
     if IsNotificationsMuted then
@@ -423,7 +457,6 @@ table.insert(Connections, HideBtn.MouseButton1Click:Connect(function()
     ChatBarFrame.Visible = false
 end))
 
--- زر فتح وإغلاق القائمة (مع تصفير العداد عند الفتح)
 table.insert(Connections, ToggleBarBtn.MouseButton1Click:Connect(function()
     ChatBarFrame.Visible = not ChatBarFrame.Visible
     if ChatBarFrame.Visible then
