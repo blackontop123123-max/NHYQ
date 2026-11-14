@@ -1,5 +1,5 @@
 --==================================================
--- NHYQ GLOBAL CHAT - shs09qp23 (ROOM 8 + BLOCK SYSTEM)
+-- NHYQ GLOBAL CHAT - shs09qp23 (ROOM 8 + ROOM PLAYERS)
 --==================================================
 
 local Players = game:GetService("Players")
@@ -14,8 +14,6 @@ local Username = LocalPlayer.Name
 local ROOM_NAME = "REX-Chat-Room8"
 local ENDPOINT = "wss://openfunproxy.zerdgeservers.workers.dev/ws"
 local MAX_MESSAGES = 100
-
--- آيدي الصوت المخصص للإشعارات
 local SOUND_ID = "rbxassetid://89068385567682"
 
 local Env = (getgenv and getgenv()) or _G
@@ -34,15 +32,14 @@ local Connections = {}
 local SocketConnections = {}
 local Labels = {}
 local MessageOrder = 0
-local Muted = {}
-local BlockedPlayers = {} -- قائمة اللاعبين المحظورين
+local BlockedPlayers = {}
+local RoomActivePlayers = {} -- قائمة اللاعبين الفعليين في الروم
 local IsNotificationsMuted = false
 local UnreadCount = 0
 
 local targetList = {"All"}
 local currentIndex = 1
 
--- واجهة المستخدم
 local ChatGui = Instance.new("ScreenGui")
 ChatGui.Name = "NHYQ_FloatingChat_GUI"
 ChatGui.ResetOnSpawn = false
@@ -70,7 +67,6 @@ HeaderBar.BackgroundColor3 = Color3.fromRGB(18, 5, 5)
 HeaderBar.BorderSizePixel = 0
 Instance.new("UICorner", HeaderBar).CornerRadius = UDim.new(0, 8)
 
--- حقوقك الكاملة في الواجهة
 local HeaderTitle = Instance.new("TextLabel", HeaderBar)
 HeaderTitle.Size = UDim2.new(1, -75, 1, 0)
 HeaderTitle.Position = UDim2.new(0, 8, 0, 0)
@@ -81,7 +77,6 @@ HeaderTitle.TextSize = 9.5
 HeaderTitle.Font = Enum.Font.GothamBold
 HeaderTitle.TextXAlignment = Enum.TextXAlignment.Left
 
--- زر الإعدادات ⚙️
 local SettingsBtn = Instance.new("TextButton", HeaderBar)
 SettingsBtn.Size = UDim2.new(0, 22, 0, 18)
 SettingsBtn.Position = UDim2.new(1, -74, 0.5, -9)
@@ -91,7 +86,6 @@ SettingsBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 SettingsBtn.TextSize = 10
 Instance.new("UICorner", SettingsBtn).CornerRadius = UDim.new(0, 4)
 
--- زر كتم الإشعارات والصوت (الجرس)
 local MuteNotifBtn = Instance.new("TextButton", HeaderBar)
 MuteNotifBtn.Size = UDim2.new(0, 22, 0, 18)
 MuteNotifBtn.Position = UDim2.new(1, -50, 0.5, -9)
@@ -101,7 +95,6 @@ MuteNotifBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 MuteNotifBtn.TextSize = 10
 Instance.new("UICorner", MuteNotifBtn).CornerRadius = UDim.new(0, 4)
 
--- زر الإخفاء الأحمر
 local HideBtn = Instance.new("TextButton", HeaderBar)
 HideBtn.Size = UDim2.new(0, 22, 0, 18)
 HideBtn.Position = UDim2.new(1, -24, 0.5, -9)
@@ -162,7 +155,6 @@ SendBtn.TextSize = 10
 SendBtn.Font = Enum.Font.GothamBold
 Instance.new("UICorner", SendBtn).CornerRadius = UDim.new(0, 5)
 
--- الزر العائم على اليسار بالمنتصف لفتح وإغلاق القائمة
 local ToggleBarBtn = Instance.new("TextButton")
 ToggleBarBtn.Size = UDim2.new(0, 38, 0, 38)
 ToggleBarBtn.Position = UDim2.new(0, 12, 0.5, -19)
@@ -187,9 +179,6 @@ BadgeLabel.Font = Enum.Font.GothamBold
 BadgeLabel.Visible = false
 Instance.new("UICorner", BadgeLabel).CornerRadius = UDim.new(1, 0)
 
--- ==========================================
--- نافذة قائمة الإعدادات وبلوك اللاعبين
--- ==========================================
 local SettingsMenu = Instance.new("Frame", ChatGui)
 SettingsMenu.Size = UDim2.new(0, 150, 0, 75)
 SettingsMenu.Position = UDim2.new(1, -225, 0, 42)
@@ -222,7 +211,6 @@ UnblockMenuBtn.TextSize = 10
 UnblockMenuBtn.Font = Enum.Font.GothamBold
 Instance.new("UICorner", UnblockMenuBtn).CornerRadius = UDim.new(0, 5)
 
--- نافذة اختيار اللاعبين الفرعية (لبلوك أو أنبلوك)
 local PlayerListModal = Instance.new("Frame", ChatGui)
 PlayerListModal.Size = UDim2.new(0, 220, 0, 210)
 PlayerListModal.Position = UDim2.new(0.5, -110, 0.5, -105)
@@ -275,14 +263,14 @@ CancelModalBtn.Font = Enum.Font.GothamBold
 Instance.new("UICorner", CancelModalBtn).CornerRadius = UDim.new(0, 5)
 
 local selectedTargetPlayer = nil
-local currentModalMode = "block" -- "block" or "unblock"
+local currentModalMode = "block"
 
 local function updateTargetList()
     local currentSelected = targetList[currentIndex] or "All"
     targetList = {"All"}
-    for _, p in ipairs(Players:GetPlayers()) do
-        if p ~= LocalPlayer then
-            table.insert(targetList, p.Name)
+    for pName, _ in pairs(RoomActivePlayers) do
+        if pName:lower() ~= Username:lower() then
+            table.insert(targetList, pName)
         end
     end
     for i, name in ipairs(targetList) do
@@ -473,8 +461,12 @@ local function HandleMessage(RawMessage)
 
     if Data.type == "joined" then
         AddMessage("✅ تم الاتصال بنجاح", Color3.fromRGB(100, 255, 100))
+        RoomActivePlayers[Username] = true
         if type(Data.history) == "table" then
             for _, Entry in ipairs(Data.history) do
+                if type(Entry) == "table" and type(Entry.username) == "string" then
+                    RoomActivePlayers[Entry.username] = true
+                end
                 if type(Entry) == "table" and type(Entry.payload) == "table" and Entry.payload.type == "chat" then
                     ProcessIncomingChat(tostring(Entry.username), tostring(Entry.payload.text))
                 end
@@ -482,15 +474,22 @@ local function HandleMessage(RawMessage)
         end
 
     elseif Data.type == "say" then
+        if type(Data.username) == "string" then
+            RoomActivePlayers[Data.username] = true
+        end
         if type(Data.payload) == "table" and Data.payload.type == "chat" then
             ProcessIncomingChat(tostring(Data.username), tostring(Data.payload.text))
         end
 
     elseif Data.type == "user-joined" then
-        AddMessage("➕ دخل: " .. tostring(Data.username), Color3.fromRGB(180, 180, 180))
+        local uName = tostring(Data.username)
+        RoomActivePlayers[uName] = true
+        AddMessage("➕ دخل: " .. uName, Color3.fromRGB(180, 180, 180))
 
     elseif Data.type == "user-left" then
-        AddMessage("➖ غادر: " .. tostring(Data.username), Color3.fromRGB(150, 150, 150))
+        local uName = tostring(Data.username)
+        RoomActivePlayers[uName] = nil
+        AddMessage("➖ غادر: " .. uName, Color3.fromRGB(150, 150, 150))
 
     elseif Data.type == "error" then
         AddMessage("⚠️ خطأ: " .. tostring(Data.message), Color3.fromRGB(255, 50, 50))
@@ -503,8 +502,15 @@ local function ConnectToRoom()
     AddMessage("⏳ جاري الاتصال بالإنترنت...", Color3.fromRGB(200, 200, 200))
 
     local MyGeneration = Generation
+    
+    local wsConnect = WebSocket and WebSocket.connect or syn and syn.websocket and syn.websocket.connect or Krnl and Krnl.WebSocket and Krnl.WebSocket.connect
+    if not wsConnect then
+        AddMessage("❌ المنفذ لا يدعم WebSocket!", Color3.fromRGB(255, 50, 50))
+        return
+    end
+
     local ConnectSuccess, ConnectResult = pcall(function()
-        return WebSocket.connect(ENDPOINT)
+        return wsConnect(ENDPOINT)
     end)
 
     if not ConnectSuccess or not ConnectResult then
@@ -540,7 +546,6 @@ local function ConnectToRoom()
     end)
 end
 
--- أحداث الأزرار والقوائم
 table.insert(Connections, SettingsBtn.MouseButton1Click:Connect(function()
     SettingsMenu.Visible = not SettingsMenu.Visible
 end))
@@ -578,15 +583,15 @@ local function OpenPlayerModal(mode)
         if child:IsA("TextButton") then child:Destroy() end
     end
     
-    ModalTitle.Text = (mode == "block") ? "حظر لاعب (Block)" : "فك الحظر (UnBlock)"
-    ConfirmActionBtn.Text = (mode == "block") ? "Block 🚫" : "UnBlock"
-    ConfirmActionBtn.BackgroundColor3 = (mode == "block") ? Color3.fromRGB(180, 0, 0) : Color3.fromRGB(0, 140, 0)
+    ModalTitle.Text = (mode == "block") and "حظر لاعب (Block)" or "فك الحظر (UnBlock)"
+    ConfirmActionBtn.Text = (mode == "block") and "Block 🚫" or "UnBlock"
+    ConfirmActionBtn.BackgroundColor3 = (mode == "block") and Color3.fromRGB(180, 0, 0) or Color3.fromRGB(0, 140, 0)
 
     local playersList = {}
     if mode == "block" then
-        for _, p in ipairs(Players:GetPlayers()) do
-            if p ~= LocalPlayer then
-                table.insert(playersList, p.Name)
+        for pName, _ in pairs(RoomActivePlayers) do
+            if pName:lower() ~= Username:lower() then
+                table.insert(playersList, pName)
             end
         end
     else
