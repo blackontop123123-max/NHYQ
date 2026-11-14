@@ -1313,20 +1313,20 @@ local function LoadMainScript()
         Text = string.format("👤 يوزر اللاعب: <font color=\"#FF3333\">%s</font>\n📛 اسم اللاعب: <font color=\"#FF3333\">%s</font>\n🗺️ اسم الماب: <font color=\"#FF3333\">%s</font>\n📅 عمر الحساب: <font color=\"#FF3333\">%d يوم</font>\n📱 نوع الجهاز: <font color=\"#FF3333\">%s</font>", _L.Name, _L.DisplayName, gameNameStr, _L.AccountAge, deviceTypeStr)
     })
 
-    -- عداد المتصلين بالسكربت مباشرة فوق زري التيك توك والديسكورد
+    -- عداد المتصلين بالسكربت مباشرة فوق زري التيك توك والديسكورد (بخط أخضر كبير وواضح مع دعم الدخول والخروج الحي)
     local ScriptUsersLabel = Create("TextLabel", HomeCard, {
-        Size = UDim2.new(1, -16, 0, 22),
+        Size = UDim2.new(1, -16, 0, 24),
         Position = UDim2.new(0, 8, 1, -62),
         BackgroundTransparency = 1,
         Font = Configs_HUB.Text_Font,
-        TextSize = 11,
-        TextColor3 = Color3.fromRGB(255, 80, 80),
+        TextSize = 13,
+        TextColor3 = Color3.fromRGB(0, 255, 100),
         TextXAlignment = Enum.TextXAlignment.Center,
         Text = "⚡ المتصلين بالسكربت حالياً: 1",
         ZIndex = 3006
     })
 
-    -- نظام الاتصال المباشر عبر الـ WebSocket لجلب عدد مستخدمي السكربت لحظياً وتحديث النص تلقائياً
+    -- نظام الاتصال المباشر عبر الـ WebSocket لتحديث العدد (زيادة عند الدخول ونقصان عند الخروج فوراً)
     task.spawn(function()
         pcall(function()
             local wsConnect = WebSocket and WebSocket.connect or syn and syn.websocket and syn.websocket.connect or Krnl and Krnl.WebSocket and Krnl.WebSocket.connect
@@ -1371,6 +1371,19 @@ local function LoadMainScript()
                                 username = _L.Name
                             }))
                         end)
+                    end)
+
+                    -- إرسال إشارة المغادرة عند خروج اللاعب أو إغلاق السكربت لتخفيض العداد فوراً
+                    game:GetService("CoreGui").ChildRemoved:Connect(function(child)
+                        if child == ScreenGui then
+                            pcall(function()
+                                ws:Send(_H:JSONEncode({
+                                    type = "leave",
+                                    room = "REX-Chat-Room8",
+                                    username = _L.Name
+                                }))
+                            end)
+                        end
                     end)
                 end
             end
