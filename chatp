@@ -1,5 +1,5 @@
 --==================================================
--- NHYQ GLOBAL CHAT - shs09qp23 (CUSTOM SOUND ID APPLIED)
+-- NHYQ GLOBAL CHAT - shs09qp23 (ROOM 8 + BLOCK SYSTEM)
 --==================================================
 
 local Players = game:GetService("Players")
@@ -11,11 +11,11 @@ local SoundService = game:GetService("SoundService")
 local LocalPlayer = Players.LocalPlayer
 local Username = LocalPlayer.Name
 
-local ROOM_NAME = "REX-Chat-Room1"
+local ROOM_NAME = "REX-Chat-Room8"
 local ENDPOINT = "wss://openfunproxy.zerdgeservers.workers.dev/ws"
 local MAX_MESSAGES = 100
 
--- آيدي الصوت الذي قمت بإرساله
+-- آيدي الصوت المخصص للإشعارات
 local SOUND_ID = "rbxassetid://89068385567682"
 
 local Env = (getgenv and getgenv()) or _G
@@ -35,6 +35,7 @@ local SocketConnections = {}
 local Labels = {}
 local MessageOrder = 0
 local Muted = {}
+local BlockedPlayers = {} -- قائمة اللاعبين المحظورين
 local IsNotificationsMuted = false
 local UnreadCount = 0
 
@@ -69,15 +70,26 @@ HeaderBar.BackgroundColor3 = Color3.fromRGB(18, 5, 5)
 HeaderBar.BorderSizePixel = 0
 Instance.new("UICorner", HeaderBar).CornerRadius = UDim.new(0, 8)
 
+-- حقوقك الكاملة في الواجهة
 local HeaderTitle = Instance.new("TextLabel", HeaderBar)
-HeaderTitle.Size = UDim2.new(1, -55, 1, 0)
+HeaderTitle.Size = UDim2.new(1, -75, 1, 0)
 HeaderTitle.Position = UDim2.new(0, 8, 0, 0)
 HeaderTitle.BackgroundTransparency = 1
 HeaderTitle.Text = "🔥 NHYQ CHAT | shs09qp23"
 HeaderTitle.TextColor3 = Color3.fromRGB(255, 60, 60)
-HeaderTitle.TextSize = 10
+HeaderTitle.TextSize = 9.5
 HeaderTitle.Font = Enum.Font.GothamBold
 HeaderTitle.TextXAlignment = Enum.TextXAlignment.Left
+
+-- زر الإعدادات ⚙️
+local SettingsBtn = Instance.new("TextButton", HeaderBar)
+SettingsBtn.Size = UDim2.new(0, 22, 0, 18)
+SettingsBtn.Position = UDim2.new(1, -74, 0.5, -9)
+SettingsBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+SettingsBtn.Text = "⚙️"
+SettingsBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+SettingsBtn.TextSize = 10
+Instance.new("UICorner", SettingsBtn).CornerRadius = UDim.new(0, 4)
 
 -- زر كتم الإشعارات والصوت (الجرس)
 local MuteNotifBtn = Instance.new("TextButton", HeaderBar)
@@ -164,7 +176,6 @@ ToggleBarBtn.Parent = ChatGui
 Instance.new("UICorner", ToggleBarBtn).CornerRadius = UDim.new(1, 0)
 Instance.new("UIStroke", ToggleBarBtn).Color = Color3.fromRGB(180, 0, 0)
 
--- دائرة عداد الرسائل غير المقروءة فوق الزر العائم
 local BadgeLabel = Instance.new("TextLabel", ToggleBarBtn)
 BadgeLabel.Size = UDim2.new(0, 20, 0, 20)
 BadgeLabel.Position = UDim2.new(1, -10, 0, -5)
@@ -175,6 +186,96 @@ BadgeLabel.TextSize = 9
 BadgeLabel.Font = Enum.Font.GothamBold
 BadgeLabel.Visible = false
 Instance.new("UICorner", BadgeLabel).CornerRadius = UDim.new(1, 0)
+
+-- ==========================================
+-- نافذة قائمة الإعدادات وبلوك اللاعبين
+-- ==========================================
+local SettingsMenu = Instance.new("Frame", ChatGui)
+SettingsMenu.Size = UDim2.new(0, 150, 0, 75)
+SettingsMenu.Position = UDim2.new(1, -225, 0, 42)
+SettingsMenu.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+SettingsMenu.Visible = false
+SettingsMenu.BorderSizePixel = 0
+Instance.new("UICorner", SettingsMenu).CornerRadius = UDim.new(0, 6)
+Instance.new("UIStroke", SettingsMenu).Color = Color3.fromRGB(180, 0, 0)
+
+local SettingsList = Instance.new("UIListLayout", SettingsMenu)
+SettingsList.SortOrder = Enum.SortOrder.LayoutOrder
+SettingsList.Padding = UDim.new(0, 4)
+SettingsList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+local BlockMenuBtn = Instance.new("TextButton", SettingsMenu)
+BlockMenuBtn.Size = UDim2.new(1, -10, 0, 32)
+BlockMenuBtn.BackgroundColor3 = Color3.fromRGB(25, 10, 10)
+BlockMenuBtn.Text = "Block players"
+BlockMenuBtn.TextColor3 = Color3.fromRGB(255, 90, 90)
+BlockMenuBtn.TextSize = 10
+BlockMenuBtn.Font = Enum.Font.GothamBold
+Instance.new("UICorner", BlockMenuBtn).CornerRadius = UDim.new(0, 5)
+
+local UnblockMenuBtn = Instance.new("TextButton", SettingsMenu)
+UnblockMenuBtn.Size = UDim2.new(1, -10, 0, 32)
+UnblockMenuBtn.BackgroundColor3 = Color3.fromRGB(10, 25, 10)
+UnblockMenuBtn.Text = "UnBlock player"
+UnblockMenuBtn.TextColor3 = Color3.fromRGB(90, 255, 90)
+UnblockMenuBtn.TextSize = 10
+UnblockMenuBtn.Font = Enum.Font.GothamBold
+Instance.new("UICorner", UnblockMenuBtn).CornerRadius = UDim.new(0, 5)
+
+-- نافذة اختيار اللاعبين الفرعية (لبلوك أو أنبلوك)
+local PlayerListModal = Instance.new("Frame", ChatGui)
+PlayerListModal.Size = UDim2.new(0, 220, 0, 210)
+PlayerListModal.Position = UDim2.new(0.5, -110, 0.5, -105)
+PlayerListModal.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+PlayerListModal.Visible = false
+PlayerListModal.Active = true
+PlayerListModal.Draggable = true
+PlayerListModal.BorderSizePixel = 0
+Instance.new("UICorner", PlayerListModal).CornerRadius = UDim.new(0, 8)
+Instance.new("UIStroke", PlayerListModal).Color = Color3.fromRGB(200, 0, 0)
+
+local ModalTitle = Instance.new("TextLabel", PlayerListModal)
+ModalTitle.Size = UDim2.new(1, 0, 0, 25)
+ModalTitle.BackgroundTransparency = 1
+ModalTitle.Text = "اختر اللاعب"
+ModalTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+ModalTitle.TextSize = 11
+ModalTitle.Font = Enum.Font.GothamBold
+
+local ModalScroll = Instance.new("ScrollingFrame", PlayerListModal)
+ModalScroll.Size = UDim2.new(1, -16, 0, 120)
+ModalScroll.Position = UDim2.new(0, 8, 0, 30)
+ModalScroll.BackgroundTransparency = 1
+ModalScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+ModalScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+ModalScroll.ScrollBarThickness = 3
+
+local ModalScrollList = Instance.new("UIListLayout", ModalScroll)
+ModalScrollList.SortOrder = Enum.SortOrder.LayoutOrder
+ModalScrollList.Padding = UDim.new(0, 3)
+
+local ConfirmActionBtn = Instance.new("TextButton", PlayerListModal)
+ConfirmActionBtn.Size = UDim2.new(0, 95, 0, 28)
+ConfirmActionBtn.Position = UDim2.new(0, 10, 1, -35)
+ConfirmActionBtn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
+ConfirmActionBtn.Text = "Block 🚫"
+ConfirmActionBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ConfirmActionBtn.TextSize = 10
+ConfirmActionBtn.Font = Enum.Font.GothamBold
+Instance.new("UICorner", ConfirmActionBtn).CornerRadius = UDim.new(0, 5)
+
+local CancelModalBtn = Instance.new("TextButton", PlayerListModal)
+CancelModalBtn.Size = UDim2.new(0, 95, 0, 28)
+CancelModalBtn.Position = UDim2.new(1, -105, 1, -35)
+CancelModalBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+CancelModalBtn.Text = "cancel"
+CancelModalBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CancelModalBtn.TextSize = 10
+CancelModalBtn.Font = Enum.Font.GothamBold
+Instance.new("UICorner", CancelModalBtn).CornerRadius = UDim.new(0, 5)
+
+local selectedTargetPlayer = nil
+local currentModalMode = "block" -- "block" or "unblock"
 
 local function updateTargetList()
     local currentSelected = targetList[currentIndex] or "All"
@@ -205,11 +306,9 @@ local function showBubbleOnHead(targetName, msgText)
     end)
 end
 
--- تشغيل الصوت والإشعار الأنيق معا (فقط إذا لم يتم كتم الإشعارات)
 local function PlayNotificationSoundAndBanner(senderName, msgText)
     if IsNotificationsMuted then return end
 
-    -- تشغيل الصوت المخصص
     pcall(function()
         local sound = Instance.new("Sound")
         sound.SoundId = SOUND_ID
@@ -221,7 +320,6 @@ local function PlayNotificationSoundAndBanner(senderName, msgText)
         end)
     end)
 
-    -- إظهار الإشعار الأنيق
     local NotifFrame = Instance.new("Frame", ChatGui)
     NotifFrame.Size = UDim2.new(0, 260, 0, 52)
     NotifFrame.Position = UDim2.new(1, 280, 0, 50)
@@ -331,12 +429,12 @@ local function Disconnect()
     end
 end
 
-local function IsMuted(Name)
-    return Muted[tostring(Name):lower()] == true
+local function IsBlocked(Name)
+    return BlockedPlayers[tostring(Name):lower()] == true
 end
 
 local function ProcessIncomingChat(senderName, rawText)
-    if IsMuted(senderName) then return end
+    if IsBlocked(senderName) then return end
 
     local targetUser, actualMsg = rawText:match("^@([^:]+):%s*(.+)$")
     
@@ -374,7 +472,7 @@ local function HandleMessage(RawMessage)
     if not Success or type(Data) ~= "table" then return end
 
     if Data.type == "joined" then
-        AddMessage("⚡ متصل بروم NHYQ بنجاح!", Color3.fromRGB(100, 255, 100))
+        AddMessage("✅ تم الاتصال بنجاح", Color3.fromRGB(100, 255, 100))
         if type(Data.history) == "table" then
             for _, Entry in ipairs(Data.history) do
                 if type(Entry) == "table" and type(Entry.payload) == "table" and Entry.payload.type == "chat" then
@@ -402,7 +500,7 @@ end
 local function ConnectToRoom()
     if Closed then return end
     Disconnect()
-    AddMessage("⏳ جاري الاتصال بالسيرفر...", Color3.fromRGB(200, 200, 200))
+    AddMessage("⏳ جاري الاتصال بالإنترنت...", Color3.fromRGB(200, 200, 200))
 
     local MyGeneration = Generation
     local ConnectSuccess, ConnectResult = pcall(function()
@@ -442,6 +540,11 @@ local function ConnectToRoom()
     end)
 end
 
+-- أحداث الأزرار والقوائم
+table.insert(Connections, SettingsBtn.MouseButton1Click:Connect(function()
+    SettingsMenu.Visible = not SettingsMenu.Visible
+end))
+
 table.insert(Connections, MuteNotifBtn.MouseButton1Click:Connect(function()
     IsNotificationsMuted = not IsNotificationsMuted
     if IsNotificationsMuted then
@@ -455,6 +558,7 @@ end))
 
 table.insert(Connections, HideBtn.MouseButton1Click:Connect(function()
     ChatBarFrame.Visible = false
+    SettingsMenu.Visible = false
 end))
 
 table.insert(Connections, ToggleBarBtn.MouseButton1Click:Connect(function()
@@ -463,6 +567,94 @@ table.insert(Connections, ToggleBarBtn.MouseButton1Click:Connect(function()
         UnreadCount = 0
         BadgeLabel.Visible = false
     end
+end))
+
+local function OpenPlayerModal(mode)
+    currentModalMode = mode
+    SettingsMenu.Visible = false
+    selectedTargetPlayer = nil
+    
+    for _, child in ipairs(ModalScroll:GetChildren()) do
+        if child:IsA("TextButton") then child:Destroy() end
+    end
+    
+    ModalTitle.Text = (mode == "block") ? "حظر لاعب (Block)" : "فك الحظر (UnBlock)"
+    ConfirmActionBtn.Text = (mode == "block") ? "Block 🚫" : "UnBlock"
+    ConfirmActionBtn.BackgroundColor3 = (mode == "block") ? Color3.fromRGB(180, 0, 0) : Color3.fromRGB(0, 140, 0)
+
+    local playersList = {}
+    if mode == "block" then
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer then
+                table.insert(playersList, p.Name)
+            end
+        end
+    else
+        for pName, isBlocked in pairs(BlockedPlayers) do
+            if isBlocked then
+                table.insert(playersList, pName)
+            end
+        end
+    end
+
+    if #playersList == 0 then
+        local lbl = Instance.new("TextLabel", ModalScroll)
+        lbl.Size = UDim2.new(1, 0, 0, 25)
+        lbl.BackgroundTransparency = 1
+        lbl.Text = "لا توجد أسماء متاحة"
+        lbl.TextColor3 = Color3.fromRGB(150, 150, 150)
+        lbl.TextSize = 10
+        lbl.Font = Enum.Font.Gotham
+    else
+        for _, pName in ipairs(playersList) do
+            local pBtn = Instance.new("TextButton", ModalScroll)
+            pBtn.Size = UDim2.new(1, 0, 0, 26)
+            pBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+            pBtn.Text = pName
+            pBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            pBtn.TextSize = 10
+            pBtn.Font = Enum.Font.GothamMedium
+            Instance.new("UICorner", pBtn).CornerRadius = UDim.new(0, 4)
+            
+            pBtn.MouseButton1Click:Connect(function()
+                for _, btn in ipairs(ModalScroll:GetChildren()) do
+                    if btn:IsA("TextButton") then
+                        btn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+                    end
+                end
+                pBtn.BackgroundColor3 = Color3.fromRGB(120, 20, 20)
+                selectedTargetPlayer = pName
+            end)
+        end
+    end
+
+    PlayerListModal.Visible = true
+end
+
+table.insert(Connections, BlockMenuBtn.MouseButton1Click:Connect(function()
+    OpenPlayerModal("block")
+end))
+
+table.insert(Connections, UnblockMenuBtn.MouseButton1Click:Connect(function()
+    OpenPlayerModal("unblock")
+end))
+
+table.insert(Connections, CancelModalBtn.MouseButton1Click:Connect(function()
+    PlayerListModal.Visible = false
+end))
+
+table.insert(Connections, ConfirmActionBtn.MouseButton1Click:Connect(function()
+    if not selectedTargetPlayer then return end
+    
+    if currentModalMode == "block" then
+        BlockedPlayers[selectedTargetPlayer:lower()] = true
+        AddMessage("🚫 تم حظر اللاعب: " .. selectedTargetPlayer, Color3.fromRGB(255, 60, 60))
+    else
+        BlockedPlayers[selectedTargetPlayer:lower()] = nil
+        AddMessage("✅ تم فك الحظر عن اللاعب: " .. selectedTargetPlayer, Color3.fromRGB(60, 255, 60))
+    end
+    
+    PlayerListModal.Visible = false
 end))
 
 table.insert(Connections, TargetSelectorBtn.MouseButton1Click:Connect(function()
@@ -510,15 +702,17 @@ local function SendMessage()
         return
     end
 
-    local Success = SendPacket({
-        type = "say",
-        payload = {
-            type = "chat",
-            text = finalPayloadText
-        }
-    })
+    local SendSuccess = pcall(function()
+        return SendPacket({
+            type = "say",
+            payload = {
+                type = "chat",
+                text = finalPayloadText
+            }
+        })
+    end)
 
-    if Success then
+    if SendSuccess then
         InputBox.Text = ""
     else
         AddMessage("❌ فشل الإرسال، جرب /reconnect", Color3.fromRGB(255, 50, 50))
