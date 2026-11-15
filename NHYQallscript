@@ -66,13 +66,18 @@ local Theme = {
     Success = Color3.fromRGB(0, 230, 118)
 }
 
+-- معرف الصورة المطلوبة
+local customImageUrl = "rbxthumb://type=Asset&id=70411629921267&w=420&h=420"
+
 -- ==========================================
 -- الإطار الرئيسي
 -- ==========================================
-local MainFrame = Instance.new("Frame")
+local MainFrame = Instance.new("ImageLabel")
 MainFrame.Name = "MainFrame"
 MainFrame.Size = UDim2.new(0, 530, 0, 360)
 MainFrame.Position = UDim2.new(0.5, -265, 0.5, -180)
+MainFrame.Image = customImageUrl
+MainFrame.ScaleType = Enum.ScaleType.Crop
 MainFrame.BackgroundColor3 = Theme.BgDark
 MainFrame.BorderSizePixel = 0
 MainFrame.ClipsDescendants = true
@@ -80,24 +85,6 @@ MainFrame.Active = true
 MainFrame.Parent = ScreenGui
 
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 22)
-
--- خلفية نجوم المجرة
-local StarsHolder = Instance.new("Folder")
-StarsHolder.Name = "RealisticStars"
-StarsHolder.Parent = MainFrame
-
-math.randomseed(tick())
-for i = 1, 45 do
-    local star = Instance.new("Frame")
-    local size = math.random(2, 4)
-    star.Size = UDim2.new(0, size, 0, size)
-    star.Position = UDim2.new(math.random(2, 98)/100, 0, math.random(2, 98)/100, 0)
-    star.BackgroundColor3 = (math.random(1, 2) == 1) and Theme.NeonCyan or Theme.GalaxyPurple
-    star.BorderSizePixel = 0
-    star.BackgroundTransparency = math.random(20, 70)/100
-    star.Parent = StarsHolder
-    Instance.new("UICorner", star).CornerRadius = UDim.new(1, 0)
-end
 
 -- إطار النيون الخارجي
 local OuterStroke = Instance.new("UIStroke")
@@ -148,38 +135,46 @@ SideDivider.BackgroundColor3 = Theme.GalaxyPurple
 SideDivider.BorderSizePixel = 0
 SideDivider.Parent = Sidebar
 
--- الشعار
+-- الشعار (مع الصورة الدائرية بدلاً من الإيموجي وحذف الإيموجيات الجانبية)
 local BrandBox = Instance.new("Frame")
 BrandBox.Size = UDim2.new(1, 0, 0, 85)
 BrandBox.BackgroundTransparency = 1
 BrandBox.Parent = Sidebar
 
-local CrownIcon = Instance.new("TextLabel")
-CrownIcon.Size = UDim2.new(1, 0, 0, 26)
-CrownIcon.Position = UDim2.new(0, 0, 0, 10)
-CrownIcon.BackgroundTransparency = 1
-CrownIcon.Text = "👑🌌"
-CrownIcon.TextSize = 20
-CrownIcon.Parent = BrandBox
+-- صورة الشعار الدائرية في الأعلى
+local BrandLogo = Instance.new("ImageLabel")
+BrandLogo.Size = UDim2.new(0, 32, 0, 32)
+BrandLogo.Position = UDim2.new(0.5, -16, 0, 8)
+BrandLogo.Image = customImageUrl
+BrandLogo.ScaleType = Enum.ScaleType.Crop
+BrandLogo.BackgroundColor3 = Theme.CardBg
+BrandLogo.BorderSizePixel = 0
+BrandLogo.Parent = BrandBox
 
+Instance.new("UICorner", BrandLogo).CornerRadius = UDim.new(1, 0)
+local LogoStroke = Instance.new("UIStroke", BrandLogo)
+LogoStroke.Color = Theme.NeonCyan
+LogoStroke.Thickness = 1.5
+
+-- اسم NHYQ HUB فقط بدون إيموجيات
 local BrandTitle = Instance.new("TextLabel")
 BrandTitle.Size = UDim2.new(1, 0, 0, 28)
-BrandTitle.Position = UDim2.new(0, 0, 0, 36)
+BrandTitle.Position = UDim2.new(0, 0, 0, 42)
 BrandTitle.BackgroundTransparency = 1
-BrandTitle.Text = "NHYQ"
+BrandTitle.Text = "NHYQ HUB"
 BrandTitle.TextColor3 = Theme.NeonCyan
 BrandTitle.Font = Enum.Font.GothamBlack
-BrandTitle.TextSize = 24
+BrandTitle.TextSize = 16
 BrandTitle.Parent = BrandBox
 
 local BrandSub = Instance.new("TextLabel")
 BrandSub.Size = UDim2.new(1, 0, 0, 16)
-BrandSub.Position = UDim2.new(0, 0, 0, 62)
+BrandSub.Position = UDim2.new(0, 0, 0, 66)
 BrandSub.BackgroundTransparency = 1
 BrandSub.Text = "GALAXY EDITION"
 BrandSub.TextColor3 = Theme.TextMuted
 BrandSub.Font = Enum.Font.GothamBold
-BrandSub.TextSize = 9
+BrandSub.TextSize = 8
 BrandSub.Parent = BrandBox
 
 -- بطاقة المطور
@@ -656,15 +651,13 @@ EggPadding.PaddingRight = UDim.new(0, 4)
 EggPadding.Parent = EggStealPage
 
 -- زر الأيقونة العائم (MiniOrb)
-local MiniOrb = Instance.new("TextButton")
+local MiniOrb = Instance.new("ImageButton")
 MiniOrb.Name = "NHYQ_GalaxyOrb"
 MiniOrb.Size = UDim2.new(0, 60, 0, 60)
 MiniOrb.Position = UDim2.new(0, 20, 0.5, -30)
+MiniOrb.Image = customImageUrl
+MiniOrb.ScaleType = Enum.ScaleType.Crop
 MiniOrb.BackgroundColor3 = Theme.SidebarBg
-MiniOrb.Text = "NHYQ"
-MiniOrb.TextColor3 = Theme.NeonCyan
-MiniOrb.Font = Enum.Font.GothamBlack
-MiniOrb.TextSize = 11
 MiniOrb.Visible = false
 MiniOrb.Parent = ScreenGui
 
@@ -672,13 +665,6 @@ Instance.new("UICorner", MiniOrb).CornerRadius = UDim.new(1, 0)
 local OrbStroke = Instance.new("UIStroke", MiniOrb)
 OrbStroke.Color = Theme.GalaxyPurple
 OrbStroke.Thickness = 2.5
-
-local OrbGrad = Instance.new("UIGradient")
-OrbGrad.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, Theme.NeonCyan),
-    ColorSequenceKeypoint.new(1, Theme.GalaxyPurple)
-})
-OrbGrad.Parent = OrbStroke
 
 local orbDragging, orbDragStart, orbStartPos, orbMoved = false, Vector2.new(), UDim2.new(), false
 MiniOrb.InputBegan:Connect(function(input)
