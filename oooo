@@ -160,6 +160,7 @@ local Whitelist = {
     "TMAX_015",
     "uddhdhh670",
     "sha",
+    "Ra301n9",
 }
 
 local isAllowed = false
