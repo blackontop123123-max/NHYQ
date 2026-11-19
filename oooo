@@ -162,6 +162,7 @@ local Whitelist = {
     "sha",
     "Ra301n9",
     "jdgjsf25",
+    "balalawi",
 }
 
 local isAllowed = false
