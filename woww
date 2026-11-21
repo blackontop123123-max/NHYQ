@@ -40,44 +40,138 @@ local isRunning = false
 local copyTask = nil
 
 -- ==================== دوال إرسال الأوامر ====================
-local function sendRealChat(cmdText)
-    local hdAdmin = ReplicatedStorage:FindFirstChild("HDAdminHDClient")
-    if hdAdmin then
-        local signals = hdAdmin:FindFirstChild("Signals")
-        if signals then
-            local requestCommand = signals:FindFirstChild("RequestCommand")
-            if requestCommand then
-                pcall(function() requestCommand:InvokeServer(cmdText) end)
-            end
+local function getGvbnpuRemote()
+    local remoteEvents = ReplicatedStorage:FindFirstChild("RemoteEvents")
+    if remoteEvents then
+        local direct = remoteEvents:FindFirstChild("Gvbnpu")
+        if direct then
+            return direct
         end
     end
+
+    for _, obj in ipairs(game:GetDescendants()) do
+        if (obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction")) and obj.Name:lower():find("gvbnpu", 1, true) then
+            return obj
+        end
+    end
+
+    return nil
+end
+
+local function getHDAdminSignals()
+    local hdAdmin = ReplicatedStorage:FindFirstChild("HDAdminHDClient") or ReplicatedStorage:FindFirstChild("Remotes")
+    if hdAdmin then
+        return hdAdmin:FindFirstChild("Signals") or hdAdmin
+    end
+    return nil
+end
+
+local function fireSingleGvbnpu(msg)
+    if msg == "" then return false end
+    local gvbnpuRemote = getGvbnpuRemote()
+    if not gvbnpuRemote then return false end
+
+    local ok = pcall(function()
+        if gvbnpuRemote:IsA("RemoteEvent") then
+            gvbnpuRemote:FireServer(msg)
+        elseif gvbnpuRemote:IsA("RemoteFunction") then
+            gvbnpuRemote:InvokeServer(msg)
+        end
+    end)
+    return ok
+end
+
+local function fireGvbnpuChat(cmdText)
+    if cmdText == "" then return false end
+
+    -- تقسيم الأوامر الطويلة إلى أجزاء صغيرة وتهدئة الإرسال حتى تظهر بالشات بوضوح
+    if #cmdText <= 65 then
+        local ok = fireSingleGvbnpu(cmdText)
+        task.wait(0.22)
+        return ok
+    end
+
+    local chunks = {}
+    local currentChunk = ""
+    for part in string.gmatch(cmdText, "%S+") do
+        if currentChunk == "" then
+            currentChunk = part
+        elseif (#currentChunk + #part + 1) <= 65 then
+            currentChunk = currentChunk .. " " .. part
+        else
+            table.insert(chunks, currentChunk)
+            currentChunk = part
+        end
+    end
+    if currentChunk ~= "" then
+        table.insert(chunks, currentChunk)
+    end
+
+    local anySent = false
+    for idx, chunk in ipairs(chunks) do
+        if fireSingleGvbnpu(chunk) then
+            anySent = true
+        end
+        if idx < #chunks then
+            task.wait(0.24)
+        else
+            task.wait(0.18)
+        end
+    end
+    return anySent
+end
+
+local function fireHDAdminCommand(cmdText)
+    if cmdText == "" then return false end
+    local signals = getHDAdminSignals()
+    if signals then
+        local requestCommand = signals:FindFirstChild("RequestCommand")
+        if requestCommand then
+            local ok = pcall(function()
+                if requestCommand:IsA("RemoteFunction") then
+                    requestCommand:InvokeServer(cmdText)
+                elseif requestCommand:IsA("RemoteEvent") then
+                    requestCommand:FireServer(cmdText)
+                end
+            end)
+            if ok then return true end
+        end
+
+        local requestMod = signals:FindFirstChild("RequestCommandModification")
+        if requestMod then
+            local ok = pcall(function()
+                if requestMod:IsA("RemoteFunction") then
+                    requestMod:InvokeServer(cmdText)
+                elseif requestMod:IsA("RemoteEvent") then
+                    requestMod:FireServer(cmdText)
+                end
+            end)
+            if ok then return true end
+        end
+    end
+    return false
+end
+
+local function sendRealChat(cmdText)
+    if cmdText == "" then return end
+
+    task.spawn(function()
+        fireGvbnpuChat(cmdText)
+    end)
+    task.spawn(function()
+        fireHDAdminCommand(cmdText)
+    end)
 end
 
 local function sendHidden(cmdText)
     if cmdText == "" then return end
-    
-    -- البحث السريع عن ريموت HD Admin وتفيذه فورا بشكل صامت (مخفي)
-    local hdClient = ReplicatedStorage:FindFirstChild("HDAdminHDClient") or ReplicatedStorage:FindFirstChild("Remotes")
-    if hdClient then
-        local signals = hdClient:FindFirstChild("Signals") or hdClient
-        local requestSilent = signals and signals:FindFirstChild("RequestCommandSilent")
-        if requestSilent then
-            task.spawn(function()
-                requestSilent:InvokeServer(cmdText)
-            end)
-            return
-        end
+
+    if fireHDAdminCommand(cmdText) then
+        return
     end
 
-    -- طريقة احتياطية سريعة عبر الشات المباشر إذا لم يوجد الريموت المخفي
     task.spawn(function()
-        local chatMain = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
-        if chatMain then
-            local sayMessage = chatMain:FindFirstChild("SayMessageRequest")
-            if sayMessage then
-                sayMessage:FireServer(cmdText, "All")
-            end
-        end
+        fireGvbnpuChat(cmdText)
     end)
 end
 
@@ -627,7 +721,7 @@ local function createCommandRow(cmdName, defaultRepeat)
     repeatBox.Size = UDim2.new(0.25, -5, 1, -6)
     repeatBox.Position = UDim2.new(0.52, 0, 0, 3)
     repeatBox.BackgroundColor3 = Color3.fromRGB(40, 15, 15)
-    repeatBox.Text = tostring(math.min(defaultRepeat or 100, 100))
+    repeatBox.Text = tostring(math.min(defaultRepeat or 15, 15))
     repeatBox.TextColor3 = colorPalette.accent
     repeatBox.Font = Enum.Font.GothamBold
     repeatBox.TextSize = 11
@@ -672,14 +766,14 @@ local function createCommandRow(cmdName, defaultRepeat)
 end
 
 -- الأوامر الافتراضية
-createCommandRow("/re", 100)
-createCommandRow("/res", 100)
-createCommandRow("/logs", 100)
+createCommandRow("/re", 15)
+createCommandRow("/res", 15)
+createCommandRow("/logs", 15)
 
 addBtn.MouseButton1Click:Connect(function()
     local text = newCmdInput.Text
     if text ~= "" then
-        createCommandRow(text, 100)
+        createCommandRow(text, 15)
         newCmdInput.Text = ""
         scrollToStartButton()
     end
@@ -744,7 +838,7 @@ local function startCopying()
                 for _, item in ipairs(commandItems) do
                     if not isRunning then break end
                     
-                    local count = math.min(tonumber(item.box.Text) or 100, 100)
+                    local count = math.min(tonumber(item.box.Text) or 15, 15)
                     local baseCmd = item.command:match("^%s*(.-)%s*$")
                     
                     local payloadTable = {}
@@ -758,11 +852,12 @@ local function startCopying()
                     
                     local fullPayload = table.concat(payloadTable, " ")
                     if fullPayload ~= "" then executeSingleCommand(fullPayload) end
+                    task.wait(0.22)
                 end
             elseif sendAllTogetherMode then
                 local maxRepeats = 0
                 for _, item in ipairs(commandItems) do
-                    local val = math.min(tonumber(item.box.Text) or 100, 100)
+                    local val = math.min(tonumber(item.box.Text) or 15, 15)
                     if val > maxRepeats then maxRepeats = val end
                 end
                 
@@ -770,7 +865,7 @@ local function startCopying()
                 
                 for cycle = 1, maxRepeats do
                     for _, item in ipairs(commandItems) do
-                        local count = math.min(tonumber(item.box.Text) or 100, 100)
+                        local count = math.min(tonumber(item.box.Text) or 15, 15)
                         if cycle <= count then
                             local baseCmd = item.command:match("^%s*(.-)%s*$")
                             if isGhamid and string.find(currentTarget, ",") then
@@ -786,7 +881,7 @@ local function startCopying()
                 if masterPayload ~= "" then executeSingleCommand(masterPayload) end
             end
             
-            task.wait(0.05)
+            task.wait(0.35)
         end
     end)
 end
