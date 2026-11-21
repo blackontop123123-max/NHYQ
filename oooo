@@ -1470,6 +1470,12 @@ local function LoadMainScript()
     loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/chat'))()
     end)
 
+    -- تبويب سبام شات
+    local TabChatSpam = MakeTab("سبام شات")
+    AddButtonToTab(TabChatSpam, "تشغيل سبام شات", function()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/chatspam'))()
+    end)
+
     -- 2. تبويب حماية
     local TabProtect = MakeTab("حماية")
     AddButtonToTab(TabProtect, "حماية و حظر اشعارات الادمن", function()
@@ -1503,7 +1509,7 @@ local function LoadMainScript()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/AFK"))()
     end)
 
-    -- 4. تبويب "بانق اللاعبين"
+    -- 4. تبويب "بانق اللاعبين" (مستمر حتى بعد re / res / kill / nv وأي أمر آخر)
     local TabPlayerBang = MakeTab("بانق اللاعبين")
     
     local UnifiedBox = Create("Frame", TabPlayerBang, {
@@ -1581,6 +1587,8 @@ local function LoadMainScript()
         TargetTextBox.Text = ""
     end)
 
+    local lockedTargetUserId = nil
+
     local function GetPlayerByString(str)
         if not str or str == "" then return nil end
         str = str:match("^%s*(.-)%s*$"):lower()
@@ -1595,9 +1603,17 @@ local function LoadMainScript()
     end
 
     local function GetTargetPlayer()
+        if lockedTargetUserId then
+            local lockedPlr = _P:GetPlayerByUserId(lockedTargetUserId)
+            if lockedPlr then
+                return lockedPlr
+            end
+        end
+
         local textInput = TargetTextBox.Text
         local foundPlr = GetPlayerByString(textInput)
         if foundPlr then
+            lockedTargetUserId = foundPlr.UserId
             TargetTextBox.Text = foundPlr.Name
             isAvatarRotating = false
             AvatarIcon.Rotation = 0
@@ -1611,8 +1627,51 @@ local function LoadMainScript()
     end
 
     TargetTextBox.FocusLost:Connect(function()
+        lockedTargetUserId = nil
         GetTargetPlayer()
     end)
+
+    -- دالة مساعدة لتشغيل أو الحفاظ على الأنيميشن حتى بعد re / res / kill / nv
+    local function EnsureAnimPlaying(char, r15Id, r6Id, speedMultiplier, existingTrack)
+        if not char then return existingTrack end
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if not hum then return existingTrack end
+
+        local animator = hum:FindFirstChildOfClass("Animator")
+        if not animator then
+            animator = Instance.new("Animator")
+            animator.Parent = hum
+        end
+
+        local desiredId = (hum.RigType == Enum.HumanoidRigType.R15) and ("rbxassetid://" .. tostring(r15Id)) or ("rbxassetid://" .. tostring(r6Id))
+
+        if existingTrack then
+            local ok, playing = pcall(function() return existingTrack.IsPlaying end)
+            if ok and playing and existingTrack.Animation and existingTrack.Animation.AnimationId == desiredId then
+                return existingTrack
+            end
+            pcall(function() existingTrack:Stop() end)
+        end
+
+        local newTrack = nil
+        pcall(function()
+            local anim = Instance.new("Animation")
+            anim.AnimationId = desiredId
+            newTrack = animator:LoadAnimation(anim)
+            newTrack.Looped = true
+            newTrack:Play(0.1, 1, speedMultiplier or 1.5)
+        end)
+        return newTrack
+    end
+
+    local function SetNoClip(char, enabled)
+        if not char then return end
+        for _, part in ipairs(char:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = not enabled
+            end
+        end
+    end
 
     local function CreateiPhoneSwitch(parent, posY, labelText, activeColor)
         local container = Create("Frame", parent, {
@@ -1733,20 +1792,29 @@ local function LoadMainScript()
         return container, label, toggleBg, speedInput, SetVisual
     end
 
+    -- 1. المشاهدة (تستمر تلقائياً حتى بعد re / res / kill / nv أو تغير الشخصية)
     local _, SpecLabel, SpecToggleBg, SetSpecVisual = CreateiPhoneSwitch(UnifiedBox, 98, "👁️ تشغيل المشاهدة", Color3.fromRGB(40, 140, 200))
     local isSpectating = false
     local specConnection = nil
+    local activeSpecPlayer = nil
 
     local function StopSpectate()
         isSpectating = false
+        activeSpecPlayer = nil
         SetSpecVisual(false)
         if specConnection then
             specConnection:Disconnect()
             specConnection = nil
         end
-        if _L.Character and _L.Character:FindFirstChild("Humanoid") then
-            Camera.CameraSubject = _L.Character.Humanoid
-        end
+        pcall(function()
+            Camera.CameraType = Enum.CameraType.Custom
+            if _L.Character then
+                local hum = _L.Character:FindFirstChildOfClass("Humanoid")
+                if hum then
+                    Camera.CameraSubject = hum
+                end
+            end
+        end)
         SendNotification("تم إيقاف المشاهدة 👁️")
     end
 
@@ -1763,15 +1831,26 @@ local function LoadMainScript()
             end
             
             isSpectating = true
+            activeSpecPlayer = targetPlayer
             SetSpecVisual(true)
             SendNotification("تم تشغيل المشاهدة على " .. targetPlayer.Name .. " 👁️")
             
             specConnection = RunService.RenderStepped:Connect(function()
                 if not isSpectating then return end
-                if targetPlayer.Character and targetPlayer.Character:FindFirstChild("Humanoid") then
-                    Camera.CameraSubject = targetPlayer.Character.Humanoid
-                else
-                    StopSpectate()
+                local plr = activeSpecPlayer or GetTargetPlayer()
+                if plr and plr.Character then
+                    local hum = plr.Character:FindFirstChildOfClass("Humanoid") or plr.Character:FindFirstChildWhichIsA("Humanoid")
+                    if hum then
+                        pcall(function()
+                            if workspace.CurrentCamera ~= Camera then
+                                Camera = workspace.CurrentCamera
+                            end
+                            Camera.CameraType = Enum.CameraType.Custom
+                            if Camera.CameraSubject ~= hum then
+                                Camera.CameraSubject = hum
+                            end
+                        end)
+                    end
                 end
             end)
         else
@@ -1779,13 +1858,16 @@ local function LoadMainScript()
         end
     end)
 
+    -- 2. البانك (يستمر حتى بعد re / res / kill / nv ويعيد الأنيميشن تلقائياً)
     local _, BangLabel, BangToggleBg, BangSpeedInput, SetBangVisual = CreateiPhoneSwitchWithInput(UnifiedBox, 132, "🔥 تشغيل البانك", Color3.fromRGB(180, 20, 20), "سرعة")
     local isBanging = false
     local bangLoop = nil
+    local activeBangPlayer = nil
     local currentAnimTrack = nil
 
     local function StopBang()
         isBanging = false
+        activeBangPlayer = nil
         SetBangVisual(false)
         if bangLoop then
             bangLoop:Disconnect()
@@ -1797,9 +1879,7 @@ local function LoadMainScript()
         end
         local char = _L.Character
         if char then
-            for _, part in ipairs(char:GetDescendants()) do
-                if part:IsA("BasePart") then part.CanCollide = true end
-            end
+            SetNoClip(char, false)
             local hrp = char:FindFirstChild("HumanoidRootPart")
             if hrp then
                 pcall(function() hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0) end)
@@ -1821,39 +1901,36 @@ local function LoadMainScript()
             end
             
             isBanging = true
+            activeBangPlayer = targetPlayer
             SetBangVisual(true)
             SendNotification("تم تفعيل بانك بنجاح 🔥")
             
-            local char = _L.Character
-            if char and char:FindFirstChild("Humanoid") then
-                local hum = char.Humanoid
-                local animator = hum:FindFirstChildOfClass("Animator") or Instance.new("Animator", hum)
-                pcall(function()
-                    local anim = Instance.new("Animation")
-                    anim.AnimationId = hum.RigType == Enum.HumanoidRigType.R15 and "rbxassetid://5918726673" or "rbxassetid://148840371"
-                    currentAnimTrack = animator:LoadAnimation(anim)
-                    currentAnimTrack:Play(0.1, 1, 2)
-                end)
-            end
+            currentAnimTrack = EnsureAnimPlaying(_L.Character, 5918726673, 148840371, 2, nil)
             
             local timePassed = 0
             bangLoop = RunService.RenderStepped:Connect(function(dt)
                 if not isBanging then return end
+                local plr = activeBangPlayer or GetTargetPlayer()
                 local myChar = _L.Character
-                local tChar = targetPlayer.Character
-                if myChar and myChar:FindFirstChild("HumanoidRootPart") and tChar and tChar:FindFirstChild("HumanoidRootPart") then
-                    local hrp = myChar.HumanoidRootPart
-                    local tHrp = tChar.HumanoidRootPart
-                    for _, part in ipairs(myChar:GetDescendants()) do
-                        if part:IsA("BasePart") then part.CanCollide = false end
+                local tChar = plr and plr.Character
+
+                if myChar then
+                    currentAnimTrack = EnsureAnimPlaying(myChar, 5918726673, 148840371, 2, currentAnimTrack)
+                    SetNoClip(myChar, true)
+                end
+
+                if myChar and tChar then
+                    local hrp = myChar:FindFirstChild("HumanoidRootPart") or myChar:FindFirstChild("Torso") or myChar:FindFirstChild("UpperTorso")
+                    local tHrp = tChar:FindFirstChild("HumanoidRootPart") or tChar:FindFirstChild("Torso") or tChar:FindFirstChild("UpperTorso")
+                    if hrp and tHrp then
+                        local customSpeed = tonumber(BangSpeedInput.Text) or 15
+                        timePassed = timePassed + (dt * customSpeed)
+                        local backOffset = 1.2 + math.sin(timePassed) * 0.5
+                        pcall(function()
+                            hrp.CFrame = tHrp.CFrame * CFrame.new(0, 0, backOffset)
+                            hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                        end)
                     end
-                    local customSpeed = tonumber(BangSpeedInput.Text) or 15
-                    timePassed = timePassed + (dt * customSpeed)
-                    local backOffset = 1.2 + math.sin(timePassed) * 0.5
-                    hrp.CFrame = tHrp.CFrame * CFrame.new(0, 0, backOffset)
-                    pcall(function() hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0) end)
-                else
-                    StopBang()
                 end
             end)
         else
@@ -1861,13 +1938,16 @@ local function LoadMainScript()
         end
     end)
 
+    -- 3. المص (يستمر حتى بعد re / res / kill / nv ويعيد الأنيميشن تلقائياً)
     local _, SuckLabel, SuckToggleBg, SuckSpeedInput, SetSuckVisual = CreateiPhoneSwitchWithInput(UnifiedBox, 166, "😈 تشغيل المص", Color3.fromRGB(180, 20, 120), "سرعة")
     local isSucking = false
     local suckLoop = nil
+    local activeSuckPlayer = nil
     local currentSuckAnimTrack = nil
 
     local function StopSuck()
         isSucking = false
+        activeSuckPlayer = nil
         SetSuckVisual(false)
         if suckLoop then
             suckLoop:Disconnect()
@@ -1879,9 +1959,7 @@ local function LoadMainScript()
         end
         local char = _L.Character
         if char then
-            for _, part in ipairs(char:GetDescendants()) do
-                if part:IsA("BasePart") then part.CanCollide = true end
-            end
+            SetNoClip(char, false)
             local hrp = char:FindFirstChild("HumanoidRootPart")
             if hrp then
                 pcall(function() hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0) end)
@@ -1903,56 +1981,74 @@ local function LoadMainScript()
             end
             
             isSucking = true
+            activeSuckPlayer = targetPlayer
             SetSuckVisual(true)
             SendNotification("تم تفعيل المص بنجاح 😈")
             
-            local char = _L.Character
-            if char and char:FindFirstChild("Humanoid") then
-                local hum = char.Humanoid
-                local animator = hum:FindFirstChildOfClass("Animator") or Instance.new("Animator", hum)
-                pcall(function()
-                    local anim = Instance.new("Animation")
-                    anim.AnimationId = hum.RigType == Enum.HumanoidRigType.R15 and "rbxassetid://2506281703" or "rbxassetid://179224234"
-                    currentSuckAnimTrack = animator:LoadAnimation(anim)
-                    currentSuckAnimTrack:Play(0.1, 1, 1.5)
-                end)
-            end
+            currentSuckAnimTrack = EnsureAnimPlaying(_L.Character, 2506281703, 179224234, 1.5, nil)
             
             local timePassed = 0
             suckLoop = RunService.RenderStepped:Connect(function(dt)
                 if not isSucking then return end
+                local plr = activeSuckPlayer or GetTargetPlayer()
                 local myChar = _L.Character
-                local tChar = targetPlayer.Character
-                
-                if myChar and myChar:FindFirstChild("HumanoidRootPart") and tChar and tChar:FindFirstChild("HumanoidRootPart") then
-                    local hrp = myChar.HumanoidRootPart
-                    local tHrp = tChar.HumanoidRootPart
+                local tChar = plr and plr.Character
+
+                if myChar then
+                    currentSuckAnimTrack = EnsureAnimPlaying(myChar, 2506281703, 179224234, 1.5, currentSuckAnimTrack)
+                    SetNoClip(myChar, true)
+                end
+
+                if myChar and tChar then
+                    local hrp = myChar:FindFirstChild("HumanoidRootPart") or myChar:FindFirstChild("Torso") or myChar:FindFirstChild("UpperTorso")
+                    local tHrp = tChar:FindFirstChild("HumanoidRootPart") or tChar:FindFirstChild("Torso") or tChar:FindFirstChild("UpperTorso")
                     
-                    for _, part in ipairs(myChar:GetDescendants()) do
-                        if part:IsA("BasePart") then part.CanCollide = false end
+                    if hrp and tHrp then
+                        local customSpeed = tonumber(SuckSpeedInput.Text) or 15
+                        timePassed = timePassed + (dt * customSpeed)
+                        
+                        local frontOffset = 0.95 + (math.sin(timePassed) * 0.25)
+                        local targetHead = tChar:FindFirstChild("Head")
+                        local targetFacePos = targetHead and targetHead.Position or (tHrp.Position + Vector3.new(0, 1.5, 0))
+                        local myPelvis = myChar:FindFirstChild("LowerTorso") or myChar:FindFirstChild("Torso") or hrp
+                        local myPelvisOffset = myPelvis.Position - hrp.Position
+                        
+                        local targetRotation = (tHrp.CFrame - tHrp.Position) * CFrame.Angles(0, math.pi, 0)
+                        local desiredCFrame = CFrame.new(targetFacePos) * targetRotation * CFrame.new(0, 0, frontOffset) - myPelvisOffset
+                        
+                        pcall(function()
+                            hrp.CFrame = desiredCFrame
+                            hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                        end)
                     end
-                    
-                    local customSpeed = tonumber(SuckSpeedInput.Text) or 15
-                    timePassed = timePassed + (dt * customSpeed)
-                    
-                    local frontOffset = 0.95 + (math.sin(timePassed) * 0.25)
-                    local targetHead = tChar:FindFirstChild("Head")
-                    local targetFacePos = targetHead and targetHead.Position or (tHrp.Position + Vector3.new(0, 1.5, 0))
-                    local myPelvis = myChar:FindFirstChild("LowerTorso") or myChar:FindFirstChild("Torso") or hrp
-                    local myPelvisOffset = myPelvis.Position - hrp.Position
-                    
-                    local targetRotation = (tHrp.CFrame - tHrp.Position) * CFrame.Angles(0, math.pi, 0)
-                    local desiredCFrame = CFrame.new(targetFacePos) * targetRotation * CFrame.new(0, 0, frontOffset) - myPelvisOffset
-                    
-                    hrp.CFrame = desiredCFrame
-                    pcall(function() hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0) end)
-                else
-                    StopSuck()
                 end
             end)
         else
             StopSuck()
         end
+    end)
+
+    -- إعادة ضبط الأنيميشن فوراً عند عودة الشخصية (مثل بعد re أو res أو kill)
+    _L.CharacterAdded:Connect(function(newChar)
+        task.spawn(function()
+            local hum = newChar:WaitForChild("Humanoid", 5)
+            if not hum then return end
+            task.wait(0.2)
+            if isBanging then
+                SetNoClip(newChar, true)
+                currentAnimTrack = EnsureAnimPlaying(newChar, 5918726673, 148840371, 2, nil)
+            end
+            if isSucking then
+                SetNoClip(newChar, true)
+                currentSuckAnimTrack = EnsureAnimPlaying(newChar, 2506281703, 179224234, 1.5, nil)
+            end
+            if isSpectating and activeSpecPlayer and activeSpecPlayer.Character then
+                local tHum = activeSpecPlayer.Character:FindFirstChildOfClass("Humanoid")
+                if tHum then
+                    pcall(function() Camera.CameraSubject = tHum end)
+                end
+            end
+        end)
     end)
 
     -- 5. تبويب نسخ إلى الحافظة
