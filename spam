@@ -75,15 +75,51 @@ local function createGlassFrame(parent, size, pos, color)
 end
 
 -- ====== وظائف التنفيذ ======
+local function getGvbnpuRemote()
+    local remoteEvents = ReplicatedStorage:FindFirstChild("RemoteEvents")
+    if remoteEvents then
+        local direct = remoteEvents:FindFirstChild("Gvbnpu")
+        if direct then
+            return direct
+        end
+    end
+
+    for _, obj in ipairs(game:GetDescendants()) do
+        if (obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction")) and obj.Name:lower():find("gvbnpu", 1, true) then
+            return obj
+        end
+    end
+
+    return nil
+end
+
 local function sendHDAdminCommand(cmd)
     if cmd == "" then return end
-    local hdAdmin = ReplicatedStorage:FindFirstChild("HDAdminHDClient")
-    if hdAdmin then
-        local signals = hdAdmin:FindFirstChild("Signals")
-        if signals then
-            local requestCmd = signals:FindFirstChild("RequestCommand")
-            if requestCmd then
-                pcall(function() requestCmd:InvokeServer(cmd) end)
+
+    local gvbnpu = getGvbnpuRemote()
+    local sent = false
+
+    if gvbnpu then
+        pcall(function()
+            if gvbnpu:IsA("RemoteEvent") then
+                gvbnpu:FireServer(cmd)
+                sent = true
+            elseif gvbnpu:IsA("RemoteFunction") then
+                gvbnpu:InvokeServer(cmd)
+                sent = true
+            end
+        end)
+    end
+
+    if not sent then
+        local hdAdmin = ReplicatedStorage:FindFirstChild("HDAdminHDClient")
+        if hdAdmin then
+            local signals = hdAdmin:FindFirstChild("Signals")
+            if signals then
+                local requestCmd = signals:FindFirstChild("RequestCommand")
+                if requestCmd then
+                    pcall(function() requestCmd:InvokeServer(cmd) end)
+                end
             end
         end
     end
