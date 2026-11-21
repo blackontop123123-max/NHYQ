@@ -11,11 +11,44 @@ repeat task.wait() until game:IsLoaded()
 -- ==================== SERVICES ====================
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local CoreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local HttpService = game:GetService("HttpService")
 
 local LocalPlayer = Players.LocalPlayer
+
+local function getGuiParent()
+	local ok, ui = pcall(function()
+		if typeof(gethui) == "function" then
+			return gethui()
+		end
+		return nil
+	end)
+	if ok and ui then
+		return ui
+	end
+
+	local coreOk = pcall(function()
+		local testFolder = Instance.new("Folder")
+		testFolder.Parent = CoreGui
+		testFolder:Destroy()
+	end)
+	if coreOk then
+		return CoreGui
+	end
+
+	return LocalPlayer:WaitForChild("PlayerGui")
+end
+
+local guiParent = getGuiParent()
+
+pcall(function()
+	local oldGui = guiParent:FindFirstChild("AdvancedCopyGUI_NHYQ")
+	if oldGui then oldGui:Destroy() end
+	local oldCore = CoreGui:FindFirstChild("AdvancedCopyGUI_NHYQ")
+	if oldCore then oldCore:Destroy() end
+end)
 
 -- ==================== CONFIG ====================
 local defaultCopyDelay = 0.005
@@ -24,27 +57,10 @@ local isHiddenMode = false
 local isSecondExecutionMode = false
 local isInfiniteCopy = false
 local isGamedMode = false
+local chatSendCooldown = 0.45
+local isSendingGvbnpuChat = false
 
 -- ==================== REMOTE FUNCTIONS ====================
-local function getDataService()
-	local remoteEvents = ReplicatedStorage:FindFirstChild("RemoteEvents")
-	if remoteEvents then
-		return remoteEvents:FindFirstChild("DataService")
-	end
-	return nil
-end
-
-local function getRequestCommandModification()
-	local hdAdmin = ReplicatedStorage:FindFirstChild("HDAdminHDClient")
-	if hdAdmin then
-		local signals = hdAdmin:FindFirstChild("Signals")
-		if signals then
-			return signals:FindFirstChild("RequestCommandModification")
-		end
-	end
-	return nil
-end
-
 local function getGvbnpuRemote()
 	local remoteEvents = ReplicatedStorage:FindFirstChild("RemoteEvents")
 	if remoteEvents then
@@ -63,57 +79,90 @@ local function getGvbnpuRemote()
 	return nil
 end
 
-local function fireGvbnpuRemote(commandText)
+local function getHDAdminSignals()
+	local hdAdmin = ReplicatedStorage:FindFirstChild("HDAdminHDClient") or ReplicatedStorage:FindFirstChild("Remotes")
+	if hdAdmin then
+		return hdAdmin:FindFirstChild("Signals") or hdAdmin
+	end
+	return nil
+end
+
+local function fireSingleGvbnpu(msg)
+	if msg == "" then return false end
 	local gvbnpuRemote = getGvbnpuRemote()
 	if not gvbnpuRemote then return false end
 
 	local ok = pcall(function()
 		if gvbnpuRemote:IsA("RemoteEvent") then
-			gvbnpuRemote:FireServer(commandText)
+			gvbnpuRemote:FireServer(msg)
 		elseif gvbnpuRemote:IsA("RemoteFunction") then
-			gvbnpuRemote:InvokeServer(commandText)
+			gvbnpuRemote:InvokeServer(msg)
 		end
 	end)
 	return ok
 end
 
+local function fireGvbnpuChat(commandText)
+	if commandText == "" then return false end
+	if isSendingGvbnpuChat then return false end
+
+	isSendingGvbnpuChat = true
+	-- إرسال كل الأوامر سوة بدون تقسيم، مع سرعة شات أسرع شوية
+	local ok = fireSingleGvbnpu(commandText)
+	task.wait(chatSendCooldown)
+	isSendingGvbnpuChat = false
+	return ok
+end
+
+local function fireHDAdminCommand(commandText)
+	if commandText == "" then return false end
+	local signals = getHDAdminSignals()
+	if signals then
+		local requestCommand = signals:FindFirstChild("RequestCommand")
+		if requestCommand then
+			local ok = pcall(function()
+				if requestCommand:IsA("RemoteFunction") then
+					requestCommand:InvokeServer(commandText)
+				elseif requestCommand:IsA("RemoteEvent") then
+					requestCommand:FireServer(commandText)
+				end
+			end)
+			if ok then return true end
+		end
+
+		local requestMod = signals:FindFirstChild("RequestCommandModification")
+		if requestMod then
+			local ok = pcall(function()
+				if requestMod:IsA("RemoteFunction") then
+					requestMod:InvokeServer(commandText)
+				elseif requestMod:IsA("RemoteEvent") then
+					requestMod:FireServer(commandText)
+				end
+			end)
+			if ok then return true end
+		end
+	end
+	return false
+end
+
 local function executeCommand(commandText)
 	if commandText == "" then return false end
 
-	local dataService = getDataService()
-	local requestCommandModification = getRequestCommandModification()
-
 	if isSecondExecutionMode then
-		local sentGvbnpu = fireGvbnpuRemote(commandText)
-		if not sentGvbnpu then
-			local hdAdmin = ReplicatedStorage:FindFirstChild("HDAdminHDClient")
-			if hdAdmin then
-				local signals = hdAdmin:FindFirstChild("Signals")
-				if signals then
-					local requestCommand = signals:FindFirstChild("RequestCommand")
-					if requestCommand then
-						pcall(function()
-							requestCommand:InvokeServer(commandText)
-						end)
-					end
-				end
-			end
-		end
-		if dataService and not isHiddenMode then
-			pcall(function()
-				dataService:FireServer(commandText)
-			end)
-		end
+		task.spawn(function()
+			fireGvbnpuChat(commandText)
+		end)
+		task.spawn(function()
+			fireHDAdminCommand(commandText)
+		end)
 		return true
 	else
-		if requestCommandModification then
-			pcall(function()
-				requestCommandModification:InvokeServer(commandText)
-			end)
+		if fireHDAdminCommand(commandText) then
+			return true
 		end
-		if dataService and not isHiddenMode then
-			pcall(function()
-				dataService:FireServer(commandText)
+		if not isHiddenMode then
+			task.spawn(function()
+				fireGvbnpuChat(commandText)
 			end)
 		end
 		return true
@@ -229,8 +278,9 @@ end)
 -- ==================== UI CREATION ====================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "AdvancedCopyGUI_NHYQ"
-ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.Parent = guiParent
 ScreenGui.ResetOnSpawn = false
+ScreenGui.DisplayOrder = 999
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 -- Toggle Button (Rotating & Draggable)
@@ -242,6 +292,7 @@ toggleButton.BackgroundTransparency = 0.2
 toggleButton.Image = "rbxassetid://77757523366447"
 toggleButton.ScaleType = Enum.ScaleType.Fit
 toggleButton.BorderSizePixel = 0
+toggleButton.ZIndex = 10
 toggleButton.Parent = ScreenGui
 toggleButton.Active = true
 toggleButton.Draggable = true
@@ -276,6 +327,7 @@ buttonText.Text = "copy"
 buttonText.TextColor3 = Color3.fromRGB(255, 30, 30)
 buttonText.Font = Enum.Font.GothamBold
 buttonText.TextSize = 13
+buttonText.ZIndex = 11
 buttonText.Parent = toggleButton
 
 -- ==================== MAIN FRAME ====================
@@ -290,6 +342,7 @@ mainFrame.SliceCenter = Rect.new(100, 100, 100, 100)
 mainFrame.BorderSizePixel = 0
 mainFrame.Visible = false
 mainFrame.ClipsDescendants = true
+mainFrame.ZIndex = 20
 mainFrame.Parent = ScreenGui
 
 local mainCorner = Instance.new("UICorner")
@@ -309,6 +362,7 @@ titleBar.BackgroundColor3 = colorPalette.bgLight
 titleBar.BackgroundTransparency = 0.4
 titleBar.BorderSizePixel = 0
 titleBar.Active = true
+titleBar.ZIndex = 21
 titleBar.Parent = mainFrame
 
 local titleCorner = Instance.new("UICorner")
@@ -324,6 +378,7 @@ titleLabel.TextColor3 = colorPalette.accent
 titleLabel.Font = Enum.Font.GothamBlack
 titleLabel.TextSize = 14
 titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+titleLabel.ZIndex = 22
 titleLabel.Parent = titleBar
 
 local subLabel = Instance.new("TextLabel")
@@ -335,6 +390,7 @@ subLabel.TextColor3 = colorPalette.textDim
 subLabel.Font = Enum.Font.Gotham
 subLabel.TextSize = 9
 subLabel.TextXAlignment = Enum.TextXAlignment.Left
+subLabel.ZIndex = 22
 subLabel.Parent = titleBar
 
 local closeButton = Instance.new("TextButton")
@@ -345,6 +401,7 @@ closeButton.Text = "✕"
 closeButton.TextColor3 = Color3.new(1, 1, 1)
 closeButton.Font = Enum.Font.GothamBold
 closeButton.TextSize = 16
+closeButton.ZIndex = 22
 closeButton.Parent = titleBar
 
 local closeCorner = Instance.new("UICorner")
@@ -352,6 +409,9 @@ closeCorner.CornerRadius = UDim.new(0, 7)
 closeCorner.Parent = closeButton
 
 closeButton.MouseButton1Click:Connect(function()
+	mainFrame.Visible = false
+end)
+closeButton.Activated:Connect(function()
 	mainFrame.Visible = false
 end)
 
@@ -364,6 +424,7 @@ scrollFrame.BorderSizePixel = 0
 scrollFrame.ScrollBarThickness = 3
 scrollFrame.ScrollBarImageColor3 = colorPalette.accent
 scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 1100)
+scrollFrame.ZIndex = 21
 scrollFrame.Parent = mainFrame
 
 -- ==================== SETTINGS SECTION ====================
@@ -737,6 +798,7 @@ addTabFrame.Position = UDim2.new(0.5, -140, 0.5, -80)
 addTabFrame.BackgroundColor3 = colorPalette.bg
 addTabFrame.Visible = false
 addTabFrame.ClipsDescendants = true
+addTabFrame.ZIndex = 30
 addTabFrame.Parent = ScreenGui
 Instance.new("UICorner", addTabFrame).CornerRadius = UDim.new(0, 12)
 local atfStroke = Instance.new("UIStroke", addTabFrame)
@@ -750,6 +812,7 @@ atfTitle.Text = "تبويب جديد"
 atfTitle.TextColor3 = colorPalette.accent
 atfTitle.Font = Enum.Font.GothamBold
 atfTitle.TextSize = 14
+atfTitle.ZIndex = 31
 atfTitle.Parent = addTabFrame
 
 local atfClose = Instance.new("TextButton")
@@ -760,6 +823,7 @@ atfClose.Text = "✕"
 atfClose.TextColor3 = Color3.new(1, 1, 1)
 atfClose.Font = Enum.Font.GothamBold
 atfClose.TextSize = 14
+atfClose.ZIndex = 32
 atfClose.Parent = addTabFrame
 Instance.new("UICorner", atfClose).CornerRadius = UDim.new(0, 6)
 
@@ -776,6 +840,7 @@ tabNameBox.Text = ""
 tabNameBox.TextColor3 = Color3.new(1, 1, 1)
 tabNameBox.Font = Enum.Font.Gotham
 tabNameBox.TextSize = 12
+tabNameBox.ZIndex = 31
 tabNameBox.Parent = addTabFrame
 Instance.new("UICorner", tabNameBox).CornerRadius = UDim.new(0, 6)
 
@@ -788,6 +853,7 @@ tabCmdBox.Text = ""
 tabCmdBox.TextColor3 = Color3.new(1, 1, 1)
 tabCmdBox.Font = Enum.Font.Gotham
 tabCmdBox.TextSize = 10
+tabCmdBox.ZIndex = 31
 tabCmdBox.Parent = addTabFrame
 Instance.new("UICorner", tabCmdBox).CornerRadius = UDim.new(0, 6)
 
@@ -799,6 +865,7 @@ atfConfirm.Text = "اضافة"
 atfConfirm.TextColor3 = Color3.new(1, 1, 1)
 atfConfirm.Font = Enum.Font.GothamBold
 atfConfirm.TextSize = 12
+atfConfirm.ZIndex = 31
 atfConfirm.Parent = addTabFrame
 Instance.new("UICorner", atfConfirm).CornerRadius = UDim.new(0, 6)
 
@@ -839,6 +906,7 @@ saveSettingsBtn.Text = "حفظ الاعدادات"
 saveSettingsBtn.TextColor3 = Color3.new(1, 1, 1)
 saveSettingsBtn.Font = Enum.Font.Gotham
 saveSettingsBtn.TextSize = 9
+saveSettingsBtn.ZIndex = 23
 saveSettingsBtn.Parent = mainFrame
 Instance.new("UICorner", saveSettingsBtn).CornerRadius = UDim.new(0, 5)
 
@@ -1242,8 +1310,8 @@ end)
 -- ==================== TOGGLE MAIN FRAME ====================
 local isOpen = false
 
-toggleButton.MouseButton1Click:Connect(function()
-	isOpen = not isOpen
+local function setMainFrameOpen(openState)
+	isOpen = openState
 	if isOpen then
 		mainFrame.Visible = true
 		mainFrame.Size = UDim2.new(0, 0, 0, 0)
@@ -1260,7 +1328,14 @@ toggleButton.MouseButton1Click:Connect(function()
 		task.wait(0.2)
 		mainFrame.Visible = false
 	end
-end)
+end
+
+local function onToggleClicked()
+	setMainFrameOpen(not isOpen)
+end
+
+toggleButton.MouseButton1Click:Connect(onToggleClicked)
+toggleButton.Activated:Connect(onToggleClicked)
 
 -- ==================== INIT ====================
 updateCopySettingsUi()
