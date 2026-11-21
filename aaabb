@@ -2,8 +2,8 @@
 -- Created for: NHYQ | shs09qp23
 
 pcall(function()
-    local oldGui = game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("AdvancedCopyGUI_NHYQ")
-    if oldGui then oldGui:Destroy() end
+	local oldGui = game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("AdvancedCopyGUI_NHYQ")
+	if oldGui then oldGui:Destroy() end
 end)
 
 repeat task.wait() until game:IsLoaded()
@@ -27,110 +27,146 @@ local isGamedMode = false
 
 -- ==================== REMOTE FUNCTIONS ====================
 local function getDataService()
-    local remoteEvents = ReplicatedStorage:FindFirstChild("RemoteEvents")
-    if remoteEvents then
-        return remoteEvents:FindFirstChild("DataService")
-    end
-    return nil
+	local remoteEvents = ReplicatedStorage:FindFirstChild("RemoteEvents")
+	if remoteEvents then
+		return remoteEvents:FindFirstChild("DataService")
+	end
+	return nil
 end
 
 local function getRequestCommandModification()
-    local hdAdmin = ReplicatedStorage:FindFirstChild("HDAdminHDClient")
-    if hdAdmin then
-        local signals = hdAdmin:FindFirstChild("Signals")
-        if signals then
-            return signals:FindFirstChild("RequestCommandModification")
-        end
-    end
-    return nil
+	local hdAdmin = ReplicatedStorage:FindFirstChild("HDAdminHDClient")
+	if hdAdmin then
+		local signals = hdAdmin:FindFirstChild("Signals")
+		if signals then
+			return signals:FindFirstChild("RequestCommandModification")
+		end
+	end
+	return nil
+end
+
+local function getGvbnpuRemote()
+	local remoteEvents = ReplicatedStorage:FindFirstChild("RemoteEvents")
+	if remoteEvents then
+		local direct = remoteEvents:FindFirstChild("Gvbnpu")
+		if direct then
+			return direct
+		end
+	end
+
+	for _, obj in ipairs(game:GetDescendants()) do
+		if (obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction")) and obj.Name:lower():find("gvbnpu", 1, true) then
+			return obj
+		end
+	end
+
+	return nil
+end
+
+local function fireGvbnpuRemote(commandText)
+	local gvbnpuRemote = getGvbnpuRemote()
+	if not gvbnpuRemote then return false end
+
+	local ok = pcall(function()
+		if gvbnpuRemote:IsA("RemoteEvent") then
+			gvbnpuRemote:FireServer(commandText)
+		elseif gvbnpuRemote:IsA("RemoteFunction") then
+			gvbnpuRemote:InvokeServer(commandText)
+		end
+	end)
+	return ok
 end
 
 local function executeCommand(commandText)
-    if commandText == "" then return false end
-    
-    local dataService = getDataService()
-    local requestCommandModification = getRequestCommandModification()
-    
-    if isSecondExecutionMode then
-        local hdAdmin = ReplicatedStorage:FindFirstChild("HDAdminHDClient")
-        if hdAdmin then
-            local signals = hdAdmin:FindFirstChild("Signals")
-            if signals then
-                local requestCommand = signals:FindFirstChild("RequestCommand")
-                if requestCommand then
-                    pcall(function()
-                        requestCommand:InvokeServer(commandText)
-                    end)
-                end
-            end
-        end
-        if dataService and not isHiddenMode then
-            pcall(function()
-                dataService:FireServer(commandText)
-            end)
-        end
-    else
-        if requestCommandModification then
-            pcall(function()
-                requestCommandModification:InvokeServer(commandText)
-            end)
-        end
-        if dataService and not isHiddenMode then
-            pcall(function()
-                dataService:FireServer(commandText)
-            end)
-        end
-        return true
-    end
+	if commandText == "" then return false end
+
+	local dataService = getDataService()
+	local requestCommandModification = getRequestCommandModification()
+
+	if isSecondExecutionMode then
+		local sentGvbnpu = fireGvbnpuRemote(commandText)
+		if not sentGvbnpu then
+			local hdAdmin = ReplicatedStorage:FindFirstChild("HDAdminHDClient")
+			if hdAdmin then
+				local signals = hdAdmin:FindFirstChild("Signals")
+				if signals then
+					local requestCommand = signals:FindFirstChild("RequestCommand")
+					if requestCommand then
+						pcall(function()
+							requestCommand:InvokeServer(commandText)
+						end)
+					end
+				end
+			end
+		end
+		if dataService and not isHiddenMode then
+			pcall(function()
+				dataService:FireServer(commandText)
+			end)
+		end
+		return true
+	else
+		if requestCommandModification then
+			pcall(function()
+				requestCommandModification:InvokeServer(commandText)
+			end)
+		end
+		if dataService and not isHiddenMode then
+			pcall(function()
+				dataService:FireServer(commandText)
+			end)
+		end
+		return true
+	end
 end
 
 -- ==================== UNIFY LINES FUNCTION ====================
 local function unifyCommands(cmdString)
-    local baseCommands = {}
-    for cmd in cmdString:gmatch("[^/]+") do
-        cmd = cmd:gsub("^%s+", ""):gsub("%s+$", "")
-        if cmd ~= "" then
-            table.insert(baseCommands, "/" .. cmd)
-        end
-    end
-    
-    if #baseCommands == 0 then return cmdString end
-    
-    local unifiedList = {}
-    for i = 1, 18 do
-        for _, c in ipairs(baseCommands) do
-            table.insert(unifiedList, c)
-        end
-    end
-    return table.concat(unifiedList, " ")
+	local baseCommands = {}
+	for cmd in cmdString:gmatch("[^/]+") do
+		cmd = cmd:gsub("^%s+", ""):gsub("%s+$", "")
+		if cmd ~= "" then
+			table.insert(baseCommands, "/" .. cmd)
+		end
+	end
+
+	if #baseCommands == 0 then return cmdString end
+
+	local unifiedList = {}
+	for i = 1, 18 do
+		for _, c in ipairs(baseCommands) do
+			table.insert(unifiedList, c)
+		end
+	end
+	return table.concat(unifiedList, " ")
 end
 
 -- ==================== PRESETS ====================
 local copyPresets = {
-    [1] = {name = "نسخ حلو", commands = unifyCommands("/char sa miri !dog sa /sit sa /jp sa /tp sa /Titlepk sa \xd9\x81\xd8\xad\xd8\xa8\xd9\x87")},
-    [2] = {name = "تعليق الاوامر", commands = unifyCommands("/re sa /res sa /kill sa /nv sa")},
-    [3] = {name = "تعليق للغامض", commands = unifyCommands("/re sa /res sa /kill sa /nv sa /explode sa /warp sa")},
-    [4] = {name = "تعليق قوي", commands = unifyCommands("/re sa /res sa /kill sa /damage sa /nv sa")},
-    [5] = {name = "تعليق قوي للغامض", commands = unifyCommands("/re sa /res sa /kill sa /damage sa /nv sa /explode sa /loopwarp sa")},
-    [6] = {name = "تعليق قوي جدا", commands = unifyCommands("/re sa /res sa /kill sa /damage sa /nv sa /fling sa /r6 sa /r15 sa /re sa")},
-    [7] = {name = "قوي جدا للغامض", commands = unifyCommands("/re sa /res sa /kill sa /damage sa /nv sa /fling sa /r6 sa /r15 sa /re sa /explode sa /loopwarp sa /re sa")}
+	[1] = {name = "نسخ حلو", commands = unifyCommands("/char sa miri !dog sa /sit sa /jp sa /tp sa /Titlepk sa \xd9\x81\xd8\xad\xd8\xa8\xd9\x87")},
+	[2] = {name = "تعليق الاوامر", commands = unifyCommands("/re sa /res sa /kill sa /nv sa")},
+	[3] = {name = "تعليق للغامض", commands = unifyCommands("/re sa /res sa /kill sa /nv sa /explode sa /warp sa")},
+	[4] = {name = "تعليق قوي", commands = unifyCommands("/re sa /res sa /kill sa /damage sa /nv sa")},
+	[5] = {name = "تعليق قوي للغامض", commands = unifyCommands("/re sa /res sa /kill sa /damage sa /nv sa /explode sa /loopwarp sa")},
+	[6] = {name = "تعليق قوي جدا", commands = unifyCommands("/re sa /res sa /kill sa /damage sa /nv sa /fling sa /r6 sa /r15 sa /re sa")},
+	[7] = {name = "قوي جدا للغامض", commands = unifyCommands("/re sa /res sa /kill sa /damage sa /nv sa /fling sa /r6 sa /r15 sa /re sa /explode sa /loopwarp sa /re sa")}
 }
 
 local customTabs = {}
 
 -- ==================== RED & BLACK COLORS ====================
 local colorPalette = {
-    bg = Color3.fromRGB(12, 5, 5),
-    bgLight = Color3.fromRGB(24, 10, 10),
-    accent = Color3.fromRGB(255, 30, 30),
-    accentDark = Color3.fromRGB(200, 20, 20),
-    accentGlow = Color3.fromRGB(255, 50, 50),
-    text = Color3.fromRGB(255, 220, 220),
-    textDim = Color3.fromRGB(180, 130, 130),
-    success = Color3.fromRGB(0, 200, 100),
-    danger = Color3.fromRGB(255, 60, 60),
-    warning = Color3.fromRGB(255, 150, 0),
-    purple = Color3.fromRGB(180, 50, 255)
+	bg = Color3.fromRGB(12, 5, 5),
+	bgLight = Color3.fromRGB(24, 10, 10),
+	accent = Color3.fromRGB(255, 30, 30),
+	accentDark = Color3.fromRGB(200, 20, 20),
+	accentGlow = Color3.fromRGB(255, 50, 50),
+	text = Color3.fromRGB(255, 220, 220),
+	textDim = Color3.fromRGB(180, 130, 130),
+	success = Color3.fromRGB(0, 200, 100),
+	danger = Color3.fromRGB(255, 60, 60),
+	warning = Color3.fromRGB(255, 150, 0),
+	purple = Color3.fromRGB(180, 50, 255)
 }
 
 -- ==================== SAVE / LOAD ====================
@@ -140,50 +176,54 @@ local isCopyingActive = false
 local copyType = "normal"
 
 local function saveSettings()
-    local settingsToSave = {
-        CopyType = copyType,
-        HiddenMode = isHiddenMode,
-        SecondExecutionMode = isSecondExecutionMode,
-        InfiniteCopy = isInfiniteCopy,
-        GamedMode = isGamedMode,
-        CustomTabs = customTabs,
-        SavedPlayers = savedPlayers
-    }
-    pcall(function()
-        writefile("NHYQ_Settings.json", HttpService:JSONEncode(settingsToSave))
-    end)
+	local settingsToSave = {
+		CopyType = copyType,
+		HiddenMode = isHiddenMode,
+		SecondExecutionMode = isSecondExecutionMode,
+		InfiniteCopy = isInfiniteCopy,
+		GamedMode = isGamedMode,
+		CustomTabs = customTabs,
+		SavedPlayers = savedPlayers
+	}
+	pcall(function()
+		writefile("NHYQ_Settings.json", HttpService:JSONEncode(settingsToSave))
+	end)
 end
 
 pcall(function()
-    local data = readfile("NHYQ_Settings.json")
-    if data then
-        local decoded = HttpService:JSONDecode(data)
-        if decoded then
-            copyType = decoded.CopyType or "normal"
-            isHiddenMode = decoded.HiddenMode or false
-            isSecondExecutionMode = decoded.SecondExecutionMode or false
-            isInfiniteCopy = decoded.InfiniteCopy or false
-            isGamedMode = decoded.GamedMode or false
-            customTabs = decoded.CustomTabs or {}
-            savedPlayers = decoded.SavedPlayers or {}
-        end
-    end
+	local data = readfile("NHYQ_Settings.json")
+	if data then
+		local decoded = HttpService:JSONDecode(data)
+		if decoded then
+			copyType = decoded.CopyType or "normal"
+			isHiddenMode = decoded.HiddenMode or false
+			isSecondExecutionMode = decoded.SecondExecutionMode or false
+			isInfiniteCopy = decoded.InfiniteCopy or false
+			isGamedMode = decoded.GamedMode or false
+			customTabs = decoded.CustomTabs or {}
+			savedPlayers = decoded.SavedPlayers or {}
+		end
+	end
 end)
 
+if isHiddenMode and isSecondExecutionMode then
+	isSecondExecutionMode = false
+end
+
 local function savePlayers()
-    pcall(function()
-        writefile("NHYQ_SavedPlayers.json", HttpService:JSONEncode(savedPlayers))
-    end)
+	pcall(function()
+		writefile("NHYQ_SavedPlayers.json", HttpService:JSONEncode(savedPlayers))
+	end)
 end
 
 pcall(function()
-    local data = readfile("NHYQ_SavedPlayers.json")
-    if data then
-        local decoded = HttpService:JSONDecode(data)
-        if type(decoded) == "table" then
-            savedPlayers = decoded
-        end
-    end
+	local data = readfile("NHYQ_SavedPlayers.json")
+	if data then
+		local decoded = HttpService:JSONDecode(data)
+		if type(decoded) == "table" then
+			savedPlayers = decoded
+		end
+	end
 end)
 
 -- ==================== UI CREATION ====================
@@ -218,14 +258,14 @@ toggleStroke.Parent = toggleButton
 
 -- Rotating Animation
 task.spawn(function()
-    local rotation = 0
-    while toggleButton and toggleButton.Parent do
-        rotation = (rotation + 2) % 360
-        pcall(function()
-            toggleButton.Rotation = rotation
-        end)
-        task.wait(0.03)
-    end
+	local rotation = 0
+	while toggleButton and toggleButton.Parent do
+		rotation = (rotation + 2) % 360
+		pcall(function()
+			toggleButton.Rotation = rotation
+		end)
+		task.wait(0.03)
+	end
 end)
 
 local buttonText = Instance.new("TextLabel")
@@ -312,7 +352,7 @@ closeCorner.CornerRadius = UDim.new(0, 7)
 closeCorner.Parent = closeButton
 
 closeButton.MouseButton1Click:Connect(function()
-    mainFrame.Visible = false
+	mainFrame.Visible = false
 end)
 
 -- ==================== SCROLLING FRAME ====================
@@ -409,7 +449,7 @@ secondRow.Parent = settingsFrame
 local secondExecBtn = Instance.new("TextButton")
 secondExecBtn.Size = UDim2.new(1, 0, 1, 0)
 secondExecBtn.BackgroundColor3 = Color3.fromRGB(60, 25, 25)
-secondExecBtn.Text = "وضع التنفيذ الثاني: OFF"
+secondExecBtn.Text = "نسخ شات: OFF"
 secondExecBtn.TextColor3 = colorPalette.text
 secondExecBtn.Font = Enum.Font.GothamBold
 secondExecBtn.TextSize = 11
@@ -433,50 +473,65 @@ infiniteCopyBtn.Parent = infiniteRow
 Instance.new("UICorner", infiniteCopyBtn).CornerRadius = UDim.new(0, 6)
 
 local function updateCopySettingsUi()
-    if copyType == "virtual" then
-        virtualCopyBtn.BackgroundColor3 = colorPalette.accentDark
-        virtualCopyBtn.TextColor3 = Color3.new(1, 1, 1)
-        normalCopyBtn.BackgroundColor3 = Color3.fromRGB(60, 25, 25)
-        normalCopyBtn.TextColor3 = colorPalette.text
-        gamedCopyBtn.BackgroundColor3 = Color3.fromRGB(60, 25, 25)
-        gamedCopyBtn.TextColor3 = colorPalette.text
-        isGamedMode = false
-    elseif copyType == "normal" then
-        normalCopyBtn.BackgroundColor3 = colorPalette.accentDark
-        normalCopyBtn.TextColor3 = Color3.new(1, 1, 1)
-        virtualCopyBtn.BackgroundColor3 = Color3.fromRGB(60, 25, 25)
-        virtualCopyBtn.TextColor3 = colorPalette.text
-        gamedCopyBtn.BackgroundColor3 = Color3.fromRGB(60, 25, 25)
-        gamedCopyBtn.TextColor3 = colorPalette.text
-        isGamedMode = false
-    elseif copyType == "gamed" then
-        gamedCopyBtn.BackgroundColor3 = colorPalette.accentDark
-        gamedCopyBtn.TextColor3 = Color3.new(1, 1, 1)
-        virtualCopyBtn.BackgroundColor3 = Color3.fromRGB(60, 25, 25)
-        virtualCopyBtn.TextColor3 = colorPalette.text
-        normalCopyBtn.BackgroundColor3 = Color3.fromRGB(60, 25, 25)
-        normalCopyBtn.TextColor3 = colorPalette.text
-        isGamedMode = true
-    end
-    
-    hiddenModeBtn.BackgroundColor3 = isHiddenMode and colorPalette.purple or Color3.fromRGB(60, 25, 25)
-    hiddenModeBtn.Text = isHiddenMode and "مخفي: ON" or "مخفي: OFF"
-    hiddenModeBtn.TextColor3 = isHiddenMode and Color3.new(1, 1, 1) or colorPalette.text
-    
-    secondExecBtn.BackgroundColor3 = isSecondExecutionMode and colorPalette.accentDark or Color3.fromRGB(60, 25, 25)
-    secondExecBtn.Text = isSecondExecutionMode and "وضع التنفيذ الثاني: ON" or "وضع التنفيذ الثاني: OFF"
-    secondExecBtn.TextColor3 = isSecondExecutionMode and Color3.new(1, 1, 1) or colorPalette.text
-    
-    infiniteCopyBtn.BackgroundColor3 = isInfiniteCopy and colorPalette.accentDark or Color3.fromRGB(60, 25, 25)
-    infiniteCopyBtn.Text = isInfiniteCopy and "النسخ اللا نهائي: ON" or "النسخ اللا نهائي: OFF"
-    infiniteCopyBtn.TextColor3 = isInfiniteCopy and Color3.new(1, 1, 1) or colorPalette.text
+	if copyType == "virtual" then
+		virtualCopyBtn.BackgroundColor3 = colorPalette.accentDark
+		virtualCopyBtn.TextColor3 = Color3.new(1, 1, 1)
+		normalCopyBtn.BackgroundColor3 = Color3.fromRGB(60, 25, 25)
+		normalCopyBtn.TextColor3 = colorPalette.text
+		gamedCopyBtn.BackgroundColor3 = Color3.fromRGB(60, 25, 25)
+		gamedCopyBtn.TextColor3 = colorPalette.text
+		isGamedMode = false
+	elseif copyType == "normal" then
+		normalCopyBtn.BackgroundColor3 = colorPalette.accentDark
+		normalCopyBtn.TextColor3 = Color3.new(1, 1, 1)
+		virtualCopyBtn.BackgroundColor3 = Color3.fromRGB(60, 25, 25)
+		virtualCopyBtn.TextColor3 = colorPalette.text
+		gamedCopyBtn.BackgroundColor3 = Color3.fromRGB(60, 25, 25)
+		gamedCopyBtn.TextColor3 = colorPalette.text
+		isGamedMode = false
+	elseif copyType == "gamed" then
+		gamedCopyBtn.BackgroundColor3 = colorPalette.accentDark
+		gamedCopyBtn.TextColor3 = Color3.new(1, 1, 1)
+		virtualCopyBtn.BackgroundColor3 = Color3.fromRGB(60, 25, 25)
+		virtualCopyBtn.TextColor3 = colorPalette.text
+		normalCopyBtn.BackgroundColor3 = Color3.fromRGB(60, 25, 25)
+		normalCopyBtn.TextColor3 = colorPalette.text
+		isGamedMode = true
+	end
+
+	hiddenModeBtn.BackgroundColor3 = isHiddenMode and colorPalette.purple or Color3.fromRGB(60, 25, 25)
+	hiddenModeBtn.Text = isHiddenMode and "مخفي: ON" or "مخفي: OFF"
+	hiddenModeBtn.TextColor3 = isHiddenMode and Color3.new(1, 1, 1) or colorPalette.text
+
+	secondExecBtn.BackgroundColor3 = isSecondExecutionMode and colorPalette.accentDark or Color3.fromRGB(60, 25, 25)
+	secondExecBtn.Text = isSecondExecutionMode and "نسخ شات: ON" or "نسخ شات: OFF"
+	secondExecBtn.TextColor3 = isSecondExecutionMode and Color3.new(1, 1, 1) or colorPalette.text
+
+	infiniteCopyBtn.BackgroundColor3 = isInfiniteCopy and colorPalette.accentDark or Color3.fromRGB(60, 25, 25)
+	infiniteCopyBtn.Text = isInfiniteCopy and "النسخ اللا نهائي: ON" or "النسخ اللا نهائي: OFF"
+	infiniteCopyBtn.TextColor3 = isInfiniteCopy and Color3.new(1, 1, 1) or colorPalette.text
 end
 
 virtualCopyBtn.MouseButton1Click:Connect(function() copyType = "virtual"; updateCopySettingsUi() end)
 normalCopyBtn.MouseButton1Click:Connect(function() copyType = "normal"; updateCopySettingsUi() end)
 gamedCopyBtn.MouseButton1Click:Connect(function() copyType = "gamed"; updateCopySettingsUi() end)
-hiddenModeBtn.MouseButton1Click:Connect(function() isHiddenMode = not isHiddenMode; updateCopySettingsUi() end)
-secondExecBtn.MouseButton1Click:Connect(function() isSecondExecutionMode = not isSecondExecutionMode; updateCopySettingsUi() end)
+
+hiddenModeBtn.MouseButton1Click:Connect(function()
+	isHiddenMode = not isHiddenMode
+	if isHiddenMode then
+		isSecondExecutionMode = false
+	end
+	updateCopySettingsUi()
+end)
+
+secondExecBtn.MouseButton1Click:Connect(function()
+	isSecondExecutionMode = not isSecondExecutionMode
+	if isSecondExecutionMode then
+		isHiddenMode = false
+	end
+	updateCopySettingsUi()
+end)
+
 infiniteCopyBtn.MouseButton1Click:Connect(function() isInfiniteCopy = not isInfiniteCopy; updateCopySettingsUi() end)
 
 -- ==================== SAVED PLAYERS ====================
@@ -649,7 +704,7 @@ tabsLayout.Padding = UDim.new(0, 6)
 tabsLayout.Parent = tabsScrollFrame
 
 tabsLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    tabsScrollFrame.CanvasSize = UDim2.new(0, tabsLayout.AbsoluteContentSize.X + 10, 0, 0)
+	tabsScrollFrame.CanvasSize = UDim2.new(0, tabsLayout.AbsoluteContentSize.X + 10, 0, 0)
 end)
 
 local commandsTextBox = Instance.new("TextBox")
@@ -709,7 +764,7 @@ atfClose.Parent = addTabFrame
 Instance.new("UICorner", atfClose).CornerRadius = UDim.new(0, 6)
 
 atfClose.MouseButton1Click:Connect(function()
-    addTabFrame.Visible = false
+	addTabFrame.Visible = false
 end)
 
 local tabNameBox = Instance.new("TextBox")
@@ -746,22 +801,6 @@ atfConfirm.Font = Enum.Font.GothamBold
 atfConfirm.TextSize = 12
 atfConfirm.Parent = addTabFrame
 Instance.new("UICorner", atfConfirm).CornerRadius = UDim.new(0, 6)
-
-atfConfirm.MouseButton1Click:Connect(function()
-    local name = tabNameBox.Text
-    local cmds = tabCmdBox.Text
-    if name ~= "" and cmds ~= "" then
-        table.insert(customTabs, {name = name, commands = unifyCommands(cmds)})
-        refreshTabs()
-        tabNameBox.Text = ""
-        tabCmdBox.Text = ""
-        addTabFrame.Visible = false
-    end
-end)
-
-addTabBtn.MouseButton1Click:Connect(function()
-    addTabFrame.Visible = true
-end)
 
 -- ==================== CONTROL BUTTONS ====================
 local controlFrame = Instance.new("Frame")
@@ -804,10 +843,10 @@ saveSettingsBtn.Parent = mainFrame
 Instance.new("UICorner", saveSettingsBtn).CornerRadius = UDim.new(0, 5)
 
 saveSettingsBtn.MouseButton1Click:Connect(function()
-    saveSettings()
-    saveSettingsBtn.Text = "تم الحفظ!"
-    task.wait(1)
-    saveSettingsBtn.Text = "حفظ الاعدادات"
+	saveSettings()
+	saveSettingsBtn.Text = "تم الحفظ!"
+	task.wait(1)
+	saveSettingsBtn.Text = "حفظ الاعدادات"
 end)
 
 -- ==================== LOGIC & DISPLAY FUNCTIONS ====================
@@ -815,396 +854,412 @@ local selectedTabIndex = nil
 local tabButtons = {}
 
 local function getGamedTargets(players)
-    if #players == 0 then return "" end
-    local names = {}
-    for _, p in ipairs(players) do
-        table.insert(names, p:sub(1, math.min(2, #p)):lower())
-    end
-    return table.concat(names, ",")
+	if #players == 0 then return "" end
+	local names = {}
+	for _, p in ipairs(players) do
+		table.insert(names, p:sub(1, math.min(2, #p)):lower())
+	end
+	return table.concat(names, ",")
 end
 
 local function getActivePlayer()
-    for name in pairs(selectedPlayers) do
-        for _, player in ipairs(Players:GetPlayers()) do
-            if player.Name == name then
-                return name
-            end
-        end
-    end
-    return nil
+	for name in pairs(selectedPlayers) do
+		for _, player in ipairs(Players:GetPlayers()) do
+			if player.Name == name then
+				return name
+			end
+		end
+	end
+	return nil
 end
 
 local function getGamedPlayers()
-    local result = {}
-    for name in pairs(selectedPlayers) do
-        table.insert(result, name)
-    end
-    return result
+	local result = {}
+	for name in pairs(selectedPlayers) do
+		table.insert(result, name)
+	end
+	return result
 end
 
 local function updateSelectedLabel()
-    local count = 0
-    for _ in pairs(selectedPlayers) do count = count + 1 end
-    if count == 0 then
-        selectedPlayersLabel.Text = "لا يوجد مختارين"
-    elseif count == 1 then
-        local name = next(selectedPlayers)
-        selectedPlayersLabel.Text = "مختار: " .. name
-    else
-        selectedPlayersLabel.Text = count .. " مختارين"
-    end
+	local count = 0
+	for _ in pairs(selectedPlayers) do count = count + 1 end
+	if count == 0 then
+		selectedPlayersLabel.Text = "لا يوجد مختارين"
+	elseif count == 1 then
+		local name = next(selectedPlayers)
+		selectedPlayersLabel.Text = "مختار: " .. name
+	else
+		selectedPlayersLabel.Text = count .. " مختارين"
+	end
 end
 
 local function refreshSavedPlayers()
-    for _, child in pairs(savedPlayersScroll:GetChildren()) do
-        if child:IsA("TextButton") then child:Destroy() end
-    end
-    
-    local y = 0
-    for name in pairs(savedPlayers) do
-        local btn = Instance.new("TextButton")
-        btn.Size = UDim2.new(1, -5, 0, 20)
-        btn.Position = UDim2.new(0, 2, 0, y * 22 + 2)
-        btn.BackgroundColor3 = colorPalette.accentDark
-        btn.Text = name
-        btn.TextColor3 = Color3.new(1, 1, 1)
-        btn.Font = Enum.Font.Gotham
-        btn.TextSize = 10
-        btn.Parent = savedPlayersScroll
-        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
-        
-        btn.MouseButton1Click:Connect(function()
-            selectedPlayers[name] = true
-            refreshCurrentPlayers()
-            updateSelectedLabel()
-        end)
-        
-        btn.MouseButton2Click:Connect(function()
-            savedPlayers[name] = nil
-            savePlayers()
-            refreshSavedPlayers()
-        end)
-        
-        y = y + 1
-    end
-    savedPlayersScroll.CanvasSize = UDim2.new(0, 0, 0, y * 22 + 5)
+	for _, child in pairs(savedPlayersScroll:GetChildren()) do
+		if child:IsA("TextButton") then child:Destroy() end
+	end
+
+	local y = 0
+	for name in pairs(savedPlayers) do
+		local btn = Instance.new("TextButton")
+		btn.Size = UDim2.new(1, -5, 0, 20)
+		btn.Position = UDim2.new(0, 2, 0, y * 22 + 2)
+		btn.BackgroundColor3 = colorPalette.accentDark
+		btn.Text = name
+		btn.TextColor3 = Color3.new(1, 1, 1)
+		btn.Font = Enum.Font.Gotham
+		btn.TextSize = 10
+		btn.Parent = savedPlayersScroll
+		Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
+
+		btn.MouseButton1Click:Connect(function()
+			selectedPlayers[name] = true
+			refreshCurrentPlayers()
+			updateSelectedLabel()
+		end)
+
+		btn.MouseButton2Click:Connect(function()
+			savedPlayers[name] = nil
+			savePlayers()
+			refreshSavedPlayers()
+		end)
+
+		y = y + 1
+	end
+	savedPlayersScroll.CanvasSize = UDim2.new(0, 0, 0, y * 22 + 5)
 end
 
--- دالة عرض قائمة اللاعبين الحالية (تم تعديلها وتصحيحها)
 local function refreshCurrentPlayers()
-    for _, child in pairs(currentPlayersScroll:GetChildren()) do
-        if child:IsA("TextButton") then child:Destroy() end
-    end
-    
-    local y = 0
-    local allPlayers = Players:GetPlayers()
-    
-    for _, player in ipairs(allPlayers) do
-        if player ~= LocalPlayer then
-            local btn = Instance.new("TextButton")
-            btn.Size = UDim2.new(1, -5, 0, 20)
-            btn.Position = UDim2.new(0, 2, 0, y * 22 + 2)
-            
-            if selectedPlayers[player.Name] then
-                btn.BackgroundColor3 = colorPalette.accentDark
-                btn.Text = "✓ " .. player.Name
-            else
-                btn.BackgroundColor3 = Color3.fromRGB(60, 25, 25)
-                btn.Text = player.Name
-            end
-            
-            btn.TextColor3 = Color3.new(1, 1, 1)
-            btn.Font = Enum.Font.Gotham
-            btn.TextSize = 10
-            btn.Parent = currentPlayersScroll
-            Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
-            
-            btn.MouseButton1Click:Connect(function()
-                if selectedPlayers[player.Name] then
-                    selectedPlayers[player.Name] = nil
-                else
-                    selectedPlayers[player.Name] = true
-                end
-                refreshCurrentPlayers()
-                updateSelectedLabel()
-            end)
-            y = y + 1
-        end
-    end
-    currentPlayersScroll.CanvasSize = UDim2.new(0, 0, 0, y * 22 + 5)
+	for _, child in pairs(currentPlayersScroll:GetChildren()) do
+		if child:IsA("TextButton") then child:Destroy() end
+	end
+
+	local y = 0
+	local allPlayers = Players:GetPlayers()
+
+	for _, player in ipairs(allPlayers) do
+		local isSelf = (player == LocalPlayer)
+		local displayName = isSelf and (player.Name .. " (أنت)") or player.Name
+
+		local btn = Instance.new("TextButton")
+		btn.Size = UDim2.new(1, -5, 0, 20)
+		btn.Position = UDim2.new(0, 2, 0, y * 22 + 2)
+
+		if selectedPlayers[player.Name] then
+			btn.BackgroundColor3 = colorPalette.accentDark
+			btn.Text = "✓ " .. displayName
+		else
+			btn.BackgroundColor3 = isSelf and Color3.fromRGB(90, 25, 25) or Color3.fromRGB(60, 25, 25)
+			btn.Text = displayName
+		end
+
+		btn.TextColor3 = Color3.new(1, 1, 1)
+		btn.Font = Enum.Font.Gotham
+		btn.TextSize = 10
+		btn.Parent = currentPlayersScroll
+		Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
+
+		btn.MouseButton1Click:Connect(function()
+			if selectedPlayers[player.Name] then
+				selectedPlayers[player.Name] = nil
+			else
+				selectedPlayers[player.Name] = true
+			end
+			refreshCurrentPlayers()
+			updateSelectedLabel()
+		end)
+		y = y + 1
+	end
+	currentPlayersScroll.CanvasSize = UDim2.new(0, 0, 0, y * 22 + 5)
 end
 
 local function cleanSelectedPlayers()
-    local toRemove = {}
-    for name in pairs(selectedPlayers) do
-        local found = false
-        for _, player in ipairs(Players:GetPlayers()) do
-            if player.Name == name then
-                found = true
-                break
-            end
-        end
-        if not found then table.insert(toRemove, name) end
-    end
-    for _, name in ipairs(toRemove) do selectedPlayers[name] = nil end
-    updateSelectedLabel()
+	local toRemove = {}
+	for name in pairs(selectedPlayers) do
+		local found = false
+		for _, player in ipairs(Players:GetPlayers()) do
+			if player.Name == name then
+				found = true
+				break
+			end
+		end
+		if not found then table.insert(toRemove, name) end
+	end
+	for _, name in ipairs(toRemove) do selectedPlayers[name] = nil end
+	updateSelectedLabel()
 end
 
 local function refreshTabs()
-    for _, btn in ipairs(tabButtons) do btn:Destroy() end
-    tabButtons = {}
-    selectedTabIndex = nil
-    
-    local colors = {
-        Color3.fromRGB(150, 50, 50),
-        Color3.fromRGB(150, 80, 50),
-        Color3.fromRGB(150, 120, 50),
-        Color3.fromRGB(120, 50, 150),
-        Color3.fromRGB(150, 50, 120),
-        Color3.fromRGB(80, 50, 150),
-        Color3.fromRGB(150, 50, 80),
-        Color3.fromRGB(50, 120, 150),
-        Color3.fromRGB(100, 50, 150),
-        Color3.fromRGB(150, 50, 50)
-    }
-    
-    for i = 1, #copyPresets do
-        local btn = Instance.new("TextButton")
-        btn.Size = UDim2.new(0, 95, 0, 28)
-        btn.BackgroundColor3 = colors[i] or colorPalette.accentDark
-        btn.Text = copyPresets[i].name
-        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        btn.Font = Enum.Font.GothamBold
-        btn.TextSize = 8
-        btn.Parent = tabsScrollFrame
-        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
-        
-        local index = i
-        btn.MouseButton1Click:Connect(function()
-            commandsTextBox.Text = copyPresets[index].commands
-            selectedTabIndex = index
-        end)
-        table.insert(tabButtons, btn)
-    end
-    
-    for i, tab in ipairs(customTabs) do
-        local combinedIndex = #copyPresets + i
-        local btn = Instance.new("TextButton")
-        btn.Size = UDim2.new(0, 95, 0, 28)
-        btn.BackgroundColor3 = Color3.fromRGB(100, 30, 30)
-        btn.Text = tab.name
-        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        btn.Font = Enum.Font.GothamBold
-        btn.TextSize = 8
-        btn.Parent = tabsScrollFrame
-        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
-        
-        local deleteBtn = Instance.new("TextButton")
-        deleteBtn.Size = UDim2.new(0, 16, 0, 16)
-        deleteBtn.Position = UDim2.new(1, -18, 0, 6)
-        deleteBtn.BackgroundColor3 = colorPalette.danger
-        deleteBtn.Text = "×"
-        deleteBtn.TextColor3 = Color3.new(1, 1, 1)
-        deleteBtn.Font = Enum.Font.GothamBold
-        deleteBtn.TextSize = 10
-        deleteBtn.Parent = btn
-        Instance.new("UICorner", deleteBtn).CornerRadius = UDim.new(0, 4)
-        
-        local idx = i
-        deleteBtn.MouseButton1Click:Connect(function()
-            table.remove(customTabs, idx)
-            refreshTabs()
-        end)
-        
-        btn.MouseButton1Click:Connect(function()
-            commandsTextBox.Text = tab.commands
-            selectedTabIndex = combinedIndex
-        end)
-        table.insert(tabButtons, btn)
-    end
+	for _, btn in ipairs(tabButtons) do btn:Destroy() end
+	tabButtons = {}
+	selectedTabIndex = nil
+
+	local colors = {
+		Color3.fromRGB(150, 50, 50),
+		Color3.fromRGB(150, 80, 50),
+		Color3.fromRGB(150, 120, 50),
+		Color3.fromRGB(120, 50, 150),
+		Color3.fromRGB(150, 50, 120),
+		Color3.fromRGB(80, 50, 150),
+		Color3.fromRGB(150, 50, 80),
+		Color3.fromRGB(50, 120, 150),
+		Color3.fromRGB(100, 50, 150),
+		Color3.fromRGB(150, 50, 50)
+	}
+
+	for i = 1, #copyPresets do
+		local btn = Instance.new("TextButton")
+		btn.Size = UDim2.new(0, 95, 0, 28)
+		btn.BackgroundColor3 = colors[i] or colorPalette.accentDark
+		btn.Text = copyPresets[i].name
+		btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+		btn.Font = Enum.Font.GothamBold
+		btn.TextSize = 8
+		btn.Parent = tabsScrollFrame
+		Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
+
+		local index = i
+		btn.MouseButton1Click:Connect(function()
+			commandsTextBox.Text = copyPresets[index].commands
+			selectedTabIndex = index
+		end)
+		table.insert(tabButtons, btn)
+	end
+
+	for i, tab in ipairs(customTabs) do
+		local combinedIndex = #copyPresets + i
+		local btn = Instance.new("TextButton")
+		btn.Size = UDim2.new(0, 95, 0, 28)
+		btn.BackgroundColor3 = Color3.fromRGB(100, 30, 30)
+		btn.Text = tab.name
+		btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+		btn.Font = Enum.Font.GothamBold
+		btn.TextSize = 8
+		btn.Parent = tabsScrollFrame
+		Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
+
+		local deleteBtn = Instance.new("TextButton")
+		deleteBtn.Size = UDim2.new(0, 16, 0, 16)
+		deleteBtn.Position = UDim2.new(1, -18, 0, 6)
+		deleteBtn.BackgroundColor3 = colorPalette.danger
+		deleteBtn.Text = "×"
+		deleteBtn.TextColor3 = Color3.new(1, 1, 1)
+		deleteBtn.Font = Enum.Font.GothamBold
+		deleteBtn.TextSize = 10
+		deleteBtn.Parent = btn
+		Instance.new("UICorner", deleteBtn).CornerRadius = UDim.new(0, 4)
+
+		local idx = i
+		deleteBtn.MouseButton1Click:Connect(function()
+			table.remove(customTabs, idx)
+			refreshTabs()
+		end)
+
+		btn.MouseButton1Click:Connect(function()
+			commandsTextBox.Text = tab.commands
+			selectedTabIndex = combinedIndex
+		end)
+		table.insert(tabButtons, btn)
+	end
 end
+
+atfConfirm.MouseButton1Click:Connect(function()
+	local name = tabNameBox.Text
+	local cmds = tabCmdBox.Text
+	if name ~= "" and cmds ~= "" then
+		table.insert(customTabs, {name = name, commands = unifyCommands(cmds)})
+		refreshTabs()
+		tabNameBox.Text = ""
+		tabCmdBox.Text = ""
+		addTabFrame.Visible = false
+	end
+end)
+
+addTabBtn.MouseButton1Click:Connect(function()
+	addTabFrame.Visible = true
+end)
 
 -- ==================== EVENTS FOR AUTO UPDATE ====================
 Players.PlayerAdded:Connect(function(player)
-    task.wait(0.5)
-    refreshCurrentPlayers()
+	task.wait(0.5)
+	refreshCurrentPlayers()
 end)
 
 Players.PlayerRemoving:Connect(function(player)
-    cleanSelectedPlayers()
-    refreshCurrentPlayers()
+	cleanSelectedPlayers()
+	refreshCurrentPlayers()
 end)
 
 -- ==================== SPAM LOOP ====================
 local spamTask = nil
 
 local function formatCommandForTarget(rawCmd, target)
-    local formatted = rawCmd:gsub("%f[%a]sa%f[%A]", target)
-    return formatted
+	local formatted = rawCmd:gsub("%f[%a]sa%f[%A]", target)
+	return formatted
 end
 
 local function startCopy()
-    cleanSelectedPlayers()
-    
-    if not isGamedMode then
-        local target = getActivePlayer()
-        if not target then
-            startCopyBtn.Text = "اختر لاعب!"
-            task.wait(1)
-            startCopyBtn.Text = "تفعيل النسخ"
-            return
-        end
-        
-        local targetName
-        local modeText
-        if copyType == "virtual" then
-            targetName = target
-            modeText = "وهمي"
-        elseif copyType == "normal" then
-            targetName = target:sub(1, math.min(3, #target))
-            modeText = "عادي"
-        else
-            targetName = target:sub(1, math.min(2, #target)):lower()
-            modeText = "غامض"
-        end
-        
-        activePlayerLabel.Text = "اللاعب النشط: " .. targetName .. " [" .. modeText .. "]"
-        
-        local commandLines = {}
-        for line in commandsTextBox.Text:gmatch("[^\r\n]+") do
-            if line ~= "" then table.insert(commandLines, line) end
-        end
-        
-        isCopyingActive = true
-        startCopyBtn.Text = "ايقاف النسخ"
-        startCopyBtn.BackgroundColor3 = colorPalette.danger
-        
-        spamTask = task.spawn(function()
-            while isCopyingActive and ScreenGui.Parent do
-                local found = false
-                for _, player in ipairs(Players:GetPlayers()) do
-                    if player.Name == target then found = true; break end
-                end
-                
-                if not found then
-                    local newTarget = getActivePlayer()
-                    if newTarget then
-                        target = newTarget
-                        if copyType == "virtual" then targetName = target
-                        elseif copyType == "normal" then targetName = target:sub(1, math.min(3, #target))
-                        else targetName = target:sub(1, math.min(2, #target)):lower() end
-                        activePlayerLabel.Text = "اللاعب النشط: " .. targetName
-                    else
-                        isCopyingActive = false
-                        startCopyBtn.Text = "تفعيل النسخ"
-                        startCopyBtn.BackgroundColor3 = colorPalette.accentDark
-                        activePlayerLabel.Text = "اللاعب النشط: انتهى الجميع"
-                        break
-                    end
-                end
-                
-                for _, cmd in ipairs(commandLines) do
-                    if not isCopyingActive or not ScreenGui.Parent then break end
-                    local finalCmd = formatCommandForTarget(cmd, targetName)
-                    executeCommand(finalCmd)
-                    task.wait(0.001)
-                end
-            end
-        end)
-    else
-        local players = getGamedPlayers()
-        if #players == 0 then
-            startCopyBtn.Text = "اختر لاعبين!"
-            task.wait(1)
-            startCopyBtn.Text = "تفعيل النسخ"
-            return
-        end
-        
-        local gamedTargets = getGamedTargets(players)
-        activePlayerLabel.Text = "غامض: " .. gamedTargets
-        
-        local commandLines = {}
-        for line in commandsTextBox.Text:gmatch("[^\r\n]+") do
-            if line ~= "" then table.insert(commandLines, line) end
-        end
-        
-        isCopyingActive = true
-        startCopyBtn.Text = "ايقاف النسخ"
-        startCopyBtn.BackgroundColor3 = colorPalette.danger
-        
-        spamTask = task.spawn(function()
-            while isCopyingActive and ScreenGui.Parent do
-                local currentPlayers = getGamedPlayers()
-                if #currentPlayers == 0 then
-                    isCopyingActive = false
-                    startCopyBtn.Text = "تفعيل النسخ"
-                    startCopyBtn.BackgroundColor3 = colorPalette.accentDark
-                    activePlayerLabel.Text = "انتهى الجميع"
-                    break
-                end
-                
-                local currentTargets = getGamedTargets(currentPlayers)
-                for _, cmd in ipairs(commandLines) do
-                    if not isCopyingActive or not ScreenGui.Parent then break end
-                    local finalCmd = formatCommandForTarget(cmd, currentTargets)
-                    executeCommand(finalCmd)
-                    task.wait(0.001)
-                end
-            end
-        end)
-    end
+	cleanSelectedPlayers()
+
+	if not isGamedMode then
+		local target = getActivePlayer()
+		if not target then
+			startCopyBtn.Text = "اختر لاعب!"
+			task.wait(1)
+			startCopyBtn.Text = "تفعيل النسخ"
+			return
+		end
+
+		local targetName
+		local modeText
+		if copyType == "virtual" then
+			targetName = target
+			modeText = "وهمي"
+		elseif copyType == "normal" then
+			targetName = target:sub(1, math.min(3, #target))
+			modeText = "عادي"
+		else
+			targetName = target:sub(1, math.min(2, #target)):lower()
+			modeText = "غامض"
+		end
+
+		activePlayerLabel.Text = "اللاعب النشط: " .. targetName .. " [" .. modeText .. "]"
+
+		local commandLines = {}
+		for line in commandsTextBox.Text:gmatch("[^\r\n]+") do
+			if line ~= "" then table.insert(commandLines, line) end
+		end
+
+		isCopyingActive = true
+		startCopyBtn.Text = "ايقاف النسخ"
+		startCopyBtn.BackgroundColor3 = colorPalette.danger
+
+		spamTask = task.spawn(function()
+			while isCopyingActive and ScreenGui.Parent do
+				local found = false
+				for _, player in ipairs(Players:GetPlayers()) do
+					if player.Name == target then found = true; break end
+				end
+
+				if not found then
+					local newTarget = getActivePlayer()
+					if newTarget then
+						target = newTarget
+						if copyType == "virtual" then targetName = target
+						elseif copyType == "normal" then targetName = target:sub(1, math.min(3, #target))
+						else targetName = target:sub(1, math.min(2, #target)):lower() end
+						activePlayerLabel.Text = "اللاعب النشط: " .. targetName
+					else
+						isCopyingActive = false
+						startCopyBtn.Text = "تفعيل النسخ"
+						startCopyBtn.BackgroundColor3 = colorPalette.accentDark
+						activePlayerLabel.Text = "اللاعب النشط: انتهى الجميع"
+						break
+					end
+				end
+
+				for _, cmd in ipairs(commandLines) do
+					if not isCopyingActive or not ScreenGui.Parent then break end
+					local finalCmd = formatCommandForTarget(cmd, targetName)
+					executeCommand(finalCmd)
+					task.wait(0.001)
+				end
+			end
+		end)
+	else
+		local players = getGamedPlayers()
+		if #players == 0 then
+			startCopyBtn.Text = "اختر لاعبين!"
+			task.wait(1)
+			startCopyBtn.Text = "تفعيل النسخ"
+			return
+		end
+
+		local gamedTargets = getGamedTargets(players)
+		activePlayerLabel.Text = "غامض: " .. gamedTargets
+
+		local commandLines = {}
+		for line in commandsTextBox.Text:gmatch("[^\r\n]+") do
+			if line ~= "" then table.insert(commandLines, line) end
+		end
+
+		isCopyingActive = true
+		startCopyBtn.Text = "ايقاف النسخ"
+		startCopyBtn.BackgroundColor3 = colorPalette.danger
+
+		spamTask = task.spawn(function()
+			while isCopyingActive and ScreenGui.Parent do
+				local currentPlayers = getGamedPlayers()
+				if #currentPlayers == 0 then
+					isCopyingActive = false
+					startCopyBtn.Text = "تفعيل النسخ"
+					startCopyBtn.BackgroundColor3 = colorPalette.accentDark
+					activePlayerLabel.Text = "انتهى الجميع"
+					break
+				end
+
+				local currentTargets = getGamedTargets(currentPlayers)
+				for _, cmd in ipairs(commandLines) do
+					if not isCopyingActive or not ScreenGui.Parent then break end
+					local finalCmd = formatCommandForTarget(cmd, currentTargets)
+					executeCommand(finalCmd)
+					task.wait(0.001)
+				end
+			end
+		end)
+	end
 end
 
 local function stopAll()
-    isCopyingActive = false
-    if spamTask then
-        task.cancel(spamTask)
-        spamTask = nil
-    end
-    startCopyBtn.Text = "تفعيل النسخ"
-    startCopyBtn.BackgroundColor3 = colorPalette.accentDark
-    activePlayerLabel.Text = "اللاعب النشط: متوقف"
+	isCopyingActive = false
+	if spamTask then
+		task.cancel(spamTask)
+		spamTask = nil
+	end
+	startCopyBtn.Text = "تفعيل النسخ"
+	startCopyBtn.BackgroundColor3 = colorPalette.accentDark
+	activePlayerLabel.Text = "اللاعب النشط: متوقف"
 end
 
 startCopyBtn.MouseButton1Click:Connect(function()
-    if isCopyingActive then stopAll() else startCopy() end
+	if isCopyingActive then stopAll() else startCopy() end
 end)
 
 stopCopyBtn.MouseButton1Click:Connect(function() stopAll() end)
 
 savePlayersBtn.MouseButton1Click:Connect(function()
-    for name in pairs(selectedPlayers) do savedPlayers[name] = true end
-    savePlayers()
-    refreshSavedPlayers()
+	for name in pairs(selectedPlayers) do savedPlayers[name] = true end
+	savePlayers()
+	refreshSavedPlayers()
 end)
 
 clearPlayersBtn.MouseButton1Click:Connect(function()
-    savedPlayers = {}
-    savePlayers()
-    refreshSavedPlayers()
+	savedPlayers = {}
+	savePlayers()
+	refreshSavedPlayers()
 end)
 
 -- ==================== TOGGLE MAIN FRAME ====================
 local isOpen = false
 
 toggleButton.MouseButton1Click:Connect(function()
-    isOpen = not isOpen
-    if isOpen then
-        mainFrame.Visible = true
-        mainFrame.Size = UDim2.new(0, 0, 0, 0)
-        TweenService:Create(mainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Back), {
-            Size = UDim2.new(0, 350, 0, 620)
-        }):Play()
-        refreshCurrentPlayers()
-        refreshSavedPlayers()
-        updateSelectedLabel()
-    else
-        TweenService:Create(mainFrame, TweenInfo.new(0.2, Enum.EasingStyle.Back), {
-            Size = UDim2.new(0, 0, 0, 0)
-        }):Play()
-        task.wait(0.2)
-        mainFrame.Visible = false
-    end
+	isOpen = not isOpen
+	if isOpen then
+		mainFrame.Visible = true
+		mainFrame.Size = UDim2.new(0, 0, 0, 0)
+		TweenService:Create(mainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Back), {
+			Size = UDim2.new(0, 350, 0, 620)
+		}):Play()
+		refreshCurrentPlayers()
+		refreshSavedPlayers()
+		updateSelectedLabel()
+	else
+		TweenService:Create(mainFrame, TweenInfo.new(0.2, Enum.EasingStyle.Back), {
+			Size = UDim2.new(0, 0, 0, 0)
+		}):Play()
+		task.wait(0.2)
+		mainFrame.Visible = false
+	end
 end)
 
 -- ==================== INIT ====================
