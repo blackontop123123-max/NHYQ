@@ -1,4 +1,4 @@
---[=[ NHYQ - Auto Chat Message Sender (Messages Only) ]=]
+--[=[ NHYQ - Auto Chat Spam Sender (Messages Only) ]=]
 --[=[ by shs09qp23 ]=]
 
 repeat task.wait() until game:IsLoaded()
@@ -130,12 +130,12 @@ local theme = {
 	bg = Color3.fromRGB(12, 6, 6),
 	panel = Color3.fromRGB(24, 11, 11),
 	input = Color3.fromRGB(18, 8, 8),
-	accent = Color3.fromRGB(255, 35, 35),
+	accent = Color3.fromRGB(255, 45, 45),
 	accentDark = Color3.fromRGB(185, 18, 18),
-	text = Color3.fromRGB(255, 230, 230),
-	dim = Color3.fromRGB(175, 130, 130),
+	text = Color3.fromRGB(255, 240, 240),
+	dim = Color3.fromRGB(185, 135, 135),
 	danger = Color3.fromRGB(155, 15, 15),
-	success = Color3.fromRGB(255, 70, 70)
+	success = Color3.fromRGB(255, 85, 85)
 }
 
 -- ==================== UI BUILD ====================
@@ -145,50 +145,49 @@ screenGui.Parent = guiParent
 screenGui.ResetOnSpawn = false
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- زر عائم دائري مكتوب عليه NHYQ وجواه مكتوب سبام شات
-local toggleBtn = Instance.new("TextButton")
+-- زر عائم واضح بالصورة 132442210863994 ومكتوب عليه سبام شات بوضوح
+local toggleBtn = Instance.new("ImageButton")
 toggleBtn.Name = "ToggleButton"
-toggleBtn.Size = UDim2.new(0, 62, 0, 62)
+toggleBtn.Size = UDim2.new(0, 72, 0, 72)
 toggleBtn.Position = UDim2.new(0, 20, 0, 80)
 toggleBtn.BackgroundColor3 = theme.bg
-toggleBtn.Text = ""
-toggleBtn.AutoButtonColor = false
+toggleBtn.BackgroundTransparency = 0.08
+toggleBtn.Image = "rbxassetid://132442210863994"
+toggleBtn.ScaleType = Enum.ScaleType.Fit
+toggleBtn.BorderSizePixel = 0
 toggleBtn.Active = true
 toggleBtn.Draggable = true
+toggleBtn.ZIndex = 10
 toggleBtn.Parent = screenGui
 
 Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(1, 0)
 local toggleStroke = Instance.new("UIStroke", toggleBtn)
 toggleStroke.Color = theme.accent
-toggleStroke.Thickness = 2
+toggleStroke.Thickness = 2.5
 
-local toggleTitle = Instance.new("TextLabel")
-toggleTitle.Size = UDim2.new(1, -6, 0, 20)
-toggleTitle.Position = UDim2.new(0, 3, 0, 13)
-toggleTitle.BackgroundTransparency = 1
-toggleTitle.Text = "NHYQ"
-toggleTitle.TextColor3 = theme.accent
-toggleTitle.Font = Enum.Font.GothamBlack
-toggleTitle.TextSize = 13
-toggleTitle.ZIndex = toggleBtn.ZIndex + 1
-toggleTitle.Parent = toggleBtn
+local toggleLabel = Instance.new("TextLabel")
+toggleLabel.Size = UDim2.new(1, -6, 0, 22)
+toggleLabel.Position = UDim2.new(0, 3, 0.5, -11)
+toggleLabel.BackgroundColor3 = Color3.fromRGB(12, 4, 4)
+toggleLabel.BackgroundTransparency = 0.12
+toggleLabel.Text = "سبام شات"
+toggleLabel.TextColor3 = theme.text
+toggleLabel.Font = Enum.Font.GothamBlack
+toggleLabel.TextSize = 11.5
+toggleLabel.ZIndex = 11
+toggleLabel.Parent = toggleBtn
+Instance.new("UICorner", toggleLabel).CornerRadius = UDim.new(0, 7)
 
-local toggleSub = Instance.new("TextLabel")
-toggleSub.Size = UDim2.new(1, -6, 0, 16)
-toggleSub.Position = UDim2.new(0, 3, 0, 31)
-toggleSub.BackgroundTransparency = 1
-toggleSub.Text = "سبام شات"
-toggleSub.TextColor3 = theme.text
-toggleSub.Font = Enum.Font.GothamBold
-toggleSub.TextSize = 9
-toggleSub.ZIndex = toggleBtn.ZIndex + 1
-toggleSub.Parent = toggleBtn
+local toggleLabelStroke = Instance.new("UIStroke", toggleLabel)
+toggleLabelStroke.Color = theme.accent
+toggleLabelStroke.Thickness = 1.2
+toggleLabelStroke.Transparency = 0.25
 
 -- الإطار الرئيسي
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "MainFrame"
 mainFrame.Size = UDim2.new(0, 320, 0, 295)
-mainFrame.Position = UDim2.new(0, 95, 0, 60)
+mainFrame.Position = UDim2.new(0, 104, 0, 60)
 mainFrame.BackgroundColor3 = theme.bg
 mainFrame.BackgroundTransparency = 0.04
 mainFrame.BorderSizePixel = 0
@@ -196,6 +195,7 @@ mainFrame.Visible = false
 mainFrame.Active = true
 mainFrame.Draggable = true
 mainFrame.ClipsDescendants = true
+mainFrame.ZIndex = 20
 mainFrame.Parent = screenGui
 
 Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 14)
@@ -217,7 +217,7 @@ local titleLbl = Instance.new("TextLabel")
 titleLbl.Size = UDim2.new(1, -50, 0, 20)
 titleLbl.Position = UDim2.new(0, 14, 0, 5)
 titleLbl.BackgroundTransparency = 1
-titleLbl.Text = "سبام شات تلقائي - NHYQ"
+titleLbl.Text = "سبام شات - NHYQ"
 titleLbl.TextColor3 = theme.text
 titleLbl.Font = Enum.Font.GothamBlack
 titleLbl.TextSize = 13
@@ -283,7 +283,7 @@ speedStroke.Color = Color3.fromRGB(95, 22, 22)
 speedStroke.Thickness = 1
 
 local speedTitle = Instance.new("TextLabel")
-speedTitle.Size = UDim2.new(0.62, -10, 0, 20)
+speedTitle.Size = UDim2.new(0.58, -8, 0, 20)
 speedTitle.Position = UDim2.new(0, 10, 0, 6)
 speedTitle.BackgroundTransparency = 1
 speedTitle.Text = "⚡ سرعة الإرسال (بالثواني):"
@@ -294,54 +294,58 @@ speedTitle.TextXAlignment = Enum.TextXAlignment.Left
 speedTitle.Parent = speedCard
 
 local speedHint = Instance.new("TextLabel")
-speedHint.Size = UDim2.new(0.62, -10, 0, 16)
+speedHint.Size = UDim2.new(0.58, -8, 0, 16)
 speedHint.Position = UDim2.new(0, 10, 0, 28)
 speedHint.BackgroundTransparency = 1
 speedHint.Text = "مثال: 0.5 أو 1.5 (الحد الأدنى 0.25s)"
 speedHint.TextColor3 = theme.dim
 speedHint.Font = Enum.Font.Gotham
-speedHint.TextSize = 9
+speedHint.TextSize = 9.5
 speedHint.TextXAlignment = Enum.TextXAlignment.Left
 speedHint.Parent = speedCard
 
 local speedBox = Instance.new("TextBox")
-speedBox.Size = UDim2.new(0.32, 0, 0, 34)
-speedBox.Position = UDim2.new(0.65, 0, 0.5, -17)
-speedBox.BackgroundColor3 = theme.input
+speedBox.Size = UDim2.new(0.37, 0, 0, 40)
+speedBox.Position = UDim2.new(0.60, 0, 0.5, -20)
+speedBox.BackgroundColor3 = Color3.fromRGB(28, 8, 8)
 speedBox.Text = tostring(DEFAULT_DELAY)
 speedBox.PlaceholderText = "0.65"
 speedBox.PlaceholderColor3 = theme.dim
-speedBox.TextColor3 = theme.accent
+speedBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 speedBox.Font = Enum.Font.GothamBlack
-speedBox.TextSize = 13
+speedBox.TextSize = 19
 speedBox.ClearTextOnFocus = false
 speedBox.Parent = speedCard
 
-Instance.new("UICorner", speedBox).CornerRadius = UDim.new(0, 7)
+Instance.new("UICorner", speedBox).CornerRadius = UDim.new(0, 8)
 local speedBoxStroke = Instance.new("UIStroke", speedBox)
-speedBoxStroke.Color = theme.accent
-speedBoxStroke.Thickness = 1.2
+speedBoxStroke.Color = Color3.fromRGB(255, 55, 55)
+speedBoxStroke.Thickness = 1.8
+
+local speedTextStroke = Instance.new("UIStroke", speedBox)
+speedTextStroke.Color = Color3.fromRGB(160, 15, 15)
+speedTextStroke.Thickness = 1.2
 
 -- شريط الحالة والعداد
 local statusLbl = Instance.new("TextLabel")
-statusLbl.Size = UDim2.new(0.62, 0, 0, 22)
+statusLbl.Size = UDim2.new(0.65, 0, 0, 22)
 statusLbl.Position = UDim2.new(0, 12, 0, 202)
 statusLbl.BackgroundTransparency = 1
 statusLbl.Text = "الحالة: متوقف | السرعة: 0.65s"
-statusLbl.TextColor3 = theme.dim
+statusLbl.TextColor3 = theme.text
 statusLbl.Font = Enum.Font.GothamBold
-statusLbl.TextSize = 10
+statusLbl.TextSize = 11.5
 statusLbl.TextXAlignment = Enum.TextXAlignment.Left
 statusLbl.Parent = mainFrame
 
 local counterLbl = Instance.new("TextLabel")
-counterLbl.Size = UDim2.new(0.35, 0, 0, 22)
-counterLbl.Position = UDim2.new(0.63, 0, 0, 202)
+counterLbl.Size = UDim2.new(0.32, 0, 0, 22)
+counterLbl.Position = UDim2.new(0.66, 0, 0, 202)
 counterLbl.BackgroundTransparency = 1
 counterLbl.Text = "المرسل: 0"
-counterLbl.TextColor3 = theme.accent
-counterLbl.Font = Enum.Font.GothamBold
-counterLbl.TextSize = 10
+counterLbl.TextColor3 = Color3.fromRGB(255, 85, 85)
+counterLbl.Font = Enum.Font.GothamBlack
+counterLbl.TextSize = 11.5
 counterLbl.TextXAlignment = Enum.TextXAlignment.Right
 counterLbl.Parent = mainFrame
 
