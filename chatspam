@@ -1,0 +1,458 @@
+--[=[ NHYQ - Auto Chat Message Sender (Messages Only) ]=]
+--[=[ by shs09qp23 ]=]
+
+repeat task.wait() until game:IsLoaded()
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TextChatService = game:GetService("TextChatService")
+local CoreGui = game:GetService("CoreGui")
+local TweenService = game:GetService("TweenService")
+
+local LocalPlayer = Players.LocalPlayer
+
+-- ==================== GUI PARENT ====================
+local function getGuiParent()
+	local ok, ui = pcall(function()
+		if typeof(gethui) == "function" then
+			return gethui()
+		end
+		return nil
+	end)
+	if ok and ui then return ui end
+
+	local coreOk = pcall(function()
+		local f = Instance.new("Folder")
+		f.Parent = CoreGui
+		f:Destroy()
+	end)
+	if coreOk then return CoreGui end
+
+	return LocalPlayer:WaitForChild("PlayerGui")
+end
+
+local guiParent = getGuiParent()
+
+pcall(function()
+	local old = guiParent:FindFirstChild("NHYQAutoChatGUI")
+	if old then old:Destroy() end
+end)
+
+-- ==================== CONFIG & REMOTE ====================
+local MIN_DELAY = 0.25
+local DEFAULT_DELAY = 0.65
+local currentDelay = DEFAULT_DELAY
+local sentCount = 0
+local isSending = false
+local sendThread = nil
+
+local function getGvbnpuRemote()
+	local remoteEvents = ReplicatedStorage:FindFirstChild("RemoteEvents")
+	if remoteEvents then
+		local direct = remoteEvents:FindFirstChild("Gvbnpu")
+		if direct then
+			return direct
+		end
+	end
+
+	for _, obj in ipairs(game:GetDescendants()) do
+		if (obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction")) and obj.Name:lower():find("gvbnpu", 1, true) then
+			return obj
+		end
+	end
+
+	return nil
+end
+
+local function sanitizeMessage(rawText)
+	local cleaned = tostring(rawText or "")
+	-- إزالة أي بادئة أوامر (مثل /) لأن الإرسال مخصص لرسالة شات فقط
+	cleaned = cleaned:gsub("^%s*/+", "")
+	cleaned = cleaned:gsub("%s+/", " ")
+	cleaned = cleaned:gsub("%s+", " "):gsub("^%s+", ""):gsub("%s+$", "")
+	return cleaned
+end
+
+local function sendFullChatMessage(msg)
+	if msg == "" then return false end
+
+	-- إرسال الرسالة كاملة سوة بدون تقسيم عبر Gvbnpu
+	local gvbnpu = getGvbnpuRemote()
+	if gvbnpu then
+		local ok = pcall(function()
+			if gvbnpu:IsA("RemoteEvent") then
+				gvbnpu:FireServer(msg)
+			elseif gvbnpu:IsA("RemoteFunction") then
+				gvbnpu:InvokeServer(msg)
+			end
+		end)
+		if ok then return true end
+	end
+
+	-- دعم احتياطي في حال عدم توفر Gvbnpu باللعبة
+	if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+		local ok = pcall(function()
+			local channels = TextChatService:FindFirstChild("TextChannels")
+			local general = channels and (channels:FindFirstChild("RBXGeneral") or channels:GetChildren()[1])
+			if general and general:IsA("TextChannel") then
+				general:SendAsync(msg)
+			end
+		end)
+		if ok then return true end
+	else
+		local ok = pcall(function()
+			local chatEvents = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
+			local sayMsg = chatEvents and chatEvents:FindFirstChild("SayMessageRequest")
+			if sayMsg and sayMsg:IsA("RemoteEvent") then
+				sayMsg:FireServer(msg, "All")
+			end
+		end)
+		if ok then return true end
+	end
+
+	return false
+end
+
+local function parseDelay(rawText)
+	local cleaned = tostring(rawText or ""):gsub(",", ".")
+	local num = tonumber(cleaned)
+	if not num then
+		return DEFAULT_DELAY
+	end
+	if num < MIN_DELAY then
+		return MIN_DELAY
+	end
+	return num
+end
+
+-- ==================== COLORS ====================
+local theme = {
+	bg = Color3.fromRGB(12, 6, 6),
+	panel = Color3.fromRGB(24, 11, 11),
+	input = Color3.fromRGB(18, 8, 8),
+	accent = Color3.fromRGB(255, 35, 35),
+	accentDark = Color3.fromRGB(185, 18, 18),
+	text = Color3.fromRGB(255, 230, 230),
+	dim = Color3.fromRGB(175, 130, 130),
+	danger = Color3.fromRGB(155, 15, 15),
+	success = Color3.fromRGB(255, 70, 70)
+}
+
+-- ==================== UI BUILD ====================
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "NHYQAutoChatGUI"
+screenGui.Parent = guiParent
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+-- زر عائم دائري مكتوب عليه NHYQ وجواه مكتوب سبام شات
+local toggleBtn = Instance.new("TextButton")
+toggleBtn.Name = "ToggleButton"
+toggleBtn.Size = UDim2.new(0, 62, 0, 62)
+toggleBtn.Position = UDim2.new(0, 20, 0, 80)
+toggleBtn.BackgroundColor3 = theme.bg
+toggleBtn.Text = ""
+toggleBtn.AutoButtonColor = false
+toggleBtn.Active = true
+toggleBtn.Draggable = true
+toggleBtn.Parent = screenGui
+
+Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(1, 0)
+local toggleStroke = Instance.new("UIStroke", toggleBtn)
+toggleStroke.Color = theme.accent
+toggleStroke.Thickness = 2
+
+local toggleTitle = Instance.new("TextLabel")
+toggleTitle.Size = UDim2.new(1, -6, 0, 20)
+toggleTitle.Position = UDim2.new(0, 3, 0, 13)
+toggleTitle.BackgroundTransparency = 1
+toggleTitle.Text = "NHYQ"
+toggleTitle.TextColor3 = theme.accent
+toggleTitle.Font = Enum.Font.GothamBlack
+toggleTitle.TextSize = 13
+toggleTitle.ZIndex = toggleBtn.ZIndex + 1
+toggleTitle.Parent = toggleBtn
+
+local toggleSub = Instance.new("TextLabel")
+toggleSub.Size = UDim2.new(1, -6, 0, 16)
+toggleSub.Position = UDim2.new(0, 3, 0, 31)
+toggleSub.BackgroundTransparency = 1
+toggleSub.Text = "سبام شات"
+toggleSub.TextColor3 = theme.text
+toggleSub.Font = Enum.Font.GothamBold
+toggleSub.TextSize = 9
+toggleSub.ZIndex = toggleBtn.ZIndex + 1
+toggleSub.Parent = toggleBtn
+
+-- الإطار الرئيسي
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 320, 0, 295)
+mainFrame.Position = UDim2.new(0, 95, 0, 60)
+mainFrame.BackgroundColor3 = theme.bg
+mainFrame.BackgroundTransparency = 0.04
+mainFrame.BorderSizePixel = 0
+mainFrame.Visible = false
+mainFrame.Active = true
+mainFrame.Draggable = true
+mainFrame.ClipsDescendants = true
+mainFrame.Parent = screenGui
+
+Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 14)
+local mainStroke = Instance.new("UIStroke", mainFrame)
+mainStroke.Color = theme.accent
+mainStroke.Thickness = 2
+mainStroke.Transparency = 0.15
+
+-- شريط العنوان
+local header = Instance.new("Frame")
+header.Size = UDim2.new(1, 0, 0, 44)
+header.BackgroundColor3 = theme.panel
+header.BorderSizePixel = 0
+header.Parent = mainFrame
+
+Instance.new("UICorner", header).CornerRadius = UDim.new(0, 14)
+
+local titleLbl = Instance.new("TextLabel")
+titleLbl.Size = UDim2.new(1, -50, 0, 20)
+titleLbl.Position = UDim2.new(0, 14, 0, 5)
+titleLbl.BackgroundTransparency = 1
+titleLbl.Text = "سبام شات تلقائي - NHYQ"
+titleLbl.TextColor3 = theme.text
+titleLbl.Font = Enum.Font.GothamBlack
+titleLbl.TextSize = 13
+titleLbl.TextXAlignment = Enum.TextXAlignment.Left
+titleLbl.Parent = header
+
+local subLbl = Instance.new("TextLabel")
+subLbl.Size = UDim2.new(1, -50, 0, 14)
+subLbl.Position = UDim2.new(0, 14, 0, 24)
+subLbl.BackgroundTransparency = 1
+subLbl.Text = "BY SHS09QP23 • CHAT MESSAGES ONLY"
+subLbl.TextColor3 = theme.dim
+subLbl.Font = Enum.Font.GothamBold
+subLbl.TextSize = 9
+subLbl.TextXAlignment = Enum.TextXAlignment.Left
+subLbl.Parent = header
+
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0, 28, 0, 28)
+closeBtn.Position = UDim2.new(1, -36, 0.5, -14)
+closeBtn.BackgroundColor3 = theme.danger
+closeBtn.Text = "✕"
+closeBtn.TextColor3 = Color3.new(1, 1, 1)
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.TextSize = 13
+closeBtn.Parent = header
+Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 7)
+
+-- صندوق كتابة رسالة الشات فقط
+local messageBox = Instance.new("TextBox")
+messageBox.Size = UDim2.new(1, -24, 0, 76)
+messageBox.Position = UDim2.new(0, 12, 0, 54)
+messageBox.BackgroundColor3 = theme.input
+messageBox.PlaceholderText = "اكتب رسالة الشات هنا (رسالة عادية بدون أوامر)..."
+messageBox.PlaceholderColor3 = theme.dim
+messageBox.Text = ""
+messageBox.TextColor3 = theme.text
+messageBox.Font = Enum.Font.Gotham
+messageBox.TextSize = 11
+messageBox.TextWrapped = true
+messageBox.MultiLine = true
+messageBox.ClearTextOnFocus = false
+messageBox.TextXAlignment = Enum.TextXAlignment.Right
+messageBox.TextYAlignment = Enum.TextYAlignment.Top
+messageBox.Parent = mainFrame
+
+Instance.new("UICorner", messageBox).CornerRadius = UDim.new(0, 9)
+local msgStroke = Instance.new("UIStroke", messageBox)
+msgStroke.Color = Color3.fromRGB(90, 20, 20)
+msgStroke.Thickness = 1.2
+
+-- قسم تحديد سرعة الإرسال من اللاعب
+local speedCard = Instance.new("Frame")
+speedCard.Size = UDim2.new(1, -24, 0, 56)
+speedCard.Position = UDim2.new(0, 12, 0, 138)
+speedCard.BackgroundColor3 = theme.panel
+speedCard.BorderSizePixel = 0
+speedCard.Parent = mainFrame
+
+Instance.new("UICorner", speedCard).CornerRadius = UDim.new(0, 9)
+local speedStroke = Instance.new("UIStroke", speedCard)
+speedStroke.Color = Color3.fromRGB(95, 22, 22)
+speedStroke.Thickness = 1
+
+local speedTitle = Instance.new("TextLabel")
+speedTitle.Size = UDim2.new(0.62, -10, 0, 20)
+speedTitle.Position = UDim2.new(0, 10, 0, 6)
+speedTitle.BackgroundTransparency = 1
+speedTitle.Text = "⚡ سرعة الإرسال (بالثواني):"
+speedTitle.TextColor3 = theme.text
+speedTitle.Font = Enum.Font.GothamBold
+speedTitle.TextSize = 11
+speedTitle.TextXAlignment = Enum.TextXAlignment.Left
+speedTitle.Parent = speedCard
+
+local speedHint = Instance.new("TextLabel")
+speedHint.Size = UDim2.new(0.62, -10, 0, 16)
+speedHint.Position = UDim2.new(0, 10, 0, 28)
+speedHint.BackgroundTransparency = 1
+speedHint.Text = "مثال: 0.5 أو 1.5 (الحد الأدنى 0.25s)"
+speedHint.TextColor3 = theme.dim
+speedHint.Font = Enum.Font.Gotham
+speedHint.TextSize = 9
+speedHint.TextXAlignment = Enum.TextXAlignment.Left
+speedHint.Parent = speedCard
+
+local speedBox = Instance.new("TextBox")
+speedBox.Size = UDim2.new(0.32, 0, 0, 34)
+speedBox.Position = UDim2.new(0.65, 0, 0.5, -17)
+speedBox.BackgroundColor3 = theme.input
+speedBox.Text = tostring(DEFAULT_DELAY)
+speedBox.PlaceholderText = "0.65"
+speedBox.PlaceholderColor3 = theme.dim
+speedBox.TextColor3 = theme.accent
+speedBox.Font = Enum.Font.GothamBlack
+speedBox.TextSize = 13
+speedBox.ClearTextOnFocus = false
+speedBox.Parent = speedCard
+
+Instance.new("UICorner", speedBox).CornerRadius = UDim.new(0, 7)
+local speedBoxStroke = Instance.new("UIStroke", speedBox)
+speedBoxStroke.Color = theme.accent
+speedBoxStroke.Thickness = 1.2
+
+-- شريط الحالة والعداد
+local statusLbl = Instance.new("TextLabel")
+statusLbl.Size = UDim2.new(0.62, 0, 0, 22)
+statusLbl.Position = UDim2.new(0, 12, 0, 202)
+statusLbl.BackgroundTransparency = 1
+statusLbl.Text = "الحالة: متوقف | السرعة: 0.65s"
+statusLbl.TextColor3 = theme.dim
+statusLbl.Font = Enum.Font.GothamBold
+statusLbl.TextSize = 10
+statusLbl.TextXAlignment = Enum.TextXAlignment.Left
+statusLbl.Parent = mainFrame
+
+local counterLbl = Instance.new("TextLabel")
+counterLbl.Size = UDim2.new(0.35, 0, 0, 22)
+counterLbl.Position = UDim2.new(0.63, 0, 0, 202)
+counterLbl.BackgroundTransparency = 1
+counterLbl.Text = "المرسل: 0"
+counterLbl.TextColor3 = theme.accent
+counterLbl.Font = Enum.Font.GothamBold
+counterLbl.TextSize = 10
+counterLbl.TextXAlignment = Enum.TextXAlignment.Right
+counterLbl.Parent = mainFrame
+
+-- زر بدء / إيقاف الإرسال
+local startStopBtn = Instance.new("TextButton")
+startStopBtn.Size = UDim2.new(1, -24, 0, 42)
+startStopBtn.Position = UDim2.new(0, 12, 0, 234)
+startStopBtn.BackgroundColor3 = theme.accentDark
+startStopBtn.Text = "بدء الإرسال التلقائي"
+startStopBtn.TextColor3 = Color3.new(1, 1, 1)
+startStopBtn.Font = Enum.Font.GothamBlack
+startStopBtn.TextSize = 13
+startStopBtn.Parent = mainFrame
+
+Instance.new("UICorner", startStopBtn).CornerRadius = UDim.new(0, 9)
+
+-- ==================== LOGIC ====================
+local function updateStatusText()
+	local stateText = isSending and "يعمل" or "متوقف"
+	statusLbl.Text = string.format("الحالة: %s | السرعة: %.2fs", stateText, currentDelay)
+	counterLbl.Text = "المرسل: " .. tostring(sentCount)
+end
+
+speedBox.FocusLost:Connect(function()
+	currentDelay = parseDelay(speedBox.Text)
+	speedBox.Text = tostring(currentDelay)
+	updateStatusText()
+end)
+
+local function stopAutoChat()
+	isSending = false
+	if sendThread then
+		task.cancel(sendThread)
+		sendThread = nil
+	end
+	startStopBtn.Text = "بدء الإرسال التلقائي"
+	startStopBtn.BackgroundColor3 = theme.accentDark
+	updateStatusText()
+end
+
+local function startAutoChat()
+	local cleanMsg = sanitizeMessage(messageBox.Text)
+	if cleanMsg == "" then
+		statusLbl.Text = "الحالة: اكتب رسالة أولاً!"
+		statusLbl.TextColor3 = theme.accent
+		return
+	end
+
+	currentDelay = parseDelay(speedBox.Text)
+	speedBox.Text = tostring(currentDelay)
+
+	isSending = true
+	startStopBtn.Text = "إيقاف الإرسال"
+	startStopBtn.BackgroundColor3 = theme.danger
+	statusLbl.TextColor3 = theme.success
+	updateStatusText()
+
+	sendThread = task.spawn(function()
+		while isSending and screenGui.Parent do
+			local msgToSend = sanitizeMessage(messageBox.Text)
+			if msgToSend == "" then
+				stopAutoChat()
+				break
+			end
+
+			-- إرسال الرسالة كاملة سوة بدون تقسيم
+			local ok = sendFullChatMessage(msgToSend)
+			if ok then
+				sentCount += 1
+				updateStatusText()
+			end
+
+			local waitTime = parseDelay(speedBox.Text)
+			currentDelay = waitTime
+			task.wait(waitTime)
+		end
+	end)
+end
+
+startStopBtn.MouseButton1Click:Connect(function()
+	if isSending then
+		stopAutoChat()
+	else
+		startAutoChat()
+	end
+end)
+
+local isOpen = false
+local function setOpen(openState)
+	isOpen = openState
+	if isOpen then
+		mainFrame.Visible = true
+		mainFrame.Size = UDim2.new(0, 0, 0, 0)
+		TweenService:Create(mainFrame, TweenInfo.new(0.22, Enum.EasingStyle.Back), {
+			Size = UDim2.new(0, 320, 0, 295)
+		}):Play()
+	else
+		TweenService:Create(mainFrame, TweenInfo.new(0.18, Enum.EasingStyle.Quad), {
+			Size = UDim2.new(0, 0, 0, 0)
+		}):Play()
+		task.wait(0.18)
+		mainFrame.Visible = false
+	end
+end
+
+toggleBtn.MouseButton1Click:Connect(function()
+	setOpen(not isOpen)
+end)
+
+closeBtn.MouseButton1Click:Connect(function()
+	setOpen(false)
+end)
+
+updateStatusText()
