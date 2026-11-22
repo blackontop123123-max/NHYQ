@@ -164,6 +164,7 @@ local Whitelist = {
     "hokhxohdkudkudkdkyd",
     "balalawi",
     "3AW_111",
+    "tariq191188",
 }
 
 local isAllowed = false
