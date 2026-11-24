@@ -1,10 +1,9 @@
 --====================================================================--
---  🛡️ NHYQ LOG SYSTEM | أحمر وأسود • بحث مرن • By shs09qp23        --
+--  🛡️ NHYQ LOG SYSTEM v3.5 | أحمر وأسود • قلم الاسم + زر الحذف • By shs09qp23 --
 --====================================================================--
 
 local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
 local LocalPlayer = Players.LocalPlayer
@@ -12,19 +11,42 @@ local LocalPlayer = Players.LocalPlayer
 local MonitoredPlayers = {}
 local PlayerHistory = {}
 local PlayerTimers = {}
+local SavedLogsByUser = {} -- [userId] = { entries... } خاصة بكل لاعب فقط
+local IsRecordingVideo = false
+local LogCounter = 0
+local CustomLogTitle = "لوق اللاعبين"
 
--- 🔴 أصول وألوان نظام NHYQ (أحمر وأسود)
+local DEFAULT_AVATAR = "rbxassetid://139930568"
+local LOG_SNAP_ICON = "rbxassetid://5554236805"
+
 local THEME = {
-    Main = Color3.fromHex("#E50914"),   -- أحمر جريء
-    Light = Color3.fromHex("#FF3333"),  -- أحمر فاتح للتوهج
-    Dark = Color3.fromHex("#0F0F0F")    -- أسود داكن
+    Main = Color3.fromHex("#E50914"),
+    Light = Color3.fromHex("#FF3333"),
+    Dark = Color3.fromHex("#0F0F0F"),
+    Card = Color3.fromRGB(16, 16, 16),
+    TabActive = Color3.fromHex("#E50914"),
+    TabInactive = Color3.fromRGB(24, 24, 24)
 }
 
--- [ دالة السحب السلسة ]
+local function GetOwnerId()
+    if LocalPlayer and LocalPlayer.UserId and LocalPlayer.UserId > 0 then
+        return LocalPlayer.UserId
+    end
+    return 0
+end
+
+local function GetOwnerLogs()
+    local ownerId = GetOwnerId()
+    if not SavedLogsByUser[ownerId] then
+        SavedLogsByUser[ownerId] = {}
+    end
+    return SavedLogsByUser[ownerId]
+end
+
 local function MakeDraggable(Frame, DragAnchor)
     local Dragging = false
     local DragInput, DragStart, StartPosition
-    
+
     DragAnchor.InputBegan:Connect(function(Input)
         if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
             Dragging = true
@@ -37,13 +59,13 @@ local function MakeDraggable(Frame, DragAnchor)
             end)
         end
     end)
-    
+
     DragAnchor.InputChanged:Connect(function(Input)
         if Input.UserInputType == Enum.UserInputType.MouseMovement or Input.UserInputType == Enum.UserInputType.Touch then
             DragInput = Input
         end
     end)
-    
+
     UserInputService.InputChanged:Connect(function(Input)
         if Input == DragInput and Dragging then
             local Delta = Input.Position - DragStart
@@ -55,22 +77,21 @@ local function MakeDraggable(Frame, DragAnchor)
     end)
 end
 
--- دالة جلب صورة اللاعب
 local function GetAvatar(userId, imageLabel)
     if not userId or userId <= 0 then
-        imageLabel.Image = "rbxassetid://139930568"
+        imageLabel.Image = DEFAULT_AVATAR
         return
     end
     pcall(function()
         local img = Players:GetUserThumbnailAsync(userId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size100x100)
-        imageLabel.Image = img or "rbxassetid://139930568"
+        imageLabel.Image = img or DEFAULT_AVATAR
     end)
 end
 
--- إنشاء الواجهة
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "NhyqLogSystem"
 ScreenGui.ResetOnSpawn = false
+ScreenGui.DisplayOrder = 50
 
 if getgui then
     ScreenGui.Parent = getgui()
@@ -79,6 +100,81 @@ elseif syn and syn.protect_gui then
     ScreenGui.Parent = CoreGui
 else
     ScreenGui.Parent = CoreGui:FindFirstChild("RobloxGui") or LocalPlayer:WaitForChild("PlayerGui")
+end
+
+-- =============================================
+-- 🔔 إشعار فوري عند الالتقاط (يفتح قائمة اللقطة عند الضغط)
+-- =============================================
+local PreviewModal
+
+local function ShowCaptureToast(mainText, subText, logEntry)
+    local Toast = Instance.new("TextButton")
+    Toast.Name = "CaptureToast"
+    Toast.Parent = ScreenGui
+    Toast.Size = UDim2.new(0, 265, 0, 74)
+    Toast.Position = UDim2.new(1, -280, 1, -92)
+    Toast.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    Toast.Text = ""
+    Toast.AutoButtonColor = false
+    Toast.ZIndex = 100
+
+    Instance.new("UICorner", Toast).CornerRadius = UDim.new(0, 10)
+    local Stroke = Instance.new("UIStroke")
+    Stroke.Parent = Toast
+    Stroke.Color = THEME.Main
+    Stroke.Thickness = 2
+
+    local Thumb = Instance.new("ImageLabel")
+    Thumb.Parent = Toast
+    Thumb.Size = UDim2.new(0, 52, 0, 52)
+    Thumb.Position = UDim2.new(0, 10, 0.5, -26)
+    Thumb.BackgroundColor3 = Color3.fromRGB(28, 12, 12)
+    Thumb.Image = LOG_SNAP_ICON
+    Thumb.ImageColor3 = THEME.Light
+    Thumb.ZIndex = 101
+    Instance.new("UICorner", Thumb).CornerRadius = UDim.new(0, 8)
+
+    local Title = Instance.new("TextLabel")
+    Title.Parent = Toast
+    Title.Size = UDim2.new(1, -74, 0, 20)
+    Title.Position = UDim2.new(0, 68, 0, 12)
+    Title.BackgroundTransparency = 1
+    Title.Text = mainText
+    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Title.Font = Enum.Font.GothamBlack
+    Title.TextSize = 12
+    Title.TextXAlignment = Enum.TextXAlignment.Right
+    Title.ZIndex = 101
+
+    local Sub = Instance.new("TextLabel")
+    Sub.Parent = Toast
+    Sub.Size = UDim2.new(1, -74, 0, 28)
+    Sub.Position = UDim2.new(0, 68, 0, 34)
+    Sub.BackgroundTransparency = 1
+    Sub.Text = subText .. " (اضغط لفتح القائمة)"
+    Sub.TextColor3 = Color3.fromRGB(220, 160, 160)
+    Sub.Font = Enum.Font.GothamBold
+    Sub.TextSize = 10
+    Sub.TextWrapped = true
+    Sub.TextXAlignment = Enum.TextXAlignment.Right
+    Sub.ZIndex = 101
+
+    Toast.MouseButton1Click:Connect(function()
+        if logEntry and logEntry.OwnerId == GetOwnerId() and PreviewModal then
+            PreviewModal(logEntry)
+        end
+    end)
+
+    task.delay(4.5, function()
+        if Toast and Toast.Parent then
+            local fade = TweenService:Create(Toast, TweenInfo.new(0.35), {Position = UDim2.new(1, 20, 1, -92)})
+            fade:Play()
+            fade.Completed:Wait()
+            if Toast and Toast.Parent then
+                Toast:Destroy()
+            end
+        end
+    end)
 end
 
 -- =============================================
@@ -96,7 +192,6 @@ ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 ToggleButton.Font = Enum.Font.GothamBlack
 ToggleButton.TextSize = 13
 ToggleButton.Active = true
-ToggleButton.Draggable = true
 ToggleButton.ClipsDescendants = false
 
 Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(0, 18)
@@ -130,7 +225,7 @@ local GlowBg = Instance.new("ImageLabel")
 GlowBg.Size = UDim2.new(1.6, 0, 1.6, 0)
 GlowBg.Position = UDim2.new(-0.3, 0, -0.3, 0)
 GlowBg.BackgroundTransparency = 1
-GlowBg.Image = "rbxassetid://5554236805"
+GlowBg.Image = LOG_SNAP_ICON
 GlowBg.ImageColor3 = THEME.Main
 GlowBg.ImageTransparency = 0.5
 GlowBg.ScaleType = Enum.ScaleType.Slice
@@ -169,13 +264,13 @@ ToggleButton.MouseButton1Up:Connect(function()
 end)
 
 -- =============================================
--- 🔴 اللوحة الرئيسية
+-- 🔴 اللوحة الرئيسية (قائمة السكربت الأصلية)
 -- =============================================
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Parent = ScreenGui
-MainFrame.Size = UDim2.new(0, 460, 0, 350)
-MainFrame.Position = UDim2.new(0.5, -230, 0.4, -175)
+MainFrame.Size = UDim2.new(0, 480, 0, 385)
+MainFrame.Position = UDim2.new(0.5, -240, 0.42, -192)
 MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 MainFrame.Visible = false
 
@@ -185,43 +280,165 @@ MainStroke.Parent = MainFrame
 MainStroke.Color = THEME.Main
 MainStroke.Thickness = 2
 
-local DragHeader = Instance.new("Frame")
-DragHeader.Parent = MainFrame
-DragHeader.Size = UDim2.new(1, 0, 0, 40)
-DragHeader.BackgroundTransparency = 1
-MakeDraggable(MainFrame, DragHeader)
+local TopBar = Instance.new("Frame")
+TopBar.Parent = MainFrame
+TopBar.Size = UDim2.new(1, 0, 0, 46)
+TopBar.BackgroundTransparency = 1
+MakeDraggable(MainFrame, TopBar)
 
-local TitleLabel = Instance.new("TextLabel")
-TitleLabel.Parent = MainFrame
-TitleLabel.Size = UDim2.new(1, 0, 0, 20)
-TitleLabel.Position = UDim2.new(0, 0, 0, 10)
-TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "لوق دخول وخروج اللاعبين"
-TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-TitleLabel.Font = Enum.Font.GothamBlack
-TitleLabel.TextSize = 16
+local PhotoBtn = Instance.new("TextButton")
+PhotoBtn.Name = "PhotoCaptureButton"
+PhotoBtn.Parent = TopBar
+PhotoBtn.Size = UDim2.new(0, 108, 0, 28)
+PhotoBtn.Position = UDim2.new(0, 12, 0, 9)
+PhotoBtn.BackgroundColor3 = Color3.fromRGB(26, 12, 12)
+PhotoBtn.Text = "📷 التقاط صورة"
+PhotoBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+PhotoBtn.Font = Enum.Font.GothamBold
+PhotoBtn.TextSize = 11
+Instance.new("UICorner", PhotoBtn).CornerRadius = UDim.new(0, 7)
+local PhotoStroke = Instance.new("UIStroke")
+PhotoStroke.Parent = PhotoBtn
+PhotoStroke.Color = THEME.Main
 
-local SubtitleLabel = Instance.new("TextLabel")
-SubtitleLabel.Parent = MainFrame
-SubtitleLabel.Size = UDim2.new(1, 0, 0, 15)
-SubtitleLabel.Position = UDim2.new(0, 0, 0, 30)
-SubtitleLabel.BackgroundTransparency = 1
-SubtitleLabel.Text = "NHYQ Log v2 | By shs09qp23"
-SubtitleLabel.TextColor3 = THEME.Main
-SubtitleLabel.Font = Enum.Font.GothamBold
-SubtitleLabel.TextSize = 11
+local VideoBtn = Instance.new("TextButton")
+VideoBtn.Name = "VideoRecordButton"
+VideoBtn.Parent = TopBar
+VideoBtn.Size = UDim2.new(0, 118, 0, 28)
+VideoBtn.Position = UDim2.new(0, 126, 0, 9)
+VideoBtn.BackgroundColor3 = Color3.fromRGB(26, 12, 12)
+VideoBtn.Text = "🎥 تصوير فيد (5ث)"
+VideoBtn.TextColor3 = Color3.fromRGB(255, 210, 210)
+VideoBtn.Font = Enum.Font.GothamBold
+VideoBtn.TextSize = 11
+Instance.new("UICorner", VideoBtn).CornerRadius = UDim.new(0, 7)
+local VideoStroke = Instance.new("UIStroke")
+VideoStroke.Parent = VideoBtn
+VideoStroke.Color = THEME.Light
+
+-- اسم اللوق + أيقونة القلم ✏️ لتغيير اسم اللوق
+local LogNameDisplay = Instance.new("TextLabel")
+LogNameDisplay.Parent = TopBar
+LogNameDisplay.Size = UDim2.new(0, 130, 0, 28)
+LogNameDisplay.Position = UDim2.new(1, -172, 0, 9)
+LogNameDisplay.BackgroundTransparency = 1
+LogNameDisplay.Text = CustomLogTitle
+LogNameDisplay.TextColor3 = Color3.fromRGB(255, 255, 255)
+LogNameDisplay.Font = Enum.Font.GothamBlack
+LogNameDisplay.TextSize = 12
+LogNameDisplay.TextXAlignment = Enum.TextXAlignment.Right
+
+local EditNamePenBtn = Instance.new("TextButton")
+EditNamePenBtn.Name = "EditLogNamePen"
+EditNamePenBtn.Parent = TopBar
+EditNamePenBtn.Size = UDim2.new(0, 28, 0, 28)
+EditNamePenBtn.Position = UDim2.new(1, -38, 0, 9)
+EditNamePenBtn.BackgroundColor3 = Color3.fromRGB(26, 12, 12)
+EditNamePenBtn.Text = "✏️"
+EditNamePenBtn.TextColor3 = THEME.Light
+EditNamePenBtn.Font = Enum.Font.GothamBold
+EditNamePenBtn.TextSize = 12
+Instance.new("UICorner", EditNamePenBtn).CornerRadius = UDim.new(0, 7)
+local PenStroke = Instance.new("UIStroke")
+PenStroke.Parent = EditNamePenBtn
+PenStroke.Color = THEME.Main
+
+local RenameBox = Instance.new("TextBox")
+RenameBox.Name = "RenameLogBox"
+RenameBox.Parent = TopBar
+RenameBox.Size = UDim2.new(0, 160, 0, 28)
+RenameBox.Position = UDim2.new(1, -172, 0, 9)
+RenameBox.BackgroundColor3 = Color3.fromRGB(22, 14, 14)
+RenameBox.Text = CustomLogTitle
+RenameBox.PlaceholderText = "اكتب اسم اللوق..."
+RenameBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+RenameBox.PlaceholderColor3 = Color3.fromRGB(150, 80, 80)
+RenameBox.Font = Enum.Font.GothamBold
+RenameBox.TextSize = 11
+RenameBox.TextXAlignment = Enum.TextXAlignment.Right
+RenameBox.Visible = false
+Instance.new("UICorner", RenameBox).CornerRadius = UDim.new(0, 7)
+local RenameStroke = Instance.new("UIStroke")
+RenameStroke.Parent = RenameBox
+RenameStroke.Color = THEME.Light
+
+local SnapHeader
+
+local function ApplyCustomLogTitle(newTitle)
+    local cleaned = newTitle:gsub("^%s*(.-)%s*$", "%1")
+    if #cleaned > 0 then
+        CustomLogTitle = cleaned
+    end
+    LogNameDisplay.Text = CustomLogTitle
+    RenameBox.Text = CustomLogTitle
+    if SnapHeader then
+        SnapHeader.Text = CustomLogTitle .. " • NHYQ Log"
+    end
+end
+
+EditNamePenBtn.MouseButton1Click:Connect(function()
+    LogNameDisplay.Visible = false
+    RenameBox.Text = CustomLogTitle
+    RenameBox.Visible = true
+    RenameBox:CaptureFocus()
+end)
+
+RenameBox.FocusLost:Connect(function()
+    if not RenameBox.Visible then return end
+    ApplyCustomLogTitle(RenameBox.Text)
+    RenameBox.Visible = false
+    LogNameDisplay.Visible = true
+end)
+
+-- التبويبان: (لوق اللاعبين) و (مكان حفظ اللوقات)
+local TabsBar = Instance.new("Frame")
+TabsBar.Parent = MainFrame
+TabsBar.Size = UDim2.new(1, -24, 0, 32)
+TabsBar.Position = UDim2.new(0, 12, 0, 48)
+TabsBar.BackgroundTransparency = 1
+
+local TabPlayersBtn = Instance.new("TextButton")
+TabPlayersBtn.Parent = TabsBar
+TabPlayersBtn.Size = UDim2.new(0.5, -5, 1, 0)
+TabPlayersBtn.Position = UDim2.new(0, 0, 0, 0)
+TabPlayersBtn.BackgroundColor3 = THEME.TabActive
+TabPlayersBtn.Text = "لوق اللاعبين"
+TabPlayersBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+TabPlayersBtn.Font = Enum.Font.GothamBlack
+TabPlayersBtn.TextSize = 12
+Instance.new("UICorner", TabPlayersBtn).CornerRadius = UDim.new(0, 8)
+
+local TabStorageBtn = Instance.new("TextButton")
+TabStorageBtn.Parent = TabsBar
+TabStorageBtn.Size = UDim2.new(0.5, -5, 1, 0)
+TabStorageBtn.Position = UDim2.new(0.5, 5, 0, 0)
+TabStorageBtn.BackgroundColor3 = THEME.TabInactive
+TabStorageBtn.Text = "مكان حفظ اللوقات"
+TabStorageBtn.TextColor3 = Color3.fromRGB(220, 170, 170)
+TabStorageBtn.Font = Enum.Font.GothamBlack
+TabStorageBtn.TextSize = 12
+Instance.new("UICorner", TabStorageBtn).CornerRadius = UDim.new(0, 8)
 
 local Line = Instance.new("Frame")
 Line.Parent = MainFrame
-Line.Size = UDim2.new(0, 420, 0, 1)
-Line.Position = UDim2.new(0.5, -210, 0, 50)
+Line.Size = UDim2.new(1, -24, 0, 1)
+Line.Position = UDim2.new(0, 12, 0, 86)
 Line.BackgroundColor3 = Color3.fromRGB(60, 10, 10)
 
--- مربع البحث المرن (بالحروف أو جزء من الاسم)
+-- =============================================
+-- 📄 تبويب 1: لوق اللاعبين
+-- =============================================
+local PlayersPage = Instance.new("Frame")
+PlayersPage.Parent = MainFrame
+PlayersPage.Size = UDim2.new(1, -24, 0, 288)
+PlayersPage.Position = UDim2.new(0, 12, 0, 92)
+PlayersPage.BackgroundTransparency = 1
+PlayersPage.Visible = true
+
 local SearchBox = Instance.new("TextBox")
-SearchBox.Parent = MainFrame
-SearchBox.Size = UDim2.new(0, 340, 0, 34)
-SearchBox.Position = UDim2.new(0.5, -170, 0, 58)
+SearchBox.Parent = PlayersPage
+SearchBox.Size = UDim2.new(1, -20, 0, 34)
+SearchBox.Position = UDim2.new(0, 10, 0, 0)
 SearchBox.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 SearchBox.PlaceholderText = "ابحث وأضف أي عدد من اللاعبين..."
 SearchBox.Text = ""
@@ -229,7 +446,6 @@ SearchBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 SearchBox.PlaceholderColor3 = Color3.fromRGB(120, 50, 50)
 SearchBox.Font = Enum.Font.GothamBold
 SearchBox.TextSize = 12
-
 Instance.new("UICorner", SearchBox).CornerRadius = UDim.new(0, 8)
 
 local SearchStroke = Instance.new("UIStroke")
@@ -238,9 +454,9 @@ SearchStroke.Thickness = 1
 SearchStroke.Parent = SearchBox
 
 local Container = Instance.new("ScrollingFrame")
-Container.Parent = MainFrame
-Container.Size = UDim2.new(0, 420, 0, 230)
-Container.Position = UDim2.new(0.5, -210, 0, 102)
+Container.Parent = PlayersPage
+Container.Size = UDim2.new(1, -20, 0, 244)
+Container.Position = UDim2.new(0, 10, 0, 42)
 Container.BackgroundTransparency = 1
 Container.ScrollBarThickness = 3
 Container.ScrollBarImageColor3 = THEME.Main
@@ -252,10 +468,503 @@ UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
     Container.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y)
 end)
 
-ToggleButton.MouseButton1Click:Connect(function()
-    MainFrame.Visible = not MainFrame.Visible
+-- =============================================
+-- 📁 تبويب 2: مكان حفظ اللوقات (خاصة بكل لاعب + إمكانية الحذف)
+-- =============================================
+local StoragePage = Instance.new("Frame")
+StoragePage.Parent = MainFrame
+StoragePage.Size = UDim2.new(1, -24, 0, 288)
+StoragePage.Position = UDim2.new(0, 12, 0, 92)
+StoragePage.BackgroundTransparency = 1
+StoragePage.Visible = false
+
+local StorageInfo = Instance.new("TextLabel")
+StorageInfo.Parent = StoragePage
+StorageInfo.Size = UDim2.new(1, -20, 0, 24)
+StorageInfo.Position = UDim2.new(0, 10, 0, 0)
+StorageInfo.BackgroundTransparency = 1
+StorageInfo.Text = "لقطاتك الخاصة (فيد أقصى مدة 5 ثوانٍ • فتح أو حذف)"
+StorageInfo.TextColor3 = Color3.fromRGB(220, 170, 170)
+StorageInfo.Font = Enum.Font.GothamBold
+StorageInfo.TextSize = 11
+StorageInfo.TextXAlignment = Enum.TextXAlignment.Right
+
+local StorageScroll = Instance.new("ScrollingFrame")
+StorageScroll.Parent = StoragePage
+StorageScroll.Size = UDim2.new(1, -20, 0, 256)
+StorageScroll.Position = UDim2.new(0, 10, 0, 28)
+StorageScroll.BackgroundTransparency = 1
+StorageScroll.ScrollBarThickness = 3
+StorageScroll.ScrollBarImageColor3 = THEME.Main
+
+local StorageLayout = Instance.new("UIListLayout")
+StorageLayout.Parent = StorageScroll
+StorageLayout.Padding = UDim.new(0, 8)
+StorageLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    StorageScroll.CanvasSize = UDim2.new(0, 0, 0, StorageLayout.AbsoluteContentSize.Y)
 end)
 
+local function RemoveSavedLogForCurrentPlayer(entryId)
+    local ownerId = GetOwnerId()
+    local ownerLogs = GetOwnerLogs()
+    for i = #ownerLogs, 1, -1 do
+        local item = ownerLogs[i]
+        if item.Id == entryId and item.OwnerId == ownerId then
+            table.remove(ownerLogs, i)
+            break
+        end
+    end
+end
+
+local function RefreshStorageForCurrentPlayer()
+    for _, child in ipairs(StorageScroll:GetChildren()) do
+        if child:IsA("Frame") then
+            child:Destroy()
+        end
+    end
+
+    local currentOwnerId = GetOwnerId()
+    local ownerLogs = GetOwnerLogs()
+
+    for _, entry in ipairs(ownerLogs) do
+        if entry.OwnerId == currentOwnerId then
+            local Card = Instance.new("Frame")
+            Card.Parent = StorageScroll
+            Card.Size = UDim2.new(1, -6, 0, 74)
+            Card.BackgroundColor3 = THEME.Card
+            Instance.new("UICorner", Card).CornerRadius = UDim.new(0, 8)
+            local Stroke = Instance.new("UIStroke")
+            Stroke.Parent = Card
+            Stroke.Color = Color3.fromRGB(60, 20, 20)
+
+            local Thumb = Instance.new("ImageLabel")
+            Thumb.Parent = Card
+            Thumb.Size = UDim2.new(0, 52, 0, 52)
+            Thumb.Position = UDim2.new(0, 10, 0.5, -26)
+            Thumb.BackgroundColor3 = Color3.fromRGB(28, 12, 12)
+            Thumb.Image = LOG_SNAP_ICON
+            Thumb.ImageColor3 = THEME.Light
+            Instance.new("UICorner", Thumb).CornerRadius = UDim.new(0, 6)
+
+            local Title = Instance.new("TextLabel")
+            Title.Parent = Card
+            Title.Size = UDim2.new(1, -155, 0, 20)
+            Title.Position = UDim2.new(0, 70, 0, 12)
+            Title.BackgroundTransparency = 1
+            Title.Text = entry.Title
+            Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Title.Font = Enum.Font.GothamBlack
+            Title.TextSize = 12
+            Title.TextXAlignment = Enum.TextXAlignment.Right
+
+            local Info = Instance.new("TextLabel")
+            Info.Parent = Card
+            Info.Size = UDim2.new(1, -155, 0, 26)
+            Info.Position = UDim2.new(0, 70, 0, 34)
+            Info.BackgroundTransparency = 1
+            Info.Text = entry.ShortInfo
+            Info.TextColor3 = Color3.fromRGB(205, 160, 160)
+            Info.Font = Enum.Font.GothamBold
+            Info.TextSize = 10
+            Info.TextXAlignment = Enum.TextXAlignment.Right
+
+            local OpenBtn = Instance.new("TextButton")
+            OpenBtn.Parent = Card
+            OpenBtn.Size = UDim2.new(0, 68, 0, 26)
+            OpenBtn.Position = UDim2.new(1, -78, 0, 12)
+            OpenBtn.BackgroundColor3 = THEME.Main
+            OpenBtn.Text = "فتح"
+            OpenBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            OpenBtn.Font = Enum.Font.GothamBold
+            OpenBtn.TextSize = 11
+            Instance.new("UICorner", OpenBtn).CornerRadius = UDim.new(0, 6)
+
+            local DelBtn = Instance.new("TextButton")
+            DelBtn.Parent = Card
+            DelBtn.Size = UDim2.new(0, 68, 0, 22)
+            DelBtn.Position = UDim2.new(1, -78, 0, 42)
+            DelBtn.BackgroundColor3 = Color3.fromRGB(35, 12, 12)
+            DelBtn.Text = "حذف"
+            DelBtn.TextColor3 = Color3.fromRGB(255, 180, 180)
+            DelBtn.Font = Enum.Font.GothamBold
+            DelBtn.TextSize = 10
+            Instance.new("UICorner", DelBtn).CornerRadius = UDim.new(0, 6)
+
+            OpenBtn.MouseButton1Click:Connect(function()
+                if entry.OwnerId == GetOwnerId() and PreviewModal then
+                    PreviewModal(entry)
+                end
+            end)
+
+            DelBtn.MouseButton1Click:Connect(function()
+                if entry.OwnerId == GetOwnerId() then
+                    RemoveSavedLogForCurrentPlayer(entry.Id)
+                    Card:Destroy()
+                end
+            end)
+        end
+    end
+end
+
+local function SwitchTab(isPlayers)
+    PlayersPage.Visible = isPlayers
+    StoragePage.Visible = not isPlayers
+    TabPlayersBtn.BackgroundColor3 = isPlayers and THEME.TabActive or THEME.TabInactive
+    TabStorageBtn.BackgroundColor3 = (not isPlayers) and THEME.TabActive or THEME.TabInactive
+    if not isPlayers then
+        RefreshStorageForCurrentPlayer()
+    end
+end
+
+TabPlayersBtn.MouseButton1Click:Connect(function()
+    SwitchTab(true)
+end)
+
+TabStorageBtn.MouseButton1Click:Connect(function()
+    SwitchTab(false)
+end)
+
+ToggleButton.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+    if MainFrame.Visible and StoragePage.Visible then
+        RefreshStorageForCurrentPlayer()
+    end
+end)
+
+-- =============================================
+-- 📋 التقاط حالة قائمة السكربت فقط (واضحة وبنفس شكل القائمة)
+-- =============================================
+local function CaptureScriptMenuFrame()
+    local items = {}
+    for name, data in pairs(MonitoredPlayers) do
+        local targetPlayer = Players:FindFirstChild(name)
+        local userId = targetPlayer and targetPlayer.UserId or 0
+        local displayName = targetPlayer and targetPlayer.DisplayName or name
+        local hist = PlayerHistory[name] or { Joins = 0, Leaves = 0 }
+        local timerText = data.TimerLabel and data.TimerLabel.Text or "⏱️ الوقت: 00:00"
+        local statusText = data.StatusLabel and data.StatusLabel.Text or "غير معروف"
+        local statusColor = data.StatusLabel and data.StatusLabel.TextColor3 or Color3.fromRGB(220, 170, 170)
+
+        table.insert(items, {
+            Name = name,
+            DisplayName = displayName,
+            UserId = userId,
+            Joins = hist.Joins,
+            Leaves = hist.Leaves,
+            TimerText = timerText,
+            StatusText = statusText,
+            StatusColor = statusColor
+        })
+    end
+
+    table.sort(items, function(a, b)
+        return a.Name < b.Name
+    end)
+
+    return {
+        LogTitle = CustomLogTitle,
+        CapturedAt = os.date("%H:%M:%S"),
+        Players = items
+    }
+end
+
+-- =============================================
+-- 🖼️ نافذة عرض لقطة قائمة السكربت الأصلية (صورة أو فيد 5ث)
+-- =============================================
+local ViewerBackdrop = Instance.new("Frame")
+ViewerBackdrop.Parent = ScreenGui
+ViewerBackdrop.Size = UDim2.new(1, 0, 1, 0)
+ViewerBackdrop.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+ViewerBackdrop.BackgroundTransparency = 0.5
+ViewerBackdrop.Visible = false
+ViewerBackdrop.ZIndex = 80
+
+local ViewerBox = Instance.new("Frame")
+ViewerBox.Parent = ViewerBackdrop
+ViewerBox.Size = UDim2.new(0, 440, 0, 325)
+ViewerBox.Position = UDim2.new(0.5, -220, 0.5, -162)
+ViewerBox.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+ViewerBox.ZIndex = 81
+Instance.new("UICorner", ViewerBox).CornerRadius = UDim.new(0, 12)
+local ViewerStroke = Instance.new("UIStroke")
+ViewerStroke.Parent = ViewerBox
+ViewerStroke.Color = THEME.Main
+ViewerStroke.Thickness = 2
+
+local ViewerTitle = Instance.new("TextLabel")
+ViewerTitle.Parent = ViewerBox
+ViewerTitle.Size = UDim2.new(1, -155, 0, 28)
+ViewerTitle.Position = UDim2.new(0, 12, 0, 8)
+ViewerTitle.BackgroundTransparency = 1
+ViewerTitle.Text = ""
+ViewerTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+ViewerTitle.Font = Enum.Font.GothamBlack
+ViewerTitle.TextSize = 12
+ViewerTitle.TextXAlignment = Enum.TextXAlignment.Right
+ViewerTitle.ZIndex = 82
+
+local ViewerBadge = Instance.new("TextLabel")
+ViewerBadge.Parent = ViewerBox
+ViewerBadge.Size = UDim2.new(0, 82, 0, 24)
+ViewerBadge.Position = UDim2.new(1, -148, 0, 10)
+ViewerBadge.BackgroundColor3 = Color3.fromRGB(28, 12, 12)
+ViewerBadge.Text = ""
+ViewerBadge.TextColor3 = THEME.Light
+ViewerBadge.Font = Enum.Font.GothamBold
+ViewerBadge.TextSize = 10
+ViewerBadge.ZIndex = 82
+Instance.new("UICorner", ViewerBadge).CornerRadius = UDim.new(0, 6)
+
+local CloseViewerBtn = Instance.new("TextButton")
+CloseViewerBtn.Parent = ViewerBox
+CloseViewerBtn.Size = UDim2.new(0, 54, 0, 26)
+CloseViewerBtn.Position = UDim2.new(1, -64, 0, 9)
+CloseViewerBtn.BackgroundColor3 = THEME.Main
+CloseViewerBtn.Text = "إغلاق"
+CloseViewerBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseViewerBtn.Font = Enum.Font.GothamBold
+CloseViewerBtn.TextSize = 11
+CloseViewerBtn.ZIndex = 82
+Instance.new("UICorner", CloseViewerBtn).CornerRadius = UDim.new(0, 6)
+
+local MenuSnapCanvas = Instance.new("Frame")
+MenuSnapCanvas.Parent = ViewerBox
+MenuSnapCanvas.Size = UDim2.new(1, -24, 0, 268)
+MenuSnapCanvas.Position = UDim2.new(0, 12, 0, 44)
+MenuSnapCanvas.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+MenuSnapCanvas.ZIndex = 82
+Instance.new("UICorner", MenuSnapCanvas).CornerRadius = UDim.new(0, 10)
+local SnapStroke = Instance.new("UIStroke")
+SnapStroke.Parent = MenuSnapCanvas
+SnapStroke.Color = THEME.Main
+SnapStroke.Thickness = 1.5
+
+SnapHeader = Instance.new("TextLabel")
+SnapHeader.Parent = MenuSnapCanvas
+SnapHeader.Size = UDim2.new(1, -16, 0, 24)
+SnapHeader.Position = UDim2.new(0, 8, 0, 6)
+SnapHeader.BackgroundTransparency = 1
+SnapHeader.Text = CustomLogTitle .. " • NHYQ Log"
+SnapHeader.TextColor3 = Color3.fromRGB(255, 255, 255)
+SnapHeader.Font = Enum.Font.GothamBlack
+SnapHeader.TextSize = 12
+SnapHeader.TextXAlignment = Enum.TextXAlignment.Right
+SnapHeader.ZIndex = 83
+
+local SnapLine = Instance.new("Frame")
+SnapLine.Parent = MenuSnapCanvas
+SnapLine.Size = UDim2.new(1, -16, 0, 1)
+SnapLine.Position = UDim2.new(0, 8, 0, 32)
+SnapLine.BackgroundColor3 = Color3.fromRGB(70, 15, 15)
+SnapLine.ZIndex = 83
+
+local SnapCardsScroll = Instance.new("ScrollingFrame")
+SnapCardsScroll.Parent = MenuSnapCanvas
+SnapCardsScroll.Size = UDim2.new(1, -16, 0, 224)
+SnapCardsScroll.Position = UDim2.new(0, 8, 0, 38)
+SnapCardsScroll.BackgroundTransparency = 1
+SnapCardsScroll.ScrollBarThickness = 3
+SnapCardsScroll.ScrollBarImageColor3 = THEME.Main
+SnapCardsScroll.ZIndex = 83
+
+local SnapListLayout = Instance.new("UIListLayout")
+SnapListLayout.Parent = SnapCardsScroll
+SnapListLayout.Padding = UDim.new(0, 6)
+SnapListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    SnapCardsScroll.CanvasSize = UDim2.new(0, 0, 0, SnapListLayout.AbsoluteContentSize.Y)
+end)
+
+local function RenderMenuFrameIntoViewer(frameData, badgeText)
+    local titleToShow = frameData.LogTitle or CustomLogTitle
+    ViewerBadge.Text = badgeText or frameData.CapturedAt
+    SnapHeader.Text = titleToShow .. " • وقت اللقطة: " .. frameData.CapturedAt
+
+    for _, child in ipairs(SnapCardsScroll:GetChildren()) do
+        if child:IsA("Frame") or child:IsA("TextLabel") then
+            child:Destroy()
+        end
+    end
+
+    if #frameData.Players == 0 then
+        local EmptyMsg = Instance.new("TextLabel")
+        EmptyMsg.Parent = SnapCardsScroll
+        EmptyMsg.Size = UDim2.new(1, 0, 0, 60)
+        EmptyMsg.BackgroundTransparency = 1
+        EmptyMsg.Text = "لا يوجد لاعبون مضافون في قائمة اللوق وقت الالتقاط."
+        EmptyMsg.TextColor3 = Color3.fromRGB(200, 150, 150)
+        EmptyMsg.Font = Enum.Font.GothamBold
+        EmptyMsg.TextSize = 11
+        EmptyMsg.ZIndex = 84
+        return
+    end
+
+    for _, p in ipairs(frameData.Players) do
+        local MiniCard = Instance.new("Frame")
+        MiniCard.Parent = SnapCardsScroll
+        MiniCard.Size = UDim2.new(1, -6, 0, 68)
+        MiniCard.BackgroundColor3 = Color3.fromRGB(16, 16, 16)
+        MiniCard.ZIndex = 84
+        Instance.new("UICorner", MiniCard).CornerRadius = UDim.new(0, 8)
+        local MStroke = Instance.new("UIStroke")
+        MStroke.Parent = MiniCard
+        MStroke.Color = Color3.fromRGB(65, 20, 20)
+
+        local Av = Instance.new("ImageLabel")
+        Av.Parent = MiniCard
+        Av.Size = UDim2.new(0, 42, 0, 42)
+        Av.Position = UDim2.new(0, 10, 0.5, -21)
+        Av.BackgroundColor3 = Color3.fromRGB(25, 15, 15)
+        Av.Image = DEFAULT_AVATAR
+        Av.ZIndex = 85
+        Instance.new("UICorner", Av).CornerRadius = UDim.new(0, 6)
+        GetAvatar(p.UserId, Av)
+
+        local NLabel = Instance.new("TextLabel")
+        NLabel.Parent = MiniCard
+        NLabel.Size = UDim2.new(0, 210, 0, 16)
+        NLabel.Position = UDim2.new(0, 60, 0, 8)
+        NLabel.BackgroundTransparency = 1
+        NLabel.Text = p.DisplayName .. " (@" .. p.Name .. ")"
+        NLabel.TextColor3 = Color3.fromRGB(255, 240, 240)
+        NLabel.Font = Enum.Font.GothamBold
+        NLabel.TextSize = 11
+        NLabel.TextXAlignment = Enum.TextXAlignment.Left
+        NLabel.ZIndex = 85
+
+        local SLabel = Instance.new("TextLabel")
+        SLabel.Parent = MiniCard
+        SLabel.Size = UDim2.new(0, 210, 0, 15)
+        SLabel.Position = UDim2.new(0, 60, 0, 26)
+        SLabel.BackgroundTransparency = 1
+        SLabel.Text = "🔢 الدخول: " .. p.Joins .. " | 🚪 الخروج: " .. p.Leaves
+        SLabel.TextColor3 = Color3.fromRGB(190, 150, 150)
+        SLabel.Font = Enum.Font.GothamBold
+        SLabel.TextSize = 10
+        SLabel.TextXAlignment = Enum.TextXAlignment.Left
+        SLabel.ZIndex = 85
+
+        local TLabel = Instance.new("TextLabel")
+        TLabel.Parent = MiniCard
+        TLabel.Size = UDim2.new(0, 210, 0, 15)
+        TLabel.Position = UDim2.new(0, 60, 0, 44)
+        TLabel.BackgroundTransparency = 1
+        TLabel.Text = p.TimerText
+        TLabel.TextColor3 = Color3.fromRGB(220, 175, 175)
+        TLabel.Font = Enum.Font.GothamBold
+        TLabel.TextSize = 10
+        TLabel.TextXAlignment = Enum.TextXAlignment.Left
+        TLabel.ZIndex = 85
+
+        local StLabel = Instance.new("TextLabel")
+        StLabel.Parent = MiniCard
+        StLabel.Size = UDim2.new(0, 120, 0, 18)
+        StLabel.Position = UDim2.new(1, -130, 0.5, -9)
+        StLabel.BackgroundTransparency = 1
+        StLabel.Text = p.StatusText
+        StLabel.TextColor3 = p.StatusColor
+        StLabel.Font = Enum.Font.GothamBold
+        StLabel.TextSize = 10
+        StLabel.TextXAlignment = Enum.TextXAlignment.Right
+        StLabel.ZIndex = 85
+    end
+end
+
+local activePlaybackToken = 0
+
+CloseViewerBtn.MouseButton1Click:Connect(function()
+    activePlaybackToken += 1
+    ViewerBackdrop.Visible = false
+end)
+
+PreviewModal = function(entry)
+    if not entry or entry.OwnerId ~= GetOwnerId() then return end
+    activePlaybackToken += 1
+    local token = activePlaybackToken
+    ViewerBackdrop.Visible = true
+    ViewerTitle.Text = entry.Title
+
+    if entry.Kind == "Photo" then
+        RenderMenuFrameIntoViewer(entry.FrameData, "صورة • " .. entry.Time)
+    else
+        task.spawn(function()
+            local frames = entry.Frames or {}
+            for i = 1, #frames do
+                if token ~= activePlaybackToken or not ViewerBackdrop.Visible or entry.OwnerId ~= GetOwnerId() then break end
+                RenderMenuFrameIntoViewer(frames[i], string.format("فيد %d/%dث", i, entry.Duration))
+                task.wait(1)
+            end
+            if token == activePlaybackToken and ViewerBackdrop.Visible and entry.OwnerId == GetOwnerId() and #frames > 0 then
+                RenderMenuFrameIntoViewer(frames[#frames], "انتهى (5ث)")
+            end
+        end)
+    end
+end
+
+local function SaveLogForCurrentPlayer(entry)
+    local ownerLogs = GetOwnerLogs()
+    table.insert(ownerLogs, entry)
+    if StoragePage.Visible then
+        RefreshStorageForCurrentPlayer()
+    end
+end
+
+PhotoBtn.MouseButton1Click:Connect(function()
+    local ownerId = GetOwnerId()
+    LogCounter += 1
+    local frameSnap = CaptureScriptMenuFrame()
+    local entry = {
+        Id = LogCounter,
+        OwnerId = ownerId,
+        Kind = "Photo",
+        Time = frameSnap.CapturedAt,
+        Title = "صورة (" .. CustomLogTitle .. ") #" .. LogCounter,
+        ShortInfo = "قائمة اللوق فقط • الوقت: " .. frameSnap.CapturedAt,
+        FrameData = frameSnap
+    }
+    SaveLogForCurrentPlayer(entry)
+    ShowCaptureToast("تم التقاط الصورة", entry.Title, entry)
+end)
+
+VideoBtn.MouseButton1Click:Connect(function()
+    if IsRecordingVideo then return end
+    IsRecordingVideo = true
+    local ownerId = GetOwnerId()
+    local maxSeconds = 5
+
+    task.spawn(function()
+        local frames = {}
+        for sec = 1, maxSeconds do
+            VideoBtn.Text = string.format("⏺️ يصور (%d/5ث)", sec)
+            VideoBtn.BackgroundColor3 = THEME.Main
+            table.insert(frames, CaptureScriptMenuFrame())
+            task.wait(1)
+        end
+
+        LogCounter += 1
+        local lastFrame = frames[#frames] or CaptureScriptMenuFrame()
+        local entry = {
+            Id = LogCounter,
+            OwnerId = ownerId,
+            Kind = "Video",
+            Duration = maxSeconds,
+            Time = lastFrame.CapturedAt,
+            Title = "فيد (" .. CustomLogTitle .. ") #" .. LogCounter .. " (5ث)",
+            ShortInfo = "فيد قائمة اللوق (5ث حد أقصى) • الوقت: " .. lastFrame.CapturedAt,
+            Frames = frames
+        }
+        SaveLogForCurrentPlayer(entry)
+
+        VideoBtn.Text = "🎥 تصوير فيد (5ث)"
+        VideoBtn.BackgroundColor3 = Color3.fromRGB(26, 12, 12)
+        IsRecordingVideo = false
+
+        ShowCaptureToast("تم حفظ الفيد (5 ثوانٍ)", entry.Title, entry)
+    end)
+end)
+
+-- =============================================
+-- 👥 مراقبة اللاعبين والعداد
+-- =============================================
 local function ResetPlayerData(playerName)
     PlayerHistory[playerName] = { Joins = 0, Leaves = 0 }
     PlayerTimers[playerName] = { Start = os.time(), Running = true }
@@ -266,24 +975,24 @@ local function CreateMonitorCard(targetPlayer)
     if MonitoredPlayers[name] then return end
 
     ResetPlayerData(name)
-    
+
     local Card = Instance.new("Frame")
     Card.Name = name
     Card.Size = UDim2.new(1, -5, 0, 90)
     Card.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
     Card.Parent = Container
-    
+
     Instance.new("UICorner", Card).CornerRadius = UDim.new(0, 8)
     local CardStroke = Instance.new("UIStroke")
     CardStroke.Parent = Card
     CardStroke.Color = Color3.fromRGB(60, 20, 20)
-    
+
     local AvatarImage = Instance.new("ImageLabel")
     AvatarImage.Parent = Card
     AvatarImage.Size = UDim2.new(0, 48, 0, 48)
     AvatarImage.Position = UDim2.new(0, 10, 0, 10)
     AvatarImage.BackgroundColor3 = Color3.fromRGB(25, 15, 15)
-    AvatarImage.Image = "rbxassetid://139930568"
+    AvatarImage.Image = DEFAULT_AVATAR
     Instance.new("UICorner", AvatarImage).CornerRadius = UDim.new(0, 6)
     GetAvatar(targetPlayer.UserId, AvatarImage)
 
@@ -349,11 +1058,13 @@ local function CreateMonitorCard(targetPlayer)
     }
 
     task.spawn(function()
-        while MonitoredPlayers[name] and PlayerTimers[name].Running do
-            local diff = os.time() - PlayerTimers[name].Start
-            local min = math.floor(diff / 60)
-            local sec = diff % 60
-            TimerLabel.Text = string.format("⏱️ الوقت: %02d:%02d", min, sec)
+        while MonitoredPlayers[name] do
+            if PlayerTimers[name] and PlayerTimers[name].Running then
+                local diff = math.max(0, os.time() - PlayerTimers[name].Start)
+                local min = math.floor(diff / 60)
+                local sec = diff % 60
+                TimerLabel.Text = string.format("⏱️ الوقت: %02d:%02d", min, sec)
+            end
             task.wait(1)
         end
     end)
@@ -365,7 +1076,6 @@ local function CreateMonitorCard(targetPlayer)
     end)
 end
 
--- ✅ البحث المرن القديم (يبحث بجزء من الاسم أو اسم العرض ويضيفهم ويمسح خانة البحث)
 SearchBox.FocusLost:Connect(function()
     local searchText = SearchBox.Text:lower():gsub("^%s*(.-)%s*$", "%1")
     SearchBox.Text = ""
@@ -394,11 +1104,13 @@ Players.PlayerRemoving:Connect(function(player)
     local name = player.Name
     if MonitoredPlayers[name] then
         PlayerHistory[name].Leaves += 1
-        PlayerTimers[name].Running = false
+        if PlayerTimers[name] then
+            PlayerTimers[name].Running = false
+        end
         MonitoredPlayers[name].StatsLabel.Text = "🔢 الدخول: "..PlayerHistory[name].Joins.." | 🚪 الخروج: "..PlayerHistory[name].Leaves
         MonitoredPlayers[name].StatusLabel.Text = "🔴 غادر السيرفر"
         MonitoredPlayers[name].StatusLabel.TextColor3 = Color3.fromRGB(220, 80, 100)
     end
 end)
 
-print("✅ 🛡️ NHYQ LOG v2 • By shs09qp23 Ready ✅")
+print("✅ 🛡️ NHYQ LOG v3.5 • By shs09qp23 Ready ✅")
