@@ -1,4 +1,4 @@
--- NHYQ 3D Moto & 2P AI Arcade | By shs09qp23
+-- NHYQ 3D Moto & 2P AI Arcade (Fixed) | By shs09qp23
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
@@ -6,10 +6,24 @@ local Workspace = game:GetService("Workspace")
 
 local player = Players.LocalPlayer
 local camera = Workspace.CurrentCamera
-local parentGui = (gethui and gethui()) or CoreGui or player:WaitForChild("PlayerGui")
+
+local parentGui = nil
+pcall(function()
+	if gethui then
+		parentGui = gethui()
+	end
+end)
+if not parentGui then
+	pcall(function()
+		parentGui = CoreGui
+	end)
+end
+if not parentGui then
+	parentGui = player:WaitForChild("PlayerGui")
+end
 
 if parentGui:FindFirstChild("NHYQ_ProHub") then
-    parentGui.NHYQ_ProHub:Destroy()
+	parentGui.NHYQ_ProHub:Destroy()
 end
 
 local ScreenGui = Instance.new("ScreenGui")
@@ -18,7 +32,6 @@ ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ScreenGui.Parent = parentGui
 
--- ألوان الهوية (أسود وأحمر)
 local BG_DARK = Color3.fromRGB(14, 14, 17)
 local CARD_BG = Color3.fromRGB(24, 24, 29)
 local ACCENT_RED = Color3.fromRGB(220, 38, 38)
@@ -44,7 +57,7 @@ local tStroke = Instance.new("UIStroke", ToggleBtn)
 tStroke.Color = ACCENT_RED
 tStroke.Thickness = 2
 
--- القائمة الرئيسية (قابلة للتحريك في أي مكان)
+-- القائمة الرئيسية
 local MainFrame = Instance.new("Frame")
 MainFrame.Size = UDim2.new(0, 355, 0, 265)
 MainFrame.Position = UDim2.new(0.5, -177, 0.5, -132)
@@ -58,7 +71,7 @@ mStroke.Color = ACCENT_RED
 mStroke.Thickness = 2
 
 ToggleBtn.MouseButton1Click:Connect(function()
-    MainFrame.Visible = not MainFrame.Visible
+	MainFrame.Visible = not MainFrame.Visible
 end)
 
 local Header = Instance.new("Frame", MainFrame)
@@ -76,7 +89,6 @@ TitleLbl.Font = Enum.Font.GothamBold
 TitleLbl.TextSize = 14
 TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
 
--- التبويبات الثلاثة
 local TabBar = Instance.new("Frame", MainFrame)
 TabBar.Size = UDim2.new(1, -20, 0, 34)
 TabBar.Position = UDim2.new(0, 10, 0, 46)
@@ -121,1561 +133,1517 @@ ExecuteBtn.TextSize = 15
 Instance.new("UICorner", ExecuteBtn).CornerRadius = UDim.new(0, 8)
 
 local TabsData = {
-    {
-        TabName = "1. الدراجات 3D",
-        Title = "3D STREET MOTO RIDER",
-        Desc = "منظور خلفي داخل شارع ثلاثي الأبعاد مع أزرار بانزين وبريك وتوجيه على الشاشة، وتفادي السيارات والمشاة.",
-        Mode = "MOTO_3D"
-    },
-    {
-        TabName = "2. ألعاب الثنائي",
-        Title = "2P DUEL ARENA (VS AI)",
-        Desc = "ألعاب ثنائية ضد روبوت مع تحديد المستوى (هاوي / متوسط / قوي): شطرنج، دومنة، أونو، بليارد، إكس أو.",
-        Mode = "DUEL_2P"
-    },
-    {
-        TabName = "3. مطاردة النيون",
-        Title = "3D NEON DRIFT CHASE",
-        Desc = "منظور خلفي سريع لتفادي الحواجز المضيئة وجمع نقاط النيون مع تحكم كامل بالسرعة والاتجاه.",
-        Mode = "DRIFT_3D"
-    }
+	{
+		TabName = "1. الدراجات 3D",
+		Title = "3D STREET MOTO RIDER",
+		Desc = "منظور خلفي داخل شارع ثلاثي الأبعاد مع أزرار بانزين وبريك وتوجيه على الشاشة، وتفادي السيارات والمشاة.",
+		Mode = "MOTO_3D"
+	},
+	{
+		TabName = "2. ألعاب الثنائي",
+		Title = "2P DUEL ARENA (VS AI)",
+		Desc = "ألعاب ثنائية ضد روبوت مع تحديد المستوى (هاوي / متوسط / قوي): شطرنج، دومنة، أونو، بليارد، إكس أو.",
+		Mode = "DUEL_2P"
+	},
+	{
+		TabName = "3. مطاردة النيون",
+		Title = "3D NEON DRIFT CHASE",
+		Desc = "منظور خلفي سريع لتفادي الحواجز المضيئة وجمع نقاط النيون مع تحكم كامل بالسرعة والاتجاه.",
+		Mode = "DRIFT_3D"
+	}
 }
 
 local SelectedMode = "MOTO_3D"
 local TabBtns = {}
 
 local function SelectTab(idx)
-    local d = TabsData[idx]
-    SelectedMode = d.Mode
-    InfoTitle.Text = d.Title
-    InfoDesc.Text = d.Desc
-    for i, b in ipairs(TabBtns) do
-        b.BackgroundColor3 = (i == idx) and ACCENT_RED or BG_DARK
-        b.TextColor3 = (i == idx) and TEXT_WHITE or TEXT_GRAY
-    end
+	local d = TabsData[idx]
+	SelectedMode = d.Mode
+	InfoTitle.Text = d.Title
+	InfoDesc.Text = d.Desc
+	for i, b in ipairs(TabBtns) do
+		b.BackgroundColor3 = (i == idx) and ACCENT_RED or BG_DARK
+		b.TextColor3 = (i == idx) and TEXT_WHITE or TEXT_GRAY
+	end
 end
 
 for i, d in ipairs(TabsData) do
-    local btn = Instance.new("TextButton", TabBar)
-    btn.Size = UDim2.new(0.32, 0, 1, 0)
-    btn.BackgroundColor3 = BG_DARK
-    btn.Text = d.TabName
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 11
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
-    btn.MouseButton1Click:Connect(function() SelectTab(i) end)
-    table.insert(TabBtns, btn)
+	local btn = Instance.new("TextButton", TabBar)
+	btn.Size = UDim2.new(0.32, 0, 1, 0)
+	btn.BackgroundColor3 = BG_DARK
+	btn.Text = d.TabName
+	btn.Font = Enum.Font.GothamBold
+	btn.TextSize = 11
+	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+	btn.MouseButton1Click:Connect(function() SelectTab(i) end)
+	table.insert(TabBtns, btn)
 end
 SelectTab(1)
 
--------------------------------------------------------------------------
--- إدارة دورة حياة النوافذ والعالم ثلاثي الأبعاد
--------------------------------------------------------------------------
 local ActiveConn = nil
 local ActiveWorldFolder = nil
 local SavedCameraType = nil
 local SavedCameraSubject = nil
-local ActiveThreads = {}
+local SessionCounter = 0
 
 local function ClearWorldAndLoops()
-    if ActiveConn then
-        ActiveConn:Disconnect()
-        ActiveConn = nil
-    end
-    for _, th in ipairs(ActiveThreads) do
-        pcall(function() task.cancel(th) end)
-    end
-    table.clear(ActiveThreads)
-
-    if ActiveWorldFolder then
-        ActiveWorldFolder:Destroy()
-        ActiveWorldFolder = nil
-    end
-
-    if SavedCameraType then
-        camera.CameraType = SavedCameraType
-        SavedCameraType = nil
-    end
-    if SavedCameraSubject then
-        camera.CameraSubject = SavedCameraSubject
-        SavedCameraSubject = nil
-    end
+	SessionCounter += 1
+	if ActiveConn then
+		ActiveConn:Disconnect()
+		ActiveConn = nil
+	end
+	if ActiveWorldFolder then
+		ActiveWorldFolder:Destroy()
+		ActiveWorldFolder = nil
+	end
+	if SavedCameraType then
+		camera.CameraType = SavedCameraType
+		SavedCameraType = nil
+	end
+	if SavedCameraSubject then
+		camera.CameraSubject = SavedCameraSubject
+		SavedCameraSubject = nil
+	end
 end
 
 local function LaunchMode(mode)
-    ClearWorldAndLoops()
-    if ScreenGui:FindFirstChild("GameWindow") then
-        ScreenGui.GameWindow:Destroy()
-    end
-
-    MainFrame.Visible = false
-    ToggleBtn.Visible = false
-
-    local isPaused = false
-    local isMinimized = false
-    local isGameOver = false
-    local score = 0
-
-    local is3DMode = (mode == "MOTO_3D" or mode == "DRIFT_3D")
-
-    local Win = Instance.new("Frame", ScreenGui)
-    Win.Name = "GameWindow"
-    Win.Size = UDim2.new(1, 0, 1, 0)
-    Win.Position = UDim2.new(0, 0, 0, 0)
-    Win.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
-    Win.BackgroundTransparency = is3DMode and 1 or 0
-    Win.ClipsDescendants = true
-    Win.ZIndex = 20
-
-    local wStroke = Instance.new("UIStroke", Win)
-    wStroke.Color = ACCENT_RED
-    wStroke.Thickness = 2
-    wStroke.Enabled = not is3DMode
-
-    local TopBar = Instance.new("Frame", Win)
-    TopBar.Size = UDim2.new(1, 0, 0, 44)
-    TopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
-    TopBar.BackgroundTransparency = is3DMode and 0.25 or 0
-    TopBar.ZIndex = 30
-
-    local StatusLbl = Instance.new("TextLabel", TopBar)
-    StatusLbl.Size = UDim2.new(0.58, 0, 1, 0)
-    StatusLbl.Position = UDim2.new(0, 14, 0, 0)
-    StatusLbl.BackgroundTransparency = 1
-    StatusLbl.Text = "SCORE: 0"
-    StatusLbl.TextColor3 = TEXT_WHITE
-    StatusLbl.Font = Enum.Font.GothamBlack
-    StatusLbl.TextSize = 14
-    StatusLbl.TextXAlignment = Enum.TextXAlignment.Left
-    StatusLbl.ZIndex = 31
-
-    local CtrlBox = Instance.new("Frame", TopBar)
-    CtrlBox.Size = UDim2.new(0, 136, 0, 32)
-    CtrlBox.Position = UDim2.new(1, -146, 0.5, -16)
-    CtrlBox.BackgroundTransparency = 1
-    CtrlBox.ZIndex = 31
-
-    local cLayout = Instance.new("UIListLayout", CtrlBox)
-    cLayout.FillDirection = Enum.FillDirection.Horizontal
-    cLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
-    cLayout.Padding = UDim.new(0, 6)
-
-    local function MakeCtrlBtn(sym, col)
-        local b = Instance.new("TextButton", CtrlBox)
-        b.Size = UDim2.new(0, 38, 0, 32)
-        b.BackgroundColor3 = col
-        b.Text = sym
-        b.TextColor3 = TEXT_WHITE
-        b.Font = Enum.Font.GothamBold
-        b.TextSize = 15
-        b.ZIndex = 32
-        Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
-        return b
-    end
-
-    local PauseBtn = MakeCtrlBtn("⏸", Color3.fromRGB(48, 48, 58))
-    local MinBtn = MakeCtrlBtn("🗕", Color3.fromRGB(48, 48, 58))
-    local CloseBtn = MakeCtrlBtn("✖", ACCENT_RED)
-
-    local Body = Instance.new("Frame", Win)
-    Body.Size = UDim2.new(1, 0, 1, -44)
-    Body.Position = UDim2.new(0, 0, 0, 44)
-    Body.BackgroundTransparency = 1
-    Body.ClipsDescendants = true
-    Body.ZIndex = 22
-
-    local PauseScreen = Instance.new("Frame", Body)
-    PauseScreen.Size = UDim2.new(1, 0, 1, 0)
-    PauseScreen.BackgroundColor3 = Color3.new(0, 0, 0)
-    PauseScreen.BackgroundTransparency = 0.5
-    PauseScreen.Visible = false
-    PauseScreen.ZIndex = 50
-
-    local PauseTxt = Instance.new("TextLabel", PauseScreen)
-    PauseTxt.Size = UDim2.new(1, 0, 0, 50)
-    PauseTxt.Position = UDim2.new(0, 0, 0.45, 0)
-    PauseTxt.BackgroundTransparency = 1
-    PauseTxt.Text = "متوقف مؤقتاً"
-    PauseTxt.TextColor3 = TEXT_WHITE
-    PauseTxt.Font = Enum.Font.GothamBlack
-    PauseTxt.TextSize = 24
-    PauseTxt.ZIndex = 51
-
-    local EndScreen = Instance.new("Frame", Body)
-    EndScreen.Size = UDim2.new(1, 0, 1, 0)
-    EndScreen.BackgroundColor3 = Color3.new(0, 0, 0)
-    EndScreen.BackgroundTransparency = 0.4
-    EndScreen.Visible = false
-    EndScreen.ZIndex = 55
-
-    local EndTxt = Instance.new("TextLabel", EndScreen)
-    EndTxt.Size = UDim2.new(1, 0, 0, 44)
-    EndTxt.Position = UDim2.new(0, 0, 0.34, 0)
-    EndTxt.BackgroundTransparency = 1
-    EndTxt.Text = "انتهت الجولة!"
-    EndTxt.TextColor3 = ACCENT_RED
-    EndTxt.Font = Enum.Font.GothamBlack
-    EndTxt.TextSize = 28
-    EndTxt.ZIndex = 56
-
-    local RetryBtn = Instance.new("TextButton", EndScreen)
-    RetryBtn.Size = UDim2.new(0, 170, 0, 42)
-    RetryBtn.Position = UDim2.new(0.5, -85, 0.5, 0)
-    RetryBtn.BackgroundColor3 = ACCENT_RED
-    RetryBtn.Text = "إعادة اللعب"
-    RetryBtn.TextColor3 = TEXT_WHITE
-    RetryBtn.Font = Enum.Font.GothamBold
-    RetryBtn.TextSize = 16
-    RetryBtn.ZIndex = 56
-    Instance.new("UICorner", RetryBtn).CornerRadius = UDim.new(0, 8)
-
-    PauseBtn.MouseButton1Click:Connect(function()
-        if isGameOver then return end
-        isPaused = not isPaused
-        PauseScreen.Visible = isPaused
-        PauseBtn.Text = isPaused and "▶" or "⏸"
-    end)
-
-    MinBtn.MouseButton1Click:Connect(function()
-        isMinimized = not isMinimized
-        if isMinimized then
-            Win.BackgroundTransparency = is3DMode and 1 or 0
-            Win.Size = UDim2.new(0, 355, 0, 255)
-            Win.Position = UDim2.new(0.5, -177, 0.5, -127)
-            Win.Active = true
-            Win.Draggable = true
-            MinBtn.Text = "🗖"
-        else
-            Win.BackgroundTransparency = is3DMode and 1 or 0
-            Win.Size = UDim2.new(1, 0, 1, 0)
-            Win.Position = UDim2.new(0, 0, 0, 0)
-            Win.Active = false
-            Win.Draggable = false
-            MinBtn.Text = "🗕"
-        end
-    end)
-
-    CloseBtn.MouseButton1Click:Connect(function()
-        ClearWorldAndLoops()
-        Win:Destroy()
-        MainFrame.Visible = true
-        ToggleBtn.Visible = true
-    end)
-
-    RetryBtn.MouseButton1Click:Connect(function()
-        LaunchMode(mode)
-    end)
-
-    -----------------------------------------------------------------
-    -- الوضع الأول والثالث: عالم 3D بمنظور خلفي مع بانزين وبريك
-    -----------------------------------------------------------------
-    if is3DMode then
-        SavedCameraType = camera.CameraType
-        SavedCameraSubject = camera.CameraSubject
-        camera.CameraType = Enum.CameraType.Scriptable
-
-        local world = Instance.new("Folder", Workspace)
-        world.Name = "NHYQ_3D_World"
-        ActiveWorldFolder = world
-
-        local baseOrigin = Vector3.new(0, 500, 0)
-        local roadWidth = 36
-        local roadLength = 320
-
-        local roadPart = Instance.new("Part", world)
-        roadPart.Anchored = true
-        roadPart.Size = Vector3.new(roadWidth, 2, roadLength)
-        roadPart.Position = baseOrigin + Vector3.new(0, -1, -roadLength / 2 + 20)
-        roadPart.Color = Color3.fromRGB(32, 32, 38)
-        roadPart.Material = Enum.Material.Asphalt
-
-        for side = -1, 1, 2 do
-            local curb = Instance.new("Part", world)
-            curb.Anchored = true
-            curb.Size = Vector3.new(4, 2.6, roadLength)
-            curb.Position = baseOrigin + Vector3.new(side * (roadWidth / 2 + 2), -0.7, -roadLength / 2 + 20)
-            curb.Color = Color3.fromRGB(70, 70, 78)
-            curb.Material = Enum.Material.Concrete
-        end
-
-        local stripes = {}
-        for i = 1, 18 do
-            local s = Instance.new("Part", world)
-            s.Anchored = true
-            s.Size = Vector3.new(0.6, 0.15, 7)
-            s.Color = Color3.fromRGB(240, 240, 240)
-            s.Material = Enum.Material.Neon
-            s.Position = baseOrigin + Vector3.new(0, 0.05, -i * 18)
-            table.insert(stripes, s)
-        end
-
-        local motoModel = Instance.new("Model", world)
-        motoModel.Name = "PlayerMoto"
-
-        local function MakePart(sz, col, mat)
-            local p = Instance.new("Part", motoModel)
-            p.Size = sz
-            p.Color = col
-            p.Material = mat or Enum.Material.SmoothPlastic
-            p.Anchored = true
-            p.CanCollide = false
-            return p
-        end
-
-        local chassis = MakePart(Vector3.new(1.6, 1.3, 4.2), ACCENT_RED, Enum.Material.Metal)
-        local seat = MakePart(Vector3.new(1.4, 0.5, 1.8), Color3.fromRGB(20, 20, 24))
-        local riderTorso = MakePart(Vector3.new(1.5, 2.2, 1.1), Color3.fromRGB(45, 45, 55))
-        local riderHead = MakePart(Vector3.new(1.2, 1.2, 1.2), Color3.fromRGB(245, 245, 245))
-        local frontWheel = MakePart(Vector3.new(0.7, 1.8, 1.8), Color3.fromRGB(15, 15, 18))
-        local rearWheel = MakePart(Vector3.new(0.7, 1.8, 1.8), Color3.fromRGB(15, 15, 18))
-
-        local motoPos = baseOrigin + Vector3.new(0, 1.4, 0)
-        local speed = 0
-        local maxSpeed = (mode == "MOTO_3D") and 115 or 130
-        local steerInput = 0
-        local throttleHeld = false
-        local brakeHeld = false
-
-        local function MakePad(txt, pos, sz, col)
-            local b = Instance.new("TextButton", Body)
-            b.Size = sz
-            b.Position = pos
-            b.BackgroundColor3 = col
-            b.BackgroundTransparency = 0.2
-            b.Text = txt
-            b.TextColor3 = TEXT_WHITE
-            b.Font = Enum.Font.GothamBlack
-            b.TextSize = 15
-            b.ZIndex = 35
-            Instance.new("UICorner", b).CornerRadius = UDim.new(0, 12)
-            local st = Instance.new("UIStroke", b)
-            st.Color = TEXT_WHITE
-            st.Thickness = 1.5
-            st.Transparency = 0.35
-            return b
-        end
-
-        local LeftPad = MakePad("◀ يسار", UDim2.new(0.03, 0, 1, -78), UDim2.new(0.21, 0, 0, 64), Color3.fromRGB(30, 30, 38))
-        local RightPad = MakePad("يمين ▶", UDim2.new(0.26, 0, 1, -78), UDim2.new(0.21, 0, 0, 64), Color3.fromRGB(30, 30, 38))
-        local BrakePad = MakePad("بريك ■", UDim2.new(0.54, 0, 1, -78), UDim2.new(0.20, 0, 0, 64), Color3.fromRGB(185, 28, 28))
-        local GasPad = MakePad("بانزين ▲", UDim2.new(0.76, 0, 1, -78), UDim2.new(0.21, 0, 0, 64), ACCENT_GREEN)
-
-        LeftPad.MouseButton1Down:Connect(function() steerInput = -1 end)
-        LeftPad.MouseButton1Up:Connect(function() if steerInput == -1 then steerInput = 0 end end)
-        RightPad.MouseButton1Down:Connect(function() steerInput = 1 end)
-        RightPad.MouseButton1Up:Connect(function() if steerInput == 1 then steerInput = 0 end end)
-
-        BrakePad.MouseButton1Down:Connect(function() brakeHeld = true end)
-        BrakePad.MouseButton1Up:Connect(function() brakeHeld = false end)
-        GasPad.MouseButton1Down:Connect(function() throttleHeld = true end)
-        GasPad.MouseButton1Up:Connect(function() throttleHeld = false end)
-
-        local traffic = {}
-        local spawnClock = 0
-
-        local function SpawnTrafficEntity()
-            local ent = Instance.new("Model", world)
-            local laneX = math.random(-14, 14)
-            local zPos = motoPos.Z - 210
-
-            if mode == "MOTO_3D" then
-                local isCar = math.random() < 0.65
-                if isCar then
-                    local carBody = Instance.new("Part", ent)
-                    carBody.Anchored = true
-                    carBody.CanCollide = false
-                    carBody.Size = Vector3.new(4.6, 3.2, 9.5)
-                    carBody.Position = Vector3.new(baseOrigin.X + laneX, baseOrigin.Y + 1.6, zPos)
-                    carBody.Color = Color3.fromRGB(math.random(50, 220), math.random(50, 220), math.random(50, 220))
-                    carBody.Material = Enum.Material.SmoothPlastic
-                    table.insert(traffic, {model = ent, pos = carBody.Position, half = Vector3.new(2.3, 1.6, 4.7), speed = math.random(18, 36), vx = 0})
-                else
-                    local ped = Instance.new("Part", ent)
-                    ped.Anchored = true
-                    ped.CanCollide = false
-                    ped.Size = Vector3.new(1.5, 4.2, 1.5)
-                    ped.Position = Vector3.new(baseOrigin.X + laneX, baseOrigin.Y + 2.1, zPos)
-                    ped.Color = Color3.fromRGB(250, 204, 21)
-                    local walkVx = (laneX > 0) and -6 or 6
-                    table.insert(traffic, {model = ent, pos = ped.Position, half = Vector3.new(0.8, 2.0, 0.8), speed = 10, vx = walkVx})
-                end
-            else
-                local bar = Instance.new("Part", ent)
-                bar.Anchored = true
-                bar.CanCollide = false
-                bar.Size = Vector3.new(8, 3, 2.5)
-                bar.Position = Vector3.new(baseOrigin.X + laneX, baseOrigin.Y + 1.5, zPos)
-                bar.Color = ACCENT_RED
-                bar.Material = Enum.Material.Neon
-                table.insert(traffic, {model = ent, pos = bar.Position, half = Vector3.new(4, 1.5, 1.25), speed = 15, vx = 0})
-            end
-        end
-
-        ActiveConn = RunService.RenderStepped:Connect(function(dt)
-            if isPaused or isGameOver then return end
-
-            if throttleHeld then
-                speed = math.min(maxSpeed, speed + dt * 85)
-            elseif brakeHeld then
-                speed = math.max(0, speed - dt * 110)
-            else
-                speed = math.max(0, speed - dt * 28)
-            end
-
-            local turnFactor = (speed > 2) and (steerInput * dt * 24) or 0
-            local nextX = math.clamp(motoPos.X + turnFactor, baseOrigin.X - roadWidth / 2 + 1.5, baseOrigin.X + roadWidth / 2 - 1.5)
-            local nextZ = motoPos.Z - speed * dt
-            motoPos = Vector3.new(nextX, baseOrigin.Y + 1.4, nextZ)
-
-            score = score + (speed * dt * 0.4)
-            StatusLbl.Text = string.format("KM/H: %d  |  SCORE: %d", math.floor(speed * 1.8), math.floor(score))
-
-            local tilt = -steerInput * 0.25
-            local cf = CFrame.new(motoPos) * CFrame.Angles(0, 0, tilt)
-
-            chassis.CFrame = cf
-            seat.CFrame = cf * CFrame.new(0, 0.8, 0.3)
-            riderTorso.CFrame = cf * CFrame.new(0, 2.0, 0.2) * CFrame.Angles(0.25, 0, 0)
-            riderHead.CFrame = cf * CFrame.new(0, 3.6, -0.1)
-            frontWheel.CFrame = cf * CFrame.new(0, -0.5, -1.6) * CFrame.Angles(0, math.pi / 2, 0)
-            rearWheel.CFrame = cf * CFrame.new(0, -0.5, 1.6) * CFrame.Angles(0, math.pi / 2, 0)
-
-            roadPart.Position = Vector3.new(baseOrigin.X, baseOrigin.Y - 1, motoPos.Z - roadLength / 2 + 40)
-            for idx, s in ipairs(stripes) do
-                local sz = motoPos.Z - 20 - (idx * 18)
-                s.Position = Vector3.new(baseOrigin.X, baseOrigin.Y + 0.05, sz)
-            end
-
-            local camDesired = motoPos + Vector3.new(steerInput * 2.5, 7.5, 14.5)
-            local camLookAt = motoPos + Vector3.new(0, 2.2, -18)
-            camera.CFrame = camera.CFrame:Lerp(CFrame.lookAt(camDesired, camLookAt), math.min(1, dt * 10))
-
-            spawnClock = spawnClock + dt
-            local spawnInterval = math.max(0.42, 1.05 - (speed / 220))
-            if spawnClock >= spawnInterval then
-                spawnClock = 0
-                SpawnTrafficEntity()
-            end
-
-            for i = #traffic, 1, -1 do
-                local item = traffic[i]
-                local nx = math.clamp(item.pos.X + item.vx * dt, baseOrigin.X - roadWidth / 2 + 1.5, baseOrigin.X + roadWidth / 2 - 1.5)
-                local nz = item.pos.Z + item.speed * dt
-                item.pos = Vector3.new(nx, item.pos.Y, nz)
-
-                local mainPart = item.model:FindFirstChildWhichIsA("BasePart")
-                if mainPart then
-                    mainPart.Position = item.pos
-                end
-
-                local dx = math.abs(motoPos.X - item.pos.X)
-                local dz = math.abs(motoPos.Z - item.pos.Z)
-                if dx < (1.0 + item.half.X) and dz < (2.0 + item.half.Z) then
-                    isGameOver = true
-                    EndTxt.Text = "اصطدام! انتهت الجولة"
-                    EndScreen.Visible = true
-                end
-
-                if item.pos.Z > motoPos.Z + 35 then
-                    item.model:Destroy()
-                    table.remove(traffic, i)
-                end
-            end
-        end)
-
-    -----------------------------------------------------------------
-    -- الوضع الثاني: ألعاب الثنائي ضد روبوت مع إمكانية التحريك والسحب
-    -----------------------------------------------------------------
-    elseif mode == "DUEL_2P" then
-        StatusLbl.Text = "2P DUEL ARENA"
-
-        local DiffBar = Instance.new("Frame", Body)
-        DiffBar.Size = UDim2.new(1, -16, 0, 34)
-        DiffBar.Position = UDim2.new(0, 8, 0, 6)
-        DiffBar.BackgroundColor3 = CARD_BG
-        DiffBar.ZIndex = 25
-        Instance.new("UICorner", DiffBar).CornerRadius = UDim.new(0, 8)
-
-        local DiffTitle = Instance.new("TextLabel", DiffBar)
-        DiffTitle.Size = UDim2.new(0.32, 0, 1, 0)
-        DiffTitle.Position = UDim2.new(0, 8, 0, 0)
-        DiffTitle.BackgroundTransparency = 1
-        DiffTitle.Text = "مستوى الروبوت:"
-        DiffTitle.TextColor3 = TEXT_WHITE
-        DiffTitle.Font = Enum.Font.GothamBold
-        DiffTitle.TextSize = 12
-        DiffTitle.TextXAlignment = Enum.TextXAlignment.Left
-        DiffTitle.ZIndex = 26
-
-        local botLevel = "MEDIUM"
-        local diffBtns = {}
-
-        local levels = {
-            {Id = "EASY", Label = "هاوي", Col = ACCENT_GREEN},
-            {Id = "MEDIUM", Label = "متوسط", Col = ACCENT_AMBER},
-            {Id = "HARD", Label = "قوي", Col = ACCENT_RED}
-        }
-
-        for idx, lv in ipairs(levels) do
-            local db = Instance.new("TextButton", DiffBar)
-            db.Size = UDim2.new(0.2, 0, 0, 24)
-            db.Position = UDim2.new(0.34 + (idx - 1) * 0.22, 0, 0.5, -12)
-            db.BackgroundColor3 = (lv.Id == botLevel) and lv.Col or BG_DARK
-            db.Text = lv.Label
-            db.TextColor3 = TEXT_WHITE
-            db.Font = Enum.Font.GothamBlack
-            db.TextSize = 11
-            db.ZIndex = 26
-            Instance.new("UICorner", db).CornerRadius = UDim.new(0, 6)
-            db.MouseButton1Click:Connect(function()
-                botLevel = lv.Id
-                for k, other in ipairs(diffBtns) do
-                    other.BackgroundColor3 = (levels[k].Id == botLevel) and levels[k].Col or BG_DARK
-                end
-            end)
-            table.insert(diffBtns, db)
-        end
-
-        local SubGameScroll = Instance.new("ScrollingFrame", Body)
-        SubGameScroll.Size = UDim2.new(1, -16, 0, 38)
-        SubGameScroll.Position = UDim2.new(0, 8, 0, 44)
-        SubGameScroll.BackgroundColor3 = CARD_BG
-        SubGameScroll.ScrollBarThickness = 4
-        SubGameScroll.ScrollingDirection = Enum.ScrollingDirection.X
-        SubGameScroll.CanvasSize = UDim2.new(0, 470, 0, 0)
-        SubGameScroll.ZIndex = 25
-        Instance.new("UICorner", SubGameScroll).CornerRadius = UDim.new(0, 8)
-
-        local subLayout = Instance.new("UIListLayout", SubGameScroll)
-        subLayout.FillDirection = Enum.FillDirection.Horizontal
-        subLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
-        subLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-        subLayout.Padding = UDim.new(0, 6)
-
-        local subPad = Instance.new("UIPadding", SubGameScroll)
-        subPad.PaddingLeft = UDim.new(0, 6)
-        subPad.PaddingRight = UDim.new(0, 6)
-
-        local ArenaScroll = Instance.new("ScrollingFrame", Body)
-        ArenaScroll.Size = UDim2.new(1, -16, 1, -92)
-        ArenaScroll.Position = UDim2.new(0, 8, 0, 88)
-        ArenaScroll.BackgroundColor3 = CARD_BG
-        ArenaScroll.ScrollBarThickness = 5
-        ArenaScroll.ScrollingDirection = Enum.ScrollingDirection.XY
-        ArenaScroll.CanvasSize = UDim2.new(1.2, 0, 1.2, 0)
-        ArenaScroll.ZIndex = 24
-        Instance.new("UICorner", ArenaScroll).CornerRadius = UDim.new(0, 10)
-
-        local Arena = Instance.new("Frame", ArenaScroll)
-        Arena.Size = UDim2.new(1, 0, 1, 0)
-        Arena.BackgroundTransparency = 1
-        Arena.ZIndex = 24
-
-        local function ClearArena()
-            for _, th in ipairs(ActiveThreads) do
-                pcall(function() task.cancel(th) end)
-            end
-            table.clear(ActiveThreads)
-            for _, ch in ipairs(Arena:GetChildren()) do
-                ch:Destroy()
-            end
-            EndScreen.Visible = false
-            isGameOver = false
-        end
-
-        local function BotThinkDelay()
-            if botLevel == "EASY" then return 0.9
-            elseif botLevel == "MEDIUM" then return 0.5
-            else return 0.25 end
-        end
-
-        local function BotMistakeChance()
-            if botLevel == "EASY" then return 0.72
-            elseif botLevel == "MEDIUM" then return 0.22
-            else return 0.0 end
-        end
-
-        local StartSubGame
-
-        -------------------------------------------------------------
-        -- 1. لعبة إكس أو (X-O) بقوة Minimax ضد الروبوت
-        -------------------------------------------------------------
-        local function BuildXO()
-            ClearArena()
-            local info = Instance.new("TextLabel", Arena)
-            info.Size = UDim2.new(1, 0, 0, 30)
-            info.Position = UDim2.new(0, 0, 0, 6)
-            info.BackgroundTransparency = 1
-            info.Text = "دورك (X) ضد الروبوت (O)"
-            info.TextColor3 = TEXT_WHITE
-            info.Font = Enum.Font.GothamBold
-            info.TextSize = 14
-            info.ZIndex = 26
-
-            local board = {"", "", "", "", "", "", "", "", ""}
-            local btns = {}
-            local turn = "X"
-
-            local lines = {
-                {1,2,3},{4,5,6},{7,8,9},
-                {1,4,7},{2,5,8},{3,6,9},
-                {1,5,9},{3,5,7}
-            }
-
-            local function CheckWinner(b)
-                for _, l in ipairs(lines) do
-                    if b[l[1]] ~= "" and b[l[1]] == b[l[2]] and b[l[2]] == b[l[3]] then
-                        return b[l[1]]
-                    end
-                end
-                local full = true
-                for _, v in ipairs(b) do if v == "" then full = false break end end
-                return full and "DRAW" or nil
-            end
-
-            local function Minimax(b, depth, isMax)
-                local res = CheckWinner(b)
-                if res == "O" then return 10 - depth end
-                if res == "X" then return depth - 10 end
-                if res == "DRAW" then return 0 end
-
-                if isMax then
-                    local best = -100
-                    for i = 1, 9 do
-                        if b[i] == "" then
-                            b[i] = "O"
-                            local val = Minimax(b, depth + 1, false)
-                            b[i] = ""
-                            if val > best then best = val end
-                        end
-                    end
-                    return best
-                else
-                    local best = 100
-                    for i = 1, 9 do
-                        if b[i] == "" then
-                            b[i] = "X"
-                            local val = Minimax(b, depth + 1, true)
-                            b[i] = ""
-                            if val < best then best = val end
-                        end
-                    end
-                    return best
-                end
-            end
-
-            local function PickBotMove()
-                local empty = {}
-                for i, v in ipairs(board) do if v == "" then table.insert(empty, i) end end
-                if #empty == 0 then return nil end
-
-                if math.random() < BotMistakeChance() then
-                    return empty[math.random(1, #empty)]
-                end
-
-                local bestScore = -100
-                local bestMoves = {}
-                for _, idx in ipairs(empty) do
-                    board[idx] = "O"
-                    local sc = Minimax(board, 0, false)
-                    board[idx] = ""
-                    if sc > bestScore then
-                        bestScore = sc
-                        bestMoves = {idx}
-                    elseif sc == bestScore then
-                        table.insert(bestMoves, idx)
-                    end
-                end
-
-                if botLevel == "MEDIUM" and #bestMoves > 1 then
-                    return bestMoves[math.random(1, #bestMoves)]
-                end
-                return bestMoves[1]
-            end
-
-            local function FinishXO(res)
-                isGameOver = true
-                if res == "X" then EndTxt.Text = "فزت في X-O!"
-                elseif res == "O" then EndTxt.Text = "الروبوت فاز في X-O!"
-                else EndTxt.Text = "تعادل!" end
-                EndScreen.Visible = true
-            end
-
-            local grid = Instance.new("Frame", Arena)
-            grid.Size = UDim2.new(0, 192, 0, 192)
-            grid.Position = UDim2.new(0.5, -96, 0.5, -80)
-            grid.BackgroundTransparency = 1
-            grid.ZIndex = 26
-
-            local function ApplyMove(idx, sym)
-                board[idx] = sym
-                btns[idx].Text = sym
-                btns[idx].TextColor3 = (sym == "X") and ACCENT_RED or ACCENT_GREEN
-                local res = CheckWinner(board)
-                if res then
-                    FinishXO(res)
-                    return true
-                end
-                return false
-            end
-
-            for i = 1, 9 do
-                local r = math.floor((i - 1) / 3)
-                local c = (i - 1) % 3
-                local cell = Instance.new("TextButton", grid)
-                cell.Size = UDim2.new(0, 60, 0, 60)
-                cell.Position = UDim2.new(0, c * 66, 0, r * 66)
-                cell.BackgroundColor3 = BG_DARK
-                cell.Text = ""
-                cell.Font = Enum.Font.GothamBlack
-                cell.TextSize = 26
-                cell.ZIndex = 27
-                Instance.new("UICorner", cell).CornerRadius = UDim.new(0, 8)
-
-                cell.MouseButton1Click:Connect(function()
-                    if isPaused or isGameOver or turn ~= "X" or board[i] ~= "" then return end
-                    if ApplyMove(i, "X") then return end
-                    turn = "O"
-                    info.Text = "الروبوت يحلل الخطوة..."
-                    local th = task.spawn(function()
-                        task.wait(BotThinkDelay())
-                        if isGameOver then return end
-                        local bMove = PickBotMove()
-                        if bMove and not ApplyMove(bMove, "O") then
-                            turn = "X"
-                            info.Text = "دورك (X) ضد الروبوت (O)"
-                        end
-                    end)
-                    table.insert(ActiveThreads, th)
-                end)
-                btns[i] = cell
-            end
-        end
-
-        -------------------------------------------------------------
-        -- 2. لعبة الشطرنج 8x8 الكاملة مع ترتيب البيادق والقطع الصحيحة
-        -------------------------------------------------------------
-        local function BuildChess()
-            ClearArena()
-            local info = Instance.new("TextLabel", Arena)
-            info.Size = UDim2.new(1, 0, 0, 26)
-            info.Position = UDim2.new(0, 0, 0, 2)
-            info.BackgroundTransparency = 1
-            info.Text = "شطرنج 8x8: اختر قطعة بيضاء ثم المربع"
-            info.TextColor3 = TEXT_WHITE
-            info.Font = Enum.Font.GothamBold
-            info.TextSize = 12
-            info.ZIndex = 26
-
-            local rows, cols = 8, 8
-            local pieceVal = {K = 100, Q = 9, R = 5, B = 3, N = 3, P = 1}
-            local glyph = {
-                wK = "♔", wQ = "♕", wR = "♖", wB = "♗", wN = "♘", wP = "♙",
-                bK = "♚", bQ = "♛", bR = "♜", bB = "♝", bN = "♞", bP = "♟"
-            }
-
-            local board = {}
-            for r = 1, rows do
-                board[r] = {}
-                for c = 1, cols do board[r][c] = "" end
-            end
-
-            local backRank = {"R", "N", "B", "Q", "K", "B", "N", "R"}
-            for c = 1, cols do
-                board[1][c] = "b" .. backRank[c]
-                board[2][c] = "bP"
-                board[7][c] = "wP"
-                board[8][c] = "w" .. backRank[c]
-            end
-
-            local selected = nil
-            local turn = "w"
-            local sqBtns = {}
-
-            local function IsPathClear(b, r1, c1, r2, c2)
-                local dr = r2 - r1
-                local dc = c2 - c1
-                local stepR = (dr == 0) and 0 or (dr > 0 and 1 or -1)
-                local stepC = (dc == 0) and 0 or (dc > 0 and 1 or -1)
-                local cr, cc = r1 + stepR, c1 + stepC
-                while cr ~= r2 or cc ~= c2 do
-                    if b[cr][cc] ~= "" then return false end
-                    cr += stepR
-                    cc += stepC
-                end
-                return true
-            end
-
-            local function IsValidMove(b, r1, c1, r2, c2)
-                if r1 == r2 and c1 == c2 then return false end
-                local p = b[r1][c1]
-                local target = b[r2][c2]
-                if p == "" then return false end
-                local side = string.sub(p, 1, 1)
-                local role = string.sub(p, 2, 2)
-                if target ~= "" and string.sub(target, 1, 1) == side then return false end
-
-                local dr = r2 - r1
-                local dc = c2 - c1
-                local adr = math.abs(dr)
-                local adc = math.abs(dc)
-
-                if role == "N" then
-                    return (adr == 2 and adc == 1) or (adr == 1 and adc == 2)
-                elseif role == "K" then
-                    return adr <= 1 and adc <= 1
-                elseif role == "R" then
-                    return (dr == 0 or dc == 0) and IsPathClear(b, r1, c1, r2, c2)
-                elseif role == "B" then
-                    return (adr == adc) and IsPathClear(b, r1, c1, r2, c2)
-                elseif role == "Q" then
-                    return (dr == 0 or dc == 0 or adr == adc) and IsPathClear(b, r1, c1, r2, c2)
-                elseif role == "P" then
-                    local dir = (side == "w") and -1 or 1
-                    local startRow = (side == "w") and 7 or 2
-                    if dc == 0 and dr == dir and target == "" then return true end
-                    if dc == 0 and r1 == startRow and dr == dir * 2 and target == "" and IsPathClear(b, r1, c1, r2, c2) then
-                        return true
-                    end
-                    if adc == 1 and dr == dir and target ~= "" then return true end
-                    return false
-                end
-                return false
-            end
-
-            local function RefreshBoard()
-                for r = 1, rows do
-                    for c = 1, cols do
-                        local p = board[r][c]
-                        local btn = sqBtns[r][c]
-                        btn.Text = (p ~= "") and (glyph[p] or "") or ""
-                        btn.TextColor3 = (string.sub(p, 1, 1) == "w") and TEXT_WHITE or ACCENT_RED
-                        local isDark = ((r + c) % 2 == 1)
-                        local isSel = selected and selected.r == r and selected.c == c
-                        btn.BackgroundColor3 = isSel and ACCENT_AMBER or (isDark and Color3.fromRGB(60, 60, 72) or Color3.fromRGB(28, 28, 34))
-                    end
-                end
-            end
-
-            local function CheckKingCapture(b)
-                local wKing, bKing = false, false
-                for r = 1, rows do
-                    for c = 1, cols do
-                        if b[r][c] == "wK" then wKing = true end
-                        if b[r][c] == "bK" then bKing = true end
-                    end
-                end
-                if not bKing then return "w" end
-                if not wKing then return "b" end
-                return nil
-            end
-
-            local function MovePiece(r1, c1, r2, c2)
-                local p = board[r1][c1]
-                board[r2][c2] = p
-                board[r1][c1] = ""
-                if p == "wP" and r2 == 1 then board[r2][c2] = "wQ" end
-                if p == "bP" and r2 == rows then board[r2][c2] = "bQ" end
-                selected = nil
-                RefreshBoard()
-
-                local winSide = CheckKingCapture(board)
-                if winSide then
-                    isGameOver = true
-                    EndTxt.Text = (winSide == "w") and "فزت في الشطرنج!" or "الروبوت فاز في الشطرنج!"
-                    EndScreen.Visible = true
-                    return true
-                end
-                return false
-            end
-
-            local function BotChessMove()
-                local legal = {}
-                for r1 = 1, rows do
-                    for c1 = 1, cols do
-                        if string.sub(board[r1][c1], 1, 1) == "b" then
-                            for r2 = 1, rows do
-                                for c2 = 1, cols do
-                                    if IsValidMove(board, r1, c1, r2, c2) then
-                                        local cap = board[r2][c2]
-                                        local val = (cap ~= "") and (pieceVal[string.sub(cap, 2, 2)] or 1) or 0
-                                        table.insert(legal, {r1=r1, c1=c1, r2=r2, c2=c2, score=val})
-                                    end
-                                end
-                            end
-                        end
-                    end
-                end
-                if #legal == 0 then return end
-
-                if math.random() < BotMistakeChance() then
-                    local m = legal[math.random(1, #legal)]
-                    MovePiece(m.r1, m.c1, m.r2, m.c2)
-                    return
-                end
-
-                table.sort(legal, function(a, b) return a.score > b.score end)
-                local topPool = (botLevel == "HARD") and 1 or math.min(#legal, 3)
-                local chosen = legal[math.random(1, topPool)]
-                MovePiece(chosen.r1, chosen.c1, chosen.r2, chosen.c2)
-            end
-
-            local cGrid = Instance.new("Frame", Arena)
-            cGrid.Size = UDim2.new(0, 224, 0, 224)
-            cGrid.Position = UDim2.new(0.5, -112, 0.5, -94)
-            cGrid.BackgroundTransparency = 1
-            cGrid.ZIndex = 26
-
-            for r = 1, rows do
-                sqBtns[r] = {}
-                for c = 1, cols do
-                    local sq = Instance.new("TextButton", cGrid)
-                    sq.Size = UDim2.new(0, 26, 0, 26)
-                    sq.Position = UDim2.new(0, (c - 1) * 28, 0, (r - 1) * 28)
-                    sq.Font = Enum.Font.GothamBold
-                    sq.TextSize = 17
-                    sq.ZIndex = 27
-                    Instance.new("UICorner", sq).CornerRadius = UDim.new(0, 3)
-
-                    sq.MouseButton1Click:Connect(function()
-                        if isPaused or isGameOver or turn ~= "w" then return end
-                        local cellPiece = board[r][c]
-                        if not selected then
-                            if string.sub(cellPiece, 1, 1) == "w" then
-                                selected = {r = r, c = c}
-                                RefreshBoard()
-                            end
-                        else
-                            if selected.r == r and selected.c == c then
-                                selected = nil
-                                RefreshBoard()
-                            elseif IsValidMove(board, selected.r, selected.c, r, c) then
-                                if MovePiece(selected.r, selected.c, r, c) then return end
-                                turn = "b"
-                                info.Text = "الروبوت يلعب..."
-                                local th = task.spawn(function()
-                                    task.wait(BotThinkDelay())
-                                    if isGameOver then return end
-                                    BotChessMove()
-                                    if not isGameOver then
-                                        turn = "w"
-                                        info.Text = "دورك (الأبيض)"
-                                    end
-                                end)
-                                table.insert(ActiveThreads, th)
-                            elseif string.sub(cellPiece, 1, 1) == "w" then
-                                selected = {r = r, c = c}
-                                RefreshBoard()
-                            end
-                        end
-                    end)
-                    sqBtns[r][c] = sq
-                end
-            end
-            RefreshBoard()
-        end
-
-        -------------------------------------------------------------
-        -- 3. لعبة الدومنة الواقعية مع سلسلة الطاولة
-        -------------------------------------------------------------
-        local function BuildDomino()
-            ClearArena()
-            local leftEnd, rightEnd = nil, nil
-            local playedChain = {}
-            local myHand, botHand = {}, {}
-
-            for _ = 1, 7 do
-                table.insert(myHand, {math.random(0, 6), math.random(0, 6)})
-                table.insert(botHand, {math.random(0, 6), math.random(0, 6)})
-            end
-
-            local topInfo = Instance.new("TextLabel", Arena)
-            topInfo.Size = UDim2.new(1, -16, 0, 28)
-            topInfo.Position = UDim2.new(0, 8, 0, 6)
-            topInfo.BackgroundColor3 = BG_DARK
-            topInfo.Text = "الطاولة جاهزة | قطع الروبوت: 7"
-            topInfo.TextColor3 = TEXT_WHITE
-            topInfo.Font = Enum.Font.GothamBold
-            topInfo.TextSize = 12
-            topInfo.ZIndex = 26
-            Instance.new("UICorner", topInfo).CornerRadius = UDim.new(0, 6)
-
-            local chainScroll = Instance.new("ScrollingFrame", Arena)
-            chainScroll.Size = UDim2.new(1, -16, 0, 56)
-            chainScroll.Position = UDim2.new(0, 8, 0, 40)
-            chainScroll.BackgroundColor3 = Color3.fromRGB(18, 52, 34)
-            chainScroll.ScrollBarThickness = 3
-            chainScroll.ScrollingDirection = Enum.ScrollingDirection.X
-            chainScroll.ZIndex = 26
-            Instance.new("UICorner", chainScroll).CornerRadius = UDim.new(0, 8)
-
-            local handHolder = Instance.new("ScrollingFrame", Arena)
-            handHolder.Size = UDim2.new(1, -16, 0, 82)
-            handHolder.Position = UDim2.new(0, 8, 1, -90)
-            handHolder.BackgroundTransparency = 1
-            handHolder.ScrollBarThickness = 3
-            handHolder.ScrollingDirection = Enum.ScrollingDirection.X
-            handHolder.ZIndex = 26
-
-            local RebuildChainUI, RebuildHandUI
-
-            local function UpdateInfo()
-                local endsTxt = (leftEnd and ("[" .. leftEnd .. "  |  " .. rightEnd .. "]") or "بانتظار أول قطعة")
-                topInfo.Text = "الأطراف: " .. endsTxt .. " | قطع الروبوت: " .. #botHand .. " | قطعك: " .. #myHand
-            end
-
-            local function CanPlay(tile)
-                if not leftEnd then return true, "RIGHT" end
-                if tile[1] == rightEnd or tile[2] == rightEnd then return true, "RIGHT" end
-                if tile[1] == leftEnd or tile[2] == leftEnd then return true, "LEFT" end
-                return false, nil
-            end
-
-            local function PlaceTile(tile, side)
-                if not leftEnd then
-                    leftEnd, rightEnd = tile[1], tile[2]
-                    table.insert(playedChain, {tile[1], tile[2]})
-                elseif side == "RIGHT" then
-                    local a, b = tile[1], tile[2]
-                    if a ~= rightEnd then a, b = b, a end
-                    rightEnd = b
-                    table.insert(playedChain, {a, b})
-                else
-                    local a, b = tile[1], tile[2]
-                    if b ~= leftEnd then a, b = b, a end
-                    leftEnd = a
-                    table.insert(playedChain, 1, {a, b})
-                end
-            end
-
-            RebuildChainUI = function()
-                for _, ch in ipairs(chainScroll:GetChildren()) do ch:Destroy() end
-                chainScroll.CanvasSize = UDim2.new(0, math.max(280, #playedChain * 62), 0, 0)
-                local cl = Instance.new("UIListLayout", chainScroll)
-                cl.FillDirection = Enum.FillDirection.Horizontal
-                cl.HorizontalAlignment = Enum.HorizontalAlignment.Left
-                cl.VerticalAlignment = Enum.VerticalAlignment.Center
-                cl.Padding = UDim.new(0, 6)
-
-                local cp = Instance.new("UIPadding", chainScroll)
-                cp.PaddingLeft = UDim.new(0, 6)
-                cp.PaddingRight = UDim.new(0, 6)
-
-                for _, pTile in ipairs(playedChain) do
-                    local df = Instance.new("Frame", chainScroll)
-                    df.Size = UDim2.new(0, 54, 0, 34)
-                    df.BackgroundColor3 = Color3.fromRGB(245, 245, 240)
-                    df.ZIndex = 27
-                    Instance.new("UICorner", df).CornerRadius = UDim.new(0, 5)
-
-                    local dl = Instance.new("TextLabel", df)
-                    dl.Size = UDim2.new(1, 0, 1, 0)
-                    dl.BackgroundTransparency = 1
-                    dl.Text = pTile[1] .. " | " .. pTile[2]
-                    dl.TextColor3 = BG_DARK
-                    dl.Font = Enum.Font.GothamBlack
-                    dl.TextSize = 13
-                    dl.ZIndex = 28
-                end
-            end
-
-            local function BotDominoTurn()
-                if isGameOver then return end
-                local playableIdx = {}
-                for i, t in ipairs(botHand) do
-                    local ok, side = CanPlay(t)
-                    if ok then table.insert(playableIdx, {idx = i, side = side}) end
-                end
-
-                if #playableIdx > 0 then
-                    local chosen
-                    if math.random() < BotMistakeChance() then
-                        chosen = playableIdx[math.random(1, #playableIdx)]
-                    else
-                        table.sort(playableIdx, function(a, b)
-                            local ta, tb = botHand[a.idx], botHand[b.idx]
-                            return (ta[1] + ta[2]) > (tb[1] + tb[2])
-                        end)
-                        chosen = playableIdx[1]
-                    end
-                    local played = table.remove(botHand, chosen.idx)
-                    PlaceTile(played, chosen.side)
-                else
-                    table.insert(botHand, {math.random(0, 6), math.random(0, 6)})
-                end
-
-                UpdateInfo()
-                RebuildChainUI()
-                if #botHand == 0 then
-                    isGameOver = true
-                    EndTxt.Text = "الروبوت أنهى قطعه وفاز!"
-                    EndScreen.Visible = true
-                end
-            end
-
-            RebuildHandUI = function()
-                for _, ch in ipairs(handHolder:GetChildren()) do ch:Destroy() end
-                handHolder.CanvasSize = UDim2.new(0, math.max(300, #myHand * 54), 0, 0)
-                local layout = Instance.new("UIListLayout", handHolder)
-                layout.FillDirection = Enum.FillDirection.Horizontal
-                layout.HorizontalAlignment = Enum.HorizontalAlignment.Left
-                layout.Padding = UDim.new(0, 6)
-
-                for i, tile in ipairs(myHand) do
-                    local can = CanPlay(tile)
-                    local tb = Instance.new("TextButton", handHolder)
-                    tb.Size = UDim2.new(0, 46, 0, 66)
-                    tb.BackgroundColor3 = can and Color3.fromRGB(245, 245, 240) or Color3.fromRGB(50, 50, 58)
-                    tb.Text = tile[1] .. "\n─\n" .. tile[2]
-                    tb.TextColor3 = can and BG_DARK or TEXT_GRAY
-                    tb.Font = Enum.Font.GothamBlack
-                    tb.TextSize = 14
-                    tb.ZIndex = 27
-                    Instance.new("UICorner", tb).CornerRadius = UDim.new(0, 6)
-                    local st = Instance.new("UIStroke", tb)
-                    st.Color = can and ACCENT_RED or Color3.fromRGB(80, 80, 90)
-                    st.Thickness = 2
-
-                    tb.MouseButton1Click:Connect(function()
-                        if isPaused or isGameOver then return end
-                        local ok, side = CanPlay(tile)
-                        if not ok then return end
-                        table.remove(myHand, i)
-                        PlaceTile(tile, side)
-                        UpdateInfo()
-                        RebuildChainUI()
-                        RebuildHandUI()
-
-                        if #myHand == 0 then
-                            isGameOver = true
-                            EndTxt.Text = "مبروك! فزت في الدومنة!"
-                            EndScreen.Visible = true
-                            return
-                        end
-
-                        local th = task.spawn(function()
-                            task.wait(BotThinkDelay())
-                            BotDominoTurn()
-                        end)
-                        table.insert(ActiveThreads, th)
-                    end)
-                end
-            end
-
-            local DrawBtn = Instance.new("TextButton", Arena)
-            DrawBtn.Size = UDim2.new(0, 140, 0, 32)
-            DrawBtn.Position = UDim2.new(0.5, -70, 0.52, 0)
-            DrawBtn.BackgroundColor3 = ACCENT_RED
-            DrawBtn.Text = "سحب قطعة جديدة"
-            DrawBtn.TextColor3 = TEXT_WHITE
-            DrawBtn.Font = Enum.Font.GothamBold
-            DrawBtn.TextSize = 12
-            DrawBtn.ZIndex = 27
-            Instance.new("UICorner", DrawBtn).CornerRadius = UDim.new(0, 8)
-            DrawBtn.MouseButton1Click:Connect(function()
-                if isPaused or isGameOver then return end
-                table.insert(myHand, {math.random(0, 6), math.random(0, 6)})
-                UpdateInfo()
-                RebuildHandUI()
-            end)
-
-            UpdateInfo()
-            RebuildChainUI()
-            RebuildHandUI()
-        end
-
-        -------------------------------------------------------------
-        -- 4. لعبة أونو (UNO) ضد الروبوت
-        -------------------------------------------------------------
-        local function BuildUNO()
-            ClearArena()
-            local colors = {
-                {Name = "أحمر", Col = ACCENT_RED},
-                {Name = "أخضر", Col = ACCENT_GREEN},
-                {Name = "أصفر", Col = ACCENT_AMBER},
-                {Name = "أزرق", Col = Color3.fromRGB(59, 130, 246)}
-            }
-
-            local function RandCard()
-                local c = colors[math.random(1, #colors)]
-                local val = (math.random() < 0.25) and "+2" or tostring(math.random(1, 9))
-                return {ColorName = c.Name, Color = c.Col, Val = val}
-            end
-
-            local topCard = RandCard()
-            local playerHand, botHand = {}, {}
-            for _ = 1, 5 do
-                table.insert(playerHand, RandCard())
-                table.insert(botHand, RandCard())
-            end
-
-            local status = Instance.new("TextLabel", Arena)
-            status.Size = UDim2.new(1, -16, 0, 28)
-            status.Position = UDim2.new(0, 8, 0, 6)
-            status.BackgroundTransparency = 1
-            status.Text = "أوراق الروبوت: 5"
-            status.TextColor3 = TEXT_WHITE
-            status.Font = Enum.Font.GothamBold
-            status.TextSize = 13
-            status.ZIndex = 26
-
-            local pileCard = Instance.new("TextButton", Arena)
-            pileCard.Size = UDim2.new(0, 74, 0, 96)
-            pileCard.Position = UDim2.new(0.5, -37, 0.36, -48)
-            pileCard.BackgroundColor3 = topCard.Color
-            pileCard.Text = topCard.Val .. "\n" .. topCard.ColorName
-            pileCard.TextColor3 = TEXT_WHITE
-            pileCard.Font = Enum.Font.GothamBlack
-            pileCard.TextSize = 14
-            pileCard.ZIndex = 27
-            Instance.new("UICorner", pileCard).CornerRadius = UDim.new(0, 10)
-
-            local handFrame = Instance.new("ScrollingFrame", Arena)
-            handFrame.Size = UDim2.new(1, -16, 0, 82)
-            handFrame.Position = UDim2.new(0, 8, 1, -92)
-            handFrame.BackgroundTransparency = 1
-            handFrame.ScrollBarThickness = 3
-            handFrame.ScrollingDirection = Enum.ScrollingDirection.X
-            handFrame.ZIndex = 26
-
-            local function CanMatch(card)
-                return card.ColorName == topCard.ColorName or card.Val == topCard.Val
-            end
-
-            local RefreshUNO
-
-            local function BotUNOTurn()
-                if isGameOver then return end
-                local matches = {}
-                for idx, c in ipairs(botHand) do
-                    if CanMatch(c) then table.insert(matches, idx) end
-                end
-
-                if #matches > 0 then
-                    local pickIdx = (math.random() < BotMistakeChance()) and matches[math.random(1, #matches)] or matches[1]
-                    topCard = table.remove(botHand, pickIdx)
-                    if topCard.Val == "+2" then
-                        table.insert(playerHand, RandCard())
-                        table.insert(playerHand, RandCard())
-                    end
-                else
-                    table.insert(botHand, RandCard())
-                end
-
-                pileCard.BackgroundColor3 = topCard.Color
-                pileCard.Text = topCard.Val .. "\n" .. topCard.ColorName
-                status.Text = "أوراق الروبوت: " .. #botHand
-
-                if #botHand == 0 then
-                    isGameOver = true
-                    EndTxt.Text = "الروبوت فاز في أونو!"
-                    EndScreen.Visible = true
-                else
-                    RefreshUNO()
-                end
-            end
-
-            RefreshUNO = function()
-                status.Text = "أوراق الروبوت: " .. #botHand .. " | أوراقك: " .. #playerHand
-                for _, ch in ipairs(handFrame:GetChildren()) do ch:Destroy() end
-                handFrame.CanvasSize = UDim2.new(0, math.max(300, #playerHand * 60), 0, 0)
-                local l = Instance.new("UIListLayout", handFrame)
-                l.FillDirection = Enum.FillDirection.Horizontal
-                l.HorizontalAlignment = Enum.HorizontalAlignment.Left
-                l.Padding = UDim.new(0, 6)
-
-                for i, c in ipairs(playerHand) do
-                    local cb = Instance.new("TextButton", handFrame)
-                    cb.Size = UDim2.new(0, 52, 0, 72)
-                    cb.BackgroundColor3 = c.Color
-                    cb.Text = c.Val .. "\n" .. c.ColorName
-                    cb.TextColor3 = TEXT_WHITE
-                    cb.Font = Enum.Font.GothamBlack
-                    cb.TextSize = 11
-                    cb.ZIndex = 27
-                    Instance.new("UICorner", cb).CornerRadius = UDim.new(0, 8)
-
-                    cb.MouseButton1Click:Connect(function()
-                        if isPaused or isGameOver or not CanMatch(c) then return end
-                        topCard = table.remove(playerHand, i)
-                        pileCard.BackgroundColor3 = topCard.Color
-                        pileCard.Text = topCard.Val .. "\n" .. topCard.ColorName
-
-                        if topCard.Val == "+2" then
-                            table.insert(botHand, RandCard())
-                            table.insert(botHand, RandCard())
-                        end
-
-                        if #playerHand == 0 then
-                            isGameOver = true
-                            EndTxt.Text = "فزت في أونو!"
-                            EndScreen.Visible = true
-                            return
-                        end
-
-                        RefreshUNO()
-                        local th = task.spawn(function()
-                            task.wait(BotThinkDelay())
-                            BotUNOTurn()
-                        end)
-                        table.insert(ActiveThreads, th)
-                    end)
-                end
-            end
-
-            local DrawUNO = Instance.new("TextButton", Arena)
-            DrawUNO.Size = UDim2.new(0, 120, 0, 32)
-            DrawUNO.Position = UDim2.new(0.5, -60, 0.64, 0)
-            DrawUNO.BackgroundColor3 = BG_DARK
-            DrawUNO.Text = "سحب ورقة"
-            DrawUNO.TextColor3 = TEXT_WHITE
-            DrawUNO.Font = Enum.Font.GothamBold
-            DrawUNO.TextSize = 12
-            DrawUNO.ZIndex = 27
-            Instance.new("UICorner", DrawUNO).CornerRadius = UDim.new(0, 6)
-            DrawUNO.MouseButton1Click:Connect(function()
-                if isPaused or isGameOver then return end
-                table.insert(playerHand, RandCard())
-                RefreshUNO()
-            end)
-
-            RefreshUNO()
-        end
-
-        -------------------------------------------------------------
-        -- 5. لعبة البليارد / الطاولي الكبيرة مع 6 جيوب وبار قوة التسديد
-        -------------------------------------------------------------
-        local function BuildPool()
-            ClearArena()
-            local myScore, botScore = 0, 0
-            local turn = "PLAYER"
-            local cuePower = 0.65
-
-            local pLbl = Instance.new("TextLabel", Arena)
-            pLbl.Size = UDim2.new(1, -16, 0, 26)
-            pLbl.Position = UDim2.new(0, 8, 0, 4)
-            pLbl.BackgroundTransparency = 1
-            pLbl.Text = "أنت: 0  |  الروبوت: 0  |  دورك"
-            pLbl.TextColor3 = TEXT_WHITE
-            pLbl.Font = Enum.Font.GothamBold
-            pLbl.TextSize = 12
-            pLbl.ZIndex = 26
-
-            -- طاولة بليارد كبيرة واضحة
-            local tableFrame = Instance.new("Frame", Arena)
-            tableFrame.Size = UDim2.new(0.92, 0, 0.58, 0)
-            tableFrame.Position = UDim2.new(0.04, 0, 0.14, 0)
-            tableFrame.BackgroundColor3 = Color3.fromRGB(21, 94, 52)
-            tableFrame.ZIndex = 26
-            Instance.new("UICorner", tableFrame).CornerRadius = UDim.new(0, 14)
-            local tbStroke = Instance.new("UIStroke", tableFrame)
-            tbStroke.Color = Color3.fromRGB(120, 53, 15)
-            tbStroke.Thickness = 4
-
-            -- 6 جيوب (حفر) لتسقط فيها الكرات
-            local pockets = {
-                Vector2.new(0.03, 0.08), Vector2.new(0.50, 0.06), Vector2.new(0.97, 0.08),
-                Vector2.new(0.03, 0.92), Vector2.new(0.50, 0.94), Vector2.new(0.97, 0.92)
-            }
-            for _, pk in ipairs(pockets) do
-                local hole = Instance.new("Frame", tableFrame)
-                hole.Size = UDim2.new(0, 22, 0, 22)
-                hole.AnchorPoint = Vector2.new(0.5, 0.5)
-                hole.Position = UDim2.new(pk.X, 0, pk.Y, 0)
-                hole.BackgroundColor3 = Color3.fromRGB(8, 8, 10)
-                hole.ZIndex = 27
-                Instance.new("UICorner", hole).CornerRadius = UDim.new(1, 0)
-            end
-
-            local cueBall = Instance.new("Frame", tableFrame)
-            cueBall.Size = UDim2.new(0, 20, 0, 20)
-            cueBall.AnchorPoint = Vector2.new(0.5, 0.5)
-            cueBall.Position = UDim2.new(0.24, 0, 0.5, 0)
-            cueBall.BackgroundColor3 = TEXT_WHITE
-            cueBall.ZIndex = 29
-            Instance.new("UICorner", cueBall).CornerRadius = UDim.new(1, 0)
-
-            local ballPos = Vector2.new(0.24, 0.5)
-            local ballVel = Vector2.zero
-
-            local targets = {}
-            local targetCoords = {
-                Vector2.new(0.70, 0.50),
-                Vector2.new(0.76, 0.37),
-                Vector2.new(0.76, 0.63),
-                Vector2.new(0.82, 0.44),
-                Vector2.new(0.82, 0.56)
-            }
-            for i, pos in ipairs(targetCoords) do
-                local b = Instance.new("Frame", tableFrame)
-                b.Size = UDim2.new(0, 20, 0, 20)
-                b.AnchorPoint = Vector2.new(0.5, 0.5)
-                b.Position = UDim2.new(pos.X, 0, pos.Y, 0)
-                b.BackgroundColor3 = (i % 2 == 1) and ACCENT_RED or ACCENT_AMBER
-                b.ZIndex = 28
-                Instance.new("UICorner", b).CornerRadius = UDim.new(1, 0)
-                table.insert(targets, {ui = b, pos = pos, active = true})
-            end
-
-            -- بار قوة التسديد (Power Bar) + زر الضربة
-            local powerBg = Instance.new("Frame", Arena)
-            powerBg.Size = UDim2.new(0.42, 0, 0, 26)
-            powerBg.Position = UDim2.new(0.05, 0, 1, -36)
-            powerBg.BackgroundColor3 = BG_DARK
-            powerBg.ZIndex = 28
-            Instance.new("UICorner", powerBg).CornerRadius = UDim.new(0, 7)
-
-            local powerFill = Instance.new("Frame", powerBg)
-            powerFill.Size = UDim2.new(cuePower, 0, 1, 0)
-            powerFill.BackgroundColor3 = ACCENT_AMBER
-            powerFill.ZIndex = 29
-            Instance.new("UICorner", powerFill).CornerRadius = UDim.new(0, 7)
-
-            local powerBtn = Instance.new("TextButton", powerBg)
-            powerBtn.Size = UDim2.new(1, 0, 1, 0)
-            powerBtn.BackgroundTransparency = 1
-            powerBtn.Text = "قوة: 65%"
-            powerBtn.TextColor3 = TEXT_WHITE
-            powerBtn.Font = Enum.Font.GothamBlack
-            powerBtn.TextSize = 11
-            powerBtn.ZIndex = 30
-            powerBtn.MouseButton1Click:Connect(function()
-                cuePower = cuePower + 0.2
-                if cuePower > 1.0 then cuePower = 0.35 end
-                powerFill.Size = UDim2.new(cuePower, 0, 1, 0)
-                powerBtn.Text = string.format("قوة: %d%%", math.floor(cuePower * 100))
-            end)
-
-            local ShootBtn = Instance.new("TextButton", Arena)
-            ShootBtn.Size = UDim2.new(0.42, 0, 0, 30)
-            ShootBtn.Position = UDim2.new(0.53, 0, 1, -38)
-            ShootBtn.BackgroundColor3 = ACCENT_RED
-            ShootBtn.Text = "تسديد الكرة"
-            ShootBtn.TextColor3 = TEXT_WHITE
-            ShootBtn.Font = Enum.Font.GothamBold
-            ShootBtn.TextSize = 12
-            ShootBtn.ZIndex = 28
-            Instance.new("UICorner", ShootBtn).CornerRadius = UDim.new(0, 8)
-
-            local function AimAndShoot(isBot)
-                if ballVel.Magnitude > 0.05 or isGameOver then return end
-                local aimTarget = Vector2.new(0.78, 0.5)
-                for _, t in ipairs(targets) do
-                    if t.active then aimTarget = t.pos break end
-                end
-                local dir = (aimTarget - ballPos).Unit
-                local spread = isBot and (BotMistakeChance() * 0.4) or 0.06
-                local angleOffset = (math.random() - 0.5) * spread
-                local cosA, sinA = math.cos(angleOffset), math.sin(angleOffset)
-                local rotDir = Vector2.new(dir.X * cosA - dir.Y * sinA, dir.X * sinA + dir.Y * cosA).Unit
-                local pwr = isBot and (botLevel == "HARD" and 1.25 or 0.95) or (0.65 + cuePower * 0.75)
-                ballVel = rotDir * pwr
-            end
-
-            ShootBtn.MouseButton1Click:Connect(function()
-                if isPaused or isGameOver or turn ~= "PLAYER" then return end
-                AimAndShoot(false)
-            end)
-
-            local poolConn
-            poolConn = RunService.RenderStepped:Connect(function(dt)
-                if not Win or not Win.Parent then
-                    if poolConn then poolConn:Disconnect() end
-                    return
-                end
-                if isPaused or isGameOver then return end
-
-                if ballVel.Magnitude > 0.01 then
-                    ballPos = ballPos + ballVel * dt
-                    ballVel = ballVel * math.max(0, 1 - dt * 1.25)
-
-                    if ballPos.X < 0.05 or ballPos.X > 0.95 then
-                        ballVel = Vector2.new(-ballVel.X, ballVel.Y)
-                        ballPos = Vector2.new(math.clamp(ballPos.X, 0.05, 0.95), ballPos.Y)
-                    end
-                    if ballPos.Y < 0.09 or ballPos.Y > 0.91 then
-                        ballVel = Vector2.new(ballVel.X, -ballVel.Y)
-                        ballPos = Vector2.new(ballPos.X, math.clamp(ballPos.Y, 0.09, 0.91))
-                    end
-                    cueBall.Position = UDim2.new(ballPos.X, 0, ballPos.Y, 0)
-
-                    for _, t in ipairs(targets) do
-                        if t.active then
-                            local nearBall = (t.pos - ballPos).Magnitude < 0.075
-                            local nearPocket = false
-                            for _, pk in ipairs(pockets) do
-                                if (t.pos - pk).Magnitude < 0.11 then
-                                    nearPocket = true
-                                    break
-                                end
-                            end
-                            if nearBall or nearPocket then
-                                t.active = false
-                                t.ui.Visible = false
-                                if turn == "PLAYER" then myScore += 1 else botScore += 1 end
-                                pLbl.Text = "أنت: " .. myScore .. "  |  الروبوت: " .. botScore
-                            end
-                        end
-                    end
-
-                    if ballVel.Magnitude <= 0.02 then
-                        ballVel = Vector2.zero
-                        if myScore + botScore >= #targets then
-                            isGameOver = true
-                            EndTxt.Text = (myScore >= botScore) and "فزت في البليارد!" or "الروبوت فاز في البليارد!"
-                            EndScreen.Visible = true
-                        elseif turn == "PLAYER" then
-                            turn = "BOT"
-                            pLbl.Text = "أنت: " .. myScore .. "  |  الروبوت: " .. botScore .. "  |  دور الروبوت"
-                            local th = task.spawn(function()
-                                task.wait(BotThinkDelay())
-                                AimAndShoot(true)
-                            end)
-                            table.insert(ActiveThreads, th)
-                        else
-                            turn = "PLAYER"
-                            pLbl.Text = "أنت: " .. myScore .. "  |  الروبوت: " .. botScore .. "  |  دورك"
-                        end
-                    end
-                end
-            end)
-        end
-
-        local subGames = {
-            {Name = "شطرنج", Fn = BuildChess},
-            {Name = "دومنة", Fn = BuildDomino},
-            {Name = "أونو", Fn = BuildUNO},
-            {Name = "بليارد", Fn = BuildPool},
-            {Name = "إكس أو", Fn = BuildXO}
-        }
-
-        local subBtns = {}
-        StartSubGame = function(idx)
-            for i, b in ipairs(subBtns) do
-                b.BackgroundColor3 = (i == idx) and ACCENT_RED or BG_DARK
-            end
-            subGames[idx].Fn()
-        end
-
-        for i, sg in ipairs(subGames) do
-            local sb = Instance.new("TextButton", SubGameScroll)
-            sb.Size = UDim2.new(0, 84, 0, 26)
-            sb.BackgroundColor3 = BG_DARK
-            sb.Text = sg.Name
-            sb.TextColor3 = TEXT_WHITE
-            sb.Font = Enum.Font.GothamBold
-            sb.TextSize = 11
-            sb.ZIndex = 26
-            Instance.new("UICorner", sb).CornerRadius = UDim.new(0, 6)
-            sb.MouseButton1Click:Connect(function() StartSubGame(i) end)
-            table.insert(subBtns, sb)
-        end
-
-        StartSubGame(1)
-    end
+	ClearWorldAndLoops()
+	local mySession = SessionCounter
+
+	if ScreenGui:FindFirstChild("GameWindow") then
+		ScreenGui.GameWindow:Destroy()
+	end
+
+	MainFrame.Visible = false
+	ToggleBtn.Visible = false
+
+	local isPaused = false
+	local isMinimized = false
+	local isGameOver = false
+	local score = 0
+	local is3DMode = (mode == "MOTO_3D" or mode == "DRIFT_3D")
+
+	local Win = Instance.new("Frame", ScreenGui)
+	Win.Name = "GameWindow"
+	Win.Size = UDim2.new(1, 0, 1, 0)
+	Win.Position = UDim2.new(0, 0, 0, 0)
+	Win.BackgroundColor3 = Color3.fromRGB(12, 12, 16)
+	Win.BackgroundTransparency = is3DMode and 1 or 0
+	Win.ClipsDescendants = true
+	Win.ZIndex = 20
+
+	local wStroke = Instance.new("UIStroke", Win)
+	wStroke.Color = ACCENT_RED
+	wStroke.Thickness = 2
+	wStroke.Enabled = not is3DMode
+
+	local TopBar = Instance.new("Frame", Win)
+	TopBar.Size = UDim2.new(1, 0, 0, 44)
+	TopBar.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
+	TopBar.BackgroundTransparency = is3DMode and 0.25 or 0
+	TopBar.ZIndex = 30
+
+	local StatusLbl = Instance.new("TextLabel", TopBar)
+	StatusLbl.Size = UDim2.new(0.58, 0, 1, 0)
+	StatusLbl.Position = UDim2.new(0, 14, 0, 0)
+	StatusLbl.BackgroundTransparency = 1
+	StatusLbl.Text = "SCORE: 0"
+	StatusLbl.TextColor3 = TEXT_WHITE
+	StatusLbl.Font = Enum.Font.GothamBlack
+	StatusLbl.TextSize = 14
+	StatusLbl.TextXAlignment = Enum.TextXAlignment.Left
+	StatusLbl.ZIndex = 31
+
+	local CtrlBox = Instance.new("Frame", TopBar)
+	CtrlBox.Size = UDim2.new(0, 136, 0, 32)
+	CtrlBox.Position = UDim2.new(1, -146, 0.5, -16)
+	CtrlBox.BackgroundTransparency = 1
+	CtrlBox.ZIndex = 31
+
+	local cLayout = Instance.new("UIListLayout", CtrlBox)
+	cLayout.FillDirection = Enum.FillDirection.Horizontal
+	cLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+	cLayout.Padding = UDim.new(0, 6)
+
+	local function MakeCtrlBtn(sym, col)
+		local b = Instance.new("TextButton", CtrlBox)
+		b.Size = UDim2.new(0, 38, 0, 32)
+		b.BackgroundColor3 = col
+		b.Text = sym
+		b.TextColor3 = TEXT_WHITE
+		b.Font = Enum.Font.GothamBold
+		b.TextSize = 15
+		b.ZIndex = 32
+		Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
+		return b
+	end
+
+	local PauseBtn = MakeCtrlBtn("⏸", Color3.fromRGB(48, 48, 58))
+	local MinBtn = MakeCtrlBtn("🗕", Color3.fromRGB(48, 48, 58))
+	local CloseBtn = MakeCtrlBtn("✖", ACCENT_RED)
+
+	local Body = Instance.new("Frame", Win)
+	Body.Size = UDim2.new(1, 0, 1, -44)
+	Body.Position = UDim2.new(0, 0, 0, 44)
+	Body.BackgroundTransparency = 1
+	Body.ClipsDescendants = true
+	Body.ZIndex = 22
+
+	local PauseScreen = Instance.new("Frame", Body)
+	PauseScreen.Size = UDim2.new(1, 0, 1, 0)
+	PauseScreen.BackgroundColor3 = Color3.new(0, 0, 0)
+	PauseScreen.BackgroundTransparency = 0.5
+	PauseScreen.Visible = false
+	PauseScreen.ZIndex = 50
+
+	local PauseTxt = Instance.new("TextLabel", PauseScreen)
+	PauseTxt.Size = UDim2.new(1, 0, 0, 50)
+	PauseTxt.Position = UDim2.new(0, 0, 0.45, 0)
+	PauseTxt.BackgroundTransparency = 1
+	PauseTxt.Text = "متوقف مؤقتاً"
+	PauseTxt.TextColor3 = TEXT_WHITE
+	PauseTxt.Font = Enum.Font.GothamBlack
+	PauseTxt.TextSize = 24
+	PauseTxt.ZIndex = 51
+
+	local EndScreen = Instance.new("Frame", Body)
+	EndScreen.Size = UDim2.new(1, 0, 1, 0)
+	EndScreen.BackgroundColor3 = Color3.new(0, 0, 0)
+	EndScreen.BackgroundTransparency = 0.4
+	EndScreen.Visible = false
+	EndScreen.ZIndex = 55
+
+	local EndTxt = Instance.new("TextLabel", EndScreen)
+	EndTxt.Size = UDim2.new(1, 0, 0, 44)
+	EndTxt.Position = UDim2.new(0, 0, 0.34, 0)
+	EndTxt.BackgroundTransparency = 1
+	EndTxt.Text = "انتهت الجولة!"
+	EndTxt.TextColor3 = ACCENT_RED
+	EndTxt.Font = Enum.Font.GothamBlack
+	EndTxt.TextSize = 28
+	EndTxt.ZIndex = 56
+
+	local RetryBtn = Instance.new("TextButton", EndScreen)
+	RetryBtn.Size = UDim2.new(0, 170, 0, 42)
+	RetryBtn.Position = UDim2.new(0.5, -85, 0.5, 0)
+	RetryBtn.BackgroundColor3 = ACCENT_RED
+	RetryBtn.Text = "إعادة اللعب"
+	RetryBtn.TextColor3 = TEXT_WHITE
+	RetryBtn.Font = Enum.Font.GothamBold
+	RetryBtn.TextSize = 16
+	RetryBtn.ZIndex = 56
+	Instance.new("UICorner", RetryBtn).CornerRadius = UDim.new(0, 8)
+
+	PauseBtn.MouseButton1Click:Connect(function()
+		if isGameOver then return end
+		isPaused = not isPaused
+		PauseScreen.Visible = isPaused
+		PauseBtn.Text = isPaused and "▶" or "⏸"
+	end)
+
+	MinBtn.MouseButton1Click:Connect(function()
+		isMinimized = not isMinimized
+		if isMinimized then
+			Win.BackgroundTransparency = is3DMode and 1 or 0
+			Win.Size = UDim2.new(0, 355, 0, 255)
+			Win.Position = UDim2.new(0.5, -177, 0.5, -127)
+			Win.Active = true
+			Win.Draggable = true
+			MinBtn.Text = "🗖"
+		else
+			Win.BackgroundTransparency = is3DMode and 1 or 0
+			Win.Size = UDim2.new(1, 0, 1, 0)
+			Win.Position = UDim2.new(0, 0, 0, 0)
+			Win.Active = false
+			Win.Draggable = false
+			MinBtn.Text = "🗕"
+		end
+	end)
+
+	CloseBtn.MouseButton1Click:Connect(function()
+		ClearWorldAndLoops()
+		Win:Destroy()
+		MainFrame.Visible = true
+		ToggleBtn.Visible = true
+	end)
+
+	RetryBtn.MouseButton1Click:Connect(function()
+		LaunchMode(mode)
+	end)
+
+	if is3DMode then
+		SavedCameraType = camera.CameraType
+		SavedCameraSubject = camera.CameraSubject
+		camera.CameraType = Enum.CameraType.Scriptable
+
+		local world = Instance.new("Folder", Workspace)
+		world.Name = "NHYQ_3D_World"
+		ActiveWorldFolder = world
+
+		local baseOrigin = Vector3.new(0, 500, 0)
+		local roadWidth = 36
+		local roadLength = 320
+
+		local roadPart = Instance.new("Part", world)
+		roadPart.Anchored = true
+		roadPart.Size = Vector3.new(roadWidth, 2, roadLength)
+		roadPart.Position = baseOrigin + Vector3.new(0, -1, -roadLength / 2 + 20)
+		roadPart.Color = Color3.fromRGB(32, 32, 38)
+		roadPart.Material = Enum.Material.Asphalt
+
+		for side = -1, 1, 2 do
+			local curb = Instance.new("Part", world)
+			curb.Anchored = true
+			curb.Size = Vector3.new(4, 2.6, roadLength)
+			curb.Position = baseOrigin + Vector3.new(side * (roadWidth / 2 + 2), -0.7, -roadLength / 2 + 20)
+			curb.Color = Color3.fromRGB(70, 70, 78)
+			curb.Material = Enum.Material.Concrete
+		end
+
+		local stripes = {}
+		for i = 1, 18 do
+			local s = Instance.new("Part", world)
+			s.Anchored = true
+			s.Size = Vector3.new(0.6, 0.15, 7)
+			s.Color = Color3.fromRGB(240, 240, 240)
+			s.Material = Enum.Material.Neon
+			s.Position = baseOrigin + Vector3.new(0, 0.05, -i * 18)
+			table.insert(stripes, s)
+		end
+
+		local motoModel = Instance.new("Model", world)
+		motoModel.Name = "PlayerMoto"
+
+		local function MakePart(sz, col, mat)
+			local p = Instance.new("Part", motoModel)
+			p.Size = sz
+			p.Color = col
+			p.Material = mat or Enum.Material.SmoothPlastic
+			p.Anchored = true
+			p.CanCollide = false
+			return p
+		end
+
+		local chassis = MakePart(Vector3.new(1.6, 1.3, 4.2), ACCENT_RED, Enum.Material.Metal)
+		local seat = MakePart(Vector3.new(1.4, 0.5, 1.8), Color3.fromRGB(20, 20, 24))
+		local riderTorso = MakePart(Vector3.new(1.5, 2.2, 1.1), Color3.fromRGB(45, 45, 55))
+		local riderHead = MakePart(Vector3.new(1.2, 1.2, 1.2), Color3.fromRGB(245, 245, 245))
+		local frontWheel = MakePart(Vector3.new(0.7, 1.8, 1.8), Color3.fromRGB(15, 15, 18))
+		local rearWheel = MakePart(Vector3.new(0.7, 1.8, 1.8), Color3.fromRGB(15, 15, 18))
+
+		local motoPos = baseOrigin + Vector3.new(0, 1.4, 0)
+		local speed = 0
+		local maxSpeed = (mode == "MOTO_3D") and 115 or 130
+		local steerInput = 0
+		local throttleHeld = false
+		local brakeHeld = false
+
+		local function MakePad(txt, pos, sz, col)
+			local b = Instance.new("TextButton", Body)
+			b.Size = sz
+			b.Position = pos
+			b.BackgroundColor3 = col
+			b.BackgroundTransparency = 0.2
+			b.Text = txt
+			b.TextColor3 = TEXT_WHITE
+			b.Font = Enum.Font.GothamBlack
+			b.TextSize = 15
+			b.ZIndex = 35
+			Instance.new("UICorner", b).CornerRadius = UDim.new(0, 12)
+			local st = Instance.new("UIStroke", b)
+			st.Color = TEXT_WHITE
+			st.Thickness = 1.5
+			st.Transparency = 0.35
+			return b
+		end
+
+		local LeftPad = MakePad("◀ يسار", UDim2.new(0.03, 0, 1, -78), UDim2.new(0.21, 0, 0, 64), Color3.fromRGB(30, 30, 38))
+		local RightPad = MakePad("يمين ▶", UDim2.new(0.26, 0, 1, -78), UDim2.new(0.21, 0, 0, 64), Color3.fromRGB(30, 30, 38))
+		local BrakePad = MakePad("بريك ■", UDim2.new(0.54, 0, 1, -78), UDim2.new(0.20, 0, 0, 64), Color3.fromRGB(185, 28, 28))
+		local GasPad = MakePad("بانزين ▲", UDim2.new(0.76, 0, 1, -78), UDim2.new(0.21, 0, 0, 64), ACCENT_GREEN)
+
+		LeftPad.MouseButton1Down:Connect(function() steerInput = -1 end)
+		LeftPad.MouseButton1Up:Connect(function() if steerInput == -1 then steerInput = 0 end end)
+		RightPad.MouseButton1Down:Connect(function() steerInput = 1 end)
+		RightPad.MouseButton1Up:Connect(function() if steerInput == 1 then steerInput = 0 end end)
+
+		BrakePad.MouseButton1Down:Connect(function() brakeHeld = true end)
+		BrakePad.MouseButton1Up:Connect(function() brakeHeld = false end)
+		GasPad.MouseButton1Down:Connect(function() throttleHeld = true end)
+		GasPad.MouseButton1Up:Connect(function() throttleHeld = false end)
+
+		local traffic = {}
+		local spawnClock = 0
+
+		local function SpawnTrafficEntity()
+			local ent = Instance.new("Model", world)
+			local laneX = math.random(-14, 14)
+			local zPos = motoPos.Z - 210
+
+			if mode == "MOTO_3D" then
+				local isCar = math.random() < 0.65
+				if isCar then
+					local carBody = Instance.new("Part", ent)
+					carBody.Anchored = true
+					carBody.CanCollide = false
+					carBody.Size = Vector3.new(4.6, 3.2, 9.5)
+					carBody.Position = Vector3.new(baseOrigin.X + laneX, baseOrigin.Y + 1.6, zPos)
+					carBody.Color = Color3.fromRGB(math.random(50, 220), math.random(50, 220), math.random(50, 220))
+					carBody.Material = Enum.Material.SmoothPlastic
+					table.insert(traffic, {model = ent, pos = carBody.Position, half = Vector3.new(2.3, 1.6, 4.7), speed = math.random(18, 36), vx = 0})
+				else
+					local ped = Instance.new("Part", ent)
+					ped.Anchored = true
+					ped.CanCollide = false
+					ped.Size = Vector3.new(1.5, 4.2, 1.5)
+					ped.Position = Vector3.new(baseOrigin.X + laneX, baseOrigin.Y + 2.1, zPos)
+					ped.Color = Color3.fromRGB(250, 204, 21)
+					local walkVx = (laneX > 0) and -6 or 6
+					table.insert(traffic, {model = ent, pos = ped.Position, half = Vector3.new(0.8, 2.0, 0.8), speed = 10, vx = walkVx})
+				end
+			else
+				local bar = Instance.new("Part", ent)
+				bar.Anchored = true
+				bar.CanCollide = false
+				bar.Size = Vector3.new(8, 3, 2.5)
+				bar.Position = Vector3.new(baseOrigin.X + laneX, baseOrigin.Y + 1.5, zPos)
+				bar.Color = ACCENT_RED
+				bar.Material = Enum.Material.Neon
+				table.insert(traffic, {model = ent, pos = bar.Position, half = Vector3.new(4, 1.5, 1.25), speed = 15, vx = 0})
+			end
+		end
+
+		ActiveConn = RunService.RenderStepped:Connect(function(dt)
+			if isPaused or isGameOver then return end
+
+			if throttleHeld then
+				speed = math.min(maxSpeed, speed + dt * 85)
+			elseif brakeHeld then
+				speed = math.max(0, speed - dt * 110)
+			else
+				speed = math.max(0, speed - dt * 28)
+			end
+
+			local turnFactor = (speed > 2) and (steerInput * dt * 24) or 0
+			local nextX = math.clamp(motoPos.X + turnFactor, baseOrigin.X - roadWidth / 2 + 1.5, baseOrigin.X + roadWidth / 2 - 1.5)
+			local nextZ = motoPos.Z - speed * dt
+			motoPos = Vector3.new(nextX, baseOrigin.Y + 1.4, nextZ)
+
+			score = score + (speed * dt * 0.4)
+			StatusLbl.Text = string.format("KM/H: %d  |  SCORE: %d", math.floor(speed * 1.8), math.floor(score))
+
+			local tilt = -steerInput * 0.25
+			local cf = CFrame.new(motoPos) * CFrame.Angles(0, 0, tilt)
+
+			chassis.CFrame = cf
+			seat.CFrame = cf * CFrame.new(0, 0.8, 0.3)
+			riderTorso.CFrame = cf * CFrame.new(0, 2.0, 0.2) * CFrame.Angles(0.25, 0, 0)
+			riderHead.CFrame = cf * CFrame.new(0, 3.6, -0.1)
+			frontWheel.CFrame = cf * CFrame.new(0, -0.5, -1.6) * CFrame.Angles(0, math.pi / 2, 0)
+			rearWheel.CFrame = cf * CFrame.new(0, -0.5, 1.6) * CFrame.Angles(0, math.pi / 2, 0)
+
+			roadPart.Position = Vector3.new(baseOrigin.X, baseOrigin.Y - 1, motoPos.Z - roadLength / 2 + 40)
+			for idx, s in ipairs(stripes) do
+				local sz = motoPos.Z - 20 - (idx * 18)
+				s.Position = Vector3.new(baseOrigin.X, baseOrigin.Y + 0.05, sz)
+			end
+
+			local camDesired = motoPos + Vector3.new(steerInput * 2.5, 7.5, 14.5)
+			local camLookAt = motoPos + Vector3.new(0, 2.2, -18)
+			camera.CFrame = camera.CFrame:Lerp(CFrame.lookAt(camDesired, camLookAt), math.min(1, dt * 10))
+
+			spawnClock = spawnClock + dt
+			local spawnInterval = math.max(0.42, 1.05 - (speed / 220))
+			if spawnClock >= spawnInterval then
+				spawnClock = 0
+				SpawnTrafficEntity()
+			end
+
+			for i = #traffic, 1, -1 do
+				local item = traffic[i]
+				local nx = math.clamp(item.pos.X + item.vx * dt, baseOrigin.X - roadWidth / 2 + 1.5, baseOrigin.X + roadWidth / 2 - 1.5)
+				local nz = item.pos.Z + item.speed * dt
+				item.pos = Vector3.new(nx, item.pos.Y, nz)
+
+				local mainPart = item.model:FindFirstChildWhichIsA("BasePart")
+				if mainPart then
+					mainPart.Position = item.pos
+				end
+
+				local dx = math.abs(motoPos.X - item.pos.X)
+				local dz = math.abs(motoPos.Z - item.pos.Z)
+				if dx < (1.0 + item.half.X) and dz < (2.0 + item.half.Z) then
+					isGameOver = true
+					EndTxt.Text = "اصطدام! انتهت الجولة"
+					EndScreen.Visible = true
+				end
+
+				if item.pos.Z > motoPos.Z + 35 then
+					item.model:Destroy()
+					table.remove(traffic, i)
+				end
+			end
+		end)
+
+	elseif mode == "DUEL_2P" then
+		StatusLbl.Text = "2P DUEL ARENA"
+
+		local DiffBar = Instance.new("Frame", Body)
+		DiffBar.Size = UDim2.new(1, -16, 0, 34)
+		DiffBar.Position = UDim2.new(0, 8, 0, 6)
+		DiffBar.BackgroundColor3 = CARD_BG
+		DiffBar.ZIndex = 25
+		Instance.new("UICorner", DiffBar).CornerRadius = UDim.new(0, 8)
+
+		local DiffTitle = Instance.new("TextLabel", DiffBar)
+		DiffTitle.Size = UDim2.new(0.32, 0, 1, 0)
+		DiffTitle.Position = UDim2.new(0, 8, 0, 0)
+		DiffTitle.BackgroundTransparency = 1
+		DiffTitle.Text = "مستوى الروبوت:"
+		DiffTitle.TextColor3 = TEXT_WHITE
+		DiffTitle.Font = Enum.Font.GothamBold
+		DiffTitle.TextSize = 12
+		DiffTitle.TextXAlignment = Enum.TextXAlignment.Left
+		DiffTitle.ZIndex = 26
+
+		local botLevel = "MEDIUM"
+		local diffBtns = {}
+
+		local levels = {
+			{Id = "EASY", Label = "هاوي", Col = ACCENT_GREEN},
+			{Id = "MEDIUM", Label = "متوسط", Col = ACCENT_AMBER},
+			{Id = "HARD", Label = "قوي", Col = ACCENT_RED}
+		}
+
+		for idx, lv in ipairs(levels) do
+			local db = Instance.new("TextButton", DiffBar)
+			db.Size = UDim2.new(0.2, 0, 0, 24)
+			db.Position = UDim2.new(0.34 + (idx - 1) * 0.22, 0, 0.5, -12)
+			db.BackgroundColor3 = (lv.Id == botLevel) and lv.Col or BG_DARK
+			db.Text = lv.Label
+			db.TextColor3 = TEXT_WHITE
+			db.Font = Enum.Font.GothamBlack
+			db.TextSize = 11
+			db.ZIndex = 26
+			Instance.new("UICorner", db).CornerRadius = UDim.new(0, 6)
+			db.MouseButton1Click:Connect(function()
+				botLevel = lv.Id
+				for k, other in ipairs(diffBtns) do
+					other.BackgroundColor3 = (levels[k].Id == botLevel) and levels[k].Col or BG_DARK
+				end
+			end)
+			table.insert(diffBtns, db)
+		end
+
+		local SubGameScroll = Instance.new("ScrollingFrame", Body)
+		SubGameScroll.Size = UDim2.new(1, -16, 0, 38)
+		SubGameScroll.Position = UDim2.new(0, 8, 0, 44)
+		SubGameScroll.BackgroundColor3 = CARD_BG
+		SubGameScroll.ScrollBarThickness = 4
+		SubGameScroll.ScrollingDirection = Enum.ScrollingDirection.X
+		SubGameScroll.CanvasSize = UDim2.new(0, 470, 0, 0)
+		SubGameScroll.ZIndex = 25
+		Instance.new("UICorner", SubGameScroll).CornerRadius = UDim.new(0, 8)
+
+		local subLayout = Instance.new("UIListLayout", SubGameScroll)
+		subLayout.FillDirection = Enum.FillDirection.Horizontal
+		subLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+		subLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+		subLayout.Padding = UDim.new(0, 6)
+
+		local subPad = Instance.new("UIPadding", SubGameScroll)
+		subPad.PaddingLeft = UDim.new(0, 6)
+		subPad.PaddingRight = UDim.new(0, 6)
+
+		local ArenaScroll = Instance.new("ScrollingFrame", Body)
+		ArenaScroll.Size = UDim2.new(1, -16, 1, -92)
+		ArenaScroll.Position = UDim2.new(0, 8, 0, 88)
+		ArenaScroll.BackgroundColor3 = CARD_BG
+		ArenaScroll.ScrollBarThickness = 5
+		ArenaScroll.ScrollingDirection = Enum.ScrollingDirection.XY
+		ArenaScroll.CanvasSize = UDim2.new(1.2, 0, 1.2, 0)
+		ArenaScroll.ZIndex = 24
+		Instance.new("UICorner", ArenaScroll).CornerRadius = UDim.new(0, 10)
+
+		local Arena = Instance.new("Frame", ArenaScroll)
+		Arena.Size = UDim2.new(1, 0, 1, 0)
+		Arena.BackgroundTransparency = 1
+		Arena.ZIndex = 24
+
+		local subCounter = 0
+
+		local function ClearArena()
+			subCounter += 1
+			for _, ch in ipairs(Arena:GetChildren()) do
+				ch:Destroy()
+			end
+			EndScreen.Visible = false
+			isGameOver = false
+		end
+
+		local function BotThinkDelay()
+			if botLevel == "EASY" then return 0.9
+			elseif botLevel == "MEDIUM" then return 0.5
+			else return 0.25 end
+		end
+
+		local function BotMistakeChance()
+			if botLevel == "EASY" then return 0.72
+			elseif botLevel == "MEDIUM" then return 0.22
+			else return 0.0 end
+		end
+
+		local function BuildXO()
+			ClearArena()
+			local currentSub = subCounter
+			local info = Instance.new("TextLabel", Arena)
+			info.Size = UDim2.new(1, 0, 0, 30)
+			info.Position = UDim2.new(0, 0, 0, 6)
+			info.BackgroundTransparency = 1
+			info.Text = "دورك (X) ضد الروبوت (O)"
+			info.TextColor3 = TEXT_WHITE
+			info.Font = Enum.Font.GothamBold
+			info.TextSize = 14
+			info.ZIndex = 26
+
+			local board = {"", "", "", "", "", "", "", "", ""}
+			local btns = {}
+			local turn = "X"
+
+			local lines = {
+				{1,2,3},{4,5,6},{7,8,9},
+				{1,4,7},{2,5,8},{3,6,9},
+				{1,5,9},{3,5,7}
+			}
+
+			local function CheckWinner(b)
+				for _, l in ipairs(lines) do
+					if b[l[1]] ~= "" and b[l[1]] == b[l[2]] and b[l[2]] == b[l[3]] then
+						return b[l[1]]
+					end
+				end
+				local full = true
+				for _, v in ipairs(b) do if v == "" then full = false break end end
+				return full and "DRAW" or nil
+			end
+
+			local function Minimax(b, depth, isMax)
+				local res = CheckWinner(b)
+				if res == "O" then return 10 - depth end
+				if res == "X" then return depth - 10 end
+				if res == "DRAW" then return 0 end
+
+				if isMax then
+					local best = -100
+					for i = 1, 9 do
+						if b[i] == "" then
+							b[i] = "O"
+							local val = Minimax(b, depth + 1, false)
+							b[i] = ""
+							if val > best then best = val end
+						end
+					end
+					return best
+				else
+					local best = 100
+					for i = 1, 9 do
+						if b[i] == "" then
+							b[i] = "X"
+							local val = Minimax(b, depth + 1, true)
+							b[i] = ""
+							if val < best then best = val end
+						end
+					end
+					return best
+				end
+			end
+
+			local function PickBotMove()
+				local empty = {}
+				for i, v in ipairs(board) do if v == "" then table.insert(empty, i) end end
+				if #empty == 0 then return nil end
+
+				if math.random() < BotMistakeChance() then
+					return empty[math.random(1, #empty)]
+				end
+
+				local bestScore = -100
+				local bestMoves = {}
+				for _, idx in ipairs(empty) do
+					board[idx] = "O"
+					local sc = Minimax(board, 0, false)
+					board[idx] = ""
+					if sc > bestScore then
+						bestScore = sc
+						bestMoves = {idx}
+					elseif sc == bestScore then
+						table.insert(bestMoves, idx)
+					end
+				end
+
+				if botLevel == "MEDIUM" and #bestMoves > 1 then
+					return bestMoves[math.random(1, #bestMoves)]
+				end
+				return bestMoves[1]
+			end
+
+			local function FinishXO(res)
+				isGameOver = true
+				if res == "X" then EndTxt.Text = "فزت في X-O!"
+				elseif res == "O" then EndTxt.Text = "الروبوت فاز في X-O!"
+				else EndTxt.Text = "تعادل!" end
+				EndScreen.Visible = true
+			end
+
+			local grid = Instance.new("Frame", Arena)
+			grid.Size = UDim2.new(0, 192, 0, 192)
+			grid.Position = UDim2.new(0.5, -96, 0.5, -80)
+			grid.BackgroundTransparency = 1
+			grid.ZIndex = 26
+
+			local function ApplyMove(idx, sym)
+				board[idx] = sym
+				btns[idx].Text = sym
+				btns[idx].TextColor3 = (sym == "X") and ACCENT_RED or ACCENT_GREEN
+				local res = CheckWinner(board)
+				if res then
+					FinishXO(res)
+					return true
+				end
+				return false
+			end
+
+			for i = 1, 9 do
+				local r = math.floor((i - 1) / 3)
+				local c = (i - 1) % 3
+				local cell = Instance.new("TextButton", grid)
+				cell.Size = UDim2.new(0, 60, 0, 60)
+				cell.Position = UDim2.new(0, c * 66, 0, r * 66)
+				cell.BackgroundColor3 = BG_DARK
+				cell.Text = ""
+				cell.Font = Enum.Font.GothamBlack
+				cell.TextSize = 26
+				cell.ZIndex = 27
+				Instance.new("UICorner", cell).CornerRadius = UDim.new(0, 8)
+
+				cell.MouseButton1Click:Connect(function()
+					if isPaused or isGameOver or turn ~= "X" or board[i] ~= "" then return end
+					if ApplyMove(i, "X") then return end
+					turn = "O"
+					info.Text = "الروبوت يحلل الخطوة..."
+					task.delay(BotThinkDelay(), function()
+						if isGameOver or currentSub ~= subCounter or mySession ~= SessionCounter then return end
+						local bMove = PickBotMove()
+						if bMove and not ApplyMove(bMove, "O") then
+							turn = "X"
+							info.Text = "دورك (X) ضد الروبوت (O)"
+						end
+					end)
+				end)
+				btns[i] = cell
+			end
+		end
+
+		local function BuildChess()
+			ClearArena()
+			local currentSub = subCounter
+			local info = Instance.new("TextLabel", Arena)
+			info.Size = UDim2.new(1, 0, 0, 26)
+			info.Position = UDim2.new(0, 0, 0, 2)
+			info.BackgroundTransparency = 1
+			info.Text = "شطرنج 8x8: اختر قطعة بيضاء ثم المربع"
+			info.TextColor3 = TEXT_WHITE
+			info.Font = Enum.Font.GothamBold
+			info.TextSize = 12
+			info.ZIndex = 26
+
+			local rows, cols = 8, 8
+			local pieceVal = {K = 100, Q = 9, R = 5, B = 3, N = 3, P = 1}
+			local glyph = {
+				wK = "♔", wQ = "♕", wR = "♖", wB = "♗", wN = "♘", wP = "♙",
+				bK = "♚", bQ = "♛", bR = "♜", bB = "♝", bN = "♞", bP = "♟"
+			}
+
+			local board = {}
+			for r = 1, rows do
+				board[r] = {}
+				for c = 1, cols do board[r][c] = "" end
+			end
+
+			local backRank = {"R", "N", "B", "Q", "K", "B", "N", "R"}
+			for c = 1, cols do
+				board[1][c] = "b" .. backRank[c]
+				board[2][c] = "bP"
+				board[7][c] = "wP"
+				board[8][c] = "w" .. backRank[c]
+			end
+
+			local selected = nil
+			local turn = "w"
+			local sqBtns = {}
+
+			local function IsPathClear(b, r1, c1, r2, c2)
+				local dr = r2 - r1
+				local dc = c2 - c1
+				local stepR = (dr == 0) and 0 or (dr > 0 and 1 or -1)
+				local stepC = (dc == 0) and 0 or (dc > 0 and 1 or -1)
+				local cr, cc = r1 + stepR, c1 + stepC
+				while cr ~= r2 or cc ~= c2 do
+					if b[cr][cc] ~= "" then return false end
+					cr += stepR
+					cc += stepC
+				end
+				return true
+			end
+
+			local function IsValidMove(b, r1, c1, r2, c2)
+				if r1 == r2 and c1 == c2 then return false end
+				local p = b[r1][c1]
+				local target = b[r2][c2]
+				if p == "" then return false end
+				local side = string.sub(p, 1, 1)
+				local role = string.sub(p, 2, 2)
+				if target ~= "" and string.sub(target, 1, 1) == side then return false end
+
+				local dr = r2 - r1
+				local dc = c2 - c1
+				local adr = math.abs(dr)
+				local adc = math.abs(dc)
+
+				if role == "N" then
+					return (adr == 2 and adc == 1) or (adr == 1 and adc == 2)
+				elseif role == "K" then
+					return adr <= 1 and adc <= 1
+				elseif role == "R" then
+					return (dr == 0 or dc == 0) and IsPathClear(b, r1, c1, r2, c2)
+				elseif role == "B" then
+					return (adr == adc) and IsPathClear(b, r1, c1, r2, c2)
+				elseif role == "Q" then
+					return (dr == 0 or dc == 0 or adr == adc) and IsPathClear(b, r1, c1, r2, c2)
+				elseif role == "P" then
+					local dir = (side == "w") and -1 or 1
+					local startRow = (side == "w") and 7 or 2
+					if dc == 0 and dr == dir and target == "" then return true end
+					if dc == 0 and r1 == startRow and dr == dir * 2 and target == "" and IsPathClear(b, r1, c1, r2, c2) then
+						return true
+					end
+					if adc == 1 and dr == dir and target ~= "" then return true end
+					return false
+				end
+				return false
+			end
+
+			local function RefreshBoard()
+				for r = 1, rows do
+					for c = 1, cols do
+						local p = board[r][c]
+						local btn = sqBtns[r][c]
+						btn.Text = (p ~= "") and (glyph[p] or "") or ""
+						btn.TextColor3 = (string.sub(p, 1, 1) == "w") and TEXT_WHITE or ACCENT_RED
+						local isDark = ((r + c) % 2 == 1)
+						local isSel = selected and selected.r == r and selected.c == c
+						btn.BackgroundColor3 = isSel and ACCENT_AMBER or (isDark and Color3.fromRGB(60, 60, 72) or Color3.fromRGB(28, 28, 34))
+					end
+				end
+			end
+
+			local function CheckKingCapture(b)
+				local wKing, bKing = false, false
+				for r = 1, rows do
+					for c = 1, cols do
+						if b[r][c] == "wK" then wKing = true end
+						if b[r][c] == "bK" then bKing = true end
+					end
+				end
+				if not bKing then return "w" end
+				if not wKing then return "b" end
+				return nil
+			end
+
+			local function MovePiece(r1, c1, r2, c2)
+				local p = board[r1][c1]
+				board[r2][c2] = p
+				board[r1][c1] = ""
+				if p == "wP" and r2 == 1 then board[r2][c2] = "wQ" end
+				if p == "bP" and r2 == rows then board[r2][c2] = "bQ" end
+				selected = nil
+				RefreshBoard()
+
+				local winSide = CheckKingCapture(board)
+				if winSide then
+					isGameOver = true
+					EndTxt.Text = (winSide == "w") and "فزت في الشطرنج!" or "الروبوت فاز في الشطرنج!"
+					EndScreen.Visible = true
+					return true
+				end
+				return false
+			end
+
+			local function BotChessMove()
+				local legal = {}
+				for r1 = 1, rows do
+					for c1 = 1, cols do
+						if string.sub(board[r1][c1], 1, 1) == "b" then
+							for r2 = 1, rows do
+								for c2 = 1, cols do
+									if IsValidMove(board, r1, c1, r2, c2) then
+										local cap = board[r2][c2]
+										local val = (cap ~= "") and (pieceVal[string.sub(cap, 2, 2)] or 1) or 0
+										table.insert(legal, {r1=r1, c1=c1, r2=r2, c2=c2, score=val})
+									end
+								end
+							end
+						end
+					end
+				end
+				if #legal == 0 then return end
+
+				if math.random() < BotMistakeChance() then
+					local m = legal[math.random(1, #legal)]
+					MovePiece(m.r1, m.c1, m.r2, m.c2)
+					return
+				end
+
+				table.sort(legal, function(a, b) return a.score > b.score end)
+				local topPool = (botLevel == "HARD") and 1 or math.min(#legal, 3)
+				local chosen = legal[math.random(1, topPool)]
+				MovePiece(chosen.r1, chosen.c1, chosen.r2, chosen.c2)
+			end
+
+			local cGrid = Instance.new("Frame", Arena)
+			cGrid.Size = UDim2.new(0, 224, 0, 224)
+			cGrid.Position = UDim2.new(0.5, -112, 0.5, -94)
+			cGrid.BackgroundTransparency = 1
+			cGrid.ZIndex = 26
+
+			for r = 1, rows do
+				sqBtns[r] = {}
+				for c = 1, cols do
+					local sq = Instance.new("TextButton", cGrid)
+					sq.Size = UDim2.new(0, 26, 0, 26)
+					sq.Position = UDim2.new(0, (c - 1) * 28, 0, (r - 1) * 28)
+					sq.Font = Enum.Font.GothamBold
+					sq.TextSize = 17
+					sq.ZIndex = 27
+					Instance.new("UICorner", sq).CornerRadius = UDim.new(0, 3)
+
+					sq.MouseButton1Click:Connect(function()
+						if isPaused or isGameOver or turn ~= "w" then return end
+						local cellPiece = board[r][c]
+						if not selected then
+							if string.sub(cellPiece, 1, 1) == "w" then
+								selected = {r = r, c = c}
+								RefreshBoard()
+							end
+						else
+							if selected.r == r and selected.c == c then
+								selected = nil
+								RefreshBoard()
+							elseif IsValidMove(board, selected.r, selected.c, r, c) then
+								if MovePiece(selected.r, selected.c, r, c) then return end
+								turn = "b"
+								info.Text = "الروبوت يلعب..."
+								task.delay(BotThinkDelay(), function()
+									if isGameOver or currentSub ~= subCounter or mySession ~= SessionCounter then return end
+									BotChessMove()
+									if not isGameOver then
+										turn = "w"
+										info.Text = "دورك (الأبيض)"
+									end
+								end)
+							elseif string.sub(cellPiece, 1, 1) == "w" then
+								selected = {r = r, c = c}
+								RefreshBoard()
+							end
+						end
+					end)
+					sqBtns[r][c] = sq
+				end
+			end
+			RefreshBoard()
+		end
+
+		local function BuildDomino()
+			ClearArena()
+			local currentSub = subCounter
+			local leftEnd, rightEnd = nil, nil
+			local playedChain = {}
+			local myHand, botHand = {}, {}
+
+			for _ = 1, 7 do
+				table.insert(myHand, {math.random(0, 6), math.random(0, 6)})
+				table.insert(botHand, {math.random(0, 6), math.random(0, 6)})
+			end
+
+			local topInfo = Instance.new("TextLabel", Arena)
+			topInfo.Size = UDim2.new(1, -16, 0, 28)
+			topInfo.Position = UDim2.new(0, 8, 0, 6)
+			topInfo.BackgroundColor3 = BG_DARK
+			topInfo.Text = "الطاولة جاهزة | قطع الروبوت: 7"
+			topInfo.TextColor3 = TEXT_WHITE
+			topInfo.Font = Enum.Font.GothamBold
+			topInfo.TextSize = 12
+			topInfo.ZIndex = 26
+			Instance.new("UICorner", topInfo).CornerRadius = UDim.new(0, 6)
+
+			local chainScroll = Instance.new("ScrollingFrame", Arena)
+			chainScroll.Size = UDim2.new(1, -16, 0, 56)
+			chainScroll.Position = UDim2.new(0, 8, 0, 40)
+			chainScroll.BackgroundColor3 = Color3.fromRGB(18, 52, 34)
+			chainScroll.ScrollBarThickness = 3
+			chainScroll.ScrollingDirection = Enum.ScrollingDirection.X
+			chainScroll.ZIndex = 26
+			Instance.new("UICorner", chainScroll).CornerRadius = UDim.new(0, 8)
+
+			local handHolder = Instance.new("ScrollingFrame", Arena)
+			handHolder.Size = UDim2.new(1, -16, 0, 82)
+			handHolder.Position = UDim2.new(0, 8, 1, -90)
+			handHolder.BackgroundTransparency = 1
+			handHolder.ScrollBarThickness = 3
+			handHolder.ScrollingDirection = Enum.ScrollingDirection.X
+			handHolder.ZIndex = 26
+
+			local RebuildChainUI, RebuildHandUI
+
+			local function UpdateInfo()
+				local endsTxt = (leftEnd and ("[" .. leftEnd .. "  |  " .. rightEnd .. "]") or "بانتظار أول قطعة")
+				topInfo.Text = "الأطراف: " .. endsTxt .. " | قطع الروبوت: " .. #botHand .. " | قطعك: " .. #myHand
+			end
+
+			local function CanPlay(tile)
+				if not leftEnd then return true, "RIGHT" end
+				if tile[1] == rightEnd or tile[2] == rightEnd then return true, "RIGHT" end
+				if tile[1] == leftEnd or tile[2] == leftEnd then return true, "LEFT" end
+				return false, nil
+			end
+
+			local function PlaceTile(tile, side)
+				if not leftEnd then
+					leftEnd, rightEnd = tile[1], tile[2]
+					table.insert(playedChain, {tile[1], tile[2]})
+				elseif side == "RIGHT" then
+					local a, b = tile[1], tile[2]
+					if a ~= rightEnd then a, b = b, a end
+					rightEnd = b
+					table.insert(playedChain, {a, b})
+				else
+					local a, b = tile[1], tile[2]
+					if b ~= leftEnd then a, b = b, a end
+					leftEnd = a
+					table.insert(playedChain, 1, {a, b})
+				end
+			end
+
+			RebuildChainUI = function()
+				for _, ch in ipairs(chainScroll:GetChildren()) do ch:Destroy() end
+				chainScroll.CanvasSize = UDim2.new(0, math.max(280, #playedChain * 62), 0, 0)
+				local cl = Instance.new("UIListLayout", chainScroll)
+				cl.FillDirection = Enum.FillDirection.Horizontal
+				cl.HorizontalAlignment = Enum.HorizontalAlignment.Left
+				cl.VerticalAlignment = Enum.VerticalAlignment.Center
+				cl.Padding = UDim.new(0, 6)
+
+				local cp = Instance.new("UIPadding", chainScroll)
+				cp.PaddingLeft = UDim.new(0, 6)
+				cp.PaddingRight = UDim.new(0, 6)
+
+				for _, pTile in ipairs(playedChain) do
+					local df = Instance.new("Frame", chainScroll)
+					df.Size = UDim2.new(0, 54, 0, 34)
+					df.BackgroundColor3 = Color3.fromRGB(245, 245, 240)
+					df.ZIndex = 27
+					Instance.new("UICorner", df).CornerRadius = UDim.new(0, 5)
+
+					local dl = Instance.new("TextLabel", df)
+					dl.Size = UDim2.new(1, 0, 1, 0)
+					dl.BackgroundTransparency = 1
+					dl.Text = pTile[1] .. " | " .. pTile[2]
+					dl.TextColor3 = BG_DARK
+					dl.Font = Enum.Font.GothamBlack
+					dl.TextSize = 13
+					dl.ZIndex = 28
+				end
+			end
+
+			local function BotDominoTurn()
+				if isGameOver or currentSub ~= subCounter or mySession ~= SessionCounter then return end
+				local playableIdx = {}
+				for i, t in ipairs(botHand) do
+					local ok, side = CanPlay(t)
+					if ok then table.insert(playableIdx, {idx = i, side = side}) end
+				end
+
+				if #playableIdx > 0 then
+					local chosen
+					if math.random() < BotMistakeChance() then
+						chosen = playableIdx[math.random(1, #playableIdx)]
+					else
+						table.sort(playableIdx, function(a, b)
+							local ta, tb = botHand[a.idx], botHand[b.idx]
+							return (ta[1] + ta[2]) > (tb[1] + tb[2])
+						end)
+						chosen = playableIdx[1]
+					end
+					local played = table.remove(botHand, chosen.idx)
+					PlaceTile(played, chosen.side)
+				else
+					table.insert(botHand, {math.random(0, 6), math.random(0, 6)})
+				end
+
+				UpdateInfo()
+				RebuildChainUI()
+				if #botHand == 0 then
+					isGameOver = true
+					EndTxt.Text = "الروبوت أنهى قطعه وفاز!"
+					EndScreen.Visible = true
+				end
+			end
+
+			RebuildHandUI = function()
+				for _, ch in ipairs(handHolder:GetChildren()) do ch:Destroy() end
+				handHolder.CanvasSize = UDim2.new(0, math.max(300, #myHand * 54), 0, 0)
+				local layout = Instance.new("UIListLayout", handHolder)
+				layout.FillDirection = Enum.FillDirection.Horizontal
+				layout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+				layout.Padding = UDim.new(0, 6)
+
+				for i, tile in ipairs(myHand) do
+					local can = CanPlay(tile)
+					local tb = Instance.new("TextButton", handHolder)
+					tb.Size = UDim2.new(0, 46, 0, 66)
+					tb.BackgroundColor3 = can and Color3.fromRGB(245, 245, 240) or Color3.fromRGB(50, 50, 58)
+					tb.Text = tile[1] .. "\n─\n" .. tile[2]
+					tb.TextColor3 = can and BG_DARK or TEXT_GRAY
+					tb.Font = Enum.Font.GothamBlack
+					tb.TextSize = 14
+					tb.ZIndex = 27
+					Instance.new("UICorner", tb).CornerRadius = UDim.new(0, 6)
+					local st = Instance.new("UIStroke", tb)
+					st.Color = can and ACCENT_RED or Color3.fromRGB(80, 80, 90)
+					st.Thickness = 2
+
+					tb.MouseButton1Click:Connect(function()
+						if isPaused or isGameOver then return end
+						local ok, side = CanPlay(tile)
+						if not ok then return end
+						table.remove(myHand, i)
+						PlaceTile(tile, side)
+						UpdateInfo()
+						RebuildChainUI()
+						RebuildHandUI()
+
+						if #myHand == 0 then
+							isGameOver = true
+							EndTxt.Text = "مبروك! فزت في الدومنة!"
+							EndScreen.Visible = true
+							return
+						end
+
+						task.delay(BotThinkDelay(), BotDominoTurn)
+					end)
+				end
+			end
+
+			local DrawBtn = Instance.new("TextButton", Arena)
+			DrawBtn.Size = UDim2.new(0, 140, 0, 32)
+			DrawBtn.Position = UDim2.new(0.5, -70, 0.52, 0)
+			DrawBtn.BackgroundColor3 = ACCENT_RED
+			DrawBtn.Text = "سحب قطعة جديدة"
+			DrawBtn.TextColor3 = TEXT_WHITE
+			DrawBtn.Font = Enum.Font.GothamBold
+			DrawBtn.TextSize = 12
+			DrawBtn.ZIndex = 27
+			Instance.new("UICorner", DrawBtn).CornerRadius = UDim.new(0, 8)
+			DrawBtn.MouseButton1Click:Connect(function()
+				if isPaused or isGameOver then return end
+				table.insert(myHand, {math.random(0, 6), math.random(0, 6)})
+				UpdateInfo()
+				RebuildHandUI()
+			end)
+
+			UpdateInfo()
+			RebuildChainUI()
+			RebuildHandUI()
+		end
+
+		local function BuildUNO()
+			ClearArena()
+			local currentSub = subCounter
+			local colors = {
+				{Name = "أحمر", Col = ACCENT_RED},
+				{Name = "أخضر", Col = ACCENT_GREEN},
+				{Name = "أصفر", Col = ACCENT_AMBER},
+				{Name = "أزرق", Col = Color3.fromRGB(59, 130, 246)}
+			}
+
+			local function RandCard()
+				local c = colors[math.random(1, #colors)]
+				local val = (math.random() < 0.25) and "+2" or tostring(math.random(1, 9))
+				return {ColorName = c.Name, Color = c.Col, Val = val}
+			end
+
+			local topCard = RandCard()
+			local playerHand, botHand = {}, {}
+			for _ = 1, 5 do
+				table.insert(playerHand, RandCard())
+				table.insert(botHand, RandCard())
+			end
+
+			local status = Instance.new("TextLabel", Arena)
+			status.Size = UDim2.new(1, -16, 0, 28)
+			status.Position = UDim2.new(0, 8, 0, 6)
+			status.BackgroundTransparency = 1
+			status.Text = "أوراق الروبوت: 5"
+			status.TextColor3 = TEXT_WHITE
+			status.Font = Enum.Font.GothamBold
+			status.TextSize = 13
+			status.ZIndex = 26
+
+			local pileCard = Instance.new("TextButton", Arena)
+			pileCard.Size = UDim2.new(0, 74, 0, 96)
+			pileCard.Position = UDim2.new(0.5, -37, 0.36, -48)
+			pileCard.BackgroundColor3 = topCard.Color
+			pileCard.Text = topCard.Val .. "\n" .. topCard.ColorName
+			pileCard.TextColor3 = TEXT_WHITE
+			pileCard.Font = Enum.Font.GothamBlack
+			pileCard.TextSize = 14
+			pileCard.ZIndex = 27
+			Instance.new("UICorner", pileCard).CornerRadius = UDim.new(0, 10)
+
+			local handFrame = Instance.new("ScrollingFrame", Arena)
+			handFrame.Size = UDim2.new(1, -16, 0, 82)
+			handFrame.Position = UDim2.new(0, 8, 1, -92)
+			handFrame.BackgroundTransparency = 1
+			handFrame.ScrollBarThickness = 3
+			handFrame.ScrollingDirection = Enum.ScrollingDirection.X
+			handFrame.ZIndex = 26
+
+			local function CanMatch(card)
+				return card.ColorName == topCard.ColorName or card.Val == topCard.Val
+			end
+
+			local RefreshUNO
+
+			local function BotUNOTurn()
+				if isGameOver or currentSub ~= subCounter or mySession ~= SessionCounter then return end
+				local matches = {}
+				for idx, c in ipairs(botHand) do
+					if CanMatch(c) then table.insert(matches, idx) end
+				end
+
+				if #matches > 0 then
+					local pickIdx = (math.random() < BotMistakeChance()) and matches[math.random(1, #matches)] or matches[1]
+					topCard = table.remove(botHand, pickIdx)
+					if topCard.Val == "+2" then
+						table.insert(playerHand, RandCard())
+						table.insert(playerHand, RandCard())
+					end
+				else
+					table.insert(botHand, RandCard())
+				end
+
+				pileCard.BackgroundColor3 = topCard.Color
+				pileCard.Text = topCard.Val .. "\n" .. topCard.ColorName
+				status.Text = "أوراق الروبوت: " .. #botHand
+
+				if #botHand == 0 then
+					isGameOver = true
+					EndTxt.Text = "الروبوت فاز في أونو!"
+					EndScreen.Visible = true
+				else
+					RefreshUNO()
+				end
+			end
+
+			RefreshUNO = function()
+				status.Text = "أوراق الروبوت: " .. #botHand .. " | أوراقك: " .. #playerHand
+				for _, ch in ipairs(handFrame:GetChildren()) do ch:Destroy() end
+				handFrame.CanvasSize = UDim2.new(0, math.max(300, #playerHand * 60), 0, 0)
+				local l = Instance.new("UIListLayout", handFrame)
+				l.FillDirection = Enum.FillDirection.Horizontal
+				l.HorizontalAlignment = Enum.HorizontalAlignment.Left
+				l.Padding = UDim.new(0, 6)
+
+				for i, c in ipairs(playerHand) do
+					local cb = Instance.new("TextButton", handFrame)
+					cb.Size = UDim2.new(0, 52, 0, 72)
+					cb.BackgroundColor3 = c.Color
+					cb.Text = c.Val .. "\n" .. c.ColorName
+					cb.TextColor3 = TEXT_WHITE
+					cb.Font = Enum.Font.GothamBlack
+					cb.TextSize = 11
+					cb.ZIndex = 27
+					Instance.new("UICorner", cb).CornerRadius = UDim.new(0, 8)
+
+					cb.MouseButton1Click:Connect(function()
+						if isPaused or isGameOver or not CanMatch(c) then return end
+						topCard = table.remove(playerHand, i)
+						pileCard.BackgroundColor3 = topCard.Color
+						pileCard.Text = topCard.Val .. "\n" .. topCard.ColorName
+
+						if topCard.Val == "+2" then
+							table.insert(botHand, RandCard())
+							table.insert(botHand, RandCard())
+						end
+
+						if #playerHand == 0 then
+							isGameOver = true
+							EndTxt.Text = "فزت في أونو!"
+							EndScreen.Visible = true
+							return
+						end
+
+						RefreshUNO()
+						task.delay(BotThinkDelay(), BotUNOTurn)
+					end)
+				end
+			end
+
+			local DrawUNO = Instance.new("TextButton", Arena)
+			DrawUNO.Size = UDim2.new(0, 120, 0, 32)
+			DrawUNO.Position = UDim2.new(0.5, -60, 0.64, 0)
+			DrawUNO.BackgroundColor3 = BG_DARK
+			DrawUNO.Text = "سحب ورقة"
+			DrawUNO.TextColor3 = TEXT_WHITE
+			DrawUNO.Font = Enum.Font.GothamBold
+			DrawUNO.TextSize = 12
+			DrawUNO.ZIndex = 27
+			Instance.new("UICorner", DrawUNO).CornerRadius = UDim.new(0, 6)
+			DrawUNO.MouseButton1Click:Connect(function()
+				if isPaused or isGameOver then return end
+				table.insert(playerHand, RandCard())
+				RefreshUNO()
+			end)
+
+			RefreshUNO()
+		end
+
+		local function BuildPool()
+			ClearArena()
+			local currentSub = subCounter
+			local myScore, botScore = 0, 0
+			local turn = "PLAYER"
+			local cuePower = 0.65
+
+			local pLbl = Instance.new("TextLabel", Arena)
+			pLbl.Size = UDim2.new(1, -16, 0, 26)
+			pLbl.Position = UDim2.new(0, 8, 0, 4)
+			pLbl.BackgroundTransparency = 1
+			pLbl.Text = "أنت: 0  |  الروبوت: 0  |  دورك"
+			pLbl.TextColor3 = TEXT_WHITE
+			pLbl.Font = Enum.Font.GothamBold
+			pLbl.TextSize = 12
+			pLbl.ZIndex = 26
+
+			local tableFrame = Instance.new("Frame", Arena)
+			tableFrame.Size = UDim2.new(0.92, 0, 0.58, 0)
+			tableFrame.Position = UDim2.new(0.04, 0, 0.14, 0)
+			tableFrame.BackgroundColor3 = Color3.fromRGB(21, 94, 52)
+			tableFrame.ZIndex = 26
+			Instance.new("UICorner", tableFrame).CornerRadius = UDim.new(0, 14)
+			local tbStroke = Instance.new("UIStroke", tableFrame)
+			tbStroke.Color = Color3.fromRGB(120, 53, 15)
+			tbStroke.Thickness = 4
+
+			local pockets = {
+				Vector2.new(0.03, 0.08), Vector2.new(0.50, 0.06), Vector2.new(0.97, 0.08),
+				Vector2.new(0.03, 0.92), Vector2.new(0.50, 0.94), Vector2.new(0.97, 0.92)
+			}
+			for _, pk in ipairs(pockets) do
+				local hole = Instance.new("Frame", tableFrame)
+				hole.Size = UDim2.new(0, 22, 0, 22)
+				hole.AnchorPoint = Vector2.new(0.5, 0.5)
+				hole.Position = UDim2.new(pk.X, 0, pk.Y, 0)
+				hole.BackgroundColor3 = Color3.fromRGB(8, 8, 10)
+				hole.ZIndex = 27
+				Instance.new("UICorner", hole).CornerRadius = UDim.new(1, 0)
+			end
+
+			local cueBall = Instance.new("Frame", tableFrame)
+			cueBall.Size = UDim2.new(0, 20, 0, 20)
+			cueBall.AnchorPoint = Vector2.new(0.5, 0.5)
+			cueBall.Position = UDim2.new(0.24, 0, 0.5, 0)
+			cueBall.BackgroundColor3 = TEXT_WHITE
+			cueBall.ZIndex = 29
+			Instance.new("UICorner", cueBall).CornerRadius = UDim.new(1, 0)
+
+			local ballPos = Vector2.new(0.24, 0.5)
+			local ballVel = Vector2.zero
+
+			local targets = {}
+			local targetCoords = {
+				Vector2.new(0.70, 0.50),
+				Vector2.new(0.76, 0.37),
+				Vector2.new(0.76, 0.63),
+				Vector2.new(0.82, 0.44),
+				Vector2.new(0.82, 0.56)
+			}
+			for i, pos in ipairs(targetCoords) do
+				local b = Instance.new("Frame", tableFrame)
+				b.Size = UDim2.new(0, 20, 0, 20)
+				b.AnchorPoint = Vector2.new(0.5, 0.5)
+				b.Position = UDim2.new(pos.X, 0, pos.Y, 0)
+				b.BackgroundColor3 = (i % 2 == 1) and ACCENT_RED or ACCENT_AMBER
+				b.ZIndex = 28
+				Instance.new("UICorner", b).CornerRadius = UDim.new(1, 0)
+				table.insert(targets, {ui = b, pos = pos, active = true})
+			end
+
+			local powerBg = Instance.new("Frame", Arena)
+			powerBg.Size = UDim2.new(0.42, 0, 0, 26)
+			powerBg.Position = UDim2.new(0.05, 0, 1, -36)
+			powerBg.BackgroundColor3 = BG_DARK
+			powerBg.ZIndex = 28
+			Instance.new("UICorner", powerBg).CornerRadius = UDim.new(0, 7)
+
+			local powerFill = Instance.new("Frame", powerBg)
+			powerFill.Size = UDim2.new(cuePower, 0, 1, 0)
+			powerFill.BackgroundColor3 = ACCENT_AMBER
+			powerFill.ZIndex = 29
+			Instance.new("UICorner", powerFill).CornerRadius = UDim.new(0, 7)
+
+			local powerBtn = Instance.new("TextButton", powerBg)
+			powerBtn.Size = UDim2.new(1, 0, 1, 0)
+			powerBtn.BackgroundTransparency = 1
+			powerBtn.Text = "قوة: 65%"
+			powerBtn.TextColor3 = TEXT_WHITE
+			powerBtn.Font = Enum.Font.GothamBlack
+			powerBtn.TextSize = 11
+			powerBtn.ZIndex = 30
+			powerBtn.MouseButton1Click:Connect(function()
+				cuePower = cuePower + 0.2
+				if cuePower > 1.0 then cuePower = 0.35 end
+				powerFill.Size = UDim2.new(cuePower, 0, 1, 0)
+				powerBtn.Text = string.format("قوة: %d%%", math.floor(cuePower * 100))
+			end)
+
+			local ShootBtn = Instance.new("TextButton", Arena)
+			ShootBtn.Size = UDim2.new(0.42, 0, 0, 30)
+			ShootBtn.Position = UDim2.new(0.53, 0, 1, -38)
+			ShootBtn.BackgroundColor3 = ACCENT_RED
+			ShootBtn.Text = "تسديد الكرة"
+			ShootBtn.TextColor3 = TEXT_WHITE
+			ShootBtn.Font = Enum.Font.GothamBold
+			ShootBtn.TextSize = 12
+			ShootBtn.ZIndex = 28
+			Instance.new("UICorner", ShootBtn).CornerRadius = UDim.new(0, 8)
+
+			local function AimAndShoot(isBot)
+				if ballVel.Magnitude > 0.05 or isGameOver then return end
+				local aimTarget = Vector2.new(0.78, 0.5)
+				for _, t in ipairs(targets) do
+					if t.active then aimTarget = t.pos break end
+				end
+				local dir = (aimTarget - ballPos).Unit
+				local spread = isBot and (BotMistakeChance() * 0.4) or 0.06
+				local angleOffset = (math.random() - 0.5) * spread
+				local cosA, sinA = math.cos(angleOffset), math.sin(angleOffset)
+				local rotDir = Vector2.new(dir.X * cosA - dir.Y * sinA, dir.X * sinA + dir.Y * cosA).Unit
+				local pwr = isBot and (botLevel == "HARD" and 1.25 or 0.95) or (0.65 + cuePower * 0.75)
+				ballVel = rotDir * pwr
+			end
+
+			ShootBtn.MouseButton1Click:Connect(function()
+				if isPaused or isGameOver or turn ~= "PLAYER" then return end
+				AimAndShoot(false)
+			end)
+
+			local poolConn
+			poolConn = RunService.RenderStepped:Connect(function(dt)
+				if not Win or not Win.Parent or currentSub ~= subCounter or mySession ~= SessionCounter then
+					if poolConn then poolConn:Disconnect() end
+					return
+				end
+				if isPaused or isGameOver then return end
+
+				if ballVel.Magnitude > 0.01 then
+					ballPos = ballPos + ballVel * dt
+					ballVel = ballVel * math.max(0, 1 - dt * 1.25)
+
+					if ballPos.X < 0.05 or ballPos.X > 0.95 then
+						ballVel = Vector2.new(-ballVel.X, ballVel.Y)
+						ballPos = Vector2.new(math.clamp(ballPos.X, 0.05, 0.95), ballPos.Y)
+					end
+					if ballPos.Y < 0.09 or ballPos.Y > 0.91 then
+						ballVel = Vector2.new(ballVel.X, -ballVel.Y)
+						ballPos = Vector2.new(ballPos.X, math.clamp(ballPos.Y, 0.09, 0.91))
+					end
+					cueBall.Position = UDim2.new(ballPos.X, 0, ballPos.Y, 0)
+
+					for _, t in ipairs(targets) do
+						if t.active then
+							local nearBall = (t.pos - ballPos).Magnitude < 0.075
+							local nearPocket = false
+							for _, pk in ipairs(pockets) do
+								if (t.pos - pk).Magnitude < 0.11 then
+									nearPocket = true
+									break
+								end
+							end
+							if nearBall or nearPocket then
+								t.active = false
+								t.ui.Visible = false
+								if turn == "PLAYER" then myScore += 1 else botScore += 1 end
+								pLbl.Text = "أنت: " .. myScore .. "  |  الروبوت: " .. botScore
+							end
+						end
+					end
+
+					if ballVel.Magnitude <= 0.02 then
+						ballVel = Vector2.zero
+						if myScore + botScore >= #targets then
+							isGameOver = true
+							EndTxt.Text = (myScore >= botScore) and "فزت في البليارد!" or "الروبوت فاز في البليارد!"
+							EndScreen.Visible = true
+						elseif turn == "PLAYER" then
+							turn = "BOT"
+							pLbl.Text = "أنت: " .. myScore .. "  |  الروبوت: " .. botScore .. "  |  دور الروبوت"
+							task.delay(BotThinkDelay(), function()
+								if isGameOver or currentSub ~= subCounter or mySession ~= SessionCounter then return end
+								AimAndShoot(true)
+							end)
+						else
+							turn = "PLAYER"
+							pLbl.Text = "أنت: " .. myScore .. "  |  الروبوت: " .. botScore .. "  |  دورك"
+						end
+					end
+				end
+			end)
+		end
+
+		local subGames = {
+			{Name = "شطرنج", Fn = BuildChess},
+			{Name = "دومنة", Fn = BuildDomino},
+			{Name = "أونو", Fn = BuildUNO},
+			{Name = "بليارد", Fn = BuildPool},
+			{Name = "إكس أو", Fn = BuildXO}
+		}
+
+		local subBtns = {}
+		for i, sg in ipairs(subGames) do
+			local sb = Instance.new("TextButton", SubGameScroll)
+			sb.Size = UDim2.new(0, 84, 0, 26)
+			sb.BackgroundColor3 = BG_DARK
+			sb.Text = sg.Name
+			sb.TextColor3 = TEXT_WHITE
+			sb.Font = Enum.Font.GothamBold
+			sb.TextSize = 11
+			sb.ZIndex = 26
+			Instance.new("UICorner", sb).CornerRadius = UDim.new(0, 6)
+			sb.MouseButton1Click:Connect(function()
+				for k, b in ipairs(subBtns) do
+					b.BackgroundColor3 = (k == i) and ACCENT_RED or BG_DARK
+				end
+				sg.Fn()
+			end)
+			table.insert(subBtns, sb)
+		end
+
+		subBtns[1].BackgroundColor3 = ACCENT_RED
+		BuildChess()
+	end
 end
 
 ExecuteBtn.MouseButton1Click:Connect(function()
-    LaunchMode(SelectedMode)
+	LaunchMode(SelectedMode)
 end)
-
