@@ -165,6 +165,7 @@ local Whitelist = {
     "balalawi",
     "3AW_111",
     "tariq191188",
+    "L3_yasser",
 }
 
 local isAllowed = false
