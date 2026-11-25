@@ -46,7 +46,7 @@ local DEF = {
 	opacity = 60, animSpeed = 3, scale = 3, shimmer = true, showStats = true,
 	aDeath = false, aSit = false, aToolLag = false, aBomb = false, aKick = false,
 	aGrief = false, aFling = false, aBang = false, aSuck = false,
-	quality = 0, fxNight = false, fxDay = false, fxClouds = false, fxShader = false, fxFog = false,
+	quality = 3, fxNight = false, fxDay = false, fxClouds = false, fxShader = false, fxFog = false,
 	autoQ = false, autoQFps = 30,
 }
 local S = {}
@@ -62,15 +62,19 @@ end
 pcall(function()
 	if isfile and isfile(SFILE) then merge(HttpService:JSONDecode(readfile(SFILE))) end
 end)
-S.opacity = math.clamp(math.floor(S.opacity + .5), 0, 100)
-S.animSpeed = math.clamp(S.animSpeed, 1, 10)
-S.scale = math.clamp(math.floor(S.scale), 1, 4)
-S.quality = math.clamp(math.floor(S.quality), 0, 5)
-S.autoQFps = math.clamp(math.floor(S.autoQFps + .5), 10, 60)
+S.opacity = math.clamp(math.floor((tonumber(S.opacity) or 60) + .5), 0, 100)
+S.animSpeed = math.clamp(tonumber(S.animSpeed) or 3, 1, 10)
+S.scale = math.clamp(math.floor(tonumber(S.scale) or 3), 1, 4)
+S.quality = math.clamp(math.floor(tonumber(S.quality) or 3), 1, 5)
+S.autoQFps = math.clamp(math.floor((tonumber(S.autoQFps) or 30) + .5), 10, 60)
 if S.fxNight and S.fxDay then S.fxDay = false end
 
 local function saveS()
-	return (pcall(function() writefile(SFILE, HttpService:JSONEncode(S)) end))
+	return (pcall(function()
+		if writefile then
+			writefile(SFILE, HttpService:JSONEncode(S))
+		end
+	end))
 end
 
 --===================================================================
@@ -80,7 +84,7 @@ local function GetLocalAsset(url, id)
 	local fileName = "DevImage_" .. tostring(id) .. ".png"
 	local okF, exists = pcall(function() return isfile and isfile(fileName) end)
 	if okF and exists then
-		local ok, a = pcall(function() return getcustomasset(fileName) end)
+		local ok, a = pcall(function() return getcustomasset and getcustomasset(fileName) end)
 		if ok and a then return a end
 	end
 	local req = request or http_request or (syn and syn.request)
@@ -88,7 +92,7 @@ local function GetLocalAsset(url, id)
 	local ok, res = pcall(function() return req({Url = url, Method = "GET"}) end)
 	if not ok or not res or res.StatusCode ~= 200 then return nil end
 	if not pcall(function() writefile(fileName, res.Body) end) then return nil end
-	local ok2, a = pcall(function() return getcustomasset(fileName) end)
+	local ok2, a = pcall(function() return getcustomasset and getcustomasset(fileName) end)
 	return ok2 and a or nil
 end
 
@@ -154,7 +158,7 @@ new("Frame", {
 
 local TITLE_Y = 0.75
 
-local title = new("TextLabel", {
+new("TextLabel", {
 	Name = "Title",
 	AnchorPoint = Vector2.new(0.5, 0.5),
 	Position = UDim2.fromScale(0.5, TITLE_Y),
@@ -360,19 +364,20 @@ local function stopAudio()
 	loadSound = nil
 	if s then
 		local tw = TweenService:Create(s, TweenInfo.new(1), { Volume = 0 })
-		tw.Completed:Connect(function() s:Destroy() end)
+		tw.Completed:Connect(function() pcall(function() s:Destroy() end) end)
 		tw:Play()
 	end
 end
 
 task.spawn(function()
+	if not (game.HttpGet and writefile and getcustomasset) then return end
 	local ok, data = pcall(function() return game:HttpGet(AUDIO_URL) end)
-	if not ok or not gui.Parent then return end
+	if not ok or not data or not gui.Parent then return end
 	local ok2, asset = pcall(function()
 		writefile("ywif_loading_song.mp3", data)
 		return getcustomasset("ywif_loading_song.mp3")
 	end)
-	if not ok2 then return end
+	if not ok2 or not asset then return end
 
 	local s = Instance.new("Sound")
 	s.SoundId = asset
@@ -431,7 +436,7 @@ task.spawn(function()
 			}
 		)
 		tw.Completed:Connect(function()
-			img:Destroy()
+			pcall(function() img:Destroy() end)
 		end)
 		tw:Play()
 		task.wait(rng:NextNumber(0.15, 0.4))
@@ -455,11 +460,13 @@ local function fadeOut()
 			goal.Transparency = 1
 		end
 		if next(goal) then
-			TweenService:Create(o, info, goal):Play()
+			pcall(function()
+				TweenService:Create(o, info, goal):Play()
+			end)
 		end
 	end
 	task.delay(1.6, function()
-		gui:Destroy()
+		pcall(function() gui:Destroy() end)
 	end)
 end
 
@@ -504,7 +511,7 @@ local function loadMenu()
 	local afkCleanup, autoRestore
 	local fxSuppressed = false
 	local STEPS = { .7, .85, 1, 1.15 }
-	local userSc = STEPS[S.scale]
+	local userSc = STEPS[S.scale] or 1
 	local function dur(t) return t * 3 / math.max(S.animSpeed, .1) end
 
 	-- ================= WINDOW =================
@@ -729,7 +736,7 @@ local function loadMenu()
 	local current = nil
 
 	local function selectTab(name)
-		if current == name then return end
+		if current == name or not tabButtons[name] or not pages[name] then return end
 		current = name
 
 		for n, t in pairs(tabButtons) do
@@ -1115,7 +1122,7 @@ local function loadMenu()
 				busy2 = true
 				local f = setclipboard or toclipboard
 				u.Text = (f and pcall(f, t.user)) and "تم النسخ ✓" or "غير مدعوم"
-				task.delay(1.2, function() u.Text = t.user busy2 = false end)
+				task.delay(1.2, function() if u.Parent then u.Text = t.user end busy2 = false end)
 			end)
 		end
 
@@ -1561,9 +1568,10 @@ local function loadMenu()
 
 	local QLV = { 1, 5, 9, 15, 21 }
 	local function applyQuality(i)
-		S.quality = i
+		local idx = math.clamp(math.floor(tonumber(i) or 3), 1, #QLV)
+		S.quality = idx
 		pcall(function()
-			settings().Rendering.QualityLevel = Enum.QualityLevel["Level" .. string.format("%02d", QLV[i])]
+			settings().Rendering.QualityLevel = Enum.QualityLevel["Level" .. string.format("%02d", QLV[idx])]
 		end)
 	end
 
@@ -1780,7 +1788,6 @@ local function loadMenu()
 		rLvl()
 	end
 
-
 	--===============================================================
 	-- SHARED HELPERS
 	--===============================================================
@@ -1856,8 +1863,8 @@ local function loadMenu()
 	local flyBV, flyBG
 
 	local function stopFlyObjs()
-		if flyBV then flyBV:Destroy() flyBV = nil end
-		if flyBG then flyBG:Destroy() flyBG = nil end
+		if flyBV then pcall(function() flyBV:Destroy() end) flyBV = nil end
+		if flyBG then pcall(function() flyBG:Destroy() end) flyBG = nil end
 		local _, _, h = myParts()
 		if h then h.PlatformStand = false end
 	end
@@ -1916,7 +1923,7 @@ local function loadMenu()
 		end
 		for i = 1, #ncParts do
 			local p = ncParts[i]
-			if p.CanCollide then p.CanCollide = false end
+			if p.Parent and p.CanCollide then p.CanCollide = false end
 		end
 	end))
 
@@ -2055,7 +2062,7 @@ local function loadMenu()
 
 		sect(page, "قائمة اللاعبين")
 		local listHolder, refreshBtn, rebuild
-		local bs = btnRow(page, { { "تحديث القائمة", function() rebuild() end } })
+		local bs = btnRow(page, { { "تحديث القائمة", function() if rebuild then rebuild() end end } })
 		refreshBtn = bs[1]
 		listHolder = new("Frame", {
 			LayoutOrder = nextOrder(page), Size = UDim2.new(1, 0, 0, 0),
@@ -2132,7 +2139,7 @@ local function loadMenu()
 		end
 
 		keep(Players.PlayerRemoving:Connect(function()
-			task.delay(.3, rebuild)
+			task.delay(.3, function() if rebuild then rebuild() end end)
 		end))
 		rebuild()
 	end
@@ -2162,13 +2169,13 @@ local function loadMenu()
 	end
 
 	local function killTrail()
-		if trailObj then trailObj:Destroy() trailObj = nil end
-		if trailA0 then trailA0:Destroy() trailA0 = nil end
-		if trailA1 then trailA1:Destroy() trailA1 = nil end
+		if trailObj then pcall(function() trailObj:Destroy() end) trailObj = nil end
+		if trailA0 then pcall(function() trailA0:Destroy() end) trailA0 = nil end
+		if trailA1 then pcall(function() trailA1:Destroy() end) trailA1 = nil end
 	end
-	local function killSparks() if sparkObj then sparkObj:Destroy() sparkObj = nil end end
+	local function killSparks() if sparkObj then pcall(function() sparkObj:Destroy() end) sparkObj = nil end end
 	local function killRing()
-		if ringPart then ringPart:Destroy() ringPart = nil ringLight = nil end
+		if ringPart then pcall(function() ringPart:Destroy() end) ringPart = nil ringLight = nil end
 	end
 
 	local function applyFilter()
@@ -2243,7 +2250,7 @@ local function loadMenu()
 			end
 			ringPart.CFrame = CFrame.new(root.Position - Vector3.new(0, 2.9, 0)) * CFrame.Angles(0, 0, math.rad(90))
 			ringPart.Color = col
-			ringLight.Color = col
+			if ringLight then ringLight.Color = col end
 		elseif ringPart then
 			killRing()
 		end
@@ -2350,7 +2357,7 @@ local function loadMenu()
 	local RN = { mode = 1, rate = 5 }
 	local rainPart, rainEm
 	local function killRain()
-		if rainPart then rainPart:Destroy() rainPart = nil rainEm = nil end
+		if rainPart then pcall(function() rainPart:Destroy() end) rainPart = nil rainEm = nil end
 	end
 	local function applyRain()
 		if RN.mode == 1 then killRain() return end
@@ -2388,7 +2395,7 @@ local function loadMenu()
 	local OB = { mode = 1, count = 6, radius = 4, speed = 5 }
 	local orbs = {}
 	local function killOrbs()
-		for _, o in ipairs(orbs) do o:Destroy() end
+		for _, o in ipairs(orbs) do pcall(function() o:Destroy() end) end
 		orbs = {}
 	end
 	local function buildOrbs()
@@ -2452,6 +2459,7 @@ local function loadMenu()
 			return
 		end
 		local d = SKY[SK.preset]
+		if not d then return end
 		if not origSky then
 			origSky = { top = Lighting.ColorShift_Top, bot = Lighting.ColorShift_Bottom, out = Lighting.OutdoorAmbient }
 		end
@@ -2556,9 +2564,11 @@ local function loadMenu()
 				for i = 1, n do
 					local a = t + (i / n) * math.pi * 2
 					local o = orbs[i]
-					o.CFrame = CFrame.new(root.Position + Vector3.new(
-						math.cos(a) * OB.radius, math.sin(t * 2 + i) * 0.8, math.sin(a) * OB.radius))
-					if OB.mode ~= 4 then o.Color = col end
+					if o and o.Parent then
+						o.CFrame = CFrame.new(root.Position + Vector3.new(
+							math.cos(a) * OB.radius, math.sin(t * 2 + i) * 0.8, math.sin(a) * OB.radius))
+						if OB.mode ~= 4 then o.Color = col end
+					end
 				end
 			end
 		end
@@ -2814,12 +2824,13 @@ local function loadMenu()
 		if afkCleanup then pcall(afkCleanup) end
 		if autoRestore then pcall(autoRestore) end
 		pcall(function() workspace.Gravity = origGravity end)
-		gui:Destroy()
+		pcall(function() gui:Destroy() end)
 	end
 
 	local function applyScale(idx)
-		S.scale = idx
-		userSc = STEPS[idx]
+		local sIdx = math.clamp(math.floor(tonumber(idx) or 3), 1, #STEPS)
+		S.scale = sIdx
+		userSc = STEPS[sIdx]
 		if isOpen then
 			TweenService:Create(windowScale, TweenInfo.new(dur(.3), Enum.EasingStyle.Quad), { Scale = userSc }):Play()
 		end
@@ -2837,7 +2848,7 @@ local function loadMenu()
 
 		local sr = mkRow(page, 32, "حجم الواجهة")
 		local sb = sBtn(sr, "", 64, 10)
-		local function rScale() sb.Text = math.floor(STEPS[S.scale] * 100 + .5) .. "%" end
+		local function rScale() sb.Text = math.floor((STEPS[S.scale] or 1) * 100 + .5) .. "%" end
 		sb.Activated:Connect(function()
 			applyScale(S.scale % #STEPS + 1)
 			rScale()
@@ -2878,7 +2889,7 @@ local function loadMenu()
 		saveB.Activated:Connect(function()
 			local ok = saveS()
 			saveB.Text = ok and "تم الحفظ ✓" or "غير مدعوم"
-			task.delay(1.2, function() saveB.Text = "حفظ الإعدادات" end)
+			task.delay(1.2, function() if saveB.Parent then saveB.Text = "حفظ الإعدادات" end end)
 		end)
 		local resetB = bigBtn("إعادة ضبط", 2)
 		resetB.Activated:Connect(function()
@@ -2933,8 +2944,11 @@ local function loadMenu()
 		["الإعدادات"] = buildSettings,
 	}
 	for _, name in ipairs(TABS) do
-		local ok, err = pcall(builders[name], pages[name])
-		if not ok then warn("YWIF page error [" .. name .. "]: " .. tostring(err)) end
+		local fn = builders[name]
+		if fn and pages[name] then
+			local ok, err = pcall(fn, pages[name])
+			if not ok then warn("YWIF page error [" .. name .. "]: " .. tostring(err)) end
+		end
 	end
 
 	applyFx()
@@ -2946,7 +2960,10 @@ end
 
 local function runScript()
 	task.wait(1.0)
-	loadMenu()
+	local ok, err = pcall(loadMenu)
+	if not ok then
+		warn("YWIF loadMenu error: " .. tostring(err))
+	end
 end
 
 button.Activated:Connect(function()
