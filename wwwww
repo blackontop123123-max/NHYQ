@@ -1409,7 +1409,7 @@ Corner(Menu)
 Stroke(Menu)
 MakeDraggableCustom(Menu)
 
--- صورة الخلفية داخل القائمة
+-- صورة الخلفية داخل القائمة (محدثة إلى 122714751450519)
 local MenuBackground = Create("ImageLabel", Menu, {
     Name = "MenuBackground",
     Size = UDim2.new(1, 0, 1, 0),
