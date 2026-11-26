@@ -21,10 +21,10 @@ local SESSION_START = os.clock()
 
 local IMAGE_ID = "rbxassetid://91670393744311"   -- background
 local FALL_ID  = "rbxassetid://83209161435555"   -- falling image
-local CIRCLE_AVATAR_ID = "rbxassetid://83209161435555" -- الصورة الدائرية الافتراضية
+local CIRCLE_AVATAR_ID = "rbxassetid://83209161435555" -- ط§ظ„طµظˆط±ط© ط§ظ„ط¯ط§ط¦ط±ظٹط© ط§ظ„ط§ظپطھط±ط§ط¶ظٹط©
 
-local BUTTON_TEXT = "تشغيل السكربت"
-local STAR = "★"
+local BUTTON_TEXT = "\u{062A}\u{0634}\u{063A}\u{064A}\u{0644} \u{0627}\u{0644}\u{0633}\u{0643}\u{0631}\u{0628}\u{062A}"
+local STAR = "\u{2605}"
 
 local WHITE = Color3.new(1, 1, 1)
 local BLACK = Color3.new(0, 0, 0)
@@ -46,7 +46,7 @@ local DEF = {
 	opacity = 60, animSpeed = 3, scale = 3, shimmer = true, showStats = true,
 	aDeath = false, aSit = false, aToolLag = false, aBomb = false, aKick = false,
 	aGrief = false, aFling = false, aBang = false, aSuck = false,
-	quality = 3, fxNight = false, fxDay = false, fxClouds = false, fxShader = false, fxFog = false,
+	quality = 0, fxNight = false, fxDay = false, fxClouds = false, fxShader = false, fxFog = false,
 	autoQ = false, autoQFps = 30,
 }
 local S = {}
@@ -62,19 +62,15 @@ end
 pcall(function()
 	if isfile and isfile(SFILE) then merge(HttpService:JSONDecode(readfile(SFILE))) end
 end)
-S.opacity = math.clamp(math.floor((tonumber(S.opacity) or 60) + .5), 0, 100)
-S.animSpeed = math.clamp(tonumber(S.animSpeed) or 3, 1, 10)
-S.scale = math.clamp(math.floor(tonumber(S.scale) or 3), 1, 4)
-S.quality = math.clamp(math.floor(tonumber(S.quality) or 3), 1, 5)
-S.autoQFps = math.clamp(math.floor((tonumber(S.autoQFps) or 30) + .5), 10, 60)
+S.opacity = math.clamp(math.floor(S.opacity + .5), 0, 100)
+S.animSpeed = math.clamp(S.animSpeed, 1, 10)
+S.scale = math.clamp(math.floor(S.scale), 1, 4)
+S.quality = math.clamp(math.floor(S.quality), 0, 5)
+S.autoQFps = math.clamp(math.floor(S.autoQFps + .5), 10, 60)
 if S.fxNight and S.fxDay then S.fxDay = false end
 
 local function saveS()
-	return (pcall(function()
-		if writefile then
-			writefile(SFILE, HttpService:JSONEncode(S))
-		end
-	end))
+	return (pcall(function() writefile(SFILE, HttpService:JSONEncode(S)) end))
 end
 
 --===================================================================
@@ -84,7 +80,7 @@ local function GetLocalAsset(url, id)
 	local fileName = "DevImage_" .. tostring(id) .. ".png"
 	local okF, exists = pcall(function() return isfile and isfile(fileName) end)
 	if okF and exists then
-		local ok, a = pcall(function() return getcustomasset and getcustomasset(fileName) end)
+		local ok, a = pcall(function() return getcustomasset(fileName) end)
 		if ok and a then return a end
 	end
 	local req = request or http_request or (syn and syn.request)
@@ -92,22 +88,22 @@ local function GetLocalAsset(url, id)
 	local ok, res = pcall(function() return req({Url = url, Method = "GET"}) end)
 	if not ok or not res or res.StatusCode ~= 200 then return nil end
 	if not pcall(function() writefile(fileName, res.Body) end) then return nil end
-	local ok2, a = pcall(function() return getcustomasset and getcustomasset(fileName) end)
+	local ok2, a = pcall(function() return getcustomasset(fileName) end)
 	return ok2 and a or nil
 end
 
 local DEV_CARDS = {
-	{name = "يوييف الحزين", url = "https://cdn.discordapp.com/attachments/1551649443407863888/1564686950752063611/rn_image_picker_lib_temp_1f4fa1d7-ab2a-4b79-b331-3ced00bd5c51.jpg?ex=6ae22bc7&is=6ae0da47&hm=93c3fa1fdbd92f038dbaefdb67e1c91743c32f14d482ca89e0bbb8d0d9241332&"},
-	{name = "سوييف الحزين", url = "https://cdn.discordapp.com/attachments/1551649443407863888/1564687327140515982/6a5558f229b0ff791eaa55d86c22869e.jpg?ex=6ae22c21&is=6ae0daa1&hm=88de214bf21579561bdc43652576eafdca502ce829e8ad6bdac6b42c45c072b5&"},
-	{name = "حسن الحزين", url = "https://cdn.discordapp.com/attachments/1551649443407863888/1564687704845717686/Screenshot_20261027_201005_com_discord_MainActivity.jpg?ex=6ae22c7b&is=6ae0dafb&hm=9e8728d4cde483b5054abffba75253358d3a353095a1de4904f3df96bac3ed4c&"},
-	{name = "حسنين الحزين", url = "https://cdn.discordapp.com/attachments/1551649443407863888/1564687705412206602/Screenshot_20261027_200949_com_discord_MainActivity.jpg?ex=6ae22c7b&is=6ae0dafb&hm=b70e057a001444224a5b41052ecc1b6294e5356356b0d4681e7ad8b095206257&"},
+	{name = "ظٹظˆظٹظپ ط§ظ„ط­ط²ظٹظ†", url = "https://cdn.discordapp.com/attachments/1551649443407863888/1564686950752063611/rn_image_picker_lib_temp_1f4fa1d7-ab2a-4b79-b331-3ced00bd5c51.jpg?ex=6ae22bc7&is=6ae0da47&hm=93c3fa1fdbd92f038dbaefdb67e1c91743c32f14d482ca89e0bbb8d0d9241332&"},
+	{name = "ط³ظˆظٹظپ ط§ظ„ط­ط²ظٹظ†", url = "https://cdn.discordapp.com/attachments/1551649443407863888/1564687327140515982/6a5558f229b0ff791eaa55d86c22869e.jpg?ex=6ae22c21&is=6ae0daa1&hm=88de214bf21579561bdc43652576eafdca502ce829e8ad6bdac6b42c45c072b5&"},
+	{name = "ط­ط³ظ† ط§ظ„ط­ط²ظٹظ†", url = "https://cdn.discordapp.com/attachments/1551649443407863888/1564687704845717686/Screenshot_20261027_201005_com_discord_MainActivity.jpg?ex=6ae22c7b&is=6ae0dafb&hm=9e8728d4cde483b5054abffba75253358d3a353095a1de4904f3df96bac3ed4c&"},
+	{name = "ط­ط³ظ†ظٹظ† ط§ظ„ط­ط²ظٹظ†", url = "https://cdn.discordapp.com/attachments/1551649443407863888/1564687705412206602/Screenshot_20261027_200949_com_discord_MainActivity.jpg?ex=6ae22c7b&is=6ae0dafb&hm=b70e057a001444224a5b41052ecc1b6294e5356356b0d4681e7ad8b095206257&"},
 }
 
 local TIKTOK = {
-	{ar = "يوييف", user = "ai_bx.0"},
-	{ar = "سوييف", user = ".nixor"},
-	{ar = "حسنين", user = "wlv202"},
-	{ar = "حسن", user = "jilnij"},
+	{ar = "ظٹظˆظٹظپ", user = "ai_bx.0"},
+	{ar = "ط³ظˆظٹظپ", user = ".nixor"},
+	{ar = "ط­ط³ظ†ظٹظ†", user = "wlv202"},
+	{ar = "ط­ط³ظ†", user = "jilnij"},
 }
 
 --===================================================================
@@ -158,7 +154,7 @@ new("Frame", {
 
 local TITLE_Y = 0.75
 
-new("TextLabel", {
+local title = new("TextLabel", {
 	Name = "Title",
 	AnchorPoint = Vector2.new(0.5, 0.5),
 	Position = UDim2.fromScale(0.5, TITLE_Y),
@@ -228,7 +224,7 @@ diamond(0, 28, 8)
 diamond(-22, 28, 4)
 diamond(22, 28, 4)
 
-local SPARK = "✦"
+local SPARK = "\u{2726}"
 
 local function socialCard(xScale, platform, handle)
 	local card = new("Frame", {
@@ -350,7 +346,7 @@ local leftL, leftS = lyricLabel(0.14)
 local rightL, rightS = lyricLabel(0.86)
 
 local function showLine(l, st, text)
-	l.Text = "✦ " .. text .. " ✦"
+	l.Text = "âœ¦ " .. text .. " âœ¦"
 	TweenService:Create(l, TweenInfo.new(0.35), { TextTransparency = 0 }):Play()
 	TweenService:Create(st, TweenInfo.new(0.35), { Transparency = 0.3 }):Play()
 end
@@ -364,20 +360,19 @@ local function stopAudio()
 	loadSound = nil
 	if s then
 		local tw = TweenService:Create(s, TweenInfo.new(1), { Volume = 0 })
-		tw.Completed:Connect(function() pcall(function() s:Destroy() end) end)
+		tw.Completed:Connect(function() s:Destroy() end)
 		tw:Play()
 	end
 end
 
 task.spawn(function()
-	if not (game.HttpGet and writefile and getcustomasset) then return end
 	local ok, data = pcall(function() return game:HttpGet(AUDIO_URL) end)
-	if not ok or not data or not gui.Parent then return end
+	if not ok or not gui.Parent then return end
 	local ok2, asset = pcall(function()
 		writefile("ywif_loading_song.mp3", data)
 		return getcustomasset("ywif_loading_song.mp3")
 	end)
-	if not ok2 or not asset then return end
+	if not ok2 then return end
 
 	local s = Instance.new("Sound")
 	s.SoundId = asset
@@ -436,7 +431,7 @@ task.spawn(function()
 			}
 		)
 		tw.Completed:Connect(function()
-			pcall(function() img:Destroy() end)
+			img:Destroy()
 		end)
 		tw:Play()
 		task.wait(rng:NextNumber(0.15, 0.4))
@@ -460,13 +455,11 @@ local function fadeOut()
 			goal.Transparency = 1
 		end
 		if next(goal) then
-			pcall(function()
-				TweenService:Create(o, info, goal):Play()
-			end)
+			TweenService:Create(o, info, goal):Play()
 		end
 	end
 	task.delay(1.6, function()
-		pcall(function() gui:Destroy() end)
+		gui:Destroy()
 	end)
 end
 
@@ -478,7 +471,7 @@ local function loadMenu()
 	local TOGGLE_OPEN_ID  = "rbxassetid://104724042003669"
 	local TOGGLE_CLOSE_ID = "rbxassetid://132237631257444"
 
-	local TABS = { "الحقوق", "الرحمة", "اللاعب", "المتعة", "المؤثرات الإضافية", "المضادات", "الجودة والمؤثرات", "السيرفرات", "AFK", "الأدوات", "الإعدادات" }
+	local TABS = { "ط§ظ„ط­ظ‚ظˆظ‚", "ط§ظ„ط±ط­ظ…ط©", "ط§ظ„ظ„ط§ط¹ط¨", "ط§ظ„ظ…طھط¹ط©", "ط§ظ„ظ…ط¤ط«ط±ط§طھ ط§ظ„ط¥ط¶ط§ظپظٹط©", "ط§ظ„ظ…ط¶ط§ط¯ط§طھ", "ط§ظ„ط¬ظˆط¯ط© ظˆط§ظ„ظ…ط¤ط«ط±ط§طھ", "ط§ظ„ط³ظٹط±ظپط±ط§طھ", "AFK", "ط§ظ„ط£ط¯ظˆط§طھ", "ط§ظ„ط¥ط¹ط¯ط§ط¯ط§طھ" }
 
 	for _, root in ipairs({ playerGui, game:GetService("CoreGui") }) do
 		pcall(function()
@@ -511,7 +504,7 @@ local function loadMenu()
 	local afkCleanup, autoRestore
 	local fxSuppressed = false
 	local STEPS = { .7, .85, 1, 1.15 }
-	local userSc = STEPS[S.scale] or 1
+	local userSc = STEPS[S.scale]
 	local function dur(t) return t * 3 / math.max(S.animSpeed, .1) end
 
 	-- ================= WINDOW =================
@@ -736,7 +729,7 @@ local function loadMenu()
 	local current = nil
 
 	local function selectTab(name)
-		if current == name or not tabButtons[name] or not pages[name] then return end
+		if current == name then return end
 		current = name
 
 		for n, t in pairs(tabButtons) do
@@ -906,7 +899,7 @@ local function loadMenu()
 	end
 
 	local function styleOn(b, on)
-		b.Text = on and "تشغيل" or "إيقاف"
+		b.Text = on and "طھط´ط؛ظٹظ„" or "ط¥ظٹظ‚ط§ظپ"
 		b.BackgroundColor3 = on and WHITE or OFFCOL
 		b.TextColor3 = on and BLACK or WHITE
 	end
@@ -1039,9 +1032,9 @@ local function loadMenu()
 			TextXAlignment = Enum.TextXAlignment.Left, TextTruncate = Enum.TextTruncate.AtEnd, ZIndex = 6,
 		}, card)
 
-		local gL = infoRow("اللعبة")
-		local pL = infoRow("اللاعبين")
-		local tL = infoRow("الوقت باللعبة")
+		local gL = infoRow("ط§ظ„ظ„ط¹ط¨ط©")
+		local pL = infoRow("ط§ظ„ظ„ط§ط¹ط¨ظٹظ†")
+		local tL = infoRow("ط§ظ„ظˆظ‚طھ ط¨ط§ظ„ظ„ط¹ط¨ط©")
 
 		task.spawn(function()
 			local ok, info = pcall(function() return MarketplaceService:GetProductInfo(game.PlaceId) end)
@@ -1056,7 +1049,7 @@ local function loadMenu()
 			end
 		end)
 
-		sect(page, "مطورين سكربت")
+		sect(page, "ظ…ط·ظˆط±ظٹظ† ط³ظƒط±ط¨طھ")
 		local grid = new("Frame", {
 			LayoutOrder = nextOrder(page), Size = UDim2.new(1, 0, 0, 0),
 			AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1, ZIndex = 5,
@@ -1097,7 +1090,7 @@ local function loadMenu()
 			end)
 		end
 
-		sect(page, "حسابات تيك توك")
+		sect(page, "ط­ط³ط§ط¨ط§طھ طھظٹظƒ طھظˆظƒ")
 		for _, t in ipairs(TIKTOK) do
 			local r = new("TextButton", {
 				LayoutOrder = nextOrder(page), Size = UDim2.new(1, 0, 0, 28),
@@ -1121,20 +1114,20 @@ local function loadMenu()
 				if busy2 then return end
 				busy2 = true
 				local f = setclipboard or toclipboard
-				u.Text = (f and pcall(f, t.user)) and "تم النسخ ✓" or "غير مدعوم"
-				task.delay(1.2, function() if u.Parent then u.Text = t.user end busy2 = false end)
+				u.Text = (f and pcall(f, t.user)) and "طھظ… ط§ظ„ظ†ط³ط® âœ“" or "ط؛ظٹط± ظ…ط¯ط¹ظˆظ…"
+				task.delay(1.2, function() u.Text = t.user busy2 = false end)
 			end)
 		end
 
 		new("TextLabel", {
 			LayoutOrder = nextOrder(page), Size = UDim2.new(1, 0, 0, 30), BackgroundTransparency = 1,
-			Text = "للتواصل مع المطورين: TikTok فقط", Font = Enum.Font.GothamBold,
+			Text = "ظ„ظ„طھظˆط§طµظ„ ظ…ط¹ ط§ظ„ظ…ط·ظˆط±ظٹظ†: TikTok ظپظ‚ط·", Font = Enum.Font.GothamBold,
 			TextSize = 13, TextColor3 = WHITE, TextTransparency = 0.2, ZIndex = 5,
 		}, page)
 	end
 
 	--===============================================================
-	-- MERCY PAGE (قائمة الرحمة)
+	-- MERCY PAGE (ظ‚ط§ط¦ظ…ط© ط§ظ„ط±ط­ظ…ط©)
 	--===============================================================
 	local globalLockedUserId = nil
 	local globalActiveAction = nil
@@ -1158,7 +1151,7 @@ local function loadMenu()
 			Font = Enum.Font.GothamBold,
 			TextSize = 14,
 			TextColor3 = WHITE,
-			PlaceholderText = "اكتب حرفين من يوزر الضحية...",
+			PlaceholderText = "ط§ظƒطھط¨ ط­ط±ظپظٹظ† ظ…ظ† ظٹظˆط²ط± ط§ظ„ط¶ط­ظٹط©...",
 			PlaceholderColor3 = Color3.fromRGB(150, 150, 150),
 			Text = "",
 			ClearTextOnFocus = false,
@@ -1221,11 +1214,11 @@ local function loadMenu()
 		local function updateTargetInfo()
 			local found = getTargetPlayer()
 			if found then
-				local accAge = "غير معروف"
+				local accAge = "ط؛ظٹط± ظ…ط¹ط±ظˆظپ"
 				pcall(function()
-					accAge = tostring(found.AccountAge) .. " يوم"
+					accAge = tostring(found.AccountAge) .. " ظٹظˆظ…"
 				end)
-				targetDetails.Text = ("UserID: %d\nDisplay: %s (@%s)\nJoined: منذ %s"):format(found.UserId, found.DisplayName, found.Name, accAge)
+				targetDetails.Text = ("UserID: %d\nDisplay: %s (@%s)\nJoined: ظ…ظ†ط° %s"):format(found.UserId, found.DisplayName, found.Name, accAge)
 				pcall(function()
 					targetAvatar.Image = ("rbxthumb://type=AvatarHeadShot&id=%d&w=150&h=150"):format(found.UserId)
 				end)
@@ -1258,12 +1251,12 @@ local function loadMenu()
 		}, page)
 
 		local buttonsData = {
-			{name = "FlingTarget_Button", text = "فلنق", x = 0, y = 0, action = "fling"},
-			{name = "ViewTarget_Button", text = "مشاهدة", x = 220, y = 0, action = "view"},
-			{name = "HeadFuck_Button", text = "يمص", x = 0, y = 37, action = "suck"},
-			{name = "BenxTarget_Button", text = "بانق", x = 220, y = 37, action = "bang"},
-			{name = "HeadsitTarget_Button", text = "جلوس في راسه", x = 0, y = 74, action = "headsit"},
-			{name = "TeleportTarget_Button", text = "تنقل", x = 220, y = 74, action = "teleport"},
+			{name = "FlingTarget_Button", text = "ظپظ„ظ†ظ‚", x = 0, y = 0, action = "fling"},
+			{name = "ViewTarget_Button", text = "ظ…ط´ط§ظ‡ط¯ط©", x = 220, y = 0, action = "view"},
+			{name = "HeadFuck_Button", text = "ظٹظ…طµ", x = 0, y = 37, action = "suck"},
+			{name = "BenxTarget_Button", text = "ط¨ط§ظ†ظ‚", x = 220, y = 37, action = "bang"},
+			{name = "HeadsitTarget_Button", text = "ط¬ظ„ظˆط³ ظپظٹ ط±ط§ط³ظ‡", x = 0, y = 74, action = "headsit"},
+			{name = "TeleportTarget_Button", text = "طھظ†ظ‚ظ„", x = 220, y = 74, action = "teleport"},
 		}
 
 		local buttonObjects = {}
@@ -1397,17 +1390,17 @@ local function loadMenu()
 			return ch and ch:FindFirstChildOfClass("Humanoid")
 		end
 
-		sliderRow(page, "سرعة المشي", 16, 250, function() return PS.walkSpeed end, function(v)
+		sliderRow(page, "ط³ط±ط¹ط© ط§ظ„ظ…ط´ظٹ", 16, 250, function() return PS.walkSpeed end, function(v)
 			PS.walkSpeed = v
 			local h = hum() if h then h.WalkSpeed = v end
 		end)
 
-		sliderRow(page, "قوة القفز العالي", 50, 300, function() return PS.jumpPower end, function(v)
+		sliderRow(page, "ظ‚ظˆط© ط§ظ„ظ‚ظپط² ط§ظ„ط¹ط§ظ„ظٹ", 50, 300, function() return PS.jumpPower end, function(v)
 			PS.jumpPower = v
 			local h = hum() if h then h.UseJumpPower = true h.JumpPower = v end
 		end)
 
-		toggleRow(page, "قفز لانهائي", function() return PS.infJump end, function(v) PS.infJump = v end)
+		toggleRow(page, "ظ‚ظپط² ظ„ط§ظ†ظ‡ط§ط¦ظٹ", function() return PS.infJump end, function(v) PS.infJump = v end)
 		keep(UserInputService.JumpRequest:Connect(function()
 			if PS.infJump then
 				local h = hum()
@@ -1415,8 +1408,8 @@ local function loadMenu()
 			end
 		end))
 
-		toggleRow(page, "دوران سريع", function() return PS.spinBot end, function(v) PS.spinBot = v end)
-		sliderRow(page, "سرعة الدوران", 10, 300, function() return PS.spinSpeed end, function(v) PS.spinSpeed = v end)
+		toggleRow(page, "ط¯ظˆط±ط§ظ† ط³ط±ظٹط¹", function() return PS.spinBot end, function(v) PS.spinBot = v end)
+		sliderRow(page, "ط³ط±ط¹ط© ط§ظ„ط¯ظˆط±ط§ظ†", 10, 300, function() return PS.spinSpeed end, function(v) PS.spinSpeed = v end)
 		keep(RunService.Heartbeat:Connect(function(dt)
 			if PS.spinBot then
 				local ch = player.Character
@@ -1427,12 +1420,12 @@ local function loadMenu()
 			end
 		end))
 
-		sliderRow(page, "الجاذبية", 0, 500, function() return PS.gravity end, function(v)
+		sliderRow(page, "ط§ظ„ط¬ط§ط°ط¨ظٹط©", 0, 500, function() return PS.gravity end, function(v)
 			PS.gravity = v
 			workspace.Gravity = v
 		end)
 
-		toggleRow(page, "تحويل الجسم إلى مكعب متوسط", function() return PS.blockMode end, function(v)
+		toggleRow(page, "طھط­ظˆظٹظ„ ط§ظ„ط¬ط³ظ… ط¥ظ„ظ‰ ظ…ظƒط¹ط¨ ظ…طھظˆط³ط·", function() return PS.blockMode end, function(v)
 			PS.blockMode = v
 			local ch = player.Character
 			if ch then
@@ -1444,9 +1437,9 @@ local function loadMenu()
 			end
 		end)
 
-		sliderRow(page, "تحريك الرأس فقط", -180, 180, function() return PS.headAngle end, function(v) PS.headAngle = v end)
-		sliderRow(page, "تحريك الساقين فقط", -180, 180, function() return PS.legAngle end, function(v) PS.legAngle = v end)
-		sliderRow(page, "تحريك الصدر والبطن فقط", -180, 180, function() return PS.bodyAngle end, function(v) PS.bodyAngle = v end)
+		sliderRow(page, "طھط­ط±ظٹظƒ ط§ظ„ط±ط£ط³ ظپظ‚ط·", -180, 180, function() return PS.headAngle end, function(v) PS.headAngle = v end)
+		sliderRow(page, "طھط­ط±ظٹظƒ ط§ظ„ط³ط§ظ‚ظٹظ† ظپظ‚ط·", -180, 180, function() return PS.legAngle end, function(v) PS.legAngle = v end)
+		sliderRow(page, "طھط­ط±ظٹظƒ ط§ظ„طµط¯ط± ظˆط§ظ„ط¨ط·ظ† ظپظ‚ط·", -180, 180, function() return PS.bodyAngle end, function(v) PS.bodyAngle = v end)
 
 		keep(RunService.RenderStepped:Connect(function()
 			if PS.headAngle == 0 and PS.bodyAngle == 0 and PS.legAngle == 0 then return end
@@ -1475,13 +1468,13 @@ local function loadMenu()
 	-- ANTI PAGE
 	--===============================================================
 	local ANTI = {
-		{ "aDeath", "مضاد موت" }, { "aSit", "مضاد جلوس" }, { "aToolLag", "مضاد لاق أدوات" },
-		{ "aBomb", "مضاد قنابل" }, { "aKick", "مضاد طرد" }, { "aGrief", "مضاد تخريب" },
-		{ "aFling", "مضاد فلنق" }, { "aBang", "مضاد بانق" }, { "aSuck", "مضاد مص" },
+		{ "aDeath", "ظ…ط¶ط§ط¯ ظ…ظˆطھ" }, { "aSit", "ظ…ط¶ط§ط¯ ط¬ظ„ظˆط³" }, { "aToolLag", "ظ…ط¶ط§ط¯ ظ„ط§ظ‚ ط£ط¯ظˆط§طھ" },
+		{ "aBomb", "ظ…ط¶ط§ط¯ ظ‚ظ†ط§ط¨ظ„" }, { "aKick", "ظ…ط¶ط§ط¯ ط·ط±ط¯" }, { "aGrief", "ظ…ط¶ط§ط¯ ط®ط±ظٹط¨" },
+		{ "aFling", "ظ…ط¶ط§ط¯ ظپظ„ظ†ظ‚" }, { "aBang", "ظ…ط¶ط§ط¯ ط¨ط§ظ†ظ‚" }, { "aSuck", "ظ…ط¶ط§ط¯ ظ…طµ" },
 	}
 
 	local function buildAnti(page)
-		toggleRow(page, "تفعيل الكل",
+		toggleRow(page, "طھظپط¹ظٹظ„ ط§ظ„ظƒظ„",
 			function() for _, a in ipairs(ANTI) do if not S[a[1]] then return false end end return true end,
 			function(v) for _, a in ipairs(ANTI) do S[a[1]] = v end end)
 		for _, a in ipairs(ANTI) do
@@ -1568,10 +1561,9 @@ local function loadMenu()
 
 	local QLV = { 1, 5, 9, 15, 21 }
 	local function applyQuality(i)
-		local idx = math.clamp(math.floor(tonumber(i) or 3), 1, #QLV)
-		S.quality = idx
+		S.quality = i
 		pcall(function()
-			settings().Rendering.QualityLevel = Enum.QualityLevel["Level" .. string.format("%02d", QLV[idx])]
+			settings().Rendering.QualityLevel = Enum.QualityLevel["Level" .. string.format("%02d", QLV[i])]
 		end)
 	end
 
@@ -1581,7 +1573,7 @@ local function loadMenu()
 	end
 
 	local function buildFx(page)
-		local QN = { "منخفضة جدًا", "منخفضة", "متوسطة", "عالية", "ممتازة" }
+		local QN = { "ظ…ظ†ط®ظپط¶ط© ط¬ط¯ط§ظ‹", "ظ…ظ†ط®ظپط¶ط©", "ظ…طھظˆط³ط·ط©", "ط¹ط§ظ„ظٹط©", "ظ…ظ…طھط§ط²ط©" }
 		local qr = new("Frame", {
 			LayoutOrder = nextOrder(page), Size = UDim2.new(1, 0, 0, 34),
 			BackgroundTransparency = 1, ZIndex = 5,
@@ -1613,7 +1605,7 @@ local function loadMenu()
 		end
 		table.insert(REFRESH, rQ)
 		rQ()
-		sect(page, "المؤثرات")
+		sect(page, "ط§ظ„ظ…ط¤ط«ط±ط§طھ")
 		local function fxRow(label, field, excl)
 			toggleRow(page, label, function() return S[field] end, function(v)
 				S[field] = v
@@ -1621,11 +1613,11 @@ local function loadMenu()
 				applyFx()
 			end)
 		end
-		fxRow("ليل", "fxNight", "fxDay")
-		fxRow("نهار", "fxDay", "fxNight")
-		fxRow("غيوم", "fxClouds")
-		fxRow("شادر غيوم", "fxShader")
-		fxRow("ضباب", "fxFog")
+		fxRow("ظ„ظٹظ„", "fxNight", "fxDay")
+		fxRow("ظ†ظ‡ط§ط±", "fxDay", "fxNight")
+		fxRow("ط؛ظٹظˆظ…", "fxClouds")
+		fxRow("ط´ط§ط¯ط± ط؛ظٹظˆظ…", "fxShader")
+		fxRow("ط¶ط¨ط§ط¨", "fxFog")
 	end
 
 	--===============================================================
@@ -1633,17 +1625,17 @@ local function loadMenu()
 	--===============================================================
 	local function buildServers(page)
 		local list = {
-			{ "سيرفر ممتلئ", "البحث عن سيرفر ممتلئ باللاعبين" },
-			{ "سيرفر فارغ", "البحث عن سيرفر فارغ تمامًا" },
-			{ "سيرفر عربي", "الانتقال إلى سيرفر عربي" },
-			{ "سيرفر اجنبي", "الانتقال إلى سيرفر أجنبي عالمي" },
-			{ "سيرفر عربي ممتلئ", "سيرفر عربي ممتلئ بالكامل" },
-			{ "سيرفر اجنبي ممتلئ", "سيرفر أجنبي ممتلئ بالكامل" },
-			{ "سيرفر عربي فارغ", "سيرفر عربي فارغ للعب الهادئ" },
-			{ "سيرفر عراقي", "الانتقال إلى سيرفر خاص بالعراق" },
-			{ "سيرفر سعودي", "الانتقال إلى سيرفر خاص بالسعودية" },
-			{ "سيرفر عراقي ممتلئ", "سيرفر عراقي ممتلئ باللاعبين" },
-			{ "سيرفر سعودي ممتلئ", "سيرفر سعودي ممتلئ باللاعبين" },
+			{ "ط³ظٹط±ظپط± ظ…ظ…طھظ„ظٹ", "ط§ظ„ط¨ط­ط« ط¹ظ† ط³ظٹط±ظپط± ظ…ظ…طھظ„ط¦ ط¨ط§ظ„ظ„ط§ط¹ط¨ظٹظ†" },
+			{ "ط³ظٹط±ظپط± ظپط§ط±ط؛", "ط§ظ„ط¨ط­ط« ط¹ظ† ط³ظٹط±ظپط± ظپط§ط±ط؛ طھظ…ط§ظ…ط§ظ‹" },
+			{ "ط³ظٹط±ظپط± ط¹ط±ط¨ظٹ", "ط§ظ„ط§ظ†طھظ‚ط§ظ„ ط¥ظ„ظ‰ ط³ظٹط±ظپط± ط¹ط±ط¨ظٹ" },
+			{ "ط³ظٹط±ظپط± ط§ط¬ظ†ط¨ظٹ", "ط§ظ„ط§ظ†طھظ‚ط§ظ„ ط¥ظ„ظ‰ ط³ظٹط±ظپط± ط£ط¬ظ†ط¨ظٹ ط¹ط§ظ„ظ…ظٹ" },
+			{ "ط³ظٹط±ظپط± ط¹ط±ط¨ظٹ ظ…ظ…طھظ„ظٹ", "ط³ظٹط±ظپط± ط¹ط±ط¨ظٹ ظ…ظ…طھظ„ط¦ ط¨ط§ظ„ظƒط§ظ…ظ„" },
+			{ "ط³ظٹط±ظپط± ط§ط¬ظ†ط¨ظٹ ظ…ظ…طھظ„ظٹ", "ط³ظٹط±ظپط± ط£ط¬ظ†ط¨ظٹ ظ…ظ…طھظ„ط¦ ط¨ط§ظ„ظƒط§ظ…ظ„" },
+			{ "ط³ظٹط±ظپط± ط¹ط±ط¨ظٹ ظپط§ط±ط؛", "ط³ظٹط±ظپط± ط¹ط±ط¨ظٹ ظپط§ط±ط؛ ظ„ظ„ط¹ط¨ ط§ظ„ظ‡ط§ط¯ط¦" },
+			{ "ط³ظٹط±ظپط± ط¹ط±ط§ظ‚ظٹ", "ط§ظ„ط§ظ†طھظ‚ط§ظ„ ط¥ظ„ظ‰ ط³ظٹط±ظپط± ط®ط§طµ ط¨ط§ظ„ط¹ط±ط§ظ‚" },
+			{ "ط³ظٹط±ظپط± ط³ط¹ظˆط¯ظٹ", "ط§ظ„ط§ظ†طھظ‚ط§ظ„ ط¥ظ„ظ‰ ط³ظٹط±ظپط± ط®ط§طµ ط¨ط§ظ„ط³ط¹ظˆط¯ظٹط©" },
+			{ "ط³ظٹط±ظپط± ط¹ط±ط§ظ‚ظٹ ظ…ظ…طھظ„ظٹ", "ط³ظٹط±ظپط± ط¹ط±ط§ظ‚ظٹ ظ…ظ…طھظ„ط¦ ط¨ط§ظ„ظ„ط§ط¹ط¨ظٹظ†" },
+			{ "ط³ظٹط±ظپط± ط³ط¹ظˆط¯ظٹ ظ…ظ…طھظ„ظٹ", "ط³ظٹط±ظپط± ط³ط¹ظˆط¯ظٹ ظ…ظ…طھظ„ط¦ ط¨ط§ظ„ظ„ط§ط¹ط¨ظٹظ†" },
 		}
 
 		for _, srv in ipairs(list) do
@@ -1661,16 +1653,16 @@ local function loadMenu()
 			}, card)
 			local btn = new("TextButton", {
 				Size = UDim2.fromOffset(84, 28), Position = UDim2.new(1, -92, .5, -14),
-				BackgroundColor3 = WHITE, Font = Enum.Font.GothamBold, Text = "دخول",
+				BackgroundColor3 = WHITE, Font = Enum.Font.GothamBold, Text = "ط¯ط®ظˆظ„",
 				TextColor3 = BLACK, TextSize = 13, AutoButtonColor = false, ZIndex = 7,
 			}, card)
 			new("UICorner", { CornerRadius = UDim.new(0, 8) }, btn)
 			btn.Activated:Connect(function()
-				btn.Text = "جاري..."
+				btn.Text = "ط¬ط§ط±ظٹ..."
 				task.spawn(function()
 					pcall(function() TeleportService:Teleport(game.PlaceId, player) end)
 					task.wait(2)
-					if btn.Parent then btn.Text = "دخول" end
+					if btn.Parent then btn.Text = "ط¯ط®ظˆظ„" end
 				end)
 			end)
 		end
@@ -1752,8 +1744,8 @@ local function loadMenu()
 			release()
 		end
 
-		toggleRow(page, "تثبيت بالأرض", function() return A.ground end, function(v) A.ground = v end)
-		toggleRow(page, "تثبيت مثل الجبل", function() return A.mountain end, function(v)
+		toggleRow(page, "طھط«ط¨ظٹطھ ط¨ط§ظ„ط£ط±ط¶", function() return A.ground end, function(v) A.ground = v end)
+		toggleRow(page, "طھط«ط¨ظٹطھ ظ…ط«ظ„ ط§ظ„ط¬ط¨ظ„", function() return A.mountain end, function(v)
 			A.mountain = v
 			if v then
 				local _, _, h = parts()
@@ -1762,20 +1754,20 @@ local function loadMenu()
 				restoreMove()
 			end
 		end)
-		toggleRow(page, "ضغط تلقائي (منع الطرد)", function() return A.idle end, function(v)
+		toggleRow(page, "ط¶ط؛ط· طھظ„ظ‚ط§ط¦ظٹ (ظ…ظ†ط¹ ط§ظ„ط·ط±ط¯)", function() return A.idle end, function(v)
 			A.idle = v
 			if v then fakeClick() end
 		end)
-		toggleRow(page, "رفع متر وتوقف", function() return A.hover end, function(v)
+		toggleRow(page, "ط±ظپط¹ ظ…طھط± ظˆطھظˆظ‚ظپ", function() return A.hover end, function(v)
 			A.hover = v
 			if v then
 				local _, root = parts()
 				if root then root.CFrame = root.CFrame + Vector3.new(0, 3.6, 0) end
 			end
 		end)
-		toggleRow(page, "دوران سريع", function() return A.spin end, function(v) A.spin = v end)
+		toggleRow(page, "ط¯ظˆط±ط§ظ† ط³ط±ظٹط¹", function() return A.spin end, function(v) A.spin = v end)
 
-		local sr = mkRow(page, 32, "سرعة الدوران")
+		local sr = mkRow(page, 32, "ط³ط±ط¹ط© ط§ظ„ط¯ظˆط±ط§ظ†")
 		local mB = sBtn(sr, "-", 26, 10)
 		local lvLbl = new("TextLabel", {
 			BackgroundTransparency = 1, Position = UDim2.fromOffset(40, 0), Size = UDim2.fromOffset(44, 32),
@@ -1787,6 +1779,7 @@ local function loadMenu()
 		pB.Activated:Connect(function() lvl = math.min(8, lvl + 1) rLvl() end)
 		rLvl()
 	end
+
 
 	--===============================================================
 	-- SHARED HELPERS
@@ -1863,8 +1856,8 @@ local function loadMenu()
 	local flyBV, flyBG
 
 	local function stopFlyObjs()
-		if flyBV then pcall(function() flyBV:Destroy() end) flyBV = nil end
-		if flyBG then pcall(function() flyBG:Destroy() end) flyBG = nil end
+		if flyBV then flyBV:Destroy() flyBV = nil end
+		if flyBG then flyBG:Destroy() flyBG = nil end
 		local _, _, h = myParts()
 		if h then h.PlatformStand = false end
 	end
@@ -1923,14 +1916,14 @@ local function loadMenu()
 		end
 		for i = 1, #ncParts do
 			local p = ncParts[i]
-			if p.Parent and p.CanCollide then p.CanCollide = false end
+			if p.CanCollide then p.CanCollide = false end
 		end
 	end))
 
 	local function buildMoveCore(page)
-		sect(page, "الطيران")
-		toggleRow(page, "تشغيل الطيران", function() return MS.fly end, function(v) MS.fly = v end)
-		sliderRow(page, "سرعة الطيران", 10, 300, function() return MS.speed end, function(v) MS.speed = v end)
+		sect(page, "ط§ظ„ط·ظٹط±ط§ظ†")
+		toggleRow(page, "طھط´ط؛ظٹظ„ ط§ظ„ط·ظٹط±ط§ظ†", function() return MS.fly end, function(v) MS.fly = v end)
+		sliderRow(page, "ط³ط±ط¹ط© ط§ظ„ط·ظٹط±ط§ظ†", 10, 300, function() return MS.speed end, function(v) MS.speed = v end)
 
 		local hr = new("Frame", {
 			LayoutOrder = nextOrder(page), Size = UDim2.new(1, 0, 0, 32),
@@ -1959,11 +1952,11 @@ local function loadMenu()
 				if isPress(i) then MS[flag] = false b.BackgroundColor3 = OFFCOL b.TextColor3 = WHITE end
 			end)
 		end
-		hold("▲ صعود", "up", 1)
-		hold("▼ نزول", "down", 2)
+		hold("â–² طµط¹ظˆط¯", "up", 1)
+		hold("â–¼ ظ†ط²ظˆظ„", "down", 2)
 
-		sect(page, "اختراق الجدران")
-		toggleRow(page, "تشغيل Noclip", function() return MS.noclip end, function(v) MS.noclip = v end)
+		sect(page, "ط§ط®طھط±ط§ظ‚ ط§ظ„ط¬ط¯ط±ط§ظ†")
+		toggleRow(page, "طھط´ط؛ظٹظ„ Noclip", function() return MS.noclip end, function(v) MS.noclip = v end)
 	end
 
 	--===============================================================
@@ -2048,21 +2041,21 @@ local function loadMenu()
 				player.CameraMaxZoomDistance = origZoom
 			end)
 		end)
-		sect(page, "الكاميرا")
-		sliderRow(page, "مجال الرؤية (FOV)", 30, 120,
+		sect(page, "ط§ظ„ظƒط§ظ…ظٹط±ط§")
+		sliderRow(page, "ظ…ط¬ط§ظ„ ط§ظ„ط±ط¤ظٹط© (FOV)", 30, 120,
 			function() local c = workspace.CurrentCamera return c and math.floor(c.FieldOfView + .5) or 70 end,
 			function(v) local c = workspace.CurrentCamera if c then c.FieldOfView = v end end)
-		sliderRow(page, "أقصى مسافة زوم", 10, 500,
+		sliderRow(page, "ط£ظ‚طµظ‰ ظ…ط³ط§ظپط© ط²ظˆظ…", 10, 500,
 			function() return math.floor(player.CameraMaxZoomDistance) end,
 			function(v) player.CameraMaxZoomDistance = v end)
 
-		sect(page, "رفع الأداء")
-		toggleRow(page, "رفع الأداء (FPS)", function() return BOOST.on end, function(v) setBoost(v) end)
+		sect(page, "ط±ظپط¹ ط§ظ„ط£ط¯ط§ط،")
+		toggleRow(page, "ط±ظپط¹ ط§ظ„ط£ط¯ط§ط، (FPS)", function() return BOOST.on end, function(v) setBoost(v) end)
 		table.insert(CLEANUPS, function() setBoost(false) end)
 
-		sect(page, "قائمة اللاعبين")
+		sect(page, "ظ‚ط§ط¦ظ…ط© ط§ظ„ظ„ط§ط¹ط¨ظٹظ†")
 		local listHolder, refreshBtn, rebuild
-		local bs = btnRow(page, { { "تحديث القائمة", function() if rebuild then rebuild() end end } })
+		local bs = btnRow(page, { { "طھط­ط¯ظٹط« ط§ظ„ظ‚ط§ط¦ظ…ط©", function() rebuild() end } })
 		refreshBtn = bs[1]
 		listHolder = new("Frame", {
 			LayoutOrder = nextOrder(page), Size = UDim2.new(1, 0, 0, 0),
@@ -2094,7 +2087,7 @@ local function loadMenu()
 				new("UIStroke", { Color = WHITE, Thickness = 1.5 }, av)
 				local nm = new("TextLabel", {
 					Position = UDim2.fromOffset(50, 5), Size = UDim2.new(1, -250, 0, 20),
-					BackgroundTransparency = 1, Text = pl.DisplayName .. (pl == player and " (أنت)" or ""),
+					BackgroundTransparency = 1, Text = pl.DisplayName .. (pl == player and " (ط£ظ†طھ)" or ""),
 					Font = Enum.Font.GothamBold, TextScaled = true, TextSize = 14, TextColor3 = WHITE,
 					TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 6,
 				}, card)
@@ -2126,20 +2119,20 @@ local function loadMenu()
 					new("UITextSizeConstraint", { MaxTextSize = 12, MinTextSize = 7 }, b)
 					b.Activated:Connect(function() cb(b) end)
 				end
-				mini("نسخ", 1, function(b)
+				mini("ظ†ط³ط®", 1, function(b)
 					local f = setclipboard or toclipboard
-					flash(b, (f and pcall(f, pl.Name)) and "تم ✓" or "غير مدعوم")
+					flash(b, (f and pcall(f, pl.Name)) and "طھظ… âœ“" or "ط؛ظٹط± ظ…ط¯ط¹ظˆظ…")
 				end)
 				if pl ~= player then
-					mini("مشاهدة", 2, function(b) if not viewPlayer(pl) then flash(b, "غير متاح") end end)
-					mini("تنقل", 3, function(b) if not tpToPlayer(pl) then flash(b, "غير متاح") end end)
+					mini("ظ…ط´ط§ظ‡ط¯ط©", 2, function(b) if not viewPlayer(pl) then flash(b, "ط؛ظٹط± ظ…طھط§ط­") end end)
+					mini("طھظ†ظ‚ظ„", 3, function(b) if not tpToPlayer(pl) then flash(b, "ط؛ظٹط± ظ…طھط§ط­") end end)
 				end
 			end
-			refreshBtn.Text = "تحديث القائمة (" .. n .. ")"
+			refreshBtn.Text = "طھط­ط¯ظٹط« ط§ظ„ظ‚ط§ط¦ظ…ط© (" .. n .. ")"
 		end
 
 		keep(Players.PlayerRemoving:Connect(function()
-			task.delay(.3, function() if rebuild then rebuild() end end)
+			task.delay(.3, rebuild)
 		end))
 		rebuild()
 	end
@@ -2169,13 +2162,13 @@ local function loadMenu()
 	end
 
 	local function killTrail()
-		if trailObj then pcall(function() trailObj:Destroy() end) trailObj = nil end
-		if trailA0 then pcall(function() trailA0:Destroy() end) trailA0 = nil end
-		if trailA1 then pcall(function() trailA1:Destroy() end) trailA1 = nil end
+		if trailObj then trailObj:Destroy() trailObj = nil end
+		if trailA0 then trailA0:Destroy() trailA0 = nil end
+		if trailA1 then trailA1:Destroy() trailA1 = nil end
 	end
-	local function killSparks() if sparkObj then pcall(function() sparkObj:Destroy() end) sparkObj = nil end end
+	local function killSparks() if sparkObj then sparkObj:Destroy() sparkObj = nil end end
 	local function killRing()
-		if ringPart then pcall(function() ringPart:Destroy() end) ringPart = nil ringLight = nil end
+		if ringPart then ringPart:Destroy() ringPart = nil ringLight = nil end
 	end
 
 	local function applyFilter()
@@ -2250,7 +2243,7 @@ local function loadMenu()
 			end
 			ringPart.CFrame = CFrame.new(root.Position - Vector3.new(0, 2.9, 0)) * CFrame.Angles(0, 0, math.rad(90))
 			ringPart.Color = col
-			if ringLight then ringLight.Color = col end
+			ringLight.Color = col
 		elseif ringPart then
 			killRing()
 		end
@@ -2357,7 +2350,7 @@ local function loadMenu()
 	local RN = { mode = 1, rate = 5 }
 	local rainPart, rainEm
 	local function killRain()
-		if rainPart then pcall(function() rainPart:Destroy() end) rainPart = nil rainEm = nil end
+		if rainPart then rainPart:Destroy() rainPart = nil rainEm = nil end
 	end
 	local function applyRain()
 		if RN.mode == 1 then killRain() return end
@@ -2395,7 +2388,7 @@ local function loadMenu()
 	local OB = { mode = 1, count = 6, radius = 4, speed = 5 }
 	local orbs = {}
 	local function killOrbs()
-		for _, o in ipairs(orbs) do pcall(function() o:Destroy() end) end
+		for _, o in ipairs(orbs) do o:Destroy() end
 		orbs = {}
 	end
 	local function buildOrbs()
@@ -2418,7 +2411,7 @@ local function loadMenu()
 			elseif OB.mode == 5 then
 				o.Transparency = 1
 				local bb = new("BillboardGui", { Size = UDim2.fromOffset(34, 34), AlwaysOnTop = true }, o)
-				new("TextLabel", { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Text = "🦋", TextScaled = true }, bb)
+				new("TextLabel", { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Text = "ًں¦‹", TextScaled = true }, bb)
 			end
 			orbs[i] = o
 		end
@@ -2459,7 +2452,6 @@ local function loadMenu()
 			return
 		end
 		local d = SKY[SK.preset]
-		if not d then return end
 		if not origSky then
 			origSky = { top = Lighting.ColorShift_Top, bot = Lighting.ColorShift_Bottom, out = Lighting.OutdoorAmbient }
 		end
@@ -2564,11 +2556,9 @@ local function loadMenu()
 				for i = 1, n do
 					local a = t + (i / n) * math.pi * 2
 					local o = orbs[i]
-					if o and o.Parent then
-						o.CFrame = CFrame.new(root.Position + Vector3.new(
-							math.cos(a) * OB.radius, math.sin(t * 2 + i) * 0.8, math.sin(a) * OB.radius))
-						if OB.mode ~= 4 then o.Color = col end
-					end
+					o.CFrame = CFrame.new(root.Position + Vector3.new(
+						math.cos(a) * OB.radius, math.sin(t * 2 + i) * 0.8, math.sin(a) * OB.radius))
+					if OB.mode ~= 4 then o.Color = col end
 				end
 			end
 		end
@@ -2615,44 +2605,44 @@ local function loadMenu()
 	end)
 
 	local function buildFunExtra(page)
-		sect(page, "مطر وثلج")
-		segRow(page, { "بدون", "مطر", "ثلج" }, function() return RN.mode end,
+		sect(page, "ظ…ط·ط± ظˆط«ظ„ط¬")
+		segRow(page, { "ط¨ط¯ظˆظ†", "ظ…ط·ط±", "ط«ظ„ط¬" }, function() return RN.mode end,
 			function(i) RN.mode = i applyRain() end)
-		sliderRow(page, "الكثافة", 1, 10, function() return RN.rate end, function(v) RN.rate = v applyRain() end)
+		sliderRow(page, "ط§ظ„ظƒط«ط§ظپط©", 1, 10, function() return RN.rate end, function(v) RN.rate = v applyRain() end)
 
-		sect(page, "جسيمات تدور حولك")
-		segRow(page, { "بدون", "كرات", "نجوم", "نار", "فراشات" }, function() return OB.mode end,
+		sect(page, "ط¬ط³ظٹظ…ط§طھ طھط¯ظˆط± ط­ظˆظ„ظƒ")
+		segRow(page, { "ط¨ط¯ظˆظ†", "ظƒط±ط§طھ", "ظ†ط¬ظˆظ…", "ظ†ط§ط±", "ظپط±ط§ط´ط§طھ" }, function() return OB.mode end,
 			function(i) OB.mode = i buildOrbs() end)
-		sliderRow(page, "العدد", 3, 12, function() return OB.count end, function(v) OB.count = v if OB.mode ~= 1 then buildOrbs() end end)
-		sliderRow(page, "نصف القطر", 2, 8, function() return OB.radius end, function(v) OB.radius = v end)
-		sliderRow(page, "السرعة", 1, 10, function() return OB.speed end, function(v) OB.speed = v end)
+		sliderRow(page, "ط§ظ„ط¹ط¯ط¯", 3, 12, function() return OB.count end, function(v) OB.count = v if OB.mode ~= 1 then buildOrbs() end end)
+		sliderRow(page, "ظ†طµظپ ط§ظ„ظ‚ط·ط±", 2, 8, function() return OB.radius end, function(v) OB.radius = v end)
+		sliderRow(page, "ط§ظ„ط³ط±ط¹ط©", 1, 10, function() return OB.speed end, function(v) OB.speed = v end)
 
-		sect(page, "سماء ملونة")
-		segRow(page, { "بدون", "غروب", "فضاء", "أخضر", "أحمر" }, function() return SK.preset end,
+		sect(page, "ط³ظ…ط§ط، ظ…ظ„ظˆظ†ط©")
+		segRow(page, { "ط¨ط¯ظˆظ†", "ط؛ط±ظˆط¨", "ظپط¶ط§ط،", "ط£ط®ط¶ط±", "ط£ط­ظ…ط±" }, function() return SK.preset end,
 			function(i) SK.preset = i applySky() end)
-		toggleRow(page, "سماء متحركة الألوان", function() return SK.rainbow end, function(v)
+		toggleRow(page, "ط³ظ…ط§ط، ظ…طھط­ط±ظƒط© ط§ظ„ط£ظ„ظˆط§ظ†", function() return SK.rainbow end, function(v)
 			SK.rainbow = v
 			if not v and SK.preset > 1 then applySky() end
 		end)
 
-		sect(page, "ضبابية العمق")
-		toggleRow(page, "تشغيل ضبابية العمق", function() return BL.dof end, function(v) BL.dof = v applyBlur() end)
-		sliderRow(page, "قوة الضبابية", 1, 10, function() return BL.strength end, function(v) BL.strength = v applyBlur() end)
-		sliderRow(page, "بعد التركيز", 5, 150, function() return BL.focus end, function(v) BL.focus = v applyBlur() end)
-		sliderRow(page, "تضبيب الشاشة", 0, 24, function() return BL.blur end, function(v) BL.blur = v applyBlur() end)
+		sect(page, "ط¶ط¨ط§ط¨ظٹط© ط§ظ„ط¹ظ…ظ‚")
+		toggleRow(page, "طھط´ط؛ظٹظ„ ط¶ط¨ط§ط¨ظٹط© ط§ظ„ط¹ظ…ظ‚", function() return BL.dof end, function(v) BL.dof = v applyBlur() end)
+		sliderRow(page, "ظ‚ظˆط© ط§ظ„ط¶ط¨ط§ط¨ظٹط©", 1, 10, function() return BL.strength end, function(v) BL.strength = v applyBlur() end)
+		sliderRow(page, "ط¨ط¹ط¯ ط§ظ„طھط±ظƒظٹط²", 5, 150, function() return BL.focus end, function(v) BL.focus = v applyBlur() end)
+		sliderRow(page, "طھط¶ط¨ظٹط¨ ط§ظ„ط´ط§ط´ط©", 0, 24, function() return BL.blur end, function(v) BL.blur = v applyBlur() end)
 
-		sect(page, "وضع التصوير")
-		toggleRow(page, "إخفاء الواجهة والأسماء", function() return PH.on end, function(v) applyPhoto(v) end)
-		btnRow(page, { { "إخفاء القائمة 8 ثواني", function()
+		sect(page, "ظˆط¶ط¹ ط§ظ„طھطµظˆظٹط±")
+		toggleRow(page, "ط¥ط®ظپط§ط، ط§ظ„ظˆط§ط¬ظ‡ط© ظˆط§ظ„ط£ط³ظ…ط§ط،", function() return PH.on end, function(v) applyPhoto(v) end)
+		btnRow(page, { { "ط¥ط®ظپط§ط، ط§ظ„ظ‚ط§ط¦ظ…ط© 8 ط«ظˆط§ظ†ظٹ", function()
 			setOpen(false)
 			task.delay(8, function() if gui.Parent then setOpen(true) end end)
 		end } })
 
-		sect(page, "كاميرا حرة")
-		toggleRow(page, "تشغيل الكاميرا الحرة", function() return FC.on end, function(v)
+		sect(page, "ظƒط§ظ…ظٹط±ط§ ط­ط±ط©")
+		toggleRow(page, "طھط´ط؛ظٹظ„ ط§ظ„ظƒط§ظ…ظٹط±ط§ ط§ظ„ط­ط±ط©", function() return FC.on end, function(v)
 			if v then startFree() else stopFree() end
 		end)
-		sliderRow(page, "سرعة الكاميرا", 10, 200, function() return FC.speed end, function(v) FC.speed = v end)
+		sliderRow(page, "ط³ط±ط¹ط© ط§ظ„ظƒط§ظ…ظٹط±ط§", 10, 200, function() return FC.speed end, function(v) FC.speed = v end)
 		local hr = new("Frame", {
 			LayoutOrder = nextOrder(page), Size = UDim2.new(1, 0, 0, 32),
 			BackgroundTransparency = 1, ZIndex = 5,
@@ -2680,49 +2670,49 @@ local function loadMenu()
 				if isPress(i) then FC[flag] = false b.BackgroundColor3 = OFFCOL b.TextColor3 = WHITE end
 			end)
 		end
-		hold("▲ صعود", "up", 1)
-		hold("▼ نزول", "down", 2)
+		hold("â–² طµط¹ظˆط¯", "up", 1)
+		hold("â–¼ ظ†ط²ظˆظ„", "down", 2)
 	end
 
 	local function buildFun(page)
-		sect(page, "أثر خلفك")
-		toggleRow(page, "أثر ملون خلفك", function() return FN.trail end, function(v) FN.trail = v end)
-		toggleRow(page, "نجوم وشرارات حولك", function() return FN.sparks end, function(v) FN.sparks = v end)
-		toggleRow(page, "ألوان متغيرة (قوس قزح)", function() return FN.rainbow end, function(v) FN.rainbow = v end)
-		sliderRow(page, "درجة اللون", 0, 360, function() return FN.hue end, function(v) FN.hue = v end)
+		sect(page, "ط£ط«ط± ط®ظ„ظپظƒ")
+		toggleRow(page, "ط£ط«ط± ظ…ظ„ظˆظ† ط®ظ„ظپظƒ", function() return FN.trail end, function(v) FN.trail = v end)
+		toggleRow(page, "ظ†ط¬ظˆظ… ظˆط´ط±ط§ط±ط§طھ ط­ظˆظ„ظƒ", function() return FN.sparks end, function(v) FN.sparks = v end)
+		toggleRow(page, "ط£ظ„ظˆط§ظ† ظ…طھط؛ظٹط±ط© (ظ‚ظˆط³ ظ‚ط²ط­)", function() return FN.rainbow end, function(v) FN.rainbow = v end)
+		sliderRow(page, "ط¯ط±ط¬ط© ط§ظ„ظ„ظˆظ†", 0, 360, function() return FN.hue end, function(v) FN.hue = v end)
 
-		sect(page, "الهالة")
-		toggleRow(page, "هالة ضوء ملونة حولك", function() return FN.aura end, function(v) FN.aura = v end)
+		sect(page, "ط§ظ„ظ‡ط§ظ„ط©")
+		toggleRow(page, "ظ‡ط§ظ„ط© ط¶ظˆط، ظ…ظ„ظˆظ†ط© ط­ظˆظ„ظƒ", function() return FN.aura end, function(v) FN.aura = v end)
 
-		sect(page, "شكل الشخصية")
-		toggleRow(page, "شخصية شفافة (شبح)", function() return FN.ghost end, function(v) FN.ghost = v end)
-		toggleRow(page, "شخصية نيون متوهجة", function() return FN.neon end, function(v)
+		sect(page, "ط´ظƒظ„ ط§ظ„ط´ط®طµظٹط©")
+		toggleRow(page, "ط´ط®طµظٹط© ط´ظپط§ظپط© (ط´ط¨ط­)", function() return FN.ghost end, function(v) FN.ghost = v end)
+		toggleRow(page, "ط´ط®طµظٹط© ظ†ظٹظˆظ† ظ…طھظˆظ‡ط¬ط©", function() return FN.neon end, function(v)
 			FN.neon = v
 			if not v then restoreNeon() end
 		end)
 
-		sect(page, "فلتر الشاشة")
-		segRow(page, { "بدون", "ليلي", "قديم", "أبيض وأسود" }, function() return FN.filter end,
+		sect(page, "ظپظ„طھط± ط§ظ„ط´ط§ط´ط©")
+		segRow(page, { "ط¨ط¯ظˆظ†", "ظ„ظٹظ„ظٹ", "ظ‚ط¯ظٹظ…", "ط£ط¨ظٹط¶ ظˆط£ط³ظˆط¯" }, function() return FN.filter end,
 			function(i) FN.filter = i applyFilter() end)
 
-		sect(page, "الكاميرا السينمائية")
-		segRow(page, { "إيقاف", "دوران حولك", "من فوق" }, function() return FN.cam end,
+		sect(page, "ط§ظ„ظƒط§ظ…ظٹط±ط§ ط§ظ„ط³ظٹظ†ظ…ط§ط¦ظٹط©")
+		segRow(page, { "ط¥ظٹظ‚ط§ظپ", "ط¯ظˆط±ط§ظ† ط­ظˆظ„ظƒ", "ظ…ظ† ظپظˆظ‚" }, function() return FN.cam end,
 			function(i) FN.cam = i end)
-		sliderRow(page, "سرعة الدوران", 1, 10, function() return FN.camSpeed end, function(v) FN.camSpeed = v end)
-		sliderRow(page, "بعد الكاميرا", 6, 40, function() return FN.camDist end, function(v) FN.camDist = v end)
+		sliderRow(page, "ط³ط±ط¹ط© ط§ظ„ط¯ظˆط±ط§ظ†", 1, 10, function() return FN.camSpeed end, function(v) FN.camSpeed = v end)
+		sliderRow(page, "ط¨ط¹ط¯ ط§ظ„ظƒط§ظ…ظٹط±ط§", 6, 40, function() return FN.camDist end, function(v) FN.camDist = v end)
 
-		sect(page, "الوقت")
+		sect(page, "ط§ظ„ظˆظ‚طھ")
 		btnRow(page, {
-			{ "صباح", function() FN.timeAnim = false origClock = origClock or Lighting.ClockTime Lighting.ClockTime = 7 refreshAll() end },
-			{ "ظهر", function() FN.timeAnim = false origClock = origClock or Lighting.ClockTime Lighting.ClockTime = 13 refreshAll() end },
-			{ "مغرب", function() FN.timeAnim = false origClock = origClock or Lighting.ClockTime Lighting.ClockTime = 18 refreshAll() end },
-			{ "ليل", function() FN.timeAnim = false origClock = origClock or Lighting.ClockTime Lighting.ClockTime = 0 refreshAll() end },
+			{ "طµط¨ط§ط­", function() FN.timeAnim = false origClock = origClock or Lighting.ClockTime Lighting.ClockTime = 7 refreshAll() end },
+			{ "ط¸ظ‡ط±", function() FN.timeAnim = false origClock = origClock or Lighting.ClockTime Lighting.ClockTime = 13 refreshAll() end },
+			{ "ظ…ط؛ط±ط¨", function() FN.timeAnim = false origClock = origClock or Lighting.ClockTime Lighting.ClockTime = 18 refreshAll() end },
+			{ "ظ„ظٹظ„", function() FN.timeAnim = false origClock = origClock or Lighting.ClockTime Lighting.ClockTime = 0 refreshAll() end },
 		})
-		toggleRow(page, "حركة الوقت (شروق وغروب)", function() return FN.timeAnim end, function(v)
+		toggleRow(page, "ط­ط±ظƒط© ط§ظ„ظˆظ‚طھ (ط´ط±ظˆظ‚ ظˆط؛ط±ظˆط¨)", function() return FN.timeAnim end, function(v)
 			if v then origClock = origClock or Lighting.ClockTime end
 			FN.timeAnim = v
 		end)
-		sliderRow(page, "سرعة الوقت", 1, 10, function() return FN.timeSpeed end, function(v) FN.timeSpeed = v end)
+		sliderRow(page, "ط³ط±ط¹ط© ط§ظ„ظˆظ‚طھ", 1, 10, function() return FN.timeSpeed end, function(v) FN.timeSpeed = v end)
 	end
 
 	--===============================================================
@@ -2824,31 +2814,30 @@ local function loadMenu()
 		if afkCleanup then pcall(afkCleanup) end
 		if autoRestore then pcall(autoRestore) end
 		pcall(function() workspace.Gravity = origGravity end)
-		pcall(function() gui:Destroy() end)
+		gui:Destroy()
 	end
 
 	local function applyScale(idx)
-		local sIdx = math.clamp(math.floor(tonumber(idx) or 3), 1, #STEPS)
-		S.scale = sIdx
-		userSc = STEPS[sIdx]
+		S.scale = idx
+		userSc = STEPS[idx]
 		if isOpen then
 			TweenService:Create(windowScale, TweenInfo.new(dur(.3), Enum.EasingStyle.Quad), { Scale = userSc }):Play()
 		end
 	end
 
 	local function buildSettings(page)
-		sect(page, "شفافية الواجهة")
-		sliderRow(page, "الشفافية (0-100)", 0, 100, function() return S.opacity end, function(v)
+		sect(page, "ط´ظپط§ظپظٹط© ط§ظ„ظˆط§ط¬ظ‡ط©")
+		sliderRow(page, "ط§ظ„ط´ظپط§ظپظٹط© (0-100)", 0, 100, function() return S.opacity end, function(v)
 			S.opacity = v
 			shade.BackgroundTransparency = v / 100
 		end)
 
-		sect(page, "الأنيميشن والحجم")
-		sliderRow(page, "سرعة الأنيميشن", 1, 10, function() return math.floor(S.animSpeed) end, function(v) S.animSpeed = v end)
+		sect(page, "ط§ظ„ط£ظ†ظٹظ…ظٹط´ظ† ظˆط§ظ„ط­ط¬ظ…")
+		sliderRow(page, "ط³ط±ط¹ط© ط§ظ„ط£ظ†ظٹظ…ظٹط´ظ†", 1, 10, function() return math.floor(S.animSpeed) end, function(v) S.animSpeed = v end)
 
-		local sr = mkRow(page, 32, "حجم الواجهة")
+		local sr = mkRow(page, 32, "ط­ط¬ظ… ط§ظ„ظˆط§ط¬ظ‡ط©")
 		local sb = sBtn(sr, "", 64, 10)
-		local function rScale() sb.Text = math.floor((STEPS[S.scale] or 1) * 100 + .5) .. "%" end
+		local function rScale() sb.Text = math.floor(STEPS[S.scale] * 100 + .5) .. "%" end
 		sb.Activated:Connect(function()
 			applyScale(S.scale % #STEPS + 1)
 			rScale()
@@ -2857,15 +2846,15 @@ local function loadMenu()
 		table.insert(REFRESH, rScale)
 		rScale()
 
-		sect(page, "المؤثرات")
-		toggleRow(page, "اللمعان", function() return S.shimmer end, function(v) S.shimmer = v end)
-		toggleRow(page, "عداد FPS و Ping", function() return S.showStats end, function(v) S.showStats = v applyStats() end)
+		sect(page, "ط§ظ„ظ…ط¤ط«ط±ط§طھ")
+		toggleRow(page, "ط§ظ„ظ„ظ…ط¹ط§ظ†", function() return S.shimmer end, function(v) S.shimmer = v end)
+		toggleRow(page, "ط¹ط¯ط§ط¯ FPS ظˆ Ping", function() return S.showStats end, function(v) S.showStats = v applyStats() end)
 
-		sect(page, "جودة تلقائية")
-		toggleRow(page, "تشغيل الجودة التلقائية", function() return S.autoQ end, function(v) S.autoQ = v end)
-		sliderRow(page, "حد الـ FPS", 10, 60, function() return S.autoQFps end, function(v) S.autoQFps = v end)
+		sect(page, "ط¬ظˆط¯ط© طھظ„ظ‚ط§ط¦ظٹط©")
+		toggleRow(page, "طھط´ط؛ظٹظ„ ط§ظ„ط¬ظˆط¯ط© ط§ظ„طھظ„ظ‚ط§ط¦ظٹط©", function() return S.autoQ end, function(v) S.autoQ = v end)
+		sliderRow(page, "ط­ط¯ ط§ظ„ظ€ FPS", 10, 60, function() return S.autoQFps end, function(v) S.autoQFps = v end)
 
-		sect(page, "حفظ الإعدادات")
+		sect(page, "ط­ظپط¸ ط§ظ„ط¥ط¹ط¯ط§ط¯ط§طھ")
 		local br = new("Frame", {
 			LayoutOrder = nextOrder(page), Size = UDim2.new(1, 0, 0, 34),
 			BackgroundTransparency = 1, ZIndex = 5,
@@ -2885,13 +2874,13 @@ local function loadMenu()
 			new("UICorner", { CornerRadius = UDim.new(0, 9) }, b)
 			return b
 		end
-		local saveB = bigBtn("حفظ الإعدادات", 1)
+		local saveB = bigBtn("ط­ظپط¸ ط§ظ„ط¥ط¹ط¯ط§ط¯ط§طھ", 1)
 		saveB.Activated:Connect(function()
 			local ok = saveS()
-			saveB.Text = ok and "تم الحفظ ✓" or "غير مدعوم"
-			task.delay(1.2, function() if saveB.Parent then saveB.Text = "حفظ الإعدادات" end end)
+			saveB.Text = ok and "طھظ… ط§ظ„ط­ظپط¸ âœ“" or "ط؛ظٹط± ظ…ط¯ط¹ظˆظ…"
+			task.delay(1.2, function() saveB.Text = "ط­ظپط¸ ط§ظ„ط¥ط¹ط¯ط§ط¯ط§طھ" end)
 		end)
-		local resetB = bigBtn("إعادة ضبط", 2)
+		local resetB = bigBtn("ط¥ط¹ط§ط¯ط© ط¶ط¨ط·", 2)
 		resetB.Activated:Connect(function()
 			for k, v in pairs(DEF) do S[k] = v end
 			shade.BackgroundTransparency = S.opacity / 100
@@ -2902,7 +2891,7 @@ local function loadMenu()
 			saveS()
 		end)
 
-		sect(page, "إغلاق السكربت")
+		sect(page, "ط¥ط؛ظ„ط§ظ‚ ط§ظ„ط³ظƒط±ط¨طھ")
 		local kr = new("Frame", {
 			LayoutOrder = nextOrder(page), Size = UDim2.new(1, 0, 0, 36),
 			BackgroundTransparency = 1, ZIndex = 5,
@@ -2915,7 +2904,7 @@ local function loadMenu()
 		}, kr)
 		new("UICorner", { CornerRadius = UDim.new(0, 9) }, kb)
 		local armed = false
-		local function rKill() kb.Text = armed and "اضغط مرة ثانية للتأكيد" or "إغلاق السكربت نهائيًا" end
+		local function rKill() kb.Text = armed and "ط§ط¶ط؛ط· ظ…ط±ط© ط«ط§ظ†ظٹط© ظ„ظ„طھط£ظƒظٹط¯" or "ط¥ط؛ظ„ط§ظ‚ ط§ظ„ط³ظƒط±ط¨طھ ظ†ظ‡ط§ط¦ظٹط§ظ‹" end
 		rKill()
 		kb.Activated:Connect(function()
 			if not armed then
@@ -2931,39 +2920,33 @@ local function loadMenu()
 	-- BUILD PAGES
 	--===============================================================
 	local builders = {
-		["الحقوق"] = buildCredits,
-		["الرحمة"] = buildMercy,
-		["اللاعب"] = buildPlayerFull,
-		["المتعة"] = buildFun,
-		["المؤثرات الإضافية"] = buildFunExtra,
-		["المضادات"] = buildAnti,
-		["الجودة والمؤثرات"] = buildFx,
-		["السيرفرات"] = buildServers,
+		["ط§ظ„ط­ظ‚ظˆظ‚"] = buildCredits,
+		["ط§ظ„ط±ط­ظ…ط©"] = buildMercy,
+		["ط§ظ„ظ„ط§ط¹ط¨"] = buildPlayerFull,
+		["ط§ظ„ظ…طھط¹ط©"] = buildFun,
+		["ط§ظ„ظ…ط¤ط«ط±ط§طھ ط§ظ„ط¥ط¶ط§ظپظٹط©"] = buildFunExtra,
+		["ط§ظ„ظ…ط¶ط§ط¯ط§طھ"] = buildAnti,
+		["ط§ظ„ط¬ظˆط¯ط© ظˆط§ظ„ظ…ط¤ط«ط±ط§طھ"] = buildFx,
+		["ط§ظ„ط³ظٹط±ظپط±ط§طھ"] = buildServers,
 		["AFK"] = buildAfk,
-		["الأدوات"] = buildTools,
-		["الإعدادات"] = buildSettings,
+		["ط§ظ„ط£ط¯ظˆط§طھ"] = buildTools,
+		["ط§ظ„ط¥ط¹ط¯ط§ط¯ط§طھ"] = buildSettings,
 	}
 	for _, name in ipairs(TABS) do
-		local fn = builders[name]
-		if fn and pages[name] then
-			local ok, err = pcall(fn, pages[name])
-			if not ok then warn("YWIF page error [" .. name .. "]: " .. tostring(err)) end
-		end
+		local ok, err = pcall(builders[name], pages[name])
+		if not ok then warn("YWIF page error [" .. name .. "]: " .. tostring(err)) end
 	end
 
 	applyFx()
 	if S.quality >= 1 then applyQuality(S.quality) end
 
-	selectTab("الحقوق")
+	selectTab("ط§ظ„ط­ظ‚ظˆظ‚")
 	setOpen(true)
 end
 
 local function runScript()
 	task.wait(1.0)
-	local ok, err = pcall(loadMenu)
-	if not ok then
-		warn("YWIF loadMenu error: " .. tostring(err))
-	end
+	loadMenu()
 end
 
 button.Activated:Connect(function()
