@@ -695,9 +695,20 @@ local LoaderFrame = Instance.new("Frame")
 LoaderFrame.Name = "LoaderFrame"
 LoaderFrame.Size = UDim2.fromScale(1, 1)
 LoaderFrame.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
+LoaderFrame.BackgroundTransparency = 1
 LoaderFrame.BorderSizePixel = 0
 LoaderFrame.ZIndex = 1000
 LoaderFrame.Parent = ScreenGui
+
+local LoaderBgImage = Instance.new("ImageLabel")
+LoaderBgImage.Name = "LoaderBgImage"
+LoaderBgImage.Size = UDim2.fromScale(1, 1)
+LoaderBgImage.Position = UDim2.fromScale(0, 0)
+LoaderBgImage.BackgroundTransparency = 1
+LoaderBgImage.Image = "rbxassetid://112640050525501"
+LoaderBgImage.ScaleType = Enum.ScaleType.Stretch
+LoaderBgImage.ZIndex = 1000
+LoaderBgImage.Parent = LoaderFrame
 
 local ShakeHolder = Instance.new("Frame")
 ShakeHolder.Size = UDim2.fromScale(1, 1)
@@ -869,12 +880,27 @@ Main.Position = UDim2.fromScale(0.5, 0.5)
 Main.Size = UDim2.new(0, 0, 0, 0)
 Main.BackgroundColor3 = Color3.fromRGB(4, 4, 5)
 Main.BorderSizePixel = 0
+Main.ClipsDescendants = true
 Main.ZIndex = 101
 Main.Parent = Background
 
 local MainCorner = Instance.new("UICorner")
 MainCorner.CornerRadius = UDim.new(0, 18)
 MainCorner.Parent = Main
+
+local KeyBgImage = Instance.new("ImageLabel")
+KeyBgImage.Name = "KeyBgImage"
+KeyBgImage.Size = UDim2.fromScale(1, 1)
+KeyBgImage.Position = UDim2.fromScale(0, 0)
+KeyBgImage.BackgroundTransparency = 1
+KeyBgImage.Image = "rbxassetid://110306712439559"
+KeyBgImage.ScaleType = Enum.ScaleType.Stretch
+KeyBgImage.ZIndex = 101
+KeyBgImage.Parent = Main
+
+local KeyBgCorner = Instance.new("UICorner")
+KeyBgCorner.CornerRadius = UDim.new(0, 18)
+KeyBgCorner.Parent = KeyBgImage
 
 local MainStroke = Instance.new("UIStroke")
 MainStroke.Color = Color3.fromRGB(45, 45, 48)
@@ -887,6 +913,7 @@ TopLine.Position = UDim2.new(0.08, 0, 0, 0)
 TopLine.Size = UDim2.new(0.84, 0, 0, 3)
 TopLine.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
 TopLine.BorderSizePixel = 0
+TopLine.ZIndex = 102
 TopLine.Parent = Main
 
 local TopGlow = Instance.new("UIGradient")
@@ -907,6 +934,7 @@ Close.TextColor3 = Color3.fromRGB(255, 0, 0)
 Close.TextSize = 30
 Close.Font = Enum.Font.GothamBold
 Close.AutoButtonColor = false
+Close.ZIndex = 103
 Close.Parent = Main
 
 local CloseCorner = Instance.new("UICorner")
@@ -931,6 +959,7 @@ Title.TextColor3 = Color3.fromRGB(255, 0, 0)
 Title.TextSize = 43
 Title.Font = Enum.Font.GothamBlack
 Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.ZIndex = 102
 Title.Parent = Main
 
 local ScriptKey = Instance.new("TextLabel")
@@ -942,6 +971,7 @@ ScriptKey.TextColor3 = Color3.fromRGB(220, 220, 220)
 ScriptKey.TextSize = 20
 ScriptKey.Font = Enum.Font.GothamBold
 ScriptKey.TextXAlignment = Enum.TextXAlignment.Right
+ScriptKey.ZIndex = 102
 ScriptKey.Parent = Main
 
 local Divider = Instance.new("Frame")
@@ -949,13 +979,15 @@ Divider.Position = UDim2.new(0.08, 0, 0, 130)
 Divider.Size = UDim2.new(0.84, 0, 0, 2)
 Divider.BackgroundColor3 = Color3.fromRGB(80, 0, 0)
 Divider.BorderSizePixel = 0
+Divider.ZIndex = 102
 Divider.Parent = Main
 
 local KeyBox = Instance.new("Frame")
 KeyBox.Position = UDim2.new(0.08, 0, 0, 170)
 KeyBox.Size = UDim2.new(0.84, 0, 0, 70)
-KeyBox.BackgroundColor3 = Color3.fromRGB(7, 7, 8)
+KeyBox.BackgroundTransparency = 1
 KeyBox.BorderSizePixel = 0
+KeyBox.ZIndex = 102
 KeyBox.Parent = Main
 
 local KeyCorner = Instance.new("UICorner")
@@ -973,6 +1005,7 @@ Lock.Size = UDim2.fromOffset(45, 50)
 Lock.BackgroundTransparency = 1
 Lock.Text = "🔒"
 Lock.TextSize = 28
+Lock.ZIndex = 103
 Lock.Parent = KeyBox
 
 local KeyInput = Instance.new("TextBox")
@@ -980,13 +1013,14 @@ KeyInput.Position = UDim2.new(0, 70, 0, 5)
 KeyInput.Size = UDim2.new(1, -85, 1, -10)
 KeyInput.BackgroundTransparency = 1
 KeyInput.PlaceholderText = "Enter Key..."
-KeyInput.PlaceholderColor3 = Color3.fromRGB(100, 100, 105)
-KeyInput.TextColor3 = Color3.fromRGB(240, 240, 240)
+KeyInput.PlaceholderColor3 = Color3.fromRGB(210, 210, 215)
+KeyInput.TextColor3 = Color3.fromRGB(255, 255, 255)
 KeyInput.TextSize = 20
 KeyInput.Font = Enum.Font.GothamMedium
 KeyInput.TextXAlignment = Enum.TextXAlignment.Left
 KeyInput.ClearTextOnFocus = false
 KeyInput.Text = ""
+KeyInput.ZIndex = 103
 KeyInput.Parent = KeyBox
 
 local Status = Instance.new("TextLabel")
@@ -996,6 +1030,7 @@ Status.BackgroundTransparency = 1
 Status.Text = ""
 Status.TextSize = 15
 Status.Font = Enum.Font.GothamMedium
+Status.ZIndex = 102
 Status.Parent = Main
 
 local Verify = Instance.new("TextButton")
@@ -1007,6 +1042,7 @@ Verify.TextColor3 = Color3.fromRGB(255, 255, 255)
 Verify.TextSize = 16
 Verify.Font = Enum.Font.GothamBold
 Verify.AutoButtonColor = false
+Verify.ZIndex = 103
 Verify.Parent = Main
 
 local VerifyCorner = Instance.new("UICorner")
@@ -1030,6 +1066,7 @@ DiscordBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 DiscordBtn.TextSize = 15
 DiscordBtn.Font = Enum.Font.GothamBold
 DiscordBtn.AutoButtonColor = false
+DiscordBtn.ZIndex = 103
 DiscordBtn.Parent = Main
 
 local DiscordCorner = Instance.new("UICorner")
@@ -1134,6 +1171,8 @@ local function FinishLoader()
     for _, child in ipairs(LoaderFrame:GetDescendants()) do
         if child:IsA("TextLabel") or child:IsA("TextButton") then
             TweenService:Create(child, fadeInfo, { TextTransparency = 1 }):Play()
+        elseif child:IsA("ImageLabel") then
+            TweenService:Create(child, fadeInfo, { ImageTransparency = 1 }):Play()
         elseif child:IsA("Frame") then
             TweenService:Create(child, fadeInfo, { BackgroundTransparency = 1 }):Play()
         end
@@ -1358,7 +1397,7 @@ local MenuBackground = Create("ImageLabel", Menu, {
     Size = UDim2.new(1, 0, 1, 0),
     Position = UDim2.new(0, 0, 0, 0),
     BackgroundTransparency = 1,
-    Image = "rbxthumb://type=Asset&id=124139006369501&w=420&h=420",
+    Image = "rbxassetid://122714751450519",
     ImageTransparency = 0.35,
     ScaleType = Enum.ScaleType.Crop,
     ZIndex = 3001
