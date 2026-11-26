@@ -1,0 +1,83 @@
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
+
+local player = Players.LocalPlayer
+local parentGui = (pcall(function() return CoreGui.Name end) and CoreGui) or player:WaitForChild("PlayerGui")
+
+if parentGui:FindFirstChild("ToggleButtonGui") then
+	parentGui:FindFirstChild("ToggleButtonGui"):Destroy()
+end
+
+local function toggleMainScript(isOpen)
+	-- Link your main UI or script logic here
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "ToggleButtonGui"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.Parent = parentGui
+
+local ToggleButton = Instance.new("ImageButton")
+ToggleButton.Name = "ScriptToggleButton"
+ToggleButton.Size = UDim2.new(0, 56, 0, 56)
+ToggleButton.Position = UDim2.new(0.08, 0, 0.25, 0)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+ToggleButton.BorderSizePixel = 0
+ToggleButton.Image = "rbxassetid://113873837102172"
+ToggleButton.ScaleType = Enum.ScaleType.Crop
+ToggleButton.Active = true
+ToggleButton.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(1, 0)
+UICorner.Parent = ToggleButton
+
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Color = Color3.fromRGB(220, 38, 38)
+UIStroke.Thickness = 2
+UIStroke.Parent = ToggleButton
+
+local dragging = false
+local dragStart = Vector2.new()
+local startPos = UDim2.new()
+local moved = false
+
+ToggleButton.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		moved = false
+		dragStart = input.Position
+		startPos = ToggleButton.Position
+
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+		local delta = input.Position - dragStart
+		if delta.Magnitude > 6 then
+			moved = true
+		end
+		ToggleButton.Position = UDim2.new(
+			startPos.X.Scale,
+			startPos.X.Offset + delta.X,
+			startPos.Y.Scale,
+			startPos.Y.Offset + delta.Y
+		)
+	end
+end)
+
+local isOpen = false
+ToggleButton.MouseButton1Click:Connect(function()
+	if moved then return end
+	isOpen = not isOpen
+	UIStroke.Color = isOpen and Color3.fromRGB(34, 197, 94) or Color3.fromRGB(220, 38, 38)
+	toggleMainScript(isOpen)
+end)
