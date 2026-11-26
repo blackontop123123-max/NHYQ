@@ -1,5 +1,5 @@
 --==================================================
--- NHYQ SCRIPT (Loader + Key System + Modern UI + Security Webhook + Live Script Users Counter)
+-- NHYQ SCRIPT (Intro + Loader + Key System + Modern UI + Security Webhook + Live Script Users Counter)
 --==================================================
 
 local _P = game:GetService("Players")
@@ -12,131 +12,418 @@ local MarketService = game:GetService("MarketplaceService")
 local _L = _P.LocalPlayer
 local Camera = workspace.CurrentCamera
 
+if not game:IsLoaded() then
+	game.Loaded:Wait()
+end
+
+local playerGui = _L:WaitForChild("PlayerGui")
+
 --==================================================
--- -- الانترو الجديد مع الصوت (من الثانية 42 ولمدة 8 ثواني)
+-- الانترو الجديد (Loading Screen + Song/Lyrics)
 --==================================================
+local INTRO_IMAGE_ID = "rbxassetid://89875480104607" -- background
+local INTRO_FALL_ID  = "rbxassetid://83209161435555" -- falling image
 
-pcall(function()
-    local playerGui = _L:WaitForChild("PlayerGui")
+-- غيّر رابط الأغنية هنا إلى الأغنية التي تريدها
+local INTRO_AUDIO_URL = "https://raw.githubusercontent.com/athr3322-del/QWRYZ/main/8457820402_tk%20(3).mp3"
+local INTRO_SOUND_ID  = "" -- اختياري: ضع "rbxassetid://123456789" إذا أردت استخدام Asset ID بدلاً من الرابط
 
-    if playerGui:FindFirstChild("9MART_TURBO_DOOMSDAY") then
-        playerGui:FindFirstChild("9MART_TURBO_DOOMSDAY"):Destroy()
-    end
+local LYRIC_FONT = Enum.Font.Fondamento
+local LYRIC_SIZE = 28
+local LYRICS = {
+	{0.0,  "write first line here"},
+	{4.0,  "write second line here"},
+	{8.0,  "write third line here"},
+}
 
-    local soundId = 121397051787416
-    local sound = Instance.new("Sound")
-    sound.SoundId = "rbxassetid://" .. tostring(soundId)
-    sound.Volume = 1
-    sound.Looped = false
-    sound.Parent = SoundService
+local BUTTON_TEXT = "\u{062A}\u{0634}\u{063A}\u{064A}\u{0644} \u{0627}\u{0644}\u{0633}\u{0643}\u{0631}\u{0628}\u{062A}"
+local STAR = "\u{2605}"
+local SPARK = "\u{2726}"
 
-    local sgui = Instance.new("ScreenGui", playerGui)
-    sgui.Name = "9MART_TURBO_DOOMSDAY"
-    sgui.IgnoreGuiInset = true
-    sgui.DisplayOrder = 10000
+local WHITE = Color3.new(1, 1, 1)
+local BLACK = Color3.new(0, 0, 0)
+local RED   = Color3.fromRGB(220, 20, 40)
 
-    local mainFrame = Instance.new("Frame", sgui)
-    mainFrame.Size = UDim2.new(1, 0, 1, 0)
-    mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    mainFrame.BorderSizePixel = 0
+local function newIntroObj(class, props, parent)
+	local obj = Instance.new(class)
+	for k, v in pairs(props) do
+		obj[k] = v
+	end
+	obj.Parent = parent
+	return obj
+end
 
-    local coverFrame = Instance.new("Frame", mainFrame)
-    coverFrame.Size = UDim2.new(1, 0, 1, 0)
-    coverFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    coverFrame.BorderSizePixel = 0
-    coverFrame.ZIndex = 50
+for _, root in ipairs({ playerGui, game:GetService("CoreGui") }) do
+	pcall(function()
+		local old = root:FindFirstChild("NHYQIntro")
+		if old then old:Destroy() end
+		local old2 = root:FindFirstChild("YWIFLoading")
+		if old2 then old2:Destroy() end
+		local old3 = root:FindFirstChild("9MART_TURBO_DOOMSDAY")
+		if old3 then old3:Destroy() end
+	end)
+end
 
-    local statusLabel = Instance.new("TextLabel", mainFrame)
-    statusLabel.Size = UDim2.new(1, 0, 1, 0)
-    statusLabel.BackgroundTransparency = 1
-    statusLabel.Text = "انتظر قليلا لكي يتم تحميل سكربت NHYQ"
-    statusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    statusLabel.TextSize = 28
-    statusLabel.Font = Enum.Font.SourceSansBold
-    statusLabel.ZIndex = 100
+local introGui = Instance.new("ScreenGui")
+introGui.Name = "NHYQIntro"
+introGui.IgnoreGuiInset = true
+introGui.ResetOnSpawn = false
+introGui.DisplayOrder = 10000
+introGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
-    local baseUrl = "https://digital-cloak-guard.lovable.app/api/public/raw/mw3v3n2see4uj/"
-    local totalFrames = 48
+local introParented = false
+if typeof(gethui) == "function" then
+	introParented = pcall(function() introGui.Parent = gethui() end)
+end
+if not introParented or not introGui.Parent then
+	introParented = pcall(function() introGui.Parent = game:GetService("CoreGui") end)
+end
+if not introParented or not introGui.Parent then
+	introGui.Parent = playerGui
+end
 
-    local frames = {}
-    local downloadedCount = 0
+newIntroObj("ImageLabel", {
+	Name = "Background",
+	Size = UDim2.fromScale(1, 1),
+	BackgroundColor3 = BLACK,
+	Image = INTRO_IMAGE_ID,
+	ScaleType = Enum.ScaleType.Stretch,
+	ZIndex = 1,
+}, introGui)
 
-    for i = 1, totalFrames do
-        task.spawn(function()
-            local frameNum = string.format("%04d", i)
-            local success, imgData = pcall(function() return game:HttpGet(baseUrl .. frameNum .. ".jpg") end)
-            if success then
-                local fileName = "9mart_f_" .. frameNum .. ".jpg"
-                pcall(function() writefile(fileName, imgData) end)
-                
-                local imgLabel = Instance.new("ImageLabel", mainFrame)
-                imgLabel.Size = UDim2.new(1, 0, 1, 0)
-                imgLabel.Position = UDim2.new(0, 0, 0, 0)
-                imgLabel.BackgroundTransparency = 1
-                imgLabel.ScaleType = Enum.ScaleType.Fit
-                imgLabel.ResampleMode = Enum.ResamplerMode.Default
-                pcall(function() imgLabel.Image = getcustomasset(fileName) end)
-                imgLabel.Visible = false
-                imgLabel.ZIndex = 10
-                frames[i] = imgLabel
-            end
-            downloadedCount = downloadedCount + 1
-        end)
-    end
+newIntroObj("Frame", {
+	Name = "Overlay",
+	Size = UDim2.fromScale(1, 1),
+	BackgroundColor3 = BLACK,
+	BackgroundTransparency = 0.65,
+	BorderSizePixel = 0,
+	ZIndex = 2,
+}, introGui)
 
-    repeat task.wait() until downloadedCount >= totalFrames
+local TITLE_Y = 0.75
 
-    for i = 1, totalFrames do
-        if frames[i] then frames[i].Visible = true end
-    end
+newIntroObj("TextLabel", {
+	Name = "Title",
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Position = UDim2.fromScale(0.5, TITLE_Y),
+	Size = UDim2.fromOffset(240, 44),
+	BackgroundTransparency = 1,
+	Text = STAR .. "NHYQ HUB" .. STAR,
+	Font = Enum.Font.FredokaOne,
+	TextSize = 30,
+	TextColor3 = WHITE,
+	ZIndex = 5,
+}, introGui)
 
-    task.wait(1.5)
+local function introDiamond(xOffset, yOffset, size)
+	local d = newIntroObj("Frame", {
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.new(0.5, xOffset, TITLE_Y, yOffset),
+		Size = UDim2.fromOffset(size, size),
+		Rotation = 45,
+		BackgroundColor3 = BLACK,
+		BorderSizePixel = 0,
+		ZIndex = 6,
+	}, introGui)
+	newIntroObj("UIStroke", { Color = WHITE, Thickness = 1.5 }, d)
+end
 
-    for i = 1, totalFrames do
-        if frames[i] then frames[i].Visible = false end
-    end
+local function introSideLine(side)
+	local dir = (side == "left") and -1 or 1
+	local line = newIntroObj("Frame", {
+		AnchorPoint = Vector2.new((side == "left") and 1 or 0, 0.5),
+		Position = UDim2.new(0.5, dir * 148, TITLE_Y, 0),
+		Size = UDim2.fromOffset(70, 2),
+		BackgroundColor3 = WHITE,
+		BorderSizePixel = 0,
+		ZIndex = 5,
+	}, introGui)
+	newIntroObj("UIGradient", {
+		Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, (side == "left") and 1 or 0),
+			NumberSequenceKeypoint.new(1, (side == "left") and 0 or 1),
+		}),
+	}, line)
+end
 
-    coverFrame:Destroy()
-    statusLabel.Visible = false
+introDiamond(-134, 0, 10)
+introDiamond(134, 0, 10)
+introDiamond(-122, 0, 5)
+introDiamond(122, 0, 5)
+introSideLine("left")
+introSideLine("right")
 
-    pcall(function()
-        sound.TimePosition = 42
-        sound:Play()
-    end)
+local introUnderLine = newIntroObj("Frame", {
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Position = UDim2.new(0.5, 0, TITLE_Y, 28),
+	Size = UDim2.fromOffset(150, 2),
+	BackgroundColor3 = WHITE,
+	BorderSizePixel = 0,
+	ZIndex = 5,
+}, introGui)
+newIntroObj("UIGradient", {
+	Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 1),
+		NumberSequenceKeypoint.new(0.5, 0),
+		NumberSequenceKeypoint.new(1, 1),
+	}),
+}, introUnderLine)
+introDiamond(0, 28, 8)
+introDiamond(-22, 28, 4)
+introDiamond(22, 28, 4)
 
-    local currentFrame = 1
-    local videoRunning = true
+local function introSocialCard(xScale, platform, handle)
+	local card = newIntroObj("Frame", {
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(xScale, 0.5),
+		Size = UDim2.fromOffset(170, 66),
+		BackgroundTransparency = 1,
+		ZIndex = 5,
+	}, introGui)
 
-    task.spawn(function()
-        while videoRunning do
-            if frames[currentFrame] then
-                frames[currentFrame].Visible = true
-                
-                local prevFrame = if currentFrame == 1 then totalFrames else currentFrame - 1
-                if frames[prevFrame] and prevFrame ~= currentFrame then
-                    frames[prevFrame].Visible = false
-                end
-            end
+	newIntroObj("TextLabel", {
+		Position = UDim2.fromOffset(0, 0),
+		Size = UDim2.new(1, 0, 0, 22),
+		BackgroundTransparency = 1,
+		Text = SPARK .. " " .. platform .. " " .. SPARK,
+		Font = Enum.Font.FredokaOne,
+		TextSize = 20,
+		TextColor3 = WHITE,
+		ZIndex = 5,
+	}, card)
 
-            task.wait(0.03)
+	local divider = newIntroObj("Frame", {
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromOffset(85, 31),
+		Size = UDim2.fromOffset(140, 2),
+		BackgroundColor3 = WHITE,
+		BorderSizePixel = 0,
+		ZIndex = 5,
+	}, card)
+	newIntroObj("UIGradient", {
+		Transparency = NumberSequence.new({
+			NumberSequenceKeypoint.new(0, 1),
+			NumberSequenceKeypoint.new(0.5, 0),
+			NumberSequenceKeypoint.new(1, 1),
+		}),
+	}, divider)
 
-            currentFrame = currentFrame + 1
-            if currentFrame > totalFrames then
-                currentFrame = 1
-            end
-        end
-    end)
+	newIntroObj("Frame", {
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromOffset(85, 31),
+		Size = UDim2.fromOffset(7, 7),
+		Rotation = 45,
+		BackgroundColor3 = WHITE,
+		BorderSizePixel = 0,
+		ZIndex = 6,
+	}, card)
 
-    task.wait(8)
-    videoRunning = false
+	newIntroObj("TextLabel", {
+		Position = UDim2.fromOffset(0, 38),
+		Size = UDim2.new(1, 0, 0, 24),
+		BackgroundTransparency = 1,
+		Text = SPARK .. " " .. handle .. " " .. SPARK,
+		Font = Enum.Font.FredokaOne,
+		TextSize = 18,
+		TextColor3 = WHITE,
+		ZIndex = 5,
+	}, card)
+end
 
-    pcall(function()
-        sound:Stop()
-        sound:Destroy()
-    end)
+introSocialCard(0.86, "TikTok", "r3bhtttt")
+introSocialCard(0.14, "Discord", "h_h4242000")
 
-    sgui:Destroy()
+local introButton = newIntroObj("TextButton", {
+	Name = "RunButton",
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Position = UDim2.fromScale(0.5, 0.85),
+	Size = UDim2.fromOffset(150, 36),
+	BackgroundColor3 = WHITE,
+	Text = BUTTON_TEXT,
+	Font = Enum.Font.GothamBold,
+	TextSize = 16,
+	TextColor3 = BLACK,
+	AutoButtonColor = false,
+	ZIndex = 5,
+}, introGui)
+newIntroObj("UICorner", { CornerRadius = UDim.new(0, 12) }, introButton)
+newIntroObj("UIStroke", {
+	Color = BLACK,
+	Thickness = 2,
+	ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+}, introButton)
+
+local introBusy = false
+local introLeaving = false
+local introFinished = false
+local loadSound
+
+local function lyricLabel(xScale)
+	local l = newIntroObj("TextLabel", {
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.new(xScale, 0, 0.5, 42),
+		Size = UDim2.fromOffset(240, 80),
+		BackgroundTransparency = 1,
+		Text = "",
+		Font = LYRIC_FONT,
+		TextSize = LYRIC_SIZE,
+		TextColor3 = WHITE,
+		TextWrapped = true,
+		TextYAlignment = Enum.TextYAlignment.Top,
+		TextTransparency = 1,
+		ZIndex = 5,
+	}, introGui)
+	local st = newIntroObj("UIStroke", { Color = BLACK, Thickness = 1.5, Transparency = 1 }, l)
+	return l, st
+end
+
+local leftL, leftS = lyricLabel(0.14)
+local rightL, rightS = lyricLabel(0.86)
+
+local function showLine(l, st, text)
+	l.Text = "✦ " .. text .. " ✦"
+	TweenService:Create(l, TweenInfo.new(0.35), { TextTransparency = 0 }):Play()
+	TweenService:Create(st, TweenInfo.new(0.35), { Transparency = 0.3 }):Play()
+end
+local function hideLine(l, st)
+	TweenService:Create(l, TweenInfo.new(0.25), { TextTransparency = 1 }):Play()
+	TweenService:Create(st, TweenInfo.new(0.25), { Transparency = 1 }):Play()
+end
+
+local function stopIntroAudio()
+	local s = loadSound
+	loadSound = nil
+	if s then
+		local tw = TweenService:Create(s, TweenInfo.new(1), { Volume = 0 })
+		tw.Completed:Connect(function() pcall(function() s:Destroy() end) end)
+		tw:Play()
+	end
+end
+
+task.spawn(function()
+	local soundIdToPlay = nil
+
+	if INTRO_SOUND_ID and INTRO_SOUND_ID ~= "" then
+		soundIdToPlay = INTRO_SOUND_ID
+	elseif INTRO_AUDIO_URL and INTRO_AUDIO_URL ~= "" then
+		local ok, data = pcall(function() return game:HttpGet(INTRO_AUDIO_URL) end)
+		if ok and data and introGui.Parent then
+			local ok2, asset = pcall(function()
+				writefile("nhyq_loading_song.mp3", data)
+				return getcustomasset("nhyq_loading_song.mp3")
+			end)
+			if ok2 and asset then
+				soundIdToPlay = asset
+			end
+		end
+	end
+
+	if not soundIdToPlay or not introGui.Parent then return end
+
+	local s = Instance.new("Sound")
+	s.SoundId = soundIdToPlay
+	s.Volume = 1
+	s.Looped = true
+	s.Parent = SoundService
+	loadSound = s
+	s:Play()
+
+	local idx = 0
+	while introGui.Parent and not introBusy and s.Parent do
+		local pos = s.TimePosition
+		local newIdx = 0
+		for i, line in ipairs(LYRICS) do
+			if pos >= line[1] then newIdx = i else break end
+		end
+		if newIdx ~= idx then
+			idx = newIdx
+			if idx == 0 then
+				hideLine(leftL, leftS) hideLine(rightL, rightS)
+			elseif idx % 2 == 1 then
+				hideLine(rightL, rightS)
+				showLine(leftL, leftS, LYRICS[idx][2])
+			else
+				hideLine(leftL, leftS)
+				showLine(rightL, rightS, LYRICS[idx][2])
+			end
+		end
+		task.wait(0.1)
+	end
 end)
+
+local introRng = Random.new()
+task.spawn(function()
+	while introGui.Parent and not introLeaving do
+		local size = introRng:NextInteger(26, 44)
+		local x = introRng:NextNumber(0.03, 0.97)
+		local img = newIntroObj("ImageLabel", {
+			BackgroundColor3 = RED,
+			BackgroundTransparency = 0.25,
+			BorderSizePixel = 0,
+			Image = INTRO_FALL_ID,
+			ImageColor3 = RED,
+			ScaleType = Enum.ScaleType.Fit,
+			Size = UDim2.fromOffset(size, size),
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			Position = UDim2.new(x, 0, 0, -size),
+			Rotation = introRng:NextInteger(-30, 30),
+			ZIndex = 4,
+		}, introGui)
+		newIntroObj("UICorner", { CornerRadius = UDim.new(0.5, 0) }, img)
+		newIntroObj("UIStroke", { Color = RED, Thickness = 1.5 }, img)
+		local tw = TweenService:Create(
+			img,
+			TweenInfo.new(introRng:NextNumber(3.5, 6), Enum.EasingStyle.Linear),
+			{
+				Position = UDim2.new(x + introRng:NextNumber(-0.05, 0.05), 0, 1, size),
+				Rotation = img.Rotation + introRng:NextInteger(-180, 180),
+			}
+		)
+		tw.Completed:Connect(function()
+			img:Destroy()
+		end)
+		tw:Play()
+		task.wait(introRng:NextNumber(0.15, 0.4))
+	end
+end)
+
+local function fadeOutIntro()
+	local info = TweenInfo.new(1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+	for _, o in ipairs(introGui:GetDescendants()) do
+		local goal = {}
+		if o:IsA("GuiObject") then
+			goal.BackgroundTransparency = 1
+		end
+		if o:IsA("ImageLabel") then
+			goal.ImageTransparency = 1
+		end
+		if o:IsA("TextLabel") or o:IsA("TextButton") then
+			goal.TextTransparency = 1
+		end
+		if o:IsA("UIStroke") then
+			goal.Transparency = 1
+		end
+		if next(goal) then
+			TweenService:Create(o, info, goal):Play()
+		end
+	end
+	task.delay(1.6, function()
+		if introGui and introGui.Parent then
+			introGui:Destroy()
+		end
+		introFinished = true
+	end)
+end
+
+introButton.Activated:Connect(function()
+	if introBusy then return end
+	introBusy = true
+	introLeaving = true
+	stopIntroAudio()
+	fadeOutIntro()
+end)
+
+repeat task.wait(0.05) until introFinished
 
 --==================================================
 -- NHYQ WHITELIST SYSTEM & SECURITY WEBHOOK
@@ -1050,7 +1337,7 @@ end)()
 
 MakeDraggableCustom(ToggleButton)
 
--- نافذة الهับ الرئيسية الشفافة الفخمة
+-- نافذة الهب الرئيسية الشفافة الفخمة
 local Menu = Create("Frame", ScreenGui, {
     Name = "NHYQ_MainHub",
     BackgroundColor3 = Configs_HUB.Cor_Hub,
@@ -1634,7 +1921,6 @@ local function LoadMainScript()
         GetTargetPlayer()
     end)
 
-    -- دالة مساعدة لتشغيل أو الحفاظ على الأنيميشن حتى بعد re / res / kill / nv
     local function EnsureAnimPlaying(char, r15Id, r6Id, speedMultiplier, existingTrack)
         if not char then return existingTrack end
         local hum = char:FindFirstChildOfClass("Humanoid")
@@ -1795,7 +2081,7 @@ local function LoadMainScript()
         return container, label, toggleBg, speedInput, SetVisual
     end
 
-    -- 1. المشاهدة (تستمر تلقائياً حتى بعد re / res / kill / nv أو تغير الشخصية)
+    -- 1. المشاهدة
     local _, SpecLabel, SpecToggleBg, SetSpecVisual = CreateiPhoneSwitch(UnifiedBox, 98, "👁️ تشغيل المشاهدة", Color3.fromRGB(40, 140, 200))
     local isSpectating = false
     local specConnection = nil
@@ -1861,7 +2147,7 @@ local function LoadMainScript()
         end
     end)
 
-    -- 2. البانك (يستمر حتى بعد re / res / kill / nv ويعيد الأنيميشن تلقائياً)
+    -- 2. البانك
     local _, BangLabel, BangToggleBg, BangSpeedInput, SetBangVisual = CreateiPhoneSwitchWithInput(UnifiedBox, 132, "🔥 تشغيل البانك", Color3.fromRGB(180, 20, 20), "سرعة")
     local isBanging = false
     local bangLoop = nil
@@ -1941,7 +2227,7 @@ local function LoadMainScript()
         end
     end)
 
-    -- 3. المص (يستمر حتى بعد re / res / kill / nv ويعيد الأنيميشن تلقائياً)
+    -- 3. المص
     local _, SuckLabel, SuckToggleBg, SuckSpeedInput, SetSuckVisual = CreateiPhoneSwitchWithInput(UnifiedBox, 166, "😈 تشغيل المص", Color3.fromRGB(180, 20, 120), "سرعة")
     local isSucking = false
     local suckLoop = nil
@@ -2031,7 +2317,6 @@ local function LoadMainScript()
         end
     end)
 
-    -- إعادة ضبط الأنيميشن فوراً عند عودة الشخصية (مثل بعد re أو res أو kill)
     _L.CharacterAdded:Connect(function(newChar)
         task.spawn(function()
             local hum = newChar:WaitForChild("Humanoid", 5)
@@ -2060,7 +2345,7 @@ local function LoadMainScript()
         loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/NHYQ1234'))()
     end)
 
-    -- 6. تبويب لوق دخول وخروج (مع تحديث زر Log v2 بالرابط الجديد)
+    -- 6. تبويب لوق دخول وخروج
     local TabLogs = MakeTab("لوق اللاعبين")
     AddButtonToTab(TabLogs, "لوق دخول و خروج الاعبين", function()
         loadstring(game:HttpGet("https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_gh"))()
