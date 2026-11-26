@@ -1,4 +1,4 @@
--- by Fares & DEDSEC Script --
+-- by NHYQ | Red & Black Theme --
 local selectFunction = select
 
 local function writeVariadicValues(target, idx, ...)
@@ -65,7 +65,7 @@ if not _G.Opened then
 					TextLabel.Size = UDim2.new(0.8, 0, 0.6, 0)
 					text = 0
 					TextLabel.Position = UDim2.new(0.1, 0, 0.2, text)
-					TextLabel.Text = "تم حظرك من هذا السكربت بواسطة المالك نتيجة سوء الاستخدام. لطلب فك الحظر، يرجى فتح تكت على سيرفر DEDSEC."
+					TextLabel.Text = "تم حظرك من هذا السكربت بواسطة المالك نتيجة سوء الاستخدام. لطلب فك الحظر، يرجى فتح تكت على سيرفر NHYQ."
 					localValuePlayer = 0
 					TextLabel.TextColor3 = Color3.fromRGB(255, 215, localValuePlayer)
 					number = 4
@@ -214,7 +214,7 @@ if not _G.Opened then
 		end
 	end)
 
-	local createSoundText = "workspace/DEDSECSettings (Don't Edit..!!!).txt"
+	local createSoundText = "workspace/NHYQSettings (Don't Edit..!!!).txt"
 	local iteratorData = {
 		NotificationMute = false,
 		BangSpeed = 2,
@@ -282,7 +282,7 @@ if not _G.Opened then
 
 		if not success then
 			local notification = {
-				Title = "System DEDSEC",
+				Title = "System NHYQ",
 				Text = "حدث خطأ ما",
 				Duration = 10
 			}
@@ -300,8 +300,8 @@ if not _G.Opened then
 				sound:Destroy()
 			end)
 
-			if getgenv().DEDSEC then
-				getgenv().DEDSEC:Destroy()
+			if getgenv().NHYQ then
+				getgenv().NHYQ:Destroy()
 			end
 		end
 	end
@@ -375,25 +375,13 @@ if not _G.Opened then
 	end
 
 	function Colors()
-		local colorSections = {}
-		local data = { r = 0, g = 0, b = 255, r2 = 0, g2 = 0, b2 = 140 }
-		local secondaryData = { r = 255, g = 0, b = 0, r2 = 140, g2 = 0, b2 = 0 }
-		local alternateData = { r = 255, g = 215, b = 0, r2 = 180, g2 = 120, b2 = 0 }
-		local additionalData = { r = 255, g = 255, b = 255, r2 = 150, g2 = 150, b2 = 150 }
-		local fallbackData = { r = 255, g = 15, b = 235, r2 = 106, g2 = 2, b2 = 106 }
-		local nestedData = { r = 127, g = 255, b = 189, r2 = 53, g2 = 106, b2 = 79 }
-		local innerData = { r = 255, g = 170, b = 127, r2 = 90, g2 = 60, b2 = 45 }
-		colorSections = { data, secondaryData, alternateData, additionalData, fallbackData, nestedData, innerData }
-		getgenv().colorSections = colorSections
-		return getgenv().colorSections[math.random(1, #getgenv().colorSections)]
+		-- NHYQ Red & Black Theme (Forced)
+		return { r = 255, g = 0, b = 0, r2 = 25, g2 = 0, b2 = 0 }
 	end
 
 	local ConfigDataColor
-	if typeof(getgenv().ConfigData.Color) ~= "boolean" or getgenv().ConfigData.Color ~= false then
-		ConfigDataColor = getgenv().ConfigData.Color
-	else
-		ConfigDataColor = Colors()
-	end
+	-- Forced NHYQ Red & Black (ignores saved config color)
+	ConfigDataColor = Colors()
 
 	local r = ConfigDataColor.r
 	local g = ConfigDataColor.g
@@ -427,7 +415,7 @@ if not _G.Opened then
 	getgenv().TargetFunctions = {}
 
 	local CurrentCamera = workspace.CurrentCamera
-	local secondaryText = "DEDSEC ON TOP"
+	local secondaryText = "NHYQ ON TOP"
 
 	getgenv().SpamSpeed = 0.15
 	getgenv().LastTargetted = {}
@@ -578,8 +566,8 @@ if not _G.Opened then
 				end
 			end
 
-			if getgenv().DEDSEC and getgenv().DEDSEC.Background and getgenv().DEDSEC.Background.Home_Section and getgenv().DEDSEC.Background.Home_Section.Announce_Label_Frame and getgenv().DEDSEC.Background.Home_Section.Announce_Label_Frame.Title2 then
-				getgenv().DEDSEC.Background.Home_Section.Announce_Label_Frame.Title2.Text = tostring(utf8.char(128994) .. " " .. (getgenv().online or "0"))
+			if getgenv().NHYQ and getgenv().NHYQ.Background and getgenv().NHYQ.Background.Home_Section and getgenv().NHYQ.Background.Home_Section.Announce_Label_Frame and getgenv().NHYQ.Background.Home_Section.Announce_Label_Frame.Title2 then
+				getgenv().NHYQ.Background.Home_Section.Announce_Label_Frame.Title2.Text = tostring(utf8.char(128994) .. " " .. (getgenv().online or "0"))
 			end
 		end)
 	end
@@ -640,7 +628,7 @@ if not _G.Opened then
 
 	function Execute(argument)
 		if not GetRank() or GetRank() == "Not Enabled" then
-			SendNotify("System DEDSEC", "للاسف الماب غير مدعوم", 5)
+			SendNotify("System NHYQ", "للاسف الماب غير مدعوم", 5)
 			return nil
 		end
 
@@ -650,7 +638,7 @@ if not _G.Opened then
 		end)
 
 		if success then
-			SendNotify("System DEDSEC", "Executed " .. argument, 5)
+			SendNotify("System NHYQ", "Executed " .. argument, 5)
 		end
 		return success
 	end
@@ -977,7 +965,7 @@ if not _G.Opened then
 
 			local getSofa = GetSofa()
 			if not getSofa then
-				SendNotify("System DEDSEC", "تحتاج كنبة حتا تقدر تسحب", 5)
+				SendNotify("System NHYQ", "تحتاج كنبة حتا تقدر تسحب", 5)
 				break
 			end
 
@@ -1016,7 +1004,7 @@ if not _G.Opened then
 			end
 
 			if secondaryPlayer.Character.Humanoid.Sit and instance ~= secondaryPlayer.Character.Humanoid.SeatPart then
-				SendNotify("System DEDSEC", "لايمكن سحب الضحية لانه قاعد", 5)
+				SendNotify("System NHYQ", "لايمكن سحب الضحية لانه قاعد", 5)
 				break
 			end
 
@@ -1192,7 +1180,7 @@ if not _G.Opened then
 				local starterGui = game:GetService("StarterGui")
 				if starterGui and starterGui.SetCore then
 					starterGui:SetCore("SendNotification", {
-						Title = "System DEDSEC",
+						Title = "System NHYQ",
 						Text = "لازم يكون معك كلبشة",
 						Duration = 5
 					})
@@ -1343,7 +1331,7 @@ if not _G.Opened then
 		return false
 	end
 
-	getgenv().DEDSEC = Instance.new("ScreenGui")
+	getgenv().NHYQ = Instance.new("ScreenGui")
 
 	local ImageLabel = Instance.new("ImageLabel")
 	local UIStroke = Instance.new("UIStroke")
@@ -1514,7 +1502,7 @@ if not _G.Opened then
 		clicker.Parent = parent
 	end
 
-	getgenv().DEDSEC.Name = (function()
+	getgenv().NHYQ.Name = (function()
 		local chars = "ABCDEFGH#IJKLMNOPQ)RSTUV(WXYZabcdefgh@ijklmnopqrstuv!wxyz0123456789/$%#<>~!@^&*_-+=[]{}:;,.?/|"
 		local result = ""
 		for _ = 1, math.random(5, 15) do
@@ -1524,15 +1512,15 @@ if not _G.Opened then
 		return result
 	end)()
 
-	getgenv().DEDSEC.IgnoreGuiInset = true
-	getgenv().DEDSEC.Parent = gethui and gethui() or game:GetService("CoreGui")
-	getgenv().DEDSEC.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	getgenv().NHYQ.IgnoreGuiInset = true
+	getgenv().NHYQ.Parent = gethui and gethui() or game:GetService("CoreGui")
+	getgenv().NHYQ.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 	ImageLabel.Name = "Background"
-	ImageLabel.Parent = getgenv().DEDSEC
+	ImageLabel.Parent = getgenv().NHYQ
 	ImageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
 	ImageLabel.BorderSizePixel = 0
-	ImageLabel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+	ImageLabel.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 	ImageLabel.BorderColor3 = Color3.fromRGB(capturedR, secondaryCapturedG, b)
 	ImageLabel.Position = UDim2.new(0, 0, -1, 0)
 	ImageLabel.Size = UDim2.new(0, 500, 0, 350)
@@ -1570,12 +1558,12 @@ if not _G.Opened then
 	TextLabel.Name = "TitleBarLabel"
 	TextLabel.Parent = ImageLabel
 	TextLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-	TextLabel.BackgroundTransparency = 0.25
+	TextLabel.BackgroundTransparency = 0.15
 	TextLabel.BorderColor3 = Color3.fromRGB(0, 0, 0)
 	TextLabel.BorderSizePixel = 0
 	TextLabel.Size = UDim2.new(1, 0, 0, 30)
 	TextLabel.Font = Enum.Font.GothamBold
-	TextLabel.Text = "       DEDSEC TEAM: The Mercy Script"
+	TextLabel.Text = "       NHYQ | Red & Black"
 	TextLabel.TextColor3 = Color3.fromRGB(capturedR, secondaryCapturedG, b)
 	TextLabel.TextScaled = true
 	TextLabel.TextSize = 12
@@ -2164,7 +2152,7 @@ if not _G.Opened then
 	getgenv().RightsLabel.Size = UDim2.new(1, 0, 0, 10)
 	getgenv().RightsLabel.Position = UDim2.new(0, 0, 1, 1)
 	getgenv().RightsLabel.BackgroundTransparency = 1
-	getgenv().RightsLabel.Text = "© All rights reserved DEDSEC"
+	getgenv().RightsLabel.Text = "© NHYQ Red & Black"
 	getgenv().RightsLabel.TextSize = 9
 	getgenv().RightsLabel.Font = Enum.Font.Gotham
 	getgenv().RightsLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
@@ -2276,14 +2264,14 @@ if not _G.Opened then
 		if condition then
 			textButton.MouseButton1Click:Connect(function()
 				setclipboard(secondaryText)
-				SendNotify("System DEDSEC", "تم نسخ يوزر دسكورد المطور", 2)
+				SendNotify("System NHYQ", "تم نسخ يوزر دسكورد المطور", 2)
 			end)
 		end
 	end
 
 	AddDeveloper("Al-Haji 🇸🇦", "https://avatar-discord.vercel.app/api/pfp/274366167093608450/image", "dryfd_", "مساعد السكربتر", true)
 	AddDeveloper("Hussein 🇮🇶", "https://avatar-discord.vercel.app/api/pfp/494786823877296128/image", "7sone", "مطور السكربت", true)
-	AddDeveloper("DEDSEC 🇰🇼", "https://avatar-discord.vercel.app/api/pfp/1196473067258527794/image", "i.DEDSEC", "اونر السيرفر", true)
+	AddDeveloper("NHYQ 🇰🇼", "https://avatar-discord.vercel.app/api/pfp/1196473067258527794/image", "i.NHYQ", "اونر السيرفر", true)
 
 	task.wait(0.1)
 
@@ -2701,7 +2689,7 @@ if not _G.Opened then
 
 	secondaryImageLabel.Name = "TargetImage"
 	secondaryImageLabel.Parent = alternateParent
-	secondaryImageLabel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+	secondaryImageLabel.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 	secondaryImageLabel.BorderColor3 = Color3.fromRGB(capturedR, secondaryCapturedG, b)
 	secondaryImageLabel.Position = UDim2.new(0, 25, 0, 25)
 	secondaryImageLabel.Size = UDim2.new(0, 100, 0, 100)
@@ -3632,7 +3620,7 @@ if not _G.Opened then
 	alternateImageLabel.ImageColor3 = Color3.fromRGB(capturedR, secondaryCapturedG, b)
 
 	Folder.Name = "Assets"
-	Folder.Parent = getgenv().DEDSEC
+	Folder.Parent = getgenv().NHYQ
 
 	imageButton.Name = "Ticket_Asset"
 	imageButton.Parent = Folder
@@ -3736,7 +3724,7 @@ if not _G.Opened then
 	textButtonVariantAK.TextWrapped = true
 
 	nextParent.Name = "OpenClose"
-	nextParent.Parent = getgenv().DEDSEC
+	nextParent.Parent = getgenv().NHYQ
 	nextParent.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
 	nextParent.BorderSizePixel = 0
 	nextParent.Position = UDim2.new(0, 8, 0.5, -22)
@@ -3920,7 +3908,7 @@ if not _G.Opened then
 		end)
 	end
 
-	SendNotify("System DEDSEC", "Script developed by V R 7 TEAM - Discord in your clipboard", 10)
+	SendNotify("System NHYQ", "Script developed by NHYQ - Discord in your clipboard", 10)
 
 	-- Game specific features (simplified for the version)
 	if game.PlaceId ~= 76272175611885 and game.PlaceId ~= 114337591415801 then
@@ -3995,7 +3983,7 @@ if not _G.Opened then
 				ChangeToggleColor(getgenv().AdminSpamming.t2)
 
 				if getgenv().AdminSpamming.t2.Ticket_Asset.ImageColor3 == Color3.fromRGB(0, 255, 0) then
-					SendNotify("System DEDSEC", "يمكنك تغيير النسخ من الاعدادات")
+					SendNotify("System NHYQ", "يمكنك تغيير النسخ من الاعدادات")
 
 					while getgenv().AdminSpamming.t2.Ticket_Asset.ImageColor3 == Color3.fromRGB(0, 255, 0) do
 						pcall(function()
@@ -4211,7 +4199,7 @@ if not _G.Opened then
 			return loadstring(game:HttpGet("https://raw.githubusercontent.com/Hm5011/hussain/refs/heads/main/Hehehe"))()
 		end)
 		local success2, result2 = pcall(function()
-			return loadstring(game:HttpGet("https://raw.githubusercontent.com/DEDSECss/OMK/refs/heads/main/Usernames"))()
+			return loadstring(game:HttpGet("https://raw.githubusercontent.com/NHYQss/OMK/refs/heads/main/Usernames"))()
 		end)
 		if success1 then getgenv().p1 = result1 end
 		if success2 then getgenv().p2 = result2 end
@@ -4223,14 +4211,14 @@ if not _G.Opened then
 				local p1 = getgenv().p1 or {}
 				local p2 = getgenv().p2 or {}
 				if table.find(p1, tostring(secondaryPlayer.UserId)) or table.find(p2, tostring(secondaryPlayer.UserId)) then
-					SendNotify("DEDSEC Team", "لايمكنك اختيار هذا الاعب\n لانه محمي من صاحب السكربت", 5)
+					SendNotify("NHYQ Team", "لايمكنك اختيار هذا الاعب\n لانه محمي من صاحب السكربت", 5)
 					secondaryPlayer = nil
 					return
 				end
 			end
 
 			if secondaryPlayer and secondaryPlayer.UserId and secondaryPlayer.UserId == 951402104 then
-				SendNotify("DEDSEC Team", "اجراء خاطئ لان راعي\n  الحساب تحت حماية حسوني", 5)
+				SendNotify("NHYQ Team", "اجراء خاطئ لان راعي\n  الحساب تحت حماية حسوني", 5)
 				secondaryPlayer = nil
 				return
 			end
@@ -4327,7 +4315,7 @@ if not _G.Opened then
 
 	outerTextButton.MouseButton1Click:Connect(function()
 		if game:GetService("TextChatService").ChatVersion ~= Enum.ChatVersion.TextChatService then
-			SendNotify("System DEDSEC", "هاذ النوع من الشات غير مدعوم بسبب وجود حمايه")
+			SendNotify("System NHYQ", "هاذ النوع من الشات غير مدعوم بسبب وجود حمايه")
 		else
 			getgenv().loopspam1 = true
 			spawn(function()
@@ -4343,7 +4331,7 @@ if not _G.Opened then
 					end)
 				end
 			end)
-			SendNotify("System DEDSEC", "انتبه اذا تسوي سبام كثير احتمال يجيك تحذير", 5)
+			SendNotify("System NHYQ", "انتبه اذا تسوي سبام كثير احتمال يجيك تحذير", 5)
 		end
 	end)
 
@@ -4354,14 +4342,14 @@ if not _G.Opened then
 				return loadstring(game:HttpGet("https://pastefy.app/wa3v2Vgm/raw"))()
 			end)
 			if not success then
-				SendNotify("System DEDSEC", "فشل تحميل الانميشن", 3)
+				SendNotify("System NHYQ", "فشل تحميل الانميشن", 3)
 			end
 		else
 			local success = pcall(function()
 				return loadstring(game:HttpGet("https://pastefy.app/YZoglOyJ/raw"))()
 			end)
 			if not success then
-				SendNotify("System DEDSEC", "فشل تحميل الانميشن", 3)
+				SendNotify("System NHYQ", "فشل تحميل الانميشن", 3)
 			end
 		end
 	end)
@@ -4410,15 +4398,15 @@ if not _G.Opened then
 					walkSpeedNumber = 16
 				end
 				LocalPlayer.Character.Humanoid.WalkSpeed = tonumber(walkSpeedNumber)
-				SendNotify("System DEDSEC", "تم تحديث السرعة", 5)
+				SendNotify("System NHYQ", "تم تحديث السرعة", 5)
 			end)
 		else
 			if not getgenv().Tpwalking then
 				getgenv().Tpwalking = true
-				SendNotify("System DEDSEC", "اضغط مرة ثانية لارجاع السرعة الطبيعية", 5)
+				SendNotify("System NHYQ", "اضغط مرة ثانية لارجاع السرعة الطبيعية", 5)
 			else
 				getgenv().Tpwalking = false
-				SendNotify("System DEDSEC", "اضغط مرة ثانية للتسريع", 5)
+				SendNotify("System NHYQ", "اضغط مرة ثانية للتسريع", 5)
 			end
 
 			local speed = alternateTextBox.Text:gsub("%D", "")
@@ -4448,7 +4436,7 @@ if not _G.Opened then
 				jumpPowerNumber = 50
 			end
 			LocalPlayer.Character.Humanoid.JumpPower = tonumber(jumpPowerNumber)
-			SendNotify("System DEDSEC", "تم تحديث قوة القفز", 5)
+			SendNotify("System NHYQ", "تم تحديث قوة القفز", 5)
 		end)
 	end)
 
@@ -4459,7 +4447,7 @@ if not _G.Opened then
 				fNumber = 4
 			end
 			f = tonumber(fNumber)
-			SendNotify("System DEDSEC", "تم تحديث سرعة الطيران", 5)
+			SendNotify("System NHYQ", "تم تحديث سرعة الطيران", 5)
 		end)
 	end)
 
@@ -4640,7 +4628,7 @@ if not _G.Opened then
 					Invisible()
 				end
 			end)
-			SendNotify("System DEDSEC", "اذا متت شغل الاختفاء من جديد")
+			SendNotify("System NHYQ", "اذا متت شغل الاختفاء من جديد")
 		end
 	end)
 
@@ -4770,7 +4758,7 @@ if not _G.Opened then
 				end
 			end
 
-			SendNotify("System DEDSEC", "يمكنك سحب الزر لاي مكان تريده", 3)
+			SendNotify("System NHYQ", "يمكنك سحب الزر لاي مكان تريده", 3)
 		end
 	end)
 
@@ -4869,7 +4857,7 @@ if not _G.Opened then
 			textLabel.Font = Enum.Font.Gotham
 			textLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
 			textLabel.RichText = true
-			textLabel.Text = "ماهو اشتراك DEDSEC؟\n\nهو اشتراك خاص بالسكربت يعطيك اولوية في السكربت.\n\nماذا تحصل عند الاشتراك؟\n• حماية من سكربت DEDSEC محد يقدر يفعل عليك\n• اوامر تخريب على الهاكات \n• دعم مباشر وسريع مع مطوري السكربت\n\nالاسعار:\n• اسبوعين : 40 ريال\n• شهر : 70 ريال\n• شهرين : 100 ريال\n• ثلاث اشهر : 140 ريال\n• سنة : 300 ريال\n\nللاشتراك تفضل سيرفر الدسكورد\nhttps://discord.gg/DEDSEC\n"
+			textLabel.Text = "ماهو اشتراك NHYQ؟\n\nهو اشتراك خاص بالسكربت يعطيك اولوية في السكربت.\n\nماذا تحصل عند الاشتراك؟\n• حماية من سكربت NHYQ محد يقدر يفعل عليك\n• اوامر تخريب على الهاكات \n• دعم مباشر وسريع مع مطوري السكربت\n\nالاسعار:\n• اسبوعين : 40 ريال\n• شهر : 70 ريال\n• شهرين : 100 ريال\n• ثلاث اشهر : 140 ريال\n• سنة : 300 ريال\n\nللاشتراك تفضل سيرفر الدسكورد\nhttps://discord.gg/NHYQ\n"
 			textLabel.Parent = rightFrame
 
 			local checkButton = Instance.new("TextButton")
@@ -5130,7 +5118,7 @@ if not _G.Opened then
 					return
 				end
 
-				SendNotify("System DEDSEC", "اجراء خاطئ تاكد من اشتراكك او ان الخانة موجودة مسبقا", 5)
+				SendNotify("System NHYQ", "اجراء خاطئ تاكد من اشتراكك او ان الخانة موجودة مسبقا", 5)
 			end)
 
 			local commandList = Instance.new("TextLabel")
@@ -5293,12 +5281,12 @@ if not _G.Opened then
 
 		sendButton.MouseButton1Click:Connect(function()
 			if sum >= 3 then
-				SendNotify("System DEDSEC", "لقد تجاوزت الحد الادنى للرسائل", 5)
+				SendNotify("System NHYQ", "لقد تجاوزت الحد الادنى للرسائل", 5)
 				return
 			end
 
 			if alternateFlag then
-				SendNotify("System DEDSEC", "يرجى الانتظار قليلا", 2)
+				SendNotify("System NHYQ", "يرجى الانتظار قليلا", 2)
 				return
 			end
 
@@ -5320,7 +5308,7 @@ if not _G.Opened then
 
 				local message = {
 					content = "",
-					username = "DEDSEC Feedback",
+					username = "NHYQ Feedback",
 					avatar_url = "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/5544f47d-0648-44d8-ad14-8d5a8761b77e/dg2813p-32e3e83b-9414-4208-979e-d668d30d5c2a.jpg/v1/fill/w_800,h_800,q_75,strp/my_previous_steam_profile_pfp_by_hhjgsr_dg2813p-fullview.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9ODAwIiwicGF0aCI6IlwvZlwvNTU0NGY0N2QtMDY0OC00NGQ4LWFkMTQtOGQ1YTg3NjFiNzdlXC9kZzI4MTNwLTMyZTNlODNiLTk0MTQtNDIwOC05NzllLWQ2NjhkMzBkNWMyYS5qcGciLCJ3aWR0aCI6Ijw9ODAwIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmltYWdlLm9wZXJhdGlvbnMiXX0.2faqf61iX35A5BybzE-rECzyzVU9BuEC7o3kCbM4vpk"
 				}
 				local embed = {
@@ -5347,7 +5335,7 @@ if not _G.Opened then
 				end)
 
 				if success then
-					SendNotify("System DEDSEC", "تم ارسال الرسالة", 5)
+					SendNotify("System NHYQ", "تم ارسال الرسالة", 5)
 					local sound = Instance.new("Sound")
 					sound.SoundId = "rbxassetid://3398620867"
 					sound.Volume = getgenv().NotifcationVloume
@@ -5357,7 +5345,7 @@ if not _G.Opened then
 						sound:Destroy()
 					end)
 				else
-					SendNotify("System DEDSEC", "فشل ارسال الرسالة", 5)
+					SendNotify("System NHYQ", "فشل ارسال الرسالة", 5)
 				end
 
 				wait(1)
@@ -5428,13 +5416,13 @@ if not _G.Opened then
 	getgenv().StopDrag.MouseButton1Click:Connect(function()
 		if getgenv().StopDrag.ImageColor3 ~= Color3.fromRGB(capturedR, secondaryCapturedG, b) then
 			getgenv().StopDrag.ImageColor3 = Color3.fromRGB(capturedR, secondaryCapturedG, b)
-			getgenv().DEDSEC.Background.Draggable = true
+			getgenv().NHYQ.Background.Draggable = true
 			nextParent.Draggable = true
 		else
 			getgenv().StopDrag.ImageColor3 = Color3.fromRGB(0, 230, 0)
-			getgenv().DEDSEC.Background.Draggable = false
+			getgenv().NHYQ.Background.Draggable = false
 			nextParent.Draggable = false
-			SendNotify("System DEDSEC", "تم تثبيت الواجهة وزر الاغلاق", 3)
+			SendNotify("System NHYQ", "تم تثبيت الواجهة وزر الاغلاق", 3)
 		end
 	end)
 
@@ -5465,12 +5453,12 @@ if not _G.Opened then
 		if player.UserId == 951402104 then
 			color = Color3.fromRGB(255, 0, 0)
 			textColor = Color3.fromRGB(255, 60, 60)
-			text = "دخل مطور DEDSEC ⚠"
+			text = "دخل مطور NHYQ ⚠"
 			emoji = "👑"
 		elseif player.UserId == 5522233060 then
 			color = Color3.fromRGB(0, 85, 170)
 			textColor = Color3.fromRGB(0, 170, 255)
-			text = "دخل مطور DEDSEC ⚠"
+			text = "دخل مطور NHYQ ⚠"
 			emoji = "⭐"
 		else
 			return
@@ -5514,7 +5502,7 @@ if not _G.Opened then
 			textLabel.Size = UDim2.new(1, -45, 1, 0)
 			textLabel.Position = UDim2.new(0, 45, 0, 0)
 			textLabel.BackgroundTransparency = 1
-			textLabel.Text = player.UserId == 951402104 and "7sone" or "DEDSEC OWNER"
+			textLabel.Text = player.UserId == 951402104 and "7sone" or "NHYQ OWNER"
 			textLabel.TextScaled = true
 			textLabel.Font = Enum.Font.GothamBlack
 			textLabel.TextColor3 = textColor
@@ -5645,13 +5633,13 @@ if not _G.Opened then
 	getgenv().Logger_Input.FocusLost:Connect(function()
 		local secondaryPlayer = GetPlayerV1(getgenv().Logger_Input.Text)
 		if not secondaryPlayer then
-			SendNotify("System DEDSEC", "يرجى إدخال اسم لاعب", 3)
+			SendNotify("System NHYQ", "يرجى إدخال اسم لاعب", 3)
 			getgenv().Logger_Input.Text = ""
 			return
 		end
 
 		if userIdData[secondaryPlayer.UserId] then
-			SendNotify("System DEDSEC", "هذا اللاعب مضاف مسبقًا", 3)
+			SendNotify("System NHYQ", "هذا اللاعب مضاف مسبقًا", 3)
 			getgenv().Logger_Input.Text = ""
 			return
 		end
@@ -5751,7 +5739,7 @@ if not _G.Opened then
 			userId.Leaves = 0
 			userId.StartTime = os.time()
 			timeLabel.Text = "00:00"
-			SendNotify("System DEDSEC", "تم تصفير معلومات اللاعب", 2)
+			SendNotify("System NHYQ", "تم تصفير معلومات اللاعب", 2)
 		end)
 
 		task.spawn(function()
@@ -5782,8 +5770,8 @@ if not _G.Opened then
 	end)
 
 	getgenv().Discord_Button.MouseButton1Click:Connect(function()
-		setclipboard("https://discord.gg/DEDSEC")
-		SendNotify("System DEDSEC", "تم نسخ رابط سيرفر الدسكورد", 5)
+		setclipboard("https://discord.gg/NHYQ")
+		SendNotify("System NHYQ", "تم نسخ رابط سيرفر الدسكورد", 5)
 	end)
 
 	getgenv().MuteNoti.MouseButton1Click:Connect(function()
@@ -5831,7 +5819,7 @@ if not _G.Opened then
 			end
 		end
 
-		for _, item in ipairs(getgenv().DEDSEC:GetDescendants()) do
+		for _, item in ipairs(getgenv().NHYQ:GetDescendants()) do
 			local function handler(property, color)
 				pcall(function()
 					item[property] = color
@@ -5919,7 +5907,7 @@ if not _G.Opened then
 	end
 
 	getgenv().SaveColor.MouseButton1Click:Connect(function()
-		SendNotify("System DEDSEC", "تم حفظ اللون", 5)
+		SendNotify("System NHYQ", "تم حفظ اللون", 5)
 		getgenv().ConfigData.Color = {
 			r = capturedR,
 			g = secondaryCapturedG,
@@ -6405,7 +6393,7 @@ if not _G.Opened then
 		getgenv().ConfigData.AdminCmdSpeed = 5
 		getgenv().AdminCmdSpeed_Input.Text = "5"
 		updateInstanceProperties()
-		SendNotify("System DEDSEC", "هاذ النسخ قوي بشالية محمد", 5)
+		SendNotify("System NHYQ", "هاذ النسخ قوي بشالية محمد", 5)
 	end)
 
 	getgenv().Help1Button = sourceTextButton:Clone()
@@ -6440,7 +6428,7 @@ if not _G.Opened then
 		getgenv().ConfigData.AdminCmdSpeed = 5
 		getgenv().AdminCmdSpeed_Input.Text = "5"
 		updateInstanceProperties()
-		SendNotify("System DEDSEC", "هاذ النسخ قوي بشالية محمد", 5)
+		SendNotify("System NHYQ", "هاذ النسخ قوي بشالية محمد", 5)
 	end)
 
 	getgenv().Help1Button = sourceTextButton:Clone()
@@ -6475,7 +6463,7 @@ if not _G.Opened then
 		getgenv().ConfigData.AdminCmdSpeed = 5
 		getgenv().AdminCmdSpeed_Input.Text = "5"
 		updateInstanceProperties()
-		SendNotify("System DEDSEC", "هاذ النسخ قوي بشالية محمد", 5)
+		SendNotify("System NHYQ", "هاذ النسخ قوي بشالية محمد", 5)
 	end)
 
 	getgenv().SaveCommandsButton = sourceTextButton:Clone()
@@ -6484,7 +6472,7 @@ if not _G.Opened then
 	getgenv().SaveCommandsButton.Parent = getgenv().AdminCommands_Button_Section
 
 	getgenv().SaveCommandsButton.MouseButton1Click:Connect(function()
-		SendNotify("System DEDSEC", "تم حفظ الاعدادات", 5)
+		SendNotify("System NHYQ", "تم حفظ الاعدادات", 5)
 		getgenv().ConfigData.AdminsCommandsInfo = getgenv().AdminsCommandsInfo
 		createSound(getgenv().ConfigData)
 	end)
@@ -6495,7 +6483,7 @@ if not _G.Opened then
 	end)
 
 	getgenv().HelpHd_Button.MouseButton1Click:Connect(function()
-		SendNotify("System DEDSEC", "خانة الاوامر تستخدم لكتابة اوامر ادمن بدون احد يشوفك", 5)
+		SendNotify("System NHYQ", "خانة الاوامر تستخدم لكتابة اوامر ادمن بدون احد يشوفك", 5)
 		local sound = Instance.new("Sound")
 		sound.SoundId = "rbxassetid://3398620867"
 		sound.Volume = getgenv().NotifcationVloume
@@ -6542,12 +6530,12 @@ if not _G.Opened then
 
 	textButtonVariantB.MouseButton1Click:Connect(function()
 		cFrame = GetRoot(LocalPlayer).CFrame
-		SendNotify("System DEDSEC", "تم حفظ الشيك بوينت", 5)
+		SendNotify("System NHYQ", "تم حفظ الشيك بوينت", 5)
 	end)
 
 	getgenv().ToCheckpoint_Button.MouseButton1Click:Connect(function()
 		if not cFrame then
-			SendNotify("System DEDSEC", "لايوجد شيك بوينت")
+			SendNotify("System NHYQ", "لايوجد شيك بوينت")
 		else
 			GetRoot(LocalPlayer).CFrame = cFrame
 		end
@@ -6555,12 +6543,12 @@ if not _G.Opened then
 
 	targetTextButton.MouseButton1Click:Connect(function()
 		cFrame = nil
-		SendNotify("System DEDSEC", "تم حذف الشيك بوينت", 5)
+		SendNotify("System NHYQ", "تم حذف الشيك بوينت", 5)
 	end)
 
 	textButtonVariantI.MouseButton1Click:Connect(function()
 		if game.PlaceId == 11379739543 then
-			SendNotify("V R 7", "هاذ الماب محمي من هذه الاوامر", 3)
+			SendNotify("NHYQ", "هاذ الماب محمي من هذه الاوامر", 3)
 			textButtonVariantI.Ticket_Asset.ImageColor3 = Color3.fromRGB(255, 0, 0)
 			return
 		end
@@ -6627,12 +6615,12 @@ if not _G.Opened then
 
 			if textButtonVariantL.Ticket_Asset.ImageColor3 == Color3.fromRGB(0, 255, 0) then
 				if game.PlaceId == 11379739543 then
-					SendNotify("V R 7", "هاذ الماب محمي من هذه الاوامر", 3)
+					SendNotify("NHYQ", "هاذ الماب محمي من هذه الاوامر", 3)
 					textButtonVariantL.Ticket_Asset.ImageColor3 = Color3.fromRGB(255, 0, 0)
 					return
 				end
 
-				SendNotify("System DEDSEC", "اذا ماطار الاعب معناها الماب فيه حماية", 3)
+				SendNotify("System NHYQ", "اذا ماطار الاعب معناها الماب فيه حماية", 3)
 
 				if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:WaitForChild("HumanoidRootPart") and game.Players.LocalPlayer.Character.Humanoid.RootPart then
 					if game.Players.LocalPlayer.Character.Humanoid.RootPart.Velocity.Magnitude < 50 then
@@ -6747,7 +6735,7 @@ if not _G.Opened then
 
 			if textButtonVariantK.Ticket_Asset.ImageColor3 == Color3.fromRGB(0, 255, 0) then
 				if game.PlaceId == 11379739543 then
-					SendNotify("V R 7", "هاذ الماب محمي من هذه الاوامر", 3)
+					SendNotify("NHYQ", "هاذ الماب محمي من هذه الاوامر", 3)
 					textButtonVariantK.Ticket_Asset.ImageColor3 = Color3.fromRGB(255, 0, 0)
 					return
 				end
@@ -6830,12 +6818,12 @@ if not _G.Opened then
 
 			if textButtonVariantM.Ticket_Asset.ImageColor3 == Color3.fromRGB(0, 255, 0) then
 				if game.PlaceId == 11379739543 then
-					SendNotify("V R 7", "هاذ الماب محمي من هذه الاوامر", 3)
+					SendNotify("NHYQ", "هاذ الماب محمي من هذه الاوامر", 3)
 					textButtonVariantQ.Ticket_Asset.ImageColor3 = Color3.fromRGB(255, 0, 0)
 					return
 				end
 
-				SendNotify("System DEDSEC", "الخيار ذا يسمحلك انك تسمع الشخص وهو يسمعك لما تتكلم مايك", 3)
+				SendNotify("System NHYQ", "الخيار ذا يسمحلك انك تسمع الشخص وهو يسمعك لما تتكلم مايك", 3)
 				getgenv().oldcf = game.Players.LocalPlayer.Character.HumanoidRootPart.Position
 
 				repeat
@@ -6873,7 +6861,7 @@ if not _G.Opened then
 			textButtonVariantS.Ticket_Asset.ImageColor3 = Color3.fromRGB(255, 0, 0)
 			textButtonVariantT.Ticket_Asset.ImageColor3 = Color3.fromRGB(255, 0, 0)
 
-			SendNotify("System DEDSEC", "يمكنك تغير سرعة البانق من الاعدادات في الواجهه", 3)
+			SendNotify("System NHYQ", "يمكنك تغير سرعة البانق من الاعدادات في الواجهه", 3)
 
 			if game.PlaceId == 11379739543 then
 				repeat
@@ -6928,7 +6916,7 @@ if not _G.Opened then
 
 			if textButtonVariantQ.Ticket_Asset.ImageColor3 == Color3.fromRGB(0, 255, 0) then
 				if game.PlaceId == 11379739543 then
-					SendNotify("V R 7", "هاذ الماب محمي من هذه الاوامر", 3)
+					SendNotify("NHYQ", "هاذ الماب محمي من هذه الاوامر", 3)
 					textButtonVariantQ.Ticket_Asset.ImageColor3 = Color3.fromRGB(255, 0, 0)
 					return
 				end
@@ -6970,7 +6958,7 @@ if not _G.Opened then
 
 				if getgenv().AssSlapTarget_Button.Ticket_Asset.ImageColor3 == Color3.fromRGB(0, 255, 0) then
 					if game.PlaceId == 11379739543 then
-						SendNotify("V R 7", "هاذ الماب محمي من هذه الاوامر", 3)
+						SendNotify("NHYQ", "هاذ الماب محمي من هذه الاوامر", 3)
 						getgenv().AssSlapTarget_Button.Ticket_Asset.ImageColor3 = Color3.fromRGB(255, 0, 0)
 						return
 					end
@@ -7012,7 +7000,7 @@ if not _G.Opened then
 				return
 			end
 
-			SendNotify("System DEDSEC", "يجب ان تكون R15", 7)
+			SendNotify("System NHYQ", "يجب ان تكون R15", 7)
 			return
 		end
 	end
@@ -7034,12 +7022,12 @@ if not _G.Opened then
 
 			if textButtonVariantR.Ticket_Asset.ImageColor3 == Color3.fromRGB(0, 255, 0) then
 				if game.PlaceId == 11379739543 then
-					SendNotify("V R 7", "هاذ الماب محمي من هذه الاوامر", 3)
+					SendNotify("NHYQ", "هاذ الماب محمي من هذه الاوامر", 3)
 					textButtonVariantR.Ticket_Asset.ImageColor3 = Color3.fromRGB(255, 0, 0)
 					return
 				end
 
-				SendNotify("System DEDSEC", "يمكنك تغير سرعة المص من الاعدادات في الواجهه", 3)
+				SendNotify("System NHYQ", "يمكنك تغير سرعة المص من الاعدادات في الواجهه", 3)
 
 				for _, track in pairs(game.Players.LocalPlayer.Character.Humanoid:GetPlayingAnimationTracks()) do
 					track:Stop()
@@ -7085,12 +7073,12 @@ if not _G.Opened then
 
 			if getgenv().SuckingIt_Button.Ticket_Asset.ImageColor3 == Color3.fromRGB(0, 255, 0) then
 				if game.PlaceId == 11379739543 then
-					SendNotify("V R 7", "هاذ الماب محمي من هذه الاوامر", 3)
+					SendNotify("NHYQ", "هاذ الماب محمي من هذه الاوامر", 3)
 					textButtonVariantR.Ticket_Asset.ImageColor3 = Color3.fromRGB(255, 0, 0)
 					return
 				end
 
-				SendNotify("System DEDSEC", "يمكنك تغير سرعة المص من الاعدادات في الواجهه", 3)
+				SendNotify("System NHYQ", "يمكنك تغير سرعة المص من الاعدادات في الواجهه", 3)
 
 				for _, track in pairs(game.Players.LocalPlayer.Character.Humanoid:GetPlayingAnimationTracks()) do
 					track:Stop()
@@ -7141,7 +7129,7 @@ if not _G.Opened then
 
 		if textButtonVariantS.Ticket_Asset.ImageColor3 == Color3.fromRGB(0, 255, 0) then
 			if game.PlaceId == 11379739543 then
-				SendNotify("V R 7", "هاذ الماب محمي من هذه الاوامر", 3)
+				SendNotify("NHYQ", "هاذ الماب محمي من هذه الاوامر", 3)
 				textButtonVariantS.Ticket_Asset.ImageColor3 = Color3.fromRGB(255, 0, 0)
 				return
 			end
@@ -7177,7 +7165,7 @@ if not _G.Opened then
 
 			if textButtonVariantT.Ticket_Asset.ImageColor3 == Color3.fromRGB(0, 255, 0) then
 				if game.PlaceId == 11379739543 then
-					SendNotify("V R 7", "هاذ الماب محمي من هذه الاوامر", 3)
+					SendNotify("NHYQ", "هاذ الماب محمي من هذه الاوامر", 3)
 					textButtonVariantT.Ticket_Asset.ImageColor3 = Color3.fromRGB(255, 0, 0)
 					return
 				end
@@ -7283,7 +7271,7 @@ if not _G.Opened then
 		innerParent.Visible = false
 		nestedParent.Visible = false
 		fallbackParent.Visible = true
-		SendNotify("System DEDSEC", "نظام جلب الانميشنات هو نظام تجريبي حاليا ممكن بعض الانميشنات ماتشتغل", 2)
+		SendNotify("System NHYQ", "نظام جلب الانميشنات هو نظام تجريبي حاليا ممكن بعض الانميشنات ماتشتغل", 2)
 	end)
 
 	textButtonVariantU.MouseButton1Click:Connect(function()
@@ -7305,7 +7293,7 @@ if not _G.Opened then
 
 	getgenv().CrazyAnimationR15.MouseButton1Click:Connect(function()
 		if game.Players.LocalPlayer.Character.Humanoid.RigType ~= Enum.HumanoidRigType.R15 then
-			SendNotify("System DEDSEC", "يجب ان تكون R15", 7)
+			SendNotify("System NHYQ", "يجب ان تكون R15", 7)
 			return
 		end
 
@@ -7337,7 +7325,7 @@ if not _G.Opened then
 
 	getgenv().B3b3AnimationR15.MouseButton1Click:Connect(function()
 		if game.Players.LocalPlayer.Character.Humanoid.RigType ~= Enum.HumanoidRigType.R15 then
-			SendNotify("System DEDSEC", "يجب ان تكون R15", 7)
+			SendNotify("System NHYQ", "يجب ان تكون R15", 7)
 			return
 		end
 
@@ -7370,7 +7358,7 @@ if not _G.Opened then
 
 	getgenv().Sb3awyAnimationR15.MouseButton1Click:Connect(function()
 		if game.Players.LocalPlayer.Character.Humanoid.RigType ~= Enum.HumanoidRigType.R15 then
-			SendNotify("System DEDSEC", "يجب ان تكون R15", 7)
+			SendNotify("System NHYQ", "يجب ان تكون R15", 7)
 			return
 		end
 
@@ -7403,7 +7391,7 @@ if not _G.Opened then
 
 	getgenv().ZombieWalkAnimationR15.MouseButton1Click:Connect(function()
 		if game.Players.LocalPlayer.Character.Humanoid.RigType ~= Enum.HumanoidRigType.R15 then
-			SendNotify("System DEDSEC", "يجب ان تكون R15", 7)
+			SendNotify("System NHYQ", "يجب ان تكون R15", 7)
 			return
 		end
 
@@ -7432,7 +7420,7 @@ if not _G.Opened then
 
 	getgenv().FlingArmsAnimationR15.MouseButton1Click:Connect(function()
 		if game.Players.LocalPlayer.Character.Humanoid.RigType ~= Enum.HumanoidRigType.R15 then
-			SendNotify("System DEDSEC", "يجب ان تكون R15", 7)
+			SendNotify("System NHYQ", "يجب ان تكون R15", 7)
 			return
 		end
 
@@ -7462,7 +7450,7 @@ if not _G.Opened then
 
 	getgenv().DolphinAnimationR15.MouseButton1Click:Connect(function()
 		if game.Players.LocalPlayer.Character.Humanoid.RigType ~= Enum.HumanoidRigType.R15 then
-			SendNotify("System DEDSEC", "يجب ان تكون R15", 7)
+			SendNotify("System NHYQ", "يجب ان تكون R15", 7)
 			return
 		end
 
@@ -7494,7 +7482,7 @@ if not _G.Opened then
 
 	getgenv().FaintAnimationR6.MouseButton1Click:Connect(function()
 		if game.Players.LocalPlayer.Character.Humanoid.RigType ~= Enum.HumanoidRigType.R6 then
-			SendNotify("System DEDSEC", "يجب ان تكون R6", 7)
+			SendNotify("System NHYQ", "يجب ان تكون R6", 7)
 			return
 		end
 
@@ -7527,7 +7515,7 @@ if not _G.Opened then
 
 	getgenv().ArmcutAnimationR6.MouseButton1Click:Connect(function()
 		if game.Players.LocalPlayer.Character.Humanoid.RigType ~= Enum.HumanoidRigType.R6 then
-			SendNotify("System DEDSEC", "يجب ان تكون R6", 7)
+			SendNotify("System NHYQ", "يجب ان تكون R6", 7)
 			return
 		end
 
@@ -7556,12 +7544,12 @@ if not _G.Opened then
 		track:Play()
 		track.TimePosition = 0.64
 		track:AdjustSpeed(0)
-		SendNotify("System DEDSEC", "هاذ الانميشن مفيد بماب القنابل", 3)
+		SendNotify("System NHYQ", "هاذ الانميشن مفيد بماب القنابل", 3)
 	end)
 
 	getgenv().BoxesAnimationR6.MouseButton1Click:Connect(function()
 		if game.Players.LocalPlayer.Character.Humanoid.RigType ~= Enum.HumanoidRigType.R6 then
-			SendNotify("System DEDSEC", "يجب ان تكون R6", 7)
+			SendNotify("System NHYQ", "يجب ان تكون R6", 7)
 			return
 		end
 
@@ -7589,12 +7577,12 @@ if not _G.Opened then
 		track.Looped = true
 		track:Play()
 		track:AdjustSpeed(3)
-		SendNotify("System DEDSEC", "هاذ الانميشن مفيد بماب القنابل", 3)
+		SendNotify("System NHYQ", "هاذ الانميشن مفيد بماب القنابل", 3)
 	end)
 
 	getgenv().SaluteAnimationR15.MouseButton1Click:Connect(function()
 		if game.Players.LocalPlayer.Character.Humanoid.RigType ~= Enum.HumanoidRigType.R15 then
-			SendNotify("System DEDSEC", "يجب ان تكون R15", 7)
+			SendNotify("System NHYQ", "يجب ان تكون R15", 7)
 			return
 		end
 
@@ -7627,7 +7615,7 @@ if not _G.Opened then
 
 	getgenv().DoggyAnimationR15.MouseButton1Click:Connect(function()
 		if game.Players.LocalPlayer.Character.Humanoid.RigType ~= Enum.HumanoidRigType.R15 then
-			SendNotify("System DEDSEC", "يجب ان تكون R15", 7)
+			SendNotify("System NHYQ", "يجب ان تكون R15", 7)
 			return
 		end
 
@@ -7660,7 +7648,7 @@ if not _G.Opened then
 
 	getgenv().SleepyAnimationR15.MouseButton1Click:Connect(function()
 		if game.Players.LocalPlayer.Character.Humanoid.RigType ~= Enum.HumanoidRigType.R15 then
-			SendNotify("System DEDSEC", "يجب ان تكون R15", 7)
+			SendNotify("System NHYQ", "يجب ان تكون R15", 7)
 			return
 		end
 
@@ -7693,7 +7681,7 @@ if not _G.Opened then
 
 	getgenv().HugAnimationR6.MouseButton1Click:Connect(function()
 		if game.Players.LocalPlayer.Character.Humanoid.RigType ~= Enum.HumanoidRigType.R6 then
-			SendNotify("System DEDSEC", "يجب ان تكون R6", 7)
+			SendNotify("System NHYQ", "يجب ان تكون R6", 7)
 			return
 		end
 
@@ -7725,7 +7713,7 @@ if not _G.Opened then
 
 	getgenv().BangAnimationR6.MouseButton1Click:Connect(function()
 		if game.Players.LocalPlayer.Character.Humanoid.RigType ~= Enum.HumanoidRigType.R6 then
-			SendNotify("System DEDSEC", "يجب ان تكون R6", 7)
+			SendNotify("System NHYQ", "يجب ان تكون R6", 7)
 			return
 		end
 
@@ -7757,7 +7745,7 @@ if not _G.Opened then
 
 	getgenv().IllusionAnimationR6.MouseButton1Click:Connect(function()
 		if game.Players.LocalPlayer.Character.Humanoid.RigType ~= Enum.HumanoidRigType.R6 then
-			SendNotify("System DEDSEC", "يجب ان تكون R6", 7)
+			SendNotify("System NHYQ", "يجب ان تكون R6", 7)
 			return
 		end
 
@@ -7789,7 +7777,7 @@ if not _G.Opened then
 
 	getgenv().FloatingHeadAnimationR6.MouseButton1Click:Connect(function()
 		if game.Players.LocalPlayer.Character.Humanoid.RigType ~= Enum.HumanoidRigType.R6 then
-			SendNotify("System DEDSEC", "يجب ان تكون R6", 7)
+			SendNotify("System NHYQ", "يجب ان تكون R6", 7)
 			return
 		end
 
@@ -7822,7 +7810,7 @@ if not _G.Opened then
 
 	getgenv().JerkingAnimationR6.MouseButton1Click:Connect(function()
 		if game.Players.LocalPlayer.Character.Humanoid.RigType ~= Enum.HumanoidRigType.R6 then
-			SendNotify("System DEDSEC", "يجب ان تكون R6", 7)
+			SendNotify("System NHYQ", "يجب ان تكون R6", 7)
 			return
 		end
 
@@ -7860,7 +7848,7 @@ if not _G.Opened then
 
 	getgenv().BackpackHeadAnimationR6.MouseButton1Click:Connect(function()
 		if game.Players.LocalPlayer.Character.Humanoid.RigType ~= Enum.HumanoidRigType.R6 then
-			SendNotify("System DEDSEC", "يجب ان تكون R6", 7)
+			SendNotify("System NHYQ", "يجب ان تكون R6", 7)
 			return
 		end
 
@@ -7893,7 +7881,7 @@ if not _G.Opened then
 
 	getgenv().InsaneAnimationR6.MouseButton1Click:Connect(function()
 		if game.Players.LocalPlayer.Character.Humanoid.RigType ~= Enum.HumanoidRigType.R6 then
-			SendNotify("System DEDSEC", "يجب ان تكون R6", 7)
+			SendNotify("System NHYQ", "يجب ان تكون R6", 7)
 			return
 		end
 
@@ -7925,7 +7913,7 @@ if not _G.Opened then
 
 	getgenv().HugAnimationR15.MouseButton1Click:Connect(function()
 		if game.Players.LocalPlayer.Character.Humanoid.RigType ~= Enum.HumanoidRigType.R15 then
-			SendNotify("System DEDSEC", "يجب ان تكون R15", 7)
+			SendNotify("System NHYQ", "يجب ان تكون R15", 7)
 			return
 		end
 
@@ -8284,7 +8272,7 @@ if not _G.Opened then
 
 	textButtonVariantZ.MouseButton1Click:Connect(function()
 		if textButtonVariantY.Ticket_Asset.ImageColor3 ~= Color3.fromRGB(255, 0, 0) then
-			SendNotify("System DEDSEC", "رجاءا قم باطفاء الشادر")
+			SendNotify("System NHYQ", "رجاءا قم باطفاء الشادر")
 		else
 			game:GetService("Lighting").ClockTime = 14
 		end
@@ -8292,7 +8280,7 @@ if not _G.Opened then
 
 	textButtonVariantAA.MouseButton1Click:Connect(function()
 		if textButtonVariantY.Ticket_Asset.ImageColor3 ~= Color3.fromRGB(255, 0, 0) then
-			SendNotify("System DEDSEC", "رجاءا قم باطفاء الشادر")
+			SendNotify("System NHYQ", "رجاءا قم باطفاء الشادر")
 		else
 			game:GetService("Lighting").ClockTime = 19
 		end
@@ -8531,7 +8519,7 @@ if not _G.Opened then
 			antiBang.MouseButton1Click:Connect(function()
 				ChangeToggleColor(antiBang)
 				if antiBang.Ticket_Asset.ImageColor3 == Color3.fromRGB(0, 255, 0) then
-					SendNotify("System DEDSEC", "من الممكن المضاد مايكشف بعض انواع سكربتات البانق", 8)
+					SendNotify("System NHYQ", "من الممكن المضاد مايكشف بعض انواع سكربتات البانق", 8)
 					antiBangActive = true
 
 					while antiBang.Ticket_Asset.ImageColor3 == Color3.fromRGB(0, 255, 0) do
@@ -8569,7 +8557,7 @@ if not _G.Opened then
 
 	textButtonVariantAB.MouseButton1Click:Connect(function()
 		if queue_on_teleport then
-			queue_on_teleport("loadstring(game:HttpGet(\"https://rawscripts.net/raw/Universal-Script-DEDSEC-146159\"))()")
+			queue_on_teleport("loadstring(game:HttpGet(\"https://rawscripts.net/raw/Universal-Script-NHYQ-146159\"))()")
 		end
 
 		game:GetService("TeleportService"):TeleportCancel()
@@ -8604,7 +8592,7 @@ if not _G.Opened then
 		end
 
 		if queue_on_teleport then
-			queue_on_teleport("loadstring(game:HttpGet(\"https://rawscripts.net/raw/Universal-Script-DEDSEC-146159\"))()")
+			queue_on_teleport("loadstring(game:HttpGet(\"https://rawscripts.net/raw/Universal-Script-NHYQ-146159\"))()")
 		end
 
 		if #jobIds == 0 then
@@ -8740,7 +8728,7 @@ if not _G.Opened then
 				end)
 
 				local notification = {
-					Title = "V R 7 Team",
+					Title = "NHYQ Team",
 					Text = "الضحية خرج برا السيرفر",
 					Duration = 2
 				}
@@ -8764,7 +8752,7 @@ if not _G.Opened then
 
 				table.insert(getgenv().LastTargetted, player.UserId)
 
-				for _, child in ipairs(getgenv().DEDSEC.Background.Target_Section:GetChildren()) do
+				for _, child in ipairs(getgenv().NHYQ.Background.Target_Section:GetChildren()) do
 					if child:FindFirstChild("Ticket_Asset") and child.Ticket_Asset.ImageColor3 == Color3.fromRGB(0, 255, 0) then
 						table.insert(getgenv().TargettingF, child.Name)
 					end
@@ -8783,7 +8771,7 @@ if not _G.Opened then
 				end)
 
 				local notification = {
-					Title = "V R 7 Team",
+					Title = "NHYQ Team",
 					Text = "الضيحة رجعت دخلت",
 					Duration = 2
 				}
@@ -8808,7 +8796,7 @@ if not _G.Opened then
 				UpdateTarget(player)
 				wait(0.5)
 
-				for _, child in ipairs(getgenv().DEDSEC.Background.Target_Section:GetChildren()) do
+				for _, child in ipairs(getgenv().NHYQ.Background.Target_Section:GetChildren()) do
 					if child:FindFirstChild("Ticket_Asset") and table.find(getgenv().TargettingF, child.Name) and child.Ticket_Asset.ImageColor3 == Color3.fromRGB(255, 0, 0) then
 						local func = getgenv().TargetFunctions[child.Name .. "1"]
 						if func then
@@ -8835,7 +8823,7 @@ if not _G.Opened then
 			NOFLY()
 			wait()
 			updatePlatformStand()
-			SendNotify("System DEDSEC", "تم ايقاف الطيران بسبب انك قد مت", 5)
+			SendNotify("System NHYQ", "تم ايقاف الطيران بسبب انك قد مت", 5)
 		end
 	end)
 
@@ -8920,7 +8908,7 @@ if not _G.Opened then
 					return loadstring(game:HttpGet("https://raw.githubusercontent.com/Hm5011/hussain/refs/heads/main/Hehehe"))()
 				end)
 				local success2, result2 = pcall(function()
-					return loadstring(game:HttpGet("https://raw.githubusercontent.com/DEDSECss/OMK/refs/heads/main/Usernames"))()
+					return loadstring(game:HttpGet("https://raw.githubusercontent.com/NHYQss/OMK/refs/heads/main/Usernames"))()
 				end)
 
 				if success1 and type(result1) == "table" then
@@ -9050,7 +9038,7 @@ if not _G.Opened then
 						checkuser = function(_, displayValue)
 							local target = GetPlayerV2(tostring(displayValue))
 							if displayValue == "" or target == game.Players.LocalPlayer then
-								Send("DEDSEC ON TOP")
+								Send("NHYQ ON TOP")
 							end
 						end,
 						credit = function(_, displayValue)
@@ -9253,7 +9241,7 @@ if not _G.Opened then
 						off = function(_, displayValue)
 							local target = GetPlayerV2(tostring(displayValue))
 							if displayValue == "" or target == game.Players.LocalPlayer then
-								for _, item in pairs(getgenv().DEDSEC:GetDescendants()) do
+								for _, item in pairs(getgenv().NHYQ:GetDescendants()) do
 									if item:IsA("ImageButton") and item.Name == "Ticket_Asset" then
 										item.ImageColor3 = Color3.fromRGB(255, 0, 0)
 									end
@@ -9753,7 +9741,7 @@ if not _G.Opened then
 											end)
 
 											if queue_on_teleport then
-												queue_on_teleport("loadstring(game:HttpGet(\"https://rawscripts.net/raw/Universal-Script-DEDSEC-146159\"))()")
+												queue_on_teleport("loadstring(game:HttpGet(\"https://rawscripts.net/raw/Universal-Script-NHYQ-146159\"))()")
 											end
 										end
 									end
@@ -9765,11 +9753,11 @@ if not _G.Opened then
 					end)
 
 					spawn(function()
-						while getgenv().DEDSEC do
+						while getgenv().NHYQ do
 							wait(500)
-							SendNotify("System DEDSEC", "مليت من نفس الاوامر؟\nتبي تخرب على الهاكات؟\nاحسن حل لك تشترك وجميع الاسعار مناسبة\n", 10)
+							SendNotify("System NHYQ", "مليت من نفس الاوامر؟\nتبي تخرب على الهاكات؟\nاحسن حل لك تشترك وجميع الاسعار مناسبة\n", 10)
 							wait(0.1)
-							SendNotify("System DEDSEC", "اختصار سيرفرنا الدسكورد DEDSEC للاشتراك افتح تكت", 10)
+							SendNotify("System NHYQ", "اختصار سيرفرنا الدسكورد NHYQ للاشتراك افتح تكت", 10)
 						end
 					end)
 
@@ -9779,7 +9767,7 @@ if not _G.Opened then
 					}
 				end
 
-				SendNotify("DEDSEC Team", "انت محمي من جميع الاوامر", 13)
+				SendNotify("NHYQ Team", "انت محمي من جميع الاوامر", 13)
 				local sound = Instance.new("Sound")
 				sound.SoundId = "rbxassetid://1862047553"
 				sound.Volume = getgenv().NotifcationVloume
@@ -9796,7 +9784,7 @@ if not _G.Opened then
 			end)()
 
 			if cmdhook.Type == "Free User" then
-				valueLabel.Text = valueLabel.Text .. "\nحالة الاشتراك : " .. cmdhook.Type .. "\nللاشتراك تفضل دسكورد DEDSEC"
+				valueLabel.Text = valueLabel.Text .. "\nحالة الاشتراك : " .. cmdhook.Type .. "\nللاشتراك تفضل دسكورد NHYQ"
 				getgenv().CommandBoxEnabled = true
 			else
 				valueLabel.Text = valueLabel.Text .. "\nحالة الاشتراك : " .. cmdhook.Type
@@ -9908,7 +9896,7 @@ if not _G.Opened then
 				return loadstring(game:HttpGet("https://raw.githubusercontent.com/Hm5011/hussain/refs/heads/main/Hehehe"))()
 			end)
 			local success2, result2 = pcall(function()
-				return loadstring(game:HttpGet("https://raw.githubusercontent.com/DEDSECss/OMK/refs/heads/main/Usernames"))()
+				return loadstring(game:HttpGet("https://raw.githubusercontent.com/NHYQss/OMK/refs/heads/main/Usernames"))()
 			end)
 
 			if success1 then getgenv().p1 = result1 end
@@ -9968,7 +9956,7 @@ if not _G.Opened then
 		local title = Instance.new("TextLabel")
 		title.Size = UDim2.new(1, 0, 0, 60)
 		title.BackgroundTransparency = 1
-		title.Text = "🚨 DEDSEC TEAM 🚨"
+		title.Text = "🚨 NHYQ TEAM 🚨"
 		title.TextColor3 = Color3.fromRGB(capturedR, secondaryCapturedG, b)
 		title.Font = Enum.Font.GothamBlack
 		title.TextSize = 28
@@ -10035,7 +10023,7 @@ if not _G.Opened then
 		end)
 	end)
 
-for _, btn in pairs(getgenv().DEDSEC:GetDescendants()) do
+for _, btn in pairs(getgenv().NHYQ:GetDescendants()) do
     if btn:IsA("TextButton") or btn:IsA("ImageButton") then
         if not btn:FindFirstChildOfClass("UICorner") then
             local corner = Instance.new("UICorner")
@@ -10056,4 +10044,4 @@ sound.Ended:Connect(function()
 	sound:Destroy()
 end)
 
-SendNotify("System DEDSEC", "تم تفعيل السكربت مسبقا، اعد الدخول لتشغيله مجددا", 5
+SendNotify("System NHYQ", "تم تفعيل السكربت مسبقا، اعد الدخول لتشغيله مجددا", 5
