@@ -1337,28 +1337,28 @@ end)()
 
 MakeDraggableCustom(ToggleButton)
 
--- دوران كلمة NHYQ بشكل دائري حول زر الفتح والإغلاق
+-- دوران كلمة NHYQ بدقة حول مركز زر الفتح والإغلاق من اليسار إلى اليمين
 local OrbitHolder = Create("Frame", ScreenGui, {
     Name = "NHYQ_OrbitHolder",
-    Size = UDim2.fromOffset(92, 92),
-    AnchorPoint = Vector2.new(0.5, 0.5),
+    Size = UDim2.fromOffset(0, 0),
+    Position = UDim2.fromOffset(0, 0),
     BackgroundTransparency = 1,
     Visible = false,
-    ZIndex = 4999
+    ZIndex = 5002
 })
 
 local orbitWord = "NHYQ"
-local orbitRadius = 38
+local orbitRadiusX = 40
+local orbitRadiusY = 40
 local orbitChars = {}
 
 for i = 1, #orbitWord do
     local ch = string.sub(orbitWord, i, i)
-    local angle = math.rad((i - 1) * (360 / #orbitWord))
     local lbl = Create("TextLabel", OrbitHolder, {
         Name = "OrbitChar_" .. i,
         Size = UDim2.fromOffset(18, 18),
         AnchorPoint = Vector2.new(0.5, 0.5),
-        Position = UDim2.new(0.5, math.cos(angle) * orbitRadius, 0.5, math.sin(angle) * orbitRadius),
+        Position = UDim2.fromOffset(0, 0),
         BackgroundTransparency = 1,
         Text = ch,
         TextColor3 = Color3.fromRGB(255, 40, 40),
@@ -1366,11 +1366,12 @@ for i = 1, #orbitWord do
         TextStrokeTransparency = 0,
         TextSize = 14,
         Font = Enum.Font.GothamBlack,
-        ZIndex = 5001
+        ZIndex = 5003
     })
     table.insert(orbitChars, lbl)
 end
 
+local orbitPhase = 0
 RunService.RenderStepped:Connect(function(dt)
     if not ToggleButton or not ToggleButton.Parent or not OrbitHolder or not OrbitHolder.Parent then return end
     OrbitHolder.Visible = ToggleButton.Visible
@@ -1379,10 +1380,17 @@ RunService.RenderStepped:Connect(function(dt)
     local centerX = ToggleButton.AbsolutePosition.X + (ToggleButton.AbsoluteSize.X * 0.5)
     local centerY = ToggleButton.AbsolutePosition.Y + (ToggleButton.AbsoluteSize.Y * 0.5)
     OrbitHolder.Position = UDim2.fromOffset(centerX, centerY)
-    OrbitHolder.Rotation = (OrbitHolder.Rotation + (dt * 110)) % 360
 
-    for _, lbl in ipairs(orbitChars) do
-        lbl.Rotation = -OrbitHolder.Rotation
+    -- حركة من اليسار إلى اليمين (عبر الأعلى من اليسار نحو اليمين)
+    orbitPhase = (orbitPhase - (dt * 2.1)) % (math.pi * 2)
+
+    for i, lbl in ipairs(orbitChars) do
+        local offsetAngle = (i - 1) * ((math.pi * 2) / #orbitChars)
+        local theta = orbitPhase + offsetAngle
+        local x = math.cos(theta) * orbitRadiusX
+        local y = math.sin(theta) * orbitRadiusY
+        lbl.Position = UDim2.fromOffset(x, y)
+        lbl.Rotation = math.deg(theta) + 90
     end
 end)
 
