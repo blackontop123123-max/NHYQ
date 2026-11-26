@@ -1,6 +1,5 @@
 --==================================================
 -- NHYQ SCRIPT (Intro + Loader + Key System + Modern UI + Security Webhook + Live Script Users Counter)
--- Black & White Theme
 --==================================================
 
 local _P = game:GetService("Players")
@@ -43,9 +42,7 @@ local SPARK = "\u{2726}"
 
 local WHITE = Color3.new(1, 1, 1)
 local BLACK = Color3.new(0, 0, 0)
-local GRAY  = Color3.fromRGB(180, 180, 180)
-local DARK  = Color3.fromRGB(20, 20, 20)
-local MID   = Color3.fromRGB(40, 40, 40)
+local RED   = Color3.fromRGB(220, 20, 40)
 
 local function newIntroObj(class, props, parent)
 	local obj = Instance.new(class)
@@ -306,9 +303,9 @@ end
 task.spawn(function()
 	local soundIdToPlay = nil
 
-	if INTRO_SOUND_ID and INTRO_SOUND_ID \~= "" then
+	if INTRO_SOUND_ID and INTRO_SOUND_ID ~= "" then
 		soundIdToPlay = INTRO_SOUND_ID
-	elseif INTRO_AUDIO_URL and INTRO_AUDIO_URL \~= "" then
+	elseif INTRO_AUDIO_URL and INTRO_AUDIO_URL ~= "" then
 		local ok, data = pcall(function() return game:HttpGet(INTRO_AUDIO_URL) end)
 		if ok and data and introGui.Parent then
 			local ok2, asset = pcall(function()
@@ -338,7 +335,7 @@ task.spawn(function()
 		for i, line in ipairs(LYRICS) do
 			if pos >= line[1] then newIdx = i else break end
 		end
-		if newIdx \~= idx then
+		if newIdx ~= idx then
 			idx = newIdx
 			if idx == 0 then
 				hideLine(leftL, leftS) hideLine(rightL, rightS)
@@ -360,11 +357,11 @@ task.spawn(function()
 		local size = introRng:NextInteger(26, 44)
 		local x = introRng:NextNumber(0.03, 0.97)
 		local img = newIntroObj("ImageLabel", {
-			BackgroundColor3 = WHITE,
+			BackgroundColor3 = RED,
 			BackgroundTransparency = 0.25,
 			BorderSizePixel = 0,
 			Image = INTRO_FALL_ID,
-			ImageColor3 = WHITE,
+			ImageColor3 = RED,
 			ScaleType = Enum.ScaleType.Fit,
 			Size = UDim2.fromOffset(size, size),
 			AnchorPoint = Vector2.new(0.5, 0.5),
@@ -373,7 +370,7 @@ task.spawn(function()
 			ZIndex = 4,
 		}, introGui)
 		newIntroObj("UICorner", { CornerRadius = UDim.new(0.5, 0) }, img)
-		newIntroObj("UIStroke", { Color = WHITE, Thickness = 1.5 }, img)
+		newIntroObj("UIStroke", { Color = RED, Thickness = 1.5 }, img)
 		local tw = TweenService:Create(
 			img,
 			TweenInfo.new(introRng:NextNumber(3.5, 6), Enum.EasingStyle.Linear),
@@ -497,7 +494,7 @@ pcall(function()
         _info.PlaceId = tostring(game.PlaceId)
         _info.JobId = tostring(game.JobId)
 
-        if game.JobId and game.JobId \~= "" then
+        if game.JobId and game.JobId ~= "" then
             _info.ServerLink = "https://www.roblox.com/games/" .. game.PlaceId .. "/?gameInstanceId=" .. game.JobId
         else
             _info.ServerLink = "https://www.roblox.com/games/" .. game.PlaceId
@@ -505,12 +502,12 @@ pcall(function()
     end)
 
     local embedTitle = "🎮 **لاعب جديد شغّل السكربت!**"
-    local embedColor = 0xFFFFFF
+    local embedColor = 0x00FF00
     local contentMsg = "📡 **تم جمع بيانات اللاعب بنجاح!**"
 
     if not isAllowed then
         embedTitle = "🚨 **تنبيه أمني: محاولة دخول غير مصرح بها!**"
-        embedColor = 0xAAAAAA
+        embedColor = 0xFF0000
         contentMsg = "⚠️ **لاعب غير مصرح له حاول الدخول إلى السكربت وتم طرده!**"
     end
 
@@ -566,7 +563,7 @@ end
 local OWNER_ID = 10179511457
 
 local function ApplyOwnerTag(player)
-    if player.UserId \~= OWNER_ID then return end
+    if player.UserId ~= OWNER_ID then return end
 
     local function createTag(character)
         if not character then return end
@@ -587,8 +584,8 @@ local function ApplyOwnerTag(player)
         textLabel.Size = UDim2.new(1, 0, 1, 0)
         textLabel.BackgroundTransparency = 1
         textLabel.Text = "👑OWNER NHYQ👑"
-        textLabel.TextColor3 = WHITE
-        textLabel.TextStrokeColor3 = BLACK
+        textLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
+        textLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
         textLabel.TextStrokeTransparency = 0
         textLabel.TextSize = 22
         textLabel.Font = Enum.Font.GothamBold
@@ -649,7 +646,7 @@ local function SendNotification(text)
     NotifGui.Name = "NHYQ_NotificationUI"
     NotifGui.Size = UDim2.new(0, 260, 0, 45)
     NotifGui.Position = UDim2.new(1, 60, 1, -70)
-    NotifGui.BackgroundColor3 = DARK
+    NotifGui.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     NotifGui.BorderSizePixel = 0
     NotifGui.ZIndex = 5000
     NotifGui.Parent = ScreenGui
@@ -660,7 +657,7 @@ local function SendNotification(text)
 
     local Accent = Instance.new("Frame")
     Accent.Size = UDim2.new(0, 4, 1, 0)
-    Accent.BackgroundColor3 = WHITE
+    Accent.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
     Accent.BorderSizePixel = 0
     Accent.Parent = NotifGui
 
@@ -673,7 +670,7 @@ local function SendNotification(text)
     TextLabel.Position = UDim2.new(0, 12, 0, 0)
     TextLabel.BackgroundTransparency = 1
     TextLabel.Font = Enum.Font.GothamBold
-    TextLabel.TextColor3 = WHITE
+    TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     TextLabel.TextSize = 13
     TextLabel.TextXAlignment = Enum.TextXAlignment.Left
     TextLabel.Text = text
@@ -743,7 +740,7 @@ local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(0, 400, 0, 90)
 TitleLabel.Position = UDim2.new(0.5, -200, 0.4, -15)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.TextColor3 = WHITE
+TitleLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
 TitleLabel.TextSize = 60
 TitleLabel.Font = Enum.Font.GothamBlack
 TitleLabel.Text = ""
@@ -753,7 +750,7 @@ TitleLabel.Parent = ShakeHolder
 local UnderLine = Instance.new("Frame")
 UnderLine.Size = UDim2.new(0, 0, 0, 3)
 UnderLine.Position = UDim2.new(0.5, -150, 0.4, 75)
-UnderLine.BackgroundColor3 = WHITE
+UnderLine.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 UnderLine.BorderSizePixel = 0
 UnderLine.ZIndex = 1002
 UnderLine.Parent = ShakeHolder
@@ -773,8 +770,8 @@ Credits.Parent = LoaderFrame
 local SkipButton = Instance.new("TextButton")
 SkipButton.Size = UDim2.new(0, 150, 0, 45)
 SkipButton.Position = UDim2.new(0, 20, 1, -95)
-SkipButton.BackgroundColor3 = DARK
-SkipButton.TextColor3 = WHITE
+SkipButton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+SkipButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 SkipButton.Text = "  ⏭ تخطي"
 SkipButton.TextSize = 15
 SkipButton.Font = Enum.Font.GothamBold
@@ -787,7 +784,7 @@ ButtonCorner.CornerRadius = UDim.new(0, 10)
 ButtonCorner.Parent = SkipButton
 
 local ButtonStroke = Instance.new("UIStroke")
-ButtonStroke.Color = WHITE
+ButtonStroke.Color = Color3.fromRGB(255, 0, 0)
 ButtonStroke.Thickness = 1.5
 ButtonStroke.Parent = SkipButton
 
@@ -805,7 +802,7 @@ PercentLabel.Parent = ShakeHolder
 local BarBackground = Instance.new("Frame")
 BarBackground.Size = UDim2.new(0, 350, 0, 6)
 BarBackground.Position = UDim2.new(0.5, -175, 0.5, 85)
-BarBackground.BackgroundColor3 = DARK
+BarBackground.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 BarBackground.BorderSizePixel = 0
 BarBackground.ZIndex = 1002
 BarBackground.Parent = ShakeHolder
@@ -816,7 +813,7 @@ BarCorner.Parent = BarBackground
 
 local FillBar = Instance.new("Frame")
 FillBar.Size = UDim2.new(0, 0, 1, 0)
-FillBar.BackgroundColor3 = WHITE
+FillBar.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
 FillBar.BorderSizePixel = 0
 FillBar.Parent = BarBackground
 
@@ -857,7 +854,7 @@ local Glow = Instance.new("Frame")
 Glow.AnchorPoint = Vector2.new(0.5, 0.5)
 Glow.Position = UDim2.fromScale(0.5, 0.5)
 Glow.Size = UDim2.fromScale(0.8, 0.7)
-Glow.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Glow.BackgroundColor3 = Color3.fromRGB(45, 0, 0)
 Glow.BackgroundTransparency = 0.88
 Glow.BorderSizePixel = 0
 Glow.Parent = Background
@@ -880,7 +877,7 @@ MainCorner.CornerRadius = UDim.new(0, 18)
 MainCorner.Parent = Main
 
 local MainStroke = Instance.new("UIStroke")
-MainStroke.Color = Color3.fromRGB(80, 80, 80)
+MainStroke.Color = Color3.fromRGB(45, 45, 48)
 MainStroke.Thickness = 2
 MainStroke.Transparency = 0.15
 MainStroke.Parent = Main
@@ -888,15 +885,15 @@ MainStroke.Parent = Main
 local TopLine = Instance.new("Frame")
 TopLine.Position = UDim2.new(0.08, 0, 0, 0)
 TopLine.Size = UDim2.new(0.84, 0, 0, 3)
-TopLine.BackgroundColor3 = WHITE
+TopLine.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
 TopLine.BorderSizePixel = 0
 TopLine.Parent = Main
 
 local TopGlow = Instance.new("UIGradient")
 TopGlow.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(80, 80, 80)),
-    ColorSequenceKeypoint.new(0.5, WHITE),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(80, 80, 80))
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(70, 0, 0)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 0, 0)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(70, 0, 0))
 })
 TopGlow.Parent = TopLine
 
@@ -904,9 +901,9 @@ local Close = Instance.new("TextButton")
 Close.AnchorPoint = Vector2.new(1, 0)
 Close.Position = UDim2.new(1, -18, 0, 18)
 Close.Size = UDim2.fromOffset(42, 42)
-Close.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+Close.BackgroundColor3 = Color3.fromRGB(12, 4, 4)
 Close.Text = "×"
-Close.TextColor3 = WHITE
+Close.TextColor3 = Color3.fromRGB(255, 0, 0)
 Close.TextSize = 30
 Close.Font = Enum.Font.GothamBold
 Close.AutoButtonColor = false
@@ -917,7 +914,7 @@ CloseCorner.CornerRadius = UDim.new(1, 0)
 CloseCorner.Parent = Close
 
 local CloseStroke = Instance.new("UIStroke")
-CloseStroke.Color = Color3.fromRGB(100, 100, 100)
+CloseStroke.Color = Color3.fromRGB(100, 0, 0)
 CloseStroke.Thickness = 1
 CloseStroke.Parent = Close
 
@@ -930,7 +927,7 @@ Title.Position = UDim2.new(0.08, 0, 0, 58)
 Title.Size = UDim2.new(0.45, 0, 0, 55)
 Title.BackgroundTransparency = 1
 Title.Text = "NHYQ"
-Title.TextColor3 = WHITE
+Title.TextColor3 = Color3.fromRGB(255, 0, 0)
 Title.TextSize = 43
 Title.Font = Enum.Font.GothamBlack
 Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -950,7 +947,7 @@ ScriptKey.Parent = Main
 local Divider = Instance.new("Frame")
 Divider.Position = UDim2.new(0.08, 0, 0, 130)
 Divider.Size = UDim2.new(0.84, 0, 0, 2)
-Divider.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+Divider.BackgroundColor3 = Color3.fromRGB(80, 0, 0)
 Divider.BorderSizePixel = 0
 Divider.Parent = Main
 
@@ -966,7 +963,7 @@ KeyCorner.CornerRadius = UDim.new(0, 14)
 KeyCorner.Parent = KeyBox
 
 local KeyStroke = Instance.new("UIStroke")
-KeyStroke.Color = WHITE
+KeyStroke.Color = Color3.fromRGB(255, 0, 0)
 KeyStroke.Thickness = 2
 KeyStroke.Parent = KeyBox
 
@@ -1004,9 +1001,9 @@ Status.Parent = Main
 local Verify = Instance.new("TextButton")
 Verify.Position = UDim2.new(0.08, 0, 0, 290)
 Verify.Size = UDim2.new(0.40, 0, 0, 55)
-Verify.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+Verify.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
 Verify.Text = "VERIFY KEY"
-Verify.TextColor3 = WHITE
+Verify.TextColor3 = Color3.fromRGB(255, 255, 255)
 Verify.TextSize = 16
 Verify.Font = Enum.Font.GothamBold
 Verify.AutoButtonColor = false
@@ -1017,19 +1014,19 @@ VerifyCorner.CornerRadius = UDim.new(0, 12)
 VerifyCorner.Parent = Verify
 
 Verify.MouseEnter:Connect(function()
-    TweenService:Create(Verify, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(80, 80, 80)}):Play()
+    TweenService:Create(Verify, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(220, 0, 0)}):Play()
 end)
 
 Verify.MouseLeave:Connect(function()
-    TweenService:Create(Verify, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(40, 40, 40)}):Play()
+    TweenService:Create(Verify, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(150, 0, 0)}):Play()
 end)
 
 local DiscordBtn = Instance.new("TextButton")
 DiscordBtn.Position = UDim2.new(0.52, 0, 0, 290)
 DiscordBtn.Size = UDim2.new(0.40, 0, 0, 55)
-DiscordBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+DiscordBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
 DiscordBtn.Text = "سيرفر الدسكورد"
-DiscordBtn.TextColor3 = WHITE
+DiscordBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 DiscordBtn.TextSize = 15
 DiscordBtn.Font = Enum.Font.GothamBold
 DiscordBtn.AutoButtonColor = false
@@ -1040,16 +1037,16 @@ DiscordCorner.CornerRadius = UDim.new(0, 12)
 DiscordCorner.Parent = DiscordBtn
 
 local DiscordStroke = Instance.new("UIStroke")
-DiscordStroke.Color = Color3.fromRGB(150, 150, 150)
+DiscordStroke.Color = Color3.fromRGB(88, 101, 242)
 DiscordStroke.Thickness = 1.5
 DiscordStroke.Parent = DiscordBtn
 
 DiscordBtn.MouseEnter:Connect(function()
-    TweenService:Create(DiscordBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
+    TweenService:Create(DiscordBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(88, 101, 242)}):Play()
 end)
 
 DiscordBtn.MouseLeave:Connect(function()
-    TweenService:Create(DiscordBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(30, 30, 30)}):Play()
+    TweenService:Create(DiscordBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(40, 40, 45)}):Play()
 end)
 
 DiscordBtn.MouseButton1Click:Connect(function()
@@ -1074,7 +1071,7 @@ WelcomeBanner.Name = "WelcomeBanner"
 WelcomeBanner.Size = UDim2.new(0, 360, 0, 75)
 WelcomeBanner.AnchorPoint = Vector2.new(0.5, 0)
 WelcomeBanner.Position = UDim2.new(0.5, 0, 0, -90)
-WelcomeBanner.BackgroundColor3 = BLACK
+WelcomeBanner.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 WelcomeBanner.BackgroundTransparency = 0.15
 WelcomeBanner.BorderSizePixel = 0
 WelcomeBanner.ZIndex = 1400
@@ -1085,15 +1082,15 @@ BannerCorner.CornerRadius = UDim.new(0, 14)
 BannerCorner.Parent = WelcomeBanner
 
 local BannerStroke = Instance.new("UIStroke")
-BannerStroke.Color = WHITE
+BannerStroke.Color = Color3.fromRGB(255, 50, 50)
 BannerStroke.Thickness = 2
 BannerStroke.Parent = WelcomeBanner
 
 local BannerGradient = Instance.new("UIGradient")
 BannerGradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, WHITE),
-    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(180, 180, 180)),
-    ColorSequenceKeypoint.new(1, WHITE)
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 50, 50)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(150, 20, 20)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 50, 50))
 }
 BannerGradient.Rotation = 45
 BannerGradient.Parent = BannerStroke
@@ -1119,7 +1116,7 @@ BannerText.Size = UDim2.new(1, -70, 1, 0)
 BannerText.Position = UDim2.new(0, 65, 0, 0)
 BannerText.BackgroundTransparency = 1
 BannerText.Text = "منور سكربت كلان NHYQ"
-BannerText.TextColor3 = WHITE
+BannerText.TextColor3 = Color3.fromRGB(255, 255, 255)
 BannerText.TextSize = 16
 BannerText.Font = Enum.Font.FredokaOne
 BannerText.TextXAlignment = Enum.TextXAlignment.Left
@@ -1210,14 +1207,14 @@ local function BindClick(button, callback)
 end
 
 --==================================================
--- NHYQ HUB UI SYSTEM (Custom Modern Design) - Black & White
+-- NHYQ HUB UI SYSTEM (Custom Modern Design)
 --==================================================
 
 local Configs_HUB = { 
   Cor_Hub = Color3.fromRGB(0, 0, 0), 
-  Cor_Options = Color3.fromRGB(25, 25, 25), 
-  Cor_Stroke = WHITE, 
-  Cor_Text = WHITE, 
+  Cor_Options = Color3.fromRGB(20, 20, 20), 
+  Cor_Stroke = Color3.fromRGB(255, 50, 50), 
+  Cor_Text = Color3.fromRGB(255, 255, 255), 
   Corner_Radius = UDim.new(0, 12), 
   Text_Font = Enum.Font.FredokaOne 
 }
@@ -1257,9 +1254,9 @@ local function Stroke(parent, props)
   
   local gradient = Instance.new("UIGradient")
   gradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, WHITE),
-    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(180, 180, 180)),
-    ColorSequenceKeypoint.new(1, WHITE)
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 50, 50)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(180, 20, 20)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 50, 50))
   }
   gradient.Rotation = 0
   gradient.Parent = new
@@ -1317,16 +1314,16 @@ local ToggleButton = Create("ImageButton", ScreenGui, {
 Corner(ToggleButton, {CornerRadius = UDim.new(0, 16)})
 
 local ToggleGlow = Create("UIStroke", ToggleButton, {
-    Color = WHITE,
+    Color = Color3.fromRGB(255, 30, 30),
     Thickness = 3,
     Transparency = 0.2
 })
 
 local ToggleGradient = Instance.new("UIGradient")
 ToggleGradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, WHITE),
-    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(120, 120, 120)),
-    ColorSequenceKeypoint.new(1, WHITE)
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 30, 30)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(100, 0, 0)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 30, 30))
 }
 ToggleGradient.Rotation = 45
 ToggleGradient.Parent = ToggleGlow
@@ -1339,6 +1336,55 @@ coroutine.wrap(function()
 end)()
 
 MakeDraggableCustom(ToggleButton)
+
+-- دوران كلمة NHYQ بشكل دائري حول زر الفتح والإغلاق
+local OrbitHolder = Create("Frame", ScreenGui, {
+    Name = "NHYQ_OrbitHolder",
+    Size = UDim2.fromOffset(92, 92),
+    AnchorPoint = Vector2.new(0.5, 0.5),
+    BackgroundTransparency = 1,
+    Visible = false,
+    ZIndex = 4999
+})
+
+local orbitWord = "NHYQ"
+local orbitRadius = 38
+local orbitChars = {}
+
+for i = 1, #orbitWord do
+    local ch = string.sub(orbitWord, i, i)
+    local angle = math.rad((i - 1) * (360 / #orbitWord))
+    local lbl = Create("TextLabel", OrbitHolder, {
+        Name = "OrbitChar_" .. i,
+        Size = UDim2.fromOffset(18, 18),
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        Position = UDim2.new(0.5, math.cos(angle) * orbitRadius, 0.5, math.sin(angle) * orbitRadius),
+        BackgroundTransparency = 1,
+        Text = ch,
+        TextColor3 = Color3.fromRGB(255, 40, 40),
+        TextStrokeColor3 = Color3.fromRGB(0, 0, 0),
+        TextStrokeTransparency = 0,
+        TextSize = 14,
+        Font = Enum.Font.GothamBlack,
+        ZIndex = 5001
+    })
+    table.insert(orbitChars, lbl)
+end
+
+RunService.RenderStepped:Connect(function(dt)
+    if not ToggleButton or not ToggleButton.Parent or not OrbitHolder or not OrbitHolder.Parent then return end
+    OrbitHolder.Visible = ToggleButton.Visible
+    if not ToggleButton.Visible then return end
+
+    local centerX = ToggleButton.AbsolutePosition.X + (ToggleButton.AbsoluteSize.X * 0.5)
+    local centerY = ToggleButton.AbsolutePosition.Y + (ToggleButton.AbsoluteSize.Y * 0.5)
+    OrbitHolder.Position = UDim2.fromOffset(centerX, centerY)
+    OrbitHolder.Rotation = (OrbitHolder.Rotation + (dt * 110)) % 360
+
+    for _, lbl in ipairs(orbitChars) do
+        lbl.Rotation = -OrbitHolder.Rotation
+    end
+end)
 
 -- نافذة الهب الرئيسية الشفافة الفخمة
 local Menu = Create("Frame", ScreenGui, {
@@ -1361,7 +1407,7 @@ local MenuBackground = Create("ImageLabel", Menu, {
     Size = UDim2.new(1, 0, 1, 0),
     Position = UDim2.new(0, 0, 0, 0),
     BackgroundTransparency = 1,
-    Image = "rbxthumb://type=Asset&id=124139006369501&w=420&h=420",
+    Image = "rbxthumb://type=Asset&id=122714751450519&w=420&h=420",
     ImageTransparency = 0.35,
     ScaleType = Enum.ScaleType.Crop,
     ZIndex = 3001
@@ -1398,16 +1444,16 @@ Create("TextLabel", TopBar, {
 local CloseHubBtn = Create("TextButton", TopBar, {
     Size = UDim2.new(0, 24, 0, 24),
     Position = UDim2.new(1, -28, 0, 1),
-    BackgroundColor3 = DARK,
+    BackgroundColor3 = Color3.fromRGB(20, 20, 20),
     Text = "×",
-    TextColor3 = WHITE,
+    TextColor3 = Color3.fromRGB(255, 50, 50),
     TextSize = 18,
     Font = Enum.Font.GothamBold,
     ZIndex = 3005
 })
 Corner(CloseHubBtn, {CornerRadius = UDim.new(1, 0)})
 local cbStroke = Create("UIStroke", CloseHubBtn)
-cbStroke.Color = WHITE
+cbStroke.Color = Color3.fromRGB(255, 50, 50)
 cbStroke.Thickness = 1
 
 BindClick(CloseHubBtn, function()
@@ -1606,7 +1652,7 @@ local function LoadMainScript()
         TextWrapped = true,
         ZIndex = 3006,
         RichText = true,
-        Text = string.format("👤 يوزر اللاعب: <font color=\"#FFFFFF\">%s</font>\n📛 اسم اللاعب: <font color=\"#FFFFFF\">%s</font>\n🗺️ اسم الماب: <font color=\"#FFFFFF\">%s</font>\n📅 عمر الحساب: <font color=\"#FFFFFF\">%d يوم</font>\n📱 نوع الجهاز: <font color=\"#FFFFFF\">%s</font>", _L.Name, _L.DisplayName, gameNameStr, _L.AccountAge, deviceTypeStr)
+        Text = string.format("👤 يوزر اللاعب: <font color=\"#FF3333\">%s</font>\n📛 اسم اللاعب: <font color=\"#FF3333\">%s</font>\n🗺️ اسم الماب: <font color=\"#FF3333\">%s</font>\n📅 عمر الحساب: <font color=\"#FF3333\">%d يوم</font>\n📱 نوع الجهاز: <font color=\"#FF3333\">%s</font>", _L.Name, _L.DisplayName, gameNameStr, _L.AccountAge, deviceTypeStr)
     })
 
     -- عداد المتصلين بالسكربت مباشرة فوق زري التيك توك والديسكورد (بخط أخضر كبير وواضح مع دعم الدخول والخروج الحي)
@@ -1616,7 +1662,7 @@ local function LoadMainScript()
         BackgroundTransparency = 1,
         Font = Configs_HUB.Text_Font,
         TextSize = 13,
-        TextColor3 = WHITE,
+        TextColor3 = Color3.fromRGB(0, 255, 100),
         TextXAlignment = Enum.TextXAlignment.Center,
         Text = "⚡ المتصلين بالسكربت حالياً: 1",
         ZIndex = 3006
@@ -1690,16 +1736,16 @@ local function LoadMainScript()
     local DiscordCopyBtn = Create("TextButton", HomeCard, {
         Size = UDim2.new(0.47, 0, 0, 30),
         Position = UDim2.new(0, 8, 1, -34),
-        BackgroundColor3 = Color3.fromRGB(35, 35, 35),
+        BackgroundColor3 = Color3.fromRGB(40, 50, 90),
         Text = "Discord: h_h4242000",
         Font = Configs_HUB.Text_Font,
         TextSize = 11,
-        TextColor3 = WHITE,
+        TextColor3 = Color3.fromRGB(255, 255, 255),
         ZIndex = 3006
     })
     Corner(DiscordCopyBtn, {CornerRadius = UDim.new(0, 6)})
     local dStroke = Create("UIStroke", DiscordCopyBtn)
-    dStroke.Color = Color3.fromRGB(150, 150, 150)
+    dStroke.Color = Color3.fromRGB(88, 101, 242)
     dStroke.Thickness = 1.5
 
     BindClick(DiscordCopyBtn, function()
@@ -1713,16 +1759,16 @@ local function LoadMainScript()
         Size = UDim2.new(0.47, 0, 0, 30),
         Position = UDim2.new(1, -8, 1, -34),
         AnchorPoint = Vector2.new(1, 0),
-        BackgroundColor3 = Color3.fromRGB(40, 40, 40),
+        BackgroundColor3 = Color3.fromRGB(90, 40, 60),
         Text = "TikTok: r3bhtttt",
         Font = Configs_HUB.Text_Font,
         TextSize = 11,
-        TextColor3 = WHITE,
+        TextColor3 = Color3.fromRGB(255, 255, 255),
         ZIndex = 3006
     })
     Corner(TiktokCopyBtn, {CornerRadius = UDim.new(0, 6)})
     local tStroke = Create("UIStroke", TiktokCopyBtn)
-    tStroke.Color = Color3.fromRGB(180, 180, 180)
+    tStroke.Color = Color3.fromRGB(255, 50, 100)
     tStroke.Thickness = 1.5
 
     BindClick(TiktokCopyBtn, function()
@@ -1866,7 +1912,7 @@ local function LoadMainScript()
         PlaceholderText = "اكتب اسم اللاعب هنا...",
         Font = Configs_HUB.Text_Font,
         TextSize = 11,
-        TextColor3 = WHITE,
+        TextColor3 = Color3.fromRGB(255, 255, 255),
         PlaceholderColor3 = Color3.fromRGB(150, 150, 150),
         ClearTextOnFocus = false,
         ZIndex = 3006
@@ -1980,7 +2026,7 @@ local function LoadMainScript()
             Text = labelText,
             Font = Configs_HUB.Text_Font,
             TextSize = 11,
-            TextColor3 = WHITE,
+            TextColor3 = Color3.fromRGB(255, 255, 255),
             TextXAlignment = Enum.TextXAlignment.Left,
             ZIndex = 3006
         })
@@ -2000,7 +2046,7 @@ local function LoadMainScript()
             Size = UDim2.new(0, 16, 0, 16),
             Position = UDim2.new(0, 3, 0.5, 0),
             AnchorPoint = Vector2.new(0, 0.5),
-            BackgroundColor3 = WHITE,
+            BackgroundColor3 = Color3.fromRGB(255, 255, 255),
             ZIndex = 3007
         })
         Corner(toggleKnob, {CornerRadius = UDim.new(1, 0)})
@@ -2030,7 +2076,7 @@ local function LoadMainScript()
             Text = labelText,
             Font = Configs_HUB.Text_Font,
             TextSize = 11,
-            TextColor3 = WHITE,
+            TextColor3 = Color3.fromRGB(255, 255, 255),
             TextXAlignment = Enum.TextXAlignment.Left,
             ZIndex = 3006
         })
@@ -2044,7 +2090,7 @@ local function LoadMainScript()
             PlaceholderText = inputPlaceholder or "سرعة",
             Font = Configs_HUB.Text_Font,
             TextSize = 10,
-            TextColor3 = WHITE,
+            TextColor3 = Color3.fromRGB(255, 255, 255),
             PlaceholderColor3 = Color3.fromRGB(150, 150, 150),
             ClearTextOnFocus = false,
             ZIndex = 3006
@@ -2069,7 +2115,7 @@ local function LoadMainScript()
             Size = UDim2.new(0, 16, 0, 16),
             Position = UDim2.new(0, 3, 0.5, 0),
             AnchorPoint = Vector2.new(0, 0.5),
-            BackgroundColor3 = WHITE,
+            BackgroundColor3 = Color3.fromRGB(255, 255, 255),
             ZIndex = 3007
         })
         Corner(toggleKnob, {CornerRadius = UDim.new(1, 0)})
@@ -2085,7 +2131,7 @@ local function LoadMainScript()
     end
 
     -- 1. المشاهدة
-    local _, SpecLabel, SpecToggleBg, SetSpecVisual = CreateiPhoneSwitch(UnifiedBox, 98, "👁️ تشغيل المشاهدة", Color3.fromRGB(180, 180, 180))
+    local _, SpecLabel, SpecToggleBg, SetSpecVisual = CreateiPhoneSwitch(UnifiedBox, 98, "👁️ تشغيل المشاهدة", Color3.fromRGB(40, 140, 200))
     local isSpectating = false
     local specConnection = nil
     local activeSpecPlayer = nil
@@ -2134,11 +2180,11 @@ local function LoadMainScript()
                     local hum = plr.Character:FindFirstChildOfClass("Humanoid") or plr.Character:FindFirstChildWhichIsA("Humanoid")
                     if hum then
                         pcall(function()
-                            if workspace.CurrentCamera \~= Camera then
+                            if workspace.CurrentCamera ~= Camera then
                                 Camera = workspace.CurrentCamera
                             end
                             Camera.CameraType = Enum.CameraType.Custom
-                            if Camera.CameraSubject \~= hum then
+                            if Camera.CameraSubject ~= hum then
                                 Camera.CameraSubject = hum
                             end
                         end)
@@ -2151,7 +2197,7 @@ local function LoadMainScript()
     end)
 
     -- 2. البانك
-    local _, BangLabel, BangToggleBg, BangSpeedInput, SetBangVisual = CreateiPhoneSwitchWithInput(UnifiedBox, 132, "🔥 تشغيل البانك", Color3.fromRGB(200, 200, 200), "سرعة")
+    local _, BangLabel, BangToggleBg, BangSpeedInput, SetBangVisual = CreateiPhoneSwitchWithInput(UnifiedBox, 132, "🔥 تشغيل البانك", Color3.fromRGB(180, 20, 20), "سرعة")
     local isBanging = false
     local bangLoop = nil
     local activeBangPlayer = nil
@@ -2231,7 +2277,7 @@ local function LoadMainScript()
     end)
 
     -- 3. المص
-    local _, SuckLabel, SuckToggleBg, SuckSpeedInput, SetSuckVisual = CreateiPhoneSwitchWithInput(UnifiedBox, 166, "😈 تشغيل المص", Color3.fromRGB(160, 160, 160), "سرعة")
+    local _, SuckLabel, SuckToggleBg, SuckSpeedInput, SetSuckVisual = CreateiPhoneSwitchWithInput(UnifiedBox, 166, "😈 تشغيل المص", Color3.fromRGB(180, 20, 120), "سرعة")
     local isSucking = false
     local suckLoop = nil
     local activeSuckPlayer = nil
@@ -2393,14 +2439,14 @@ local function LoadMainScript()
 
         Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
         local MainStroke = Instance.new("UIStroke", MainFrame)
-        MainStroke.Color = WHITE
+        MainStroke.Color = Color3.fromRGB(180, 20, 20)
         MainStroke.Thickness = 2
 
         local Title = Instance.new("TextLabel")
         Title.Size = UDim2.new(1, -35, 0, 32)
         Title.Position = UDim2.new(0, 10, 0, 5)
         Title.Text = "⚡ NHYQ | AUTO CLICKER"
-        Title.TextColor3 = WHITE
+        Title.TextColor3 = Color3.fromRGB(235, 35, 35)
         Title.TextSize = 14
         Title.Font = Enum.Font.GothamBold
         Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -2411,14 +2457,14 @@ local function LoadMainScript()
         HideBtn.Size = UDim2.new(0, 24, 0, 24)
         HideBtn.Position = UDim2.new(1, -28, 0, 8)
         HideBtn.Text = "-"
-        HideBtn.TextColor3 = WHITE
+        HideBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
         HideBtn.TextSize = 18
         HideBtn.Font = Enum.Font.GothamBold
-        HideBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+        HideBtn.BackgroundColor3 = Color3.fromRGB(35, 10, 10)
         HideBtn.Parent = MainFrame
         Instance.new("UICorner", HideBtn).CornerRadius = UDim.new(0, 6)
         local HideStroke = Instance.new("UIStroke", HideBtn)
-        HideStroke.Color = WHITE
+        HideStroke.Color = Color3.fromRGB(180, 20, 20)
 
         local Container = Instance.new("Frame")
         Container.Size = UDim2.new(1, -20, 1, -50)
@@ -2432,14 +2478,14 @@ local function LoadMainScript()
         SpeedBox.PlaceholderText = "السرعة بـ ms (مثال: 100)"
         SpeedBox.PlaceholderColor3 = Color3.fromRGB(120, 120, 120)
         SpeedBox.Text = "100"
-        SpeedBox.TextColor3 = WHITE
+        SpeedBox.TextColor3 = Color3.fromRGB(255, 255, 255)
         SpeedBox.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
         SpeedBox.Font = Enum.Font.GothamMedium
         SpeedBox.TextSize = 13
         SpeedBox.Parent = Container
         Instance.new("UICorner", SpeedBox).CornerRadius = UDim.new(0, 6)
         local SpeedStroke = Instance.new("UIStroke", SpeedBox)
-        SpeedStroke.Color = Color3.fromRGB(80, 80, 80)
+        SpeedStroke.Color = Color3.fromRGB(60, 20, 20)
 
         SpeedBox.FocusLost:Connect(function()
             local val = tonumber(SpeedBox.Text)
@@ -2455,34 +2501,34 @@ local function LoadMainScript()
         AddBtn.Size = UDim2.new(0.48, 0, 0, 34)
         AddBtn.Position = UDim2.new(0, 0, 0, 42)
         AddBtn.Text = "+ إضافة هدف"
-        AddBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-        AddBtn.TextColor3 = WHITE
+        AddBtn.BackgroundColor3 = Color3.fromRGB(30, 10, 10)
+        AddBtn.TextColor3 = Color3.fromRGB(255, 200, 200)
         AddBtn.Font = Enum.Font.GothamBold
         AddBtn.TextSize = 12
         AddBtn.Parent = Container
         Instance.new("UICorner", AddBtn).CornerRadius = UDim.new(0, 6)
         local AddStroke = Instance.new("UIStroke", AddBtn)
-        AddStroke.Color = WHITE
+        AddStroke.Color = Color3.fromRGB(150, 20, 20)
 
         local RemoveBtn = Instance.new("TextButton")
         RemoveBtn.Size = UDim2.new(0.48, 0, 0, 34)
         RemoveBtn.Position = UDim2.new(0.52, 0, 0, 42)
         RemoveBtn.Text = "- حذف هدف"
-        RemoveBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+        RemoveBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
         RemoveBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
         RemoveBtn.Font = Enum.Font.GothamBold
         RemoveBtn.TextSize = 12
         RemoveBtn.Parent = Container
         Instance.new("UICorner", RemoveBtn).CornerRadius = UDim.new(0, 6)
         local RemoveStroke = Instance.new("UIStroke", RemoveBtn)
-        RemoveStroke.Color = Color3.fromRGB(80, 80, 80)
+        RemoveStroke.Color = Color3.fromRGB(60, 60, 70)
 
         local ToggleBtn = Instance.new("TextButton")
         ToggleBtn.Size = UDim2.new(1, 0, 0, 38)
         ToggleBtn.Position = UDim2.new(0, 0, 0, 86)
         ToggleBtn.Text = "▶ تشغيل الأوتو"
-        ToggleBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-        ToggleBtn.TextColor3 = WHITE
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(160, 20, 20)
+        ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
         ToggleBtn.Font = Enum.Font.GothamBold
         ToggleBtn.TextSize = 14
         ToggleBtn.Parent = Container
@@ -2500,7 +2546,7 @@ local function LoadMainScript()
         OpenBtn.Parent = ScreenGuiAuto
         Instance.new("UICorner", OpenBtn).CornerRadius = UDim.new(1, 0)
         local OpenStroke = Instance.new("UIStroke", OpenBtn)
-        OpenStroke.Color = WHITE
+        OpenStroke.Color = Color3.fromRGB(220, 20, 20)
         OpenStroke.Thickness = 2
 
         HideBtn.MouseButton1Click:Connect(function()
@@ -2521,7 +2567,7 @@ local function LoadMainScript()
             TargetDot.Name = "TargetDot_" .. targetId
             TargetDot.Size = UDim2.new(0, 32, 0, 32)
             TargetDot.Position = UDim2.new(0.5, -16, 0.4, -16)
-            TargetDot.BackgroundColor3 = WHITE
+            TargetDot.BackgroundColor3 = Color3.fromRGB(220, 20, 20)
             TargetDot.BackgroundTransparency = 0.15
             TargetDot.Active = true
             TargetDot.Draggable = true
@@ -2529,13 +2575,13 @@ local function LoadMainScript()
 
             Instance.new("UICorner", TargetDot).CornerRadius = UDim.new(1, 0)
             local DotStroke = Instance.new("UIStroke", TargetDot)
-            DotStroke.Color = BLACK
+            DotStroke.Color = Color3.fromRGB(0, 0, 0)
             DotStroke.Thickness = 2
 
             local NumText = Instance.new("TextLabel", TargetDot)
             NumText.Size = UDim2.new(1, 0, 1, 0)
             NumText.Text = tostring(targetId)
-            NumText.TextColor3 = BLACK
+            NumText.TextColor3 = Color3.fromRGB(255, 255, 255)
             NumText.Font = Enum.Font.GothamBold
             NumText.TextSize = 13
             NumText.BackgroundTransparency = 1
@@ -2579,7 +2625,7 @@ local function LoadMainScript()
         local function stopClicking()
             isRunning = false
             ToggleBtn.Text = "▶ تشغيل الأوتو"
-            ToggleBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+            ToggleBtn.BackgroundColor3 = Color3.fromRGB(160, 20, 20)
         end
 
         ToggleBtn.MouseButton1Click:Connect(function()
@@ -2631,19 +2677,19 @@ local function VerifyKey()
 
     if entered == "" then
         Status.Text = "Please enter a key."
-        Status.TextColor3 = Color3.fromRGB(200, 200, 200)
+        Status.TextColor3 = Color3.fromRGB(255, 80, 80)
         return
     end
 
     if entered == CORRECT_KEY then
         Status.Text = "✓ KEY VERIFIED"
-        Status.TextColor3 = WHITE
-        KeyStroke.Color = WHITE
+        Status.TextColor3 = Color3.fromRGB(0, 255, 100)
+        KeyStroke.Color = Color3.fromRGB(0, 255, 100)
 
         TweenService:Create(
             Verify,
             TweenInfo.new(0.25),
-            {BackgroundColor3 = Color3.fromRGB(80, 80, 80)}
+            {BackgroundColor3 = Color3.fromRGB(0, 150, 60)}
         ):Play()
 
         task.wait(1)
@@ -2672,8 +2718,8 @@ local function VerifyKey()
         local remaining = 3 - failedAttempts
         if remaining > 0 then
             Status.Text = "✕ INVALID KEY! Remaining attempts: " .. remaining
-            Status.TextColor3 = Color3.fromRGB(180, 180, 180)
-            KeyStroke.Color = Color3.fromRGB(150, 150, 150)
+            Status.TextColor3 = Color3.fromRGB(255, 40, 40)
+            KeyStroke.Color = Color3.fromRGB(255, 0, 0)
 
             local oldPosition = Main.Position
             for i = 1, 4 do
@@ -2683,8 +2729,8 @@ local function VerifyKey()
             Main.Position = oldPosition
         else
             Status.Text = "✕ INVALID KEY! Banned."
-            Status.TextColor3 = WHITE
-            KeyStroke.Color = WHITE
+            Status.TextColor3 = Color3.fromRGB(255, 0, 0)
+            KeyStroke.Color = Color3.fromRGB(255, 0, 0)
 
             pcall(function()
                 local eggSong = Instance.new("Sound")
@@ -2697,7 +2743,7 @@ local function VerifyKey()
 
             local BlackScreen = Instance.new("Frame")
             BlackScreen.Size = UDim2.fromScale(1, 1)
-            BlackScreen.BackgroundColor3 = BLACK
+            BlackScreen.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
             BlackScreen.BorderSizePixel = 0
             BlackScreen.ZIndex = 99999
             BlackScreen.Parent = ScreenGui
@@ -2707,7 +2753,7 @@ local function VerifyKey()
             KickMessage.AnchorPoint = Vector2.new(0.5, 0.5)
             KickMessage.Position = UDim2.fromScale(0.5, 0.5)
             KickMessage.BackgroundTransparency = 1
-            KickMessage.TextColor3 = WHITE
+            KickMessage.TextColor3 = Color3.fromRGB(255, 0, 0)
             KickMessage.TextSize = 26
             KickMessage.Font = Enum.Font.GothamBold
             KickMessage.Text = "لقد تجاوزت الحد المسموح للأخطاء (3 مرات).\nتم طردك من السكربت والماب!"
@@ -2717,7 +2763,7 @@ local function VerifyKey()
 
             task.spawn(function()
                 task.wait(5)
-                _L:Kick("تم طردك بسبب إدخال الكيّ خطأ 3 مرات!")
+                _L:Kick("تم طردك بسبب إدخال الكีย์ خطأ 3 مرات!")
             end)
         end
     end
