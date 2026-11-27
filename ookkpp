@@ -1,5 +1,5 @@
 --==================================================
--- NHYQ SCRIPT (Intro + Loader + Key System + Horizon Crimson UI + Security Webhook + Live Script Users Counter)
+-- NHYQ SCRIPT (Intro + New Free Loader + APEX Vault Key System + Horizon Crimson UI + Security Webhook + Live Script Users Counter)
 --==================================================
 
 local _P = game:GetService("Players")
@@ -454,7 +454,6 @@ local Whitelist = {
     "3AW_111",
     "tariq191188",
     "L3_yasser",
-    "t16_e36",
 }
 
 local isAllowed = false
@@ -747,416 +746,350 @@ local function SendNotification(text)
 end
 
 --==================================================
--- LOADER SCREEN
+-- NHYQ FREE-FLOATING LOADER SCREEN (No Card / Dynamic Typewriter & Motion)
 --==================================================
 
-local LoaderFrame = Instance.new("Frame")
-LoaderFrame.Name = "LoaderFrame"
-LoaderFrame.Size = UDim2.fromScale(1, 1)
-LoaderFrame.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
-LoaderFrame.BackgroundTransparency = 1
-LoaderFrame.BorderSizePixel = 0
-LoaderFrame.ZIndex = 1000
-LoaderFrame.Parent = ScreenGui
+local LOADER_BG_IMAGE = "rbxassetid://112640050525501"
+local LOADER_TITLE = "NHYQ"
+local LOADER_SUBHEADER = "منور السكربت"
+local LOADER_CREDITS = "by گلر shs09qp23"
+local SKIP_UNLOCK_PERCENT = 30
 
-local LoaderBgImage = Instance.new("ImageLabel")
-LoaderBgImage.Name = "LoaderBgImage"
-LoaderBgImage.Size = UDim2.fromScale(1, 1)
-LoaderBgImage.Position = UDim2.fromScale(0, 0)
-LoaderBgImage.BackgroundTransparency = 1
-LoaderBgImage.Image = "rbxassetid://112640050525501"
-LoaderBgImage.ScaleType = Enum.ScaleType.Stretch
-LoaderBgImage.ZIndex = 1000
-LoaderBgImage.Parent = LoaderFrame
-
-local ShakeHolder = Instance.new("Frame")
-ShakeHolder.Size = UDim2.fromScale(1, 1)
-ShakeHolder.BackgroundTransparency = 1
-ShakeHolder.ZIndex = 1001
-ShakeHolder.Parent = LoaderFrame
-
-local SubHeader = Instance.new("TextLabel")
-SubHeader.Size = UDim2.new(0, 400, 0, 40)
-SubHeader.Position = UDim2.new(0.5, -200, 0.35, -55)
-SubHeader.BackgroundTransparency = 1
-SubHeader.TextColor3 = Color3.fromRGB(220, 220, 220)
-SubHeader.TextSize = 22
-SubHeader.Font = Enum.Font.GothamBold
-SubHeader.Text = "منور السكربت"
-SubHeader.ZIndex = 1002
-SubHeader.Parent = ShakeHolder
-
-local RightCrown = Instance.new("TextLabel")
-RightCrown.Size = UDim2.new(0, 50, 0, 50)
-RightCrown.Position = UDim2.new(0.5, 120, 0.4, -15)
-RightCrown.BackgroundTransparency = 1
-RightCrown.Text = "👑"
-RightCrown.TextSize = 35
-RightCrown.TextTransparency = 1
-RightCrown.ZIndex = 1002
-RightCrown.Parent = ShakeHolder
-
-local LeftCrown = Instance.new("TextLabel")
-LeftCrown.Size = UDim2.new(0, 50, 0, 50)
-LeftCrown.Position = UDim2.new(0.5, -170, 0.4, -15)
-LeftCrown.BackgroundTransparency = 1
-LeftCrown.Text = "👑"
-LeftCrown.TextSize = 35
-LeftCrown.TextTransparency = 1
-LeftCrown.ZIndex = 1002
-LeftCrown.Parent = ShakeHolder
-
-local TitleLabel = Instance.new("TextLabel")
-TitleLabel.Size = UDim2.new(0, 400, 0, 90)
-TitleLabel.Position = UDim2.new(0.5, -200, 0.4, -15)
-TitleLabel.BackgroundTransparency = 1
-TitleLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-TitleLabel.TextSize = 60
-TitleLabel.Font = Enum.Font.GothamBlack
-TitleLabel.Text = ""
-TitleLabel.ZIndex = 1002
-TitleLabel.Parent = ShakeHolder
-
-local UnderLine = Instance.new("Frame")
-UnderLine.Size = UDim2.new(0, 0, 0, 3)
-UnderLine.Position = UDim2.new(0.5, -150, 0.4, 75)
-UnderLine.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-UnderLine.BorderSizePixel = 0
-UnderLine.ZIndex = 1002
-UnderLine.Parent = ShakeHolder
-
-local Credits = Instance.new("TextLabel")
-Credits.Size = UDim2.new(0, 250, 0, 30)
-Credits.Position = UDim2.new(0, 20, 1, -40)
-Credits.BackgroundTransparency = 1
-Credits.TextColor3 = Color3.fromRGB(120, 120, 120)
-Credits.TextSize = 14
-Credits.Font = Enum.Font.Gotham
-Credits.TextXAlignment = Enum.TextXAlignment.Left
-Credits.Text = "by گلر shs09qp23"
-Credits.ZIndex = 1002
-Credits.Parent = LoaderFrame
-
-local SkipButton = Instance.new("TextButton")
-SkipButton.Size = UDim2.new(0, 150, 0, 45)
-SkipButton.Position = UDim2.new(0, 20, 1, -95)
-SkipButton.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-SkipButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-SkipButton.Text = "  ⏭ تخطي"
-SkipButton.TextSize = 15
-SkipButton.Font = Enum.Font.GothamBold
-SkipButton.Visible = false
-SkipButton.ZIndex = 1002
-SkipButton.Parent = LoaderFrame
-
-local ButtonCorner = Instance.new("UICorner")
-ButtonCorner.CornerRadius = UDim.new(0, 10)
-ButtonCorner.Parent = SkipButton
-
-local ButtonStroke = Instance.new("UIStroke")
-ButtonStroke.Color = Color3.fromRGB(255, 0, 0)
-ButtonStroke.Thickness = 1.5
-ButtonStroke.Parent = SkipButton
-
-local PercentLabel = Instance.new("TextLabel")
-PercentLabel.Size = UDim2.new(0, 200, 0, 30)
-PercentLabel.Position = UDim2.new(0.5, -100, 0.5, 45)
-PercentLabel.BackgroundTransparency = 1
-PercentLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-PercentLabel.TextSize = 16
-PercentLabel.Font = Enum.Font.Gotham
-PercentLabel.Text = "Loading: 0%"
-PercentLabel.ZIndex = 1002
-PercentLabel.Parent = ShakeHolder
-
-local BarBackground = Instance.new("Frame")
-BarBackground.Size = UDim2.new(0, 350, 0, 6)
-BarBackground.Position = UDim2.new(0.5, -175, 0.5, 85)
-BarBackground.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-BarBackground.BorderSizePixel = 0
-BarBackground.ZIndex = 1002
-BarBackground.Parent = ShakeHolder
-
-local BarCorner = Instance.new("UICorner")
-BarCorner.CornerRadius = UDim.new(1, 0)
-BarCorner.Parent = BarBackground
-
-local FillBar = Instance.new("Frame")
-FillBar.Size = UDim2.new(0, 0, 1, 0)
-FillBar.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-FillBar.BorderSizePixel = 0
-FillBar.Parent = BarBackground
-
-local FillCorner = Instance.new("UICorner")
-FillCorner.CornerRadius = UDim.new(1, 0)
-FillCorner.Parent = FillBar
-
-local function ShakeScreen()
-    local duration = 0.15
-    local elapsed = 0
-    local connection
-    connection = RunService.RenderStepped:Connect(function(dt)
-        elapsed = elapsed + dt
-        if elapsed >= duration then
-            ShakeHolder.Position = UDim2.new(0, 0, 0, 0)
-            connection:Disconnect()
-        else
-            local offsetX = math.random(-3, 3)
-            local offsetY = math.random(-3, 3)
-            ShakeHolder.Position = UDim2.new(0, offsetX, 0, offsetY)
-        end
-    end)
+local function createLoaderObj(class, props, parent)
+	local obj = Instance.new(class)
+	for k, v in pairs(props) do
+		obj[k] = v
+	end
+	obj.Parent = parent
+	return obj
 end
 
---==================================================
--- KEY SYSTEM
---==================================================
+local function tweenLoader(obj, info, props)
+	local anim = TweenService:Create(obj, info, props)
+	anim:Play()
+	return anim
+end
 
-local Background = Instance.new("Frame")
-Background.Size = UDim2.fromScale(1, 1)
-Background.BackgroundColor3 = Color3.fromRGB(2, 2, 3)
-Background.BorderSizePixel = 0
-Background.Visible = false
-Background.ZIndex = 100
-Background.Parent = ScreenGui
+local LoaderFrame = createLoaderObj("Frame", {
+	Name = "LoaderFrame",
+	Size = UDim2.fromScale(1, 1),
+	BackgroundColor3 = Color3.fromRGB(4, 4, 7),
+	BackgroundTransparency = 0,
+	BorderSizePixel = 0,
+	ClipsDescendants = true,
+	ZIndex = 1000
+}, ScreenGui)
 
-local Glow = Instance.new("Frame")
-Glow.AnchorPoint = Vector2.new(0.5, 0.5)
-Glow.Position = UDim2.fromScale(0.5, 0.5)
-Glow.Size = UDim2.fromScale(0.8, 0.7)
-Glow.BackgroundColor3 = Color3.fromRGB(45, 0, 0)
-Glow.BackgroundTransparency = 0.88
-Glow.BorderSizePixel = 0
-Glow.Parent = Background
+local LoaderBgImage = createLoaderObj("ImageLabel", {
+	Name = "LoaderBgImage",
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Size = UDim2.fromScale(1.08, 1.08),
+	Position = UDim2.fromScale(0.5, 0.5),
+	BackgroundTransparency = 1,
+	Image = LOADER_BG_IMAGE,
+	ImageTransparency = 0.14,
+	ScaleType = Enum.ScaleType.Stretch,
+	ZIndex = 1000
+}, LoaderFrame)
 
-local GlowCorner = Instance.new("UICorner")
-GlowCorner.CornerRadius = UDim.new(0, 30)
-GlowCorner.Parent = Glow
+local DarkVignette = createLoaderObj("Frame", {
+	Name = "DarkVignette",
+	Size = UDim2.fromScale(1, 1),
+	BackgroundColor3 = Color3.fromRGB(6, 5, 9),
+	BackgroundTransparency = 0.38,
+	BorderSizePixel = 0,
+	ZIndex = 1001
+}, LoaderFrame)
 
-local Main = Instance.new("Frame")
-Main.AnchorPoint = Vector2.new(0.5, 0.5)
-Main.Position = UDim2.fromScale(0.5, 0.5)
-Main.Size = UDim2.new(0, 0, 0, 0)
-Main.BackgroundColor3 = Color3.fromRGB(4, 4, 5)
-Main.BorderSizePixel = 0
-Main.ClipsDescendants = true
-Main.ZIndex = 101
-Main.Parent = Background
+createLoaderObj("UIGradient", {
+	Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(18, 4, 8)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(6, 6, 10)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(32, 4, 12))
+	}),
+	Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.22),
+		NumberSequenceKeypoint.new(0.5, 0.44),
+		NumberSequenceKeypoint.new(1, 0.18)
+	}),
+	Rotation = 90
+}, DarkVignette)
 
-local MainCorner = Instance.new("UICorner")
-MainCorner.CornerRadius = UDim.new(0, 18)
-MainCorner.Parent = Main
+local CrimsonAura = createLoaderObj("Frame", {
+	Name = "CrimsonAura",
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Position = UDim2.fromScale(0.5, 0.44),
+	Size = UDim2.fromOffset(440, 220),
+	BackgroundColor3 = Color3.fromRGB(225, 22, 44),
+	BackgroundTransparency = 0.89,
+	BorderSizePixel = 0,
+	ZIndex = 1001
+}, LoaderFrame)
 
-local KeyBgImage = Instance.new("ImageLabel")
-KeyBgImage.Name = "KeyBgImage"
-KeyBgImage.Size = UDim2.fromScale(1, 1)
-KeyBgImage.Position = UDim2.fromScale(0, 0)
-KeyBgImage.BackgroundTransparency = 1
-KeyBgImage.Image = "rbxassetid://110306712439559"
-KeyBgImage.ScaleType = Enum.ScaleType.Stretch
-KeyBgImage.ZIndex = 101
-KeyBgImage.Parent = Main
+createLoaderObj("UICorner", { CornerRadius = UDim.new(1, 0) }, CrimsonAura)
 
-local KeyBgCorner = Instance.new("UICorner")
-KeyBgCorner.CornerRadius = UDim.new(0, 18)
-KeyBgCorner.Parent = KeyBgImage
+local ShakeHolder = createLoaderObj("Frame", {
+	Name = "ShakeHolder",
+	Size = UDim2.fromScale(1, 1),
+	BackgroundTransparency = 1,
+	ZIndex = 1002
+}, LoaderFrame)
 
-local MainStroke = Instance.new("UIStroke")
-MainStroke.Color = Color3.fromRGB(45, 45, 48)
-MainStroke.Thickness = 2
-MainStroke.Transparency = 0.15
-MainStroke.Parent = Main
+local SubHeader = createLoaderObj("TextLabel", {
+	Name = "SubHeader",
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Size = UDim2.new(0, 440, 0, 38),
+	Position = UDim2.new(0.5, 0, 0.35, -52),
+	BackgroundTransparency = 1,
+	TextColor3 = Color3.fromRGB(242, 242, 248),
+	TextTransparency = 0,
+	TextSize = 23,
+	Font = Enum.Font.GothamBold,
+	Text = "",
+	ZIndex = 1003
+}, ShakeHolder)
 
-local TopLine = Instance.new("Frame")
-TopLine.Position = UDim2.new(0.08, 0, 0, 0)
-TopLine.Size = UDim2.new(0.84, 0, 0, 3)
-TopLine.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-TopLine.BorderSizePixel = 0
-TopLine.ZIndex = 102
-TopLine.Parent = Main
+createLoaderObj("UIStroke", {
+	Color = Color3.fromRGB(0, 0, 0),
+	Thickness = 1.6,
+	Transparency = 0.25
+}, SubHeader)
 
-local TopGlow = Instance.new("UIGradient")
-TopGlow.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(70, 0, 0)),
-    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 0, 0)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(70, 0, 0))
-})
-TopGlow.Parent = TopLine
+local RightCrown = createLoaderObj("TextLabel", {
+	Name = "RightCrown",
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Size = UDim2.fromOffset(52, 52),
+	Position = UDim2.new(0.5, 165, 0.4, 24),
+	Rotation = 20,
+	BackgroundTransparency = 1,
+	Text = "👑",
+	TextSize = 36,
+	TextTransparency = 1,
+	ZIndex = 1003
+}, ShakeHolder)
 
-local Close = Instance.new("TextButton")
-Close.AnchorPoint = Vector2.new(1, 0)
-Close.Position = UDim2.new(1, -18, 0, 18)
-Close.Size = UDim2.fromOffset(42, 42)
-Close.BackgroundColor3 = Color3.fromRGB(12, 4, 4)
-Close.Text = "×"
-Close.TextColor3 = Color3.fromRGB(255, 0, 0)
-Close.TextSize = 30
-Close.Font = Enum.Font.GothamBold
-Close.AutoButtonColor = false
-Close.ZIndex = 103
-Close.Parent = Main
+local LeftCrown = createLoaderObj("TextLabel", {
+	Name = "LeftCrown",
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Size = UDim2.fromOffset(52, 52),
+	Position = UDim2.new(0.5, -165, 0.4, 24),
+	Rotation = -20,
+	BackgroundTransparency = 1,
+	Text = "👑",
+	TextSize = 36,
+	TextTransparency = 1,
+	ZIndex = 1003
+}, ShakeHolder)
 
-local CloseCorner = Instance.new("UICorner")
-CloseCorner.CornerRadius = UDim.new(1, 0)
-CloseCorner.Parent = Close
+local TitleLabel = createLoaderObj("TextLabel", {
+	Name = "TitleLabel",
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Size = UDim2.new(0, 440, 0, 92),
+	Position = UDim2.new(0.5, 0, 0.37, 30),
+	BackgroundTransparency = 1,
+	TextColor3 = Color3.fromRGB(255, 255, 255),
+	TextTransparency = 1,
+	TextSize = 64,
+	Font = Enum.Font.GothamBlack,
+	Text = LOADER_TITLE,
+	ZIndex = 1004
+}, ShakeHolder)
 
-local CloseStroke = Instance.new("UIStroke")
-CloseStroke.Color = Color3.fromRGB(100, 0, 0)
-CloseStroke.Thickness = 1
-CloseStroke.Parent = Close
+createLoaderObj("UIGradient", {
+	Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 95, 110)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 16, 38)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(160, 0, 20))
+	}),
+	Rotation = 90
+}, TitleLabel)
 
-Close.MouseButton1Click:Connect(function()
-    ScreenGui:Destroy()
+createLoaderObj("UIStroke", {
+	Color = Color3.fromRGB(10, 0, 4),
+	Thickness = 2.6,
+	Transparency = 0.2
+}, TitleLabel)
+
+local UnderLine = createLoaderObj("Frame", {
+	Name = "UnderLine",
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Size = UDim2.fromOffset(0, 3),
+	Position = UDim2.new(0.5, 0, 0.4, 76),
+	BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+	BorderSizePixel = 0,
+	ZIndex = 1003
+}, ShakeHolder)
+
+createLoaderObj("UIGradient", {
+	Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 45, 65)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 255, 255)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 45, 65))
+	})
+}, UnderLine)
+
+local StageLabel = createLoaderObj("TextLabel", {
+	Name = "StageLabel",
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Size = UDim2.new(0, 380, 0, 22),
+	Position = UDim2.new(0.5, 0, 0.5, 22),
+	BackgroundTransparency = 1,
+	TextColor3 = Color3.fromRGB(195, 195, 212),
+	TextTransparency = 1,
+	TextSize = 12,
+	Font = Enum.Font.GothamBold,
+	Text = "INITIALIZING ENGINE",
+	ZIndex = 1003
+}, ShakeHolder)
+
+createLoaderObj("UIStroke", {
+	Color = Color3.fromRGB(0, 0, 0),
+	Thickness = 1.2,
+	Transparency = 0.35
+}, StageLabel)
+
+local PercentLabel = createLoaderObj("TextLabel", {
+	Name = "PercentLabel",
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Size = UDim2.new(0, 240, 0, 30),
+	Position = UDim2.new(0.5, 0, 0.5, 50),
+	BackgroundTransparency = 1,
+	TextColor3 = Color3.fromRGB(242, 242, 248),
+	TextSize = 16,
+	Font = Enum.Font.GothamBold,
+	Text = "Loading: 0%",
+	ZIndex = 1003
+}, ShakeHolder)
+
+createLoaderObj("UIStroke", {
+	Color = Color3.fromRGB(0, 0, 0),
+	Thickness = 1.2,
+	Transparency = 0.35
+}, PercentLabel)
+
+local BarBackground = createLoaderObj("Frame", {
+	Name = "BarBackground",
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Size = UDim2.fromOffset(356, 8),
+	Position = UDim2.new(0.5, 0, 0.5, 85),
+	BackgroundColor3 = Color3.fromRGB(18, 18, 24),
+	BorderSizePixel = 0,
+	ClipsDescendants = true,
+	ZIndex = 1003
+}, ShakeHolder)
+
+createLoaderObj("UICorner", { CornerRadius = UDim.new(1, 0) }, BarBackground)
+createLoaderObj("UIStroke", {
+	Color = Color3.fromRGB(255, 60, 80),
+	Thickness = 1,
+	Transparency = 0.65
+}, BarBackground)
+
+local FillBar = createLoaderObj("Frame", {
+	Name = "FillBar",
+	Size = UDim2.new(0, 0, 1, 0),
+	BackgroundColor3 = Color3.fromRGB(255, 35, 55),
+	BorderSizePixel = 0,
+	ClipsDescendants = true,
+	ZIndex = 1004
+}, BarBackground)
+
+createLoaderObj("UICorner", { CornerRadius = UDim.new(1, 0) }, FillBar)
+createLoaderObj("UIGradient", {
+	Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(175, 10, 25)),
+		ColorSequenceKeypoint.new(0.6, Color3.fromRGB(255, 35, 55)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 120, 135))
+	})
+}, FillBar)
+
+local BarShimmer = createLoaderObj("Frame", {
+	Name = "BarShimmer",
+	Size = UDim2.new(0.35, 0, 1, 0),
+	Position = UDim2.new(-0.35, 0, 0, 0),
+	BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+	BackgroundTransparency = 0.45,
+	BorderSizePixel = 0,
+	ZIndex = 1005
+}, FillBar)
+
+local Credits = createLoaderObj("TextLabel", {
+	Name = "Credits",
+	Size = UDim2.new(0, 260, 0, 30),
+	Position = UDim2.new(0, 20, 1, -40),
+	BackgroundTransparency = 1,
+	TextColor3 = Color3.fromRGB(170, 170, 188),
+	TextSize = 14,
+	Font = Enum.Font.GothamBold,
+	TextXAlignment = Enum.TextXAlignment.Left,
+	Text = LOADER_CREDITS,
+	ZIndex = 1003
+}, LoaderFrame)
+
+local SkipButton = createLoaderObj("TextButton", {
+	Name = "SkipButton",
+	Size = UDim2.fromOffset(152, 44),
+	Position = UDim2.new(0, 20, 1, -96),
+	BackgroundColor3 = Color3.fromRGB(20, 12, 16),
+	TextColor3 = Color3.fromRGB(255, 255, 255),
+	Text = "  ⏭ تخطي",
+	TextSize = 15,
+	Font = Enum.Font.GothamBold,
+	AutoButtonColor = false,
+	Visible = false,
+	ZIndex = 1004
+}, LoaderFrame)
+
+createLoaderObj("UICorner", { CornerRadius = UDim.new(0, 12) }, SkipButton)
+local skipStroke = createLoaderObj("UIStroke", {
+	Color = Color3.fromRGB(255, 45, 65),
+	Thickness = 1.5,
+	Transparency = 0.25
+}, SkipButton)
+
+SkipButton.MouseEnter:Connect(function()
+	tweenLoader(SkipButton, TweenInfo.new(0.16), { BackgroundColor3 = Color3.fromRGB(190, 20, 38) })
+	tweenLoader(skipStroke, TweenInfo.new(0.16), { Transparency = 0, Thickness = 2 })
 end)
 
-local Title = Instance.new("TextLabel")
-Title.Position = UDim2.new(0.08, 0, 0, 58)
-Title.Size = UDim2.new(0.45, 0, 0, 55)
-Title.BackgroundTransparency = 1
-Title.Text = "NHYQ"
-Title.TextColor3 = Color3.fromRGB(255, 0, 0)
-Title.TextSize = 43
-Title.Font = Enum.Font.GothamBlack
-Title.TextXAlignment = Enum.TextXAlignment.Left
-Title.ZIndex = 102
-Title.Parent = Main
-
-local ScriptKey = Instance.new("TextLabel")
-ScriptKey.Position = UDim2.new(0.57, 0, 0, 65)
-ScriptKey.Size = UDim2.new(0.3, 0, 0, 35)
-ScriptKey.BackgroundTransparency = 1
-ScriptKey.Text = "SCRIPT KEY"
-ScriptKey.TextColor3 = Color3.fromRGB(220, 220, 220)
-ScriptKey.TextSize = 20
-ScriptKey.Font = Enum.Font.GothamBold
-ScriptKey.TextXAlignment = Enum.TextXAlignment.Right
-ScriptKey.ZIndex = 102
-ScriptKey.Parent = Main
-
-local Divider = Instance.new("Frame")
-Divider.Position = UDim2.new(0.08, 0, 0, 130)
-Divider.Size = UDim2.new(0.84, 0, 0, 2)
-Divider.BackgroundColor3 = Color3.fromRGB(80, 0, 0)
-Divider.BorderSizePixel = 0
-Divider.ZIndex = 102
-Divider.Parent = Main
-
-local KeyBox = Instance.new("Frame")
-KeyBox.Position = UDim2.new(0.08, 0, 0, 170)
-KeyBox.Size = UDim2.new(0.84, 0, 0, 70)
-KeyBox.BackgroundTransparency = 1
-KeyBox.BorderSizePixel = 0
-KeyBox.ZIndex = 102
-KeyBox.Parent = Main
-
-local KeyCorner = Instance.new("UICorner")
-KeyCorner.CornerRadius = UDim.new(0, 14)
-KeyCorner.Parent = KeyBox
-
-local KeyStroke = Instance.new("UIStroke")
-KeyStroke.Color = Color3.fromRGB(255, 0, 0)
-KeyStroke.Thickness = 2
-KeyStroke.Parent = KeyBox
-
-local Lock = Instance.new("TextLabel")
-Lock.Position = UDim2.new(0, 22, 0, 10)
-Lock.Size = UDim2.fromOffset(45, 50)
-Lock.BackgroundTransparency = 1
-Lock.Text = "🔒"
-Lock.TextSize = 28
-Lock.ZIndex = 103
-Lock.Parent = KeyBox
-
-local KeyInput = Instance.new("TextBox")
-KeyInput.Position = UDim2.new(0, 70, 0, 5)
-KeyInput.Size = UDim2.new(1, -85, 1, -10)
-KeyInput.BackgroundTransparency = 1
-KeyInput.PlaceholderText = "Enter Key..."
-KeyInput.PlaceholderColor3 = Color3.fromRGB(210, 210, 215)
-KeyInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-KeyInput.TextSize = 20
-KeyInput.Font = Enum.Font.GothamMedium
-KeyInput.TextXAlignment = Enum.TextXAlignment.Left
-KeyInput.ClearTextOnFocus = false
-KeyInput.Text = ""
-KeyInput.ZIndex = 103
-KeyInput.Parent = KeyBox
-
-local Status = Instance.new("TextLabel")
-Status.Position = UDim2.new(0.08, 0, 0, 250)
-Status.Size = UDim2.new(0.84, 0, 0, 28)
-Status.BackgroundTransparency = 1
-Status.Text = ""
-Status.TextSize = 15
-Status.Font = Enum.Font.GothamMedium
-Status.ZIndex = 102
-Status.Parent = Main
-
-local Verify = Instance.new("TextButton")
-Verify.Position = UDim2.new(0.08, 0, 0, 290)
-Verify.Size = UDim2.new(0.40, 0, 0, 55)
-Verify.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
-Verify.Text = "VERIFY KEY"
-Verify.TextColor3 = Color3.fromRGB(255, 255, 255)
-Verify.TextSize = 16
-Verify.Font = Enum.Font.GothamBold
-Verify.AutoButtonColor = false
-Verify.ZIndex = 103
-Verify.Parent = Main
-
-local VerifyCorner = Instance.new("UICorner")
-VerifyCorner.CornerRadius = UDim.new(0, 12)
-VerifyCorner.Parent = Verify
-
-Verify.MouseEnter:Connect(function()
-    TweenService:Create(Verify, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(220, 0, 0)}):Play()
+SkipButton.MouseLeave:Connect(function()
+	tweenLoader(SkipButton, TweenInfo.new(0.16), { BackgroundColor3 = Color3.fromRGB(20, 12, 16) })
+	tweenLoader(skipStroke, TweenInfo.new(0.16), { Transparency = 0.25, Thickness = 1.5 })
 end)
 
-Verify.MouseLeave:Connect(function()
-    TweenService:Create(Verify, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(150, 0, 0)}):Play()
-end)
+local function ShakeScreen()
+	local duration = 0.14
+	local elapsed = 0
+	local conn
+	conn = RunService.RenderStepped:Connect(function(dt)
+		elapsed += dt
+		if elapsed >= duration then
+			ShakeHolder.Position = UDim2.fromOffset(0, 0)
+			conn:Disconnect()
+		else
+			local strength = 3.8 * (1 - (elapsed / duration))
+			ShakeHolder.Position = UDim2.fromOffset(
+				math.round(math.random(-strength, strength)),
+				math.round(math.random(-strength, strength))
+			)
+		end
+	end)
+end
 
-local DiscordBtn = Instance.new("TextButton")
-DiscordBtn.Position = UDim2.new(0.52, 0, 0, 290)
-DiscordBtn.Size = UDim2.new(0.40, 0, 0, 55)
-DiscordBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
-DiscordBtn.Text = "سيرفر الدسكورد"
-DiscordBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-DiscordBtn.TextSize = 15
-DiscordBtn.Font = Enum.Font.GothamBold
-DiscordBtn.AutoButtonColor = false
-DiscordBtn.ZIndex = 103
-DiscordBtn.Parent = Main
-
-local DiscordCorner = Instance.new("UICorner")
-DiscordCorner.CornerRadius = UDim.new(0, 12)
-DiscordCorner.Parent = DiscordBtn
-
-local DiscordStroke = Instance.new("UIStroke")
-DiscordStroke.Color = Color3.fromRGB(88, 101, 242)
-DiscordStroke.Thickness = 1.5
-DiscordStroke.Parent = DiscordBtn
-
-DiscordBtn.MouseEnter:Connect(function()
-    TweenService:Create(DiscordBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(88, 101, 242)}):Play()
-end)
-
-DiscordBtn.MouseLeave:Connect(function()
-    TweenService:Create(DiscordBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(40, 40, 45)}):Play()
-end)
-
-DiscordBtn.MouseButton1Click:Connect(function()
-    local link = "https://discord.gg/E2Vnuq3nm"
-    if setclipboard then
-        setclipboard(link)
-    elseif toclipboard then
-        toclipboard(link)
-    end
-    
-    DiscordBtn.Text = "✓ تم نسخ الرابط"
-    task.wait(1.5)
-    DiscordBtn.Text = "سيرفر الدسكورد"
-end)
+local function typeLoaderText(label, fullText, delayPerChar, isDoneFn)
+	local chars = {}
+	for _, code in utf8.codes(fullText) do
+		table.insert(chars, utf8.char(code))
+	end
+	for i = 1, #chars do
+		if isDoneFn() then return end
+		label.Text = table.concat(chars, "", 1, i) .. "▌"
+		task.wait(delayPerChar)
+	end
+	if not isDoneFn() then
+		label.Text = fullText
+	end
+end
 
 --==================================================
 -- WELCOME BANNER (MODERN LUXURY NOTIFICATION STYLE)
@@ -1219,75 +1152,6 @@ BannerText.TextXAlignment = Enum.TextXAlignment.Left
 BannerText.TextYAlignment = Enum.TextYAlignment.Center
 BannerText.ZIndex = 1401
 BannerText.Parent = WelcomeBanner
-
---==================================================
--- TRANSITION FROM LOADER TO KEY SYSTEM
---==================================================
-
-local function FinishLoader()
-    local fadeInfo = TweenInfo.new(0.5)
-    TweenService:Create(LoaderFrame, fadeInfo, { BackgroundTransparency = 1 }):Play()
-    for _, child in ipairs(LoaderFrame:GetDescendants()) do
-        if child:IsA("TextLabel") or child:IsA("TextButton") then
-            TweenService:Create(child, fadeInfo, { TextTransparency = 1 }):Play()
-        elseif child:IsA("ImageLabel") then
-            TweenService:Create(child, fadeInfo, { ImageTransparency = 1 }):Play()
-        elseif child:IsA("Frame") then
-            TweenService:Create(child, fadeInfo, { BackgroundTransparency = 1 }):Play()
-        end
-    end
-
-    task.wait(0.5)
-    LoaderFrame.Visible = false
-    Background.Visible = true
-
-    TweenService:Create(
-        Main,
-        TweenInfo.new(0.55, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-        { Size = UDim2.new(0.78, 0, 0, 390) }
-    ):Play()
-end
-
-SkipButton.MouseButton1Click:Connect(function()
-    FinishLoader()
-end)
-
-task.spawn(function()
-    task.wait(0.4)
-    local targetText = "NHYQ"
-    
-    for i = 1, #targetText do
-        TitleLabel.Text = string.sub(targetText, 1, i)
-        
-        if i >= 2 then
-            RightCrown.TextTransparency = 0
-            LeftCrown.TextTransparency = 0
-        end
-        
-        ShakeScreen()
-        task.wait(0.15)
-    end
-    
-    local tweenService = game:GetService("TweenService")
-    local info = TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
-    tweenService:Create(UnderLine, info, {Size = UDim2.new(0, 300, 0, 3), Position = UDim2.new(0.5, -150, 0.4, 75)}):Play()
-    
-    task.wait(0.3)
-
-    for i = 1, 100 do
-        PercentLabel.Text = "Loading: " .. i .. "%"
-        FillBar.Size = UDim2.new(i/100, 0, 1, 0)
-        
-        if i == 30 then
-            SkipButton.Visible = true
-        end
-        
-        task.wait(0.025)
-    end
-
-    task.wait(0.4)
-    FinishLoader()
-end)
 
 --==================================================
 -- SOUND SYSTEM (Click Sound)
@@ -1664,7 +1528,7 @@ local function MakeTab(TabName)
         ZIndex = 3005
     })
     
-    local tabLbl = Create("TextLabel", Frame, {
+    Create("TextLabel", Frame, {
         Size = UDim2.new(1, -8, 1, 0),
         Position = UDim2.new(0, 4, 0, 0),
         BackgroundTransparency = 1,
@@ -1747,7 +1611,7 @@ local function AddButtonToTab(tabContainer, buttonText, callback)
         Transparency = 0.2
     })
     
-    local textLbl = Create("TextLabel", btnContainer, {
+    Create("TextLabel", btnContainer, {
         Size = UDim2.new(1, -186, 1, -12),
         Position = UDim2.new(0, 68, 0, 6),
         BackgroundTransparency = 1,
@@ -1930,7 +1794,7 @@ local function LoadMainScript()
         deviceTypeStr = "Hybrid"
     end
 
-    local WelcomeInfo = Create("TextLabel", HomeCard, {
+    Create("TextLabel", HomeCard, {
         Size = UDim2.new(1, -16, 0, 110),
         Position = UDim2.new(0, 8, 0, 4),
         BackgroundTransparency = 1,
@@ -2963,115 +2827,942 @@ local function LoadMainScript()
 end
 
 --==================================================
--- VERIFY LOGIC & 3 ATTEMPTS BAN SYSTEM
+-- APEX VAULT KEY SYSTEM & KEY MENU (STATIC KEY + PILL DISCORD EDITION)
 --==================================================
 
+local KEY_MODE = "STATIC"
+local STATIC_KEY = "NHYQONTOP1234"
+local DAILY_PREFIX = "NHYQ"
+local DAILY_SUFFIX = "APEX"
+local PLAYER_PREFIX = "NHYQ"
+local PLAYER_SUFFIX = "VIP"
+local REMOTE_KEY_URL = ""
+local PRINT_GENERATED_KEY = false
+
+local DISCORD_INVITE = "https://discord.gg/E2Vnuq3nm"
+local KEY_BG_IMAGE = "rbxassetid://110306712439559"
+local BAN_SOUND_ID = "rbxassetid://1845705355"
+local MAX_ATTEMPTS = 3
+
+local function ResolveExpectedKey()
+	if KEY_MODE == "STATIC" then
+		return STATIC_KEY
+	elseif KEY_MODE == "DAILY" then
+		local dateTag = os.date("!%Y%m%d")
+		return string.format("%s-%s-%s", DAILY_PREFIX, tostring(dateTag), DAILY_SUFFIX)
+	elseif KEY_MODE == "PLAYER" then
+		return string.format("%s-%d-%s", PLAYER_PREFIX, _L.UserId, PLAYER_SUFFIX)
+	elseif KEY_MODE == "REMOTE" and REMOTE_KEY_URL ~= "" then
+		local ok, res = pcall(function()
+			return game:HttpGet(REMOTE_KEY_URL, true)
+		end)
+		if ok and type(res) == "string" then
+			local cleaned = string.match(res, "^%s*(.-)%s*$") or ""
+			if cleaned ~= "" then
+				return cleaned
+			end
+		end
+		return STATIC_KEY
+	end
+	return STATIC_KEY
+end
+
+local EXPECTED_KEY = ResolveExpectedKey()
+if PRINT_GENERATED_KEY then
+	print("[NHYQ KEY SYSTEM] Active Key (" .. KEY_MODE .. "): " .. EXPECTED_KEY)
+end
+
+local function tween(obj, info, props)
+	local anim = TweenService:Create(obj, info, props)
+	anim:Play()
+	return anim
+end
+
+local Background = Instance.new("Frame")
+Background.Name = "KeyBackdrop"
+Background.Size = UDim2.fromScale(1, 1)
+Background.BackgroundColor3 = Color3.fromRGB(3, 3, 5)
+Background.BackgroundTransparency = 0.28
+Background.BorderSizePixel = 0
+Background.Visible = false
+Background.ZIndex = 100
+Background.Parent = ScreenGui
+
+local AmbientGlow = Instance.new("Frame")
+AmbientGlow.Name = "AmbientGlow"
+AmbientGlow.AnchorPoint = Vector2.new(0.5, 0.5)
+AmbientGlow.Position = UDim2.fromScale(0.5, 0.5)
+AmbientGlow.Size = UDim2.fromScale(0.72, 0.62)
+AmbientGlow.BackgroundColor3 = Color3.fromRGB(165, 12, 24)
+AmbientGlow.BackgroundTransparency = 0.92
+AmbientGlow.BorderSizePixel = 0
+AmbientGlow.ZIndex = 100
+AmbientGlow.Parent = Background
+
+local AmbientCorner = Instance.new("UICorner")
+AmbientCorner.CornerRadius = UDim.new(0, 48)
+AmbientCorner.Parent = AmbientGlow
+
+local Main = Instance.new("Frame")
+Main.Name = "KeyMainWindow"
+Main.AnchorPoint = Vector2.new(0.5, 0.5)
+Main.Position = UDim2.fromScale(0.5, 0.5)
+Main.Size = UDim2.fromOffset(620, 410)
+Main.BackgroundColor3 = Color3.fromRGB(9, 9, 13)
+Main.BorderSizePixel = 0
+Main.ClipsDescendants = true
+Main.ZIndex = 101
+Main.Parent = Background
+
+local MainSizeConstraint = Instance.new("UISizeConstraint")
+MainSizeConstraint.MinSize = Vector2.new(330, 380)
+MainSizeConstraint.MaxSize = Vector2.new(680, 440)
+MainSizeConstraint.Parent = Main
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 20)
+MainCorner.Parent = Main
+
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Color = Color3.fromRGB(220, 28, 42)
+MainStroke.Thickness = 1.6
+MainStroke.Transparency = 0.35
+MainStroke.Parent = Main
+
+local MainStrokeGrad = Instance.new("UIGradient")
+MainStrokeGrad.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 45, 60)),
+	ColorSequenceKeypoint.new(0.5, Color3.fromRGB(70, 14, 20)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(220, 28, 42))
+})
+MainStrokeGrad.Rotation = 25
+MainStrokeGrad.Parent = MainStroke
+
+local KeyBgImage = Instance.new("ImageLabel")
+KeyBgImage.Name = "KeyBgImage"
+KeyBgImage.Size = UDim2.fromScale(1, 1)
+KeyBgImage.Position = UDim2.fromScale(0, 0)
+KeyBgImage.BackgroundTransparency = 1
+KeyBgImage.Image = KEY_BG_IMAGE
+KeyBgImage.ImageTransparency = 0.25
+KeyBgImage.ScaleType = Enum.ScaleType.Crop
+KeyBgImage.ZIndex = 101
+KeyBgImage.Parent = Main
+
+local ScrimOverlay = Instance.new("Frame")
+ScrimOverlay.Name = "ScrimOverlay"
+ScrimOverlay.Size = UDim2.fromScale(1, 1)
+ScrimOverlay.BackgroundColor3 = Color3.fromRGB(7, 7, 10)
+ScrimOverlay.BackgroundTransparency = 0.22
+ScrimOverlay.BorderSizePixel = 0
+ScrimOverlay.ZIndex = 102
+ScrimOverlay.Parent = Main
+
+local ScrimGrad = Instance.new("UIGradient")
+ScrimGrad.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(8, 8, 12)),
+	ColorSequenceKeypoint.new(0.55, Color3.fromRGB(12, 8, 11)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(22, 6, 10))
+})
+ScrimGrad.Transparency = NumberSequence.new({
+	NumberSequenceKeypoint.new(0, 0.12),
+	NumberSequenceKeypoint.new(0.6, 0.25),
+	NumberSequenceKeypoint.new(1, 0.08)
+})
+ScrimGrad.Rotation = 90
+ScrimGrad.Parent = ScrimOverlay
+
+local TopAccent = Instance.new("Frame")
+TopAccent.Name = "TopAccentBar"
+TopAccent.Size = UDim2.new(1, 0, 0, 4)
+TopAccent.BackgroundColor3 = Color3.fromRGB(255, 35, 50)
+TopAccent.BorderSizePixel = 0
+TopAccent.ZIndex = 105
+TopAccent.Parent = Main
+
+local TopGrad = Instance.new("UIGradient")
+TopGrad.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(120, 0, 15)),
+	ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 45, 65)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(120, 0, 15))
+})
+TopGrad.Parent = TopAccent
+
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Name = "CloseButton"
+CloseBtn.AnchorPoint = Vector2.new(1, 0)
+CloseBtn.Position = UDim2.new(1, -18, 0, 16)
+CloseBtn.Size = UDim2.fromOffset(38, 38)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(20, 11, 14)
+CloseBtn.BackgroundTransparency = 0.15
+CloseBtn.Text = "×"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 70, 85)
+CloseBtn.TextSize = 26
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.AutoButtonColor = false
+CloseBtn.ZIndex = 106
+CloseBtn.Parent = Main
+
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(1, 0)
+CloseCorner.Parent = CloseBtn
+
+local CloseStroke = Instance.new("UIStroke")
+CloseStroke.Color = Color3.fromRGB(255, 50, 70)
+CloseStroke.Transparency = 0.55
+CloseStroke.Thickness = 1.2
+CloseStroke.Parent = CloseBtn
+
+CloseBtn.MouseEnter:Connect(function()
+	tween(CloseBtn, TweenInfo.new(0.16), { BackgroundColor3 = Color3.fromRGB(185, 20, 35), TextColor3 = Color3.fromRGB(255, 255, 255) })
+end)
+CloseBtn.MouseLeave:Connect(function()
+	tween(CloseBtn, TweenInfo.new(0.16), { BackgroundColor3 = Color3.fromRGB(20, 11, 14), TextColor3 = Color3.fromRGB(255, 70, 85) })
+end)
+CloseBtn.MouseButton1Click:Connect(function()
+	local out = tween(Main, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+		Size = UDim2.fromOffset(560, 350),
+		Position = UDim2.fromScale(0.5, 0.54)
+	})
+	tween(Background, TweenInfo.new(0.2), { BackgroundTransparency = 1 })
+	out.Completed:Wait()
+	ScreenGui:Destroy()
+end)
+
+local HeaderFrame = Instance.new("Frame")
+HeaderFrame.Name = "HeaderFrame"
+HeaderFrame.Position = UDim2.new(0.065, 0, 0, 22)
+HeaderFrame.Size = UDim2.new(0.87, 0, 0, 78)
+HeaderFrame.BackgroundTransparency = 1
+HeaderFrame.ZIndex = 104
+HeaderFrame.Parent = Main
+
+local BrandTitle = Instance.new("TextLabel")
+BrandTitle.Name = "BrandTitle"
+BrandTitle.Position = UDim2.fromOffset(0, 0)
+BrandTitle.Size = UDim2.new(0.55, 0, 0, 46)
+BrandTitle.BackgroundTransparency = 1
+BrandTitle.Text = "NHYQ"
+BrandTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+BrandTitle.TextSize = 38
+BrandTitle.Font = Enum.Font.GothamBlack
+BrandTitle.TextXAlignment = Enum.TextXAlignment.Left
+BrandTitle.ZIndex = 104
+BrandTitle.Parent = HeaderFrame
+
+local BrandGrad = Instance.new("UIGradient")
+BrandGrad.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+	ColorSequenceKeypoint.new(0.55, Color3.fromRGB(255, 65, 80)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(190, 10, 25))
+})
+BrandGrad.Parent = BrandTitle
+
+local SubCaption = Instance.new("TextLabel")
+SubCaption.Name = "SubCaption"
+SubCaption.Position = UDim2.fromOffset(2, 46)
+SubCaption.Size = UDim2.new(0.85, 0, 0, 22)
+SubCaption.BackgroundTransparency = 1
+SubCaption.Text = "ACCESS GATEWAY  •  KEY AUTHENTICATION"
+SubCaption.TextColor3 = Color3.fromRGB(185, 185, 198)
+SubCaption.TextSize = 12
+SubCaption.Font = Enum.Font.GothamBold
+SubCaption.TextXAlignment = Enum.TextXAlignment.Left
+SubCaption.ZIndex = 104
+SubCaption.Parent = HeaderFrame
+
+local StrikeBadge = Instance.new("Frame")
+StrikeBadge.Name = "StrikeBadge"
+StrikeBadge.AnchorPoint = Vector2.new(1, 0.5)
+StrikeBadge.Position = UDim2.new(1, -48, 0.5, 4)
+StrikeBadge.Size = UDim2.fromOffset(146, 34)
+StrikeBadge.BackgroundColor3 = Color3.fromRGB(16, 16, 22)
+StrikeBadge.BackgroundTransparency = 0.15
+StrikeBadge.BorderSizePixel = 0
+StrikeBadge.ZIndex = 104
+StrikeBadge.Parent = HeaderFrame
+
+local StrikeCorner = Instance.new("UICorner")
+StrikeCorner.CornerRadius = UDim.new(1, 0)
+StrikeCorner.Parent = StrikeBadge
+
+local StrikeStroke = Instance.new("UIStroke")
+StrikeStroke.Color = Color3.fromRGB(255, 65, 80)
+StrikeStroke.Transparency = 0.45
+StrikeStroke.Thickness = 1.2
+StrikeStroke.Parent = StrikeBadge
+
+local StrikeDot = Instance.new("Frame")
+StrikeDot.Size = UDim2.fromOffset(8, 8)
+StrikeDot.Position = UDim2.new(0, 12, 0.5, -4)
+StrikeDot.BackgroundColor3 = Color3.fromRGB(255, 65, 80)
+StrikeDot.BorderSizePixel = 0
+StrikeDot.ZIndex = 105
+StrikeDot.Parent = StrikeBadge
+
+local StrikeDotCorner = Instance.new("UICorner")
+StrikeDotCorner.CornerRadius = UDim.new(1, 0)
+StrikeDotCorner.Parent = StrikeDot
+
+local StrikeText = Instance.new("TextLabel")
+StrikeText.Size = UDim2.new(1, -28, 1, 0)
+StrikeText.Position = UDim2.fromOffset(24, 0)
+StrikeText.BackgroundTransparency = 1
+StrikeText.Text = "ATTEMPTS: " .. MAX_ATTEMPTS .. " / " .. MAX_ATTEMPTS
+StrikeText.TextColor3 = Color3.fromRGB(240, 240, 248)
+StrikeText.TextSize = 11.5
+StrikeText.Font = Enum.Font.GothamBold
+StrikeText.TextXAlignment = Enum.TextXAlignment.Left
+StrikeText.ZIndex = 105
+StrikeText.Parent = StrikeBadge
+
+local Divider = Instance.new("Frame")
+Divider.Name = "Divider"
+Divider.Position = UDim2.new(0.065, 0, 0, 110)
+Divider.Size = UDim2.new(0.87, 0, 0, 1)
+Divider.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+Divider.BackgroundTransparency = 0.86
+Divider.BorderSizePixel = 0
+Divider.ZIndex = 104
+Divider.Parent = Main
+
+local InputLabel = Instance.new("TextLabel")
+InputLabel.Name = "InputLabel"
+InputLabel.Position = UDim2.new(0.065, 0, 0, 126)
+InputLabel.Size = UDim2.new(0.87, 0, 0, 20)
+InputLabel.BackgroundTransparency = 1
+InputLabel.Text = "LICENSE / ACCESS KEY"
+InputLabel.TextColor3 = Color3.fromRGB(165, 165, 180)
+InputLabel.TextSize = 11.5
+InputLabel.Font = Enum.Font.GothamBold
+InputLabel.TextXAlignment = Enum.TextXAlignment.Left
+InputLabel.ZIndex = 104
+InputLabel.Parent = Main
+
+local KeyBox = Instance.new("Frame")
+KeyBox.Name = "KeyInputContainer"
+KeyBox.Position = UDim2.new(0.065, 0, 0, 152)
+KeyBox.Size = UDim2.new(0.87, 0, 0, 62)
+KeyBox.BackgroundColor3 = Color3.fromRGB(13, 13, 18)
+KeyBox.BackgroundTransparency = 0.14
+KeyBox.BorderSizePixel = 0
+KeyBox.ZIndex = 104
+KeyBox.Parent = Main
+
+local KeyCorner = Instance.new("UICorner")
+KeyCorner.CornerRadius = UDim.new(0, 14)
+KeyCorner.Parent = KeyBox
+
+local KeyStroke = Instance.new("UIStroke")
+KeyStroke.Color = Color3.fromRGB(220, 30, 45)
+KeyStroke.Thickness = 1.6
+KeyStroke.Transparency = 0.25
+KeyStroke.Parent = KeyBox
+
+local LockBadge = Instance.new("Frame")
+LockBadge.Position = UDim2.new(0, 12, 0.5, -19)
+LockBadge.Size = UDim2.fromOffset(38, 38)
+LockBadge.BackgroundColor3 = Color3.fromRGB(28, 12, 16)
+LockBadge.BorderSizePixel = 0
+LockBadge.ZIndex = 105
+LockBadge.Parent = KeyBox
+
+local LockBadgeCorner = Instance.new("UICorner")
+LockBadgeCorner.CornerRadius = UDim.new(0, 10)
+LockBadgeCorner.Parent = LockBadge
+
+local LockIcon = Instance.new("TextLabel")
+LockIcon.Size = UDim2.fromScale(1, 1)
+LockIcon.BackgroundTransparency = 1
+LockIcon.Text = "🔒"
+LockIcon.TextSize = 19
+LockIcon.ZIndex = 106
+LockIcon.Parent = LockBadge
+
+local KeyInput = Instance.new("TextBox")
+KeyInput.Name = "KeyInputBox"
+KeyInput.Position = UDim2.new(0, 60, 0, 4)
+KeyInput.Size = UDim2.new(1, -158, 1, -8)
+KeyInput.BackgroundTransparency = 1
+KeyInput.PlaceholderText = "Enter your key here..."
+KeyInput.PlaceholderColor3 = Color3.fromRGB(135, 135, 150)
+KeyInput.TextColor3 = Color3.fromRGB(255, 255, 255)
+KeyInput.TextSize = 17
+KeyInput.Font = Enum.Font.GothamMedium
+KeyInput.TextXAlignment = Enum.TextXAlignment.Left
+KeyInput.ClearTextOnFocus = false
+KeyInput.Text = ""
+KeyInput.ZIndex = 105
+KeyInput.Parent = KeyBox
+
+local PasteBtn = Instance.new("TextButton")
+PasteBtn.Name = "PasteButton"
+PasteBtn.AnchorPoint = Vector2.new(1, 0.5)
+PasteBtn.Position = UDim2.new(1, -12, 0.5, 0)
+PasteBtn.Size = UDim2.fromOffset(80, 38)
+PasteBtn.BackgroundColor3 = Color3.fromRGB(24, 24, 32)
+PasteBtn.Text = "PASTE"
+PasteBtn.TextColor3 = Color3.fromRGB(225, 225, 238)
+PasteBtn.TextSize = 12
+PasteBtn.Font = Enum.Font.GothamBold
+PasteBtn.AutoButtonColor = false
+PasteBtn.ZIndex = 106
+PasteBtn.Parent = KeyBox
+
+local PasteCorner = Instance.new("UICorner")
+PasteCorner.CornerRadius = UDim.new(0, 10)
+PasteCorner.Parent = PasteBtn
+
+local PasteStroke = Instance.new("UIStroke")
+PasteStroke.Color = Color3.fromRGB(255, 255, 255)
+PasteStroke.Transparency = 0.85
+PasteStroke.Thickness = 1
+PasteStroke.Parent = PasteBtn
+
+PasteBtn.MouseEnter:Connect(function()
+	tween(PasteBtn, TweenInfo.new(0.15), { BackgroundColor3 = Color3.fromRGB(40, 40, 52) })
+end)
+PasteBtn.MouseLeave:Connect(function()
+	tween(PasteBtn, TweenInfo.new(0.15), { BackgroundColor3 = Color3.fromRGB(24, 24, 32) })
+end)
+PasteBtn.MouseButton1Click:Connect(function()
+	local clip
+	pcall(function()
+		if getclipboard then
+			clip = getclipboard()
+		elseif fromclipboard then
+			clip = fromclipboard()
+		end
+	end)
+	if type(clip) == "string" and clip ~= "" then
+		KeyInput.Text = clip
+		PasteBtn.Text = "PASTED"
+		task.delay(1, function()
+			if PasteBtn and PasteBtn.Parent then
+				PasteBtn.Text = "PASTE"
+			end
+		end)
+	end
+end)
+
+local Status = Instance.new("TextLabel")
+Status.Name = "StatusLabel"
+Status.Position = UDim2.new(0.065, 0, 0, 224)
+Status.Size = UDim2.new(0.87, 0, 0, 24)
+Status.BackgroundTransparency = 1
+Status.Text = "READY  •  ENTER KEY OR JOIN DISCORD FOR FREE KEY"
+Status.TextColor3 = Color3.fromRGB(165, 165, 180)
+Status.TextSize = 12.5
+Status.Font = Enum.Font.GothamMedium
+Status.TextXAlignment = Enum.TextXAlignment.Left
+Status.ZIndex = 104
+Status.Parent = Main
+
+local ProgressTrack = Instance.new("Frame")
+ProgressTrack.Name = "ProgressTrack"
+ProgressTrack.Position = UDim2.new(0.065, 0, 0, 254)
+ProgressTrack.Size = UDim2.new(0.87, 0, 0, 4)
+ProgressTrack.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+ProgressTrack.BackgroundTransparency = 0.9
+ProgressTrack.BorderSizePixel = 0
+ProgressTrack.ZIndex = 104
+ProgressTrack.Parent = Main
+
+local TrackCorner = Instance.new("UICorner")
+TrackCorner.CornerRadius = UDim.new(1, 0)
+TrackCorner.Parent = ProgressTrack
+
+local ProgressFill = Instance.new("Frame")
+ProgressFill.Name = "ProgressFill"
+ProgressFill.Size = UDim2.new(0.15, 0, 1, 0)
+ProgressFill.BackgroundColor3 = Color3.fromRGB(255, 45, 65)
+ProgressFill.BorderSizePixel = 0
+ProgressFill.ZIndex = 105
+ProgressFill.Parent = ProgressTrack
+
+local FillCorner = Instance.new("UICorner")
+FillCorner.CornerRadius = UDim.new(1, 0)
+FillCorner.Parent = ProgressFill
+
+local Verify = Instance.new("TextButton")
+Verify.Name = "VerifyButton"
+Verify.Position = UDim2.new(0.065, 0, 0, 280)
+Verify.Size = UDim2.new(0.415, 0, 0, 54)
+Verify.BackgroundColor3 = Color3.fromRGB(195, 18, 34)
+Verify.Text = "VERIFY KEY"
+Verify.TextColor3 = Color3.fromRGB(255, 255, 255)
+Verify.TextSize = 15
+Verify.Font = Enum.Font.GothamBold
+Verify.AutoButtonColor = false
+Verify.ZIndex = 105
+Verify.Parent = Main
+
+local VerifyCorner = Instance.new("UICorner")
+VerifyCorner.CornerRadius = UDim.new(0, 14)
+VerifyCorner.Parent = Verify
+
+local VerifyGrad = Instance.new("UIGradient")
+VerifyGrad.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(235, 35, 55)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(150, 10, 22))
+})
+VerifyGrad.Rotation = 90
+VerifyGrad.Parent = Verify
+
+Verify.MouseEnter:Connect(function()
+	tween(Verify, TweenInfo.new(0.18), { BackgroundColor3 = Color3.fromRGB(235, 28, 48) })
+end)
+Verify.MouseLeave:Connect(function()
+	tween(Verify, TweenInfo.new(0.18), { BackgroundColor3 = Color3.fromRGB(195, 18, 34) })
+end)
+
+local DiscordAura = Instance.new("Frame")
+DiscordAura.Name = "DiscordAuraGlow"
+DiscordAura.Position = UDim2.new(0.50, -2, 0, 278)
+DiscordAura.Size = UDim2.new(0.435, 4, 0, 58)
+DiscordAura.BackgroundColor3 = Color3.fromRGB(155, 72, 255)
+DiscordAura.BackgroundTransparency = 0.78
+DiscordAura.BorderSizePixel = 0
+DiscordAura.ZIndex = 104
+DiscordAura.Parent = Main
+
+local DiscordAuraCorner = Instance.new("UICorner")
+DiscordAuraCorner.CornerRadius = UDim.new(1, 0)
+DiscordAuraCorner.Parent = DiscordAura
+
+local DiscordBtn = Instance.new("TextButton")
+DiscordBtn.Name = "DiscordButton"
+DiscordBtn.Position = UDim2.new(0.50, 0, 0, 280)
+DiscordBtn.Size = UDim2.new(0.435, 0, 0, 54)
+DiscordBtn.BackgroundColor3 = Color3.fromRGB(24, 15, 46)
+DiscordBtn.BackgroundTransparency = 0.04
+DiscordBtn.Text = ""
+DiscordBtn.AutoButtonColor = false
+DiscordBtn.ZIndex = 106
+DiscordBtn.Parent = Main
+
+local DiscordCorner = Instance.new("UICorner")
+DiscordCorner.CornerRadius = UDim.new(1, 0)
+DiscordCorner.Parent = DiscordBtn
+
+local DiscordBgGrad = Instance.new("UIGradient")
+DiscordBgGrad.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(78, 44, 185)),
+	ColorSequenceKeypoint.new(0.55, Color3.fromRGB(36, 20, 82)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(135, 28, 118))
+})
+DiscordBgGrad.Rotation = 15
+DiscordBgGrad.Parent = DiscordBtn
+
+local DiscordStroke = Instance.new("UIStroke")
+DiscordStroke.Color = Color3.fromRGB(185, 115, 255)
+DiscordStroke.Thickness = 1.8
+DiscordStroke.Transparency = 0.15
+DiscordStroke.Parent = DiscordBtn
+
+local DiscordStrokeGrad = Instance.new("UIGradient")
+DiscordStrokeGrad.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(140, 175, 255)),
+	ColorSequenceKeypoint.new(0.5, Color3.fromRGB(225, 110, 255)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 70, 130))
+})
+DiscordStrokeGrad.Parent = DiscordStroke
+
+local DiscordPulseDot = Instance.new("Frame")
+DiscordPulseDot.Name = "PulseDot"
+DiscordPulseDot.AnchorPoint = Vector2.new(0, 0.5)
+DiscordPulseDot.Position = UDim2.new(0, 16, 0.5, 0)
+DiscordPulseDot.Size = UDim2.fromOffset(9, 9)
+DiscordPulseDot.BackgroundColor3 = Color3.fromRGB(120, 255, 195)
+DiscordPulseDot.BorderSizePixel = 0
+DiscordPulseDot.ZIndex = 107
+DiscordPulseDot.Parent = DiscordBtn
+
+local DiscordPulseCorner = Instance.new("UICorner")
+DiscordPulseCorner.CornerRadius = UDim.new(1, 0)
+DiscordPulseCorner.Parent = DiscordPulseDot
+
+local DiscordLabel = Instance.new("TextLabel")
+DiscordLabel.Name = "DiscordLabel"
+DiscordLabel.Position = UDim2.new(0, 30, 0, 0)
+DiscordLabel.Size = UDim2.new(1, -40, 1, 0)
+DiscordLabel.BackgroundTransparency = 1
+DiscordLabel.Text = "◈ سيرفر الدسكورد"
+DiscordLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+DiscordLabel.TextSize = 15
+DiscordLabel.Font = Enum.Font.GothamBold
+DiscordLabel.TextXAlignment = Enum.TextXAlignment.Center
+DiscordLabel.ZIndex = 107
+DiscordLabel.Parent = DiscordBtn
+
+task.spawn(function()
+	while DiscordPulseDot and DiscordPulseDot.Parent do
+		tween(DiscordPulseDot, TweenInfo.new(0.85, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), { Size = UDim2.fromOffset(11, 11), BackgroundColor3 = Color3.fromRGB(175, 120, 255) })
+		task.wait(0.85)
+		if not (DiscordPulseDot and DiscordPulseDot.Parent) then break end
+		tween(DiscordPulseDot, TweenInfo.new(0.85, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), { Size = UDim2.fromOffset(8, 8), BackgroundColor3 = Color3.fromRGB(120, 255, 195) })
+		task.wait(0.85)
+	end
+end)
+
+DiscordBtn.MouseEnter:Connect(function()
+	tween(DiscordAura, TweenInfo.new(0.2), { BackgroundTransparency = 0.42 })
+	tween(DiscordStroke, TweenInfo.new(0.2), { Thickness = 2.4, Transparency = 0 })
+	tween(DiscordBtn, TweenInfo.new(0.2), { Size = UDim2.new(0.435, 2, 0, 55), Position = UDim2.new(0.50, -1, 0, 279.5) })
+end)
+DiscordBtn.MouseLeave:Connect(function()
+	tween(DiscordAura, TweenInfo.new(0.2), { BackgroundTransparency = 0.78 })
+	tween(DiscordStroke, TweenInfo.new(0.2), { Thickness = 1.8, Transparency = 0.15 })
+	tween(DiscordBtn, TweenInfo.new(0.2), { Size = UDim2.new(0.435, 0, 0, 54), Position = UDim2.new(0.50, 0, 0, 280) })
+end)
+
+DiscordBtn.MouseButton1Click:Connect(function()
+	local copied = false
+	pcall(function()
+		if setclipboard then
+			setclipboard(DISCORD_INVITE)
+			copied = true
+		elseif toclipboard then
+			toclipboard(DISCORD_INVITE)
+			copied = true
+		end
+	end)
+
+	DiscordLabel.Text = copied and "✓ تم نسخ الرابط" or DISCORD_INVITE
+	DiscordPulseDot.BackgroundColor3 = Color3.fromRGB(65, 255, 150)
+	tween(DiscordStroke, TweenInfo.new(0.18), { Color = Color3.fromRGB(65, 255, 150), Thickness = 2.4 })
+	Status.Text = "DISCORD INVITE COPIED TO CLIPBOARD"
+	Status.TextColor3 = Color3.fromRGB(185, 130, 255)
+
+	task.wait(1.6)
+	if DiscordLabel and DiscordLabel.Parent then
+		DiscordLabel.Text = "◈ سيرفر الدسكورد"
+		tween(DiscordStroke, TweenInfo.new(0.25), { Color = Color3.fromRGB(185, 115, 255), Thickness = 1.8 })
+	end
+end)
+
+local FooterNote = Instance.new("TextLabel")
+FooterNote.Name = "FooterNote"
+FooterNote.Position = UDim2.new(0.065, 0, 1, -30)
+FooterNote.Size = UDim2.new(0.87, 0, 0, 20)
+FooterNote.BackgroundTransparency = 1
+FooterNote.Text = "NHYQ SECURITY  •  3 INVALID ATTEMPTS TRIGGER AUTO-KICK"
+FooterNote.TextColor3 = Color3.fromRGB(120, 120, 136)
+FooterNote.TextSize = 10.5
+FooterNote.Font = Enum.Font.GothamBold
+FooterNote.TextXAlignment = Enum.TextXAlignment.Center
+FooterNote.ZIndex = 104
+FooterNote.Parent = Main
+
 local failedAttempts = 0
-local CORRECT_KEY = "NHYQONTOP1234"
+local isVerifying = false
+local activeBanSound = nil
 
-local function VerifyKey()
-    local entered = KeyInput.Text
+local function shakeWindow()
+	local origin = Main.Position
+	for i = 1, 5 do
+		local offsetX = (i % 2 == 0 and 7 or -7) * (1 - (i - 1) * 0.15)
+		Main.Position = origin + UDim2.fromOffset(offsetX, 0)
+		task.wait(0.035)
+	end
+	Main.Position = origin
+end
 
-    if entered == "" then
-        Status.Text = "Please enter a key."
-        Status.TextColor3 = Color3.fromRGB(255, 80, 80)
-        return
-    end
+local function triggerBanSequence()
+	isVerifying = true
+	Status.Text = "✕ SECURITY BREACH  •  BANNED (3 / 3 FAILED)"
+	Status.TextColor3 = Color3.fromRGB(255, 45, 65)
+	StrikeText.Text = "LOCKED: 0 / 3"
+	tween(ProgressFill, TweenInfo.new(0.25), { Size = UDim2.new(1, 0, 1, 0), BackgroundColor3 = Color3.fromRGB(255, 25, 45) })
 
-    if entered == CORRECT_KEY then
-        Status.Text = "✓ KEY VERIFIED"
-        Status.TextColor3 = Color3.fromRGB(0, 255, 100)
-        KeyStroke.Color = Color3.fromRGB(0, 255, 100)
+	pcall(function()
+		local banSound = Instance.new("Sound")
+		banSound.Name = "NHYQ_BanSound"
+		banSound.SoundId = BAN_SOUND_ID
+		banSound.Volume = 3
+		banSound.Looped = true
+		banSound.Parent = SoundService
+		banSound:Play()
+		activeBanSound = banSound
+	end)
 
-        TweenService:Create(
-            Verify,
-            TweenInfo.new(0.25),
-            {BackgroundColor3 = Color3.fromRGB(0, 150, 60)}
-        ):Play()
+	local BlackScreen = Instance.new("Frame")
+	BlackScreen.Name = "BanOverlay"
+	BlackScreen.Size = UDim2.fromScale(1, 1)
+	BlackScreen.BackgroundColor3 = Color3.fromRGB(4, 4, 6)
+	BlackScreen.BorderSizePixel = 0
+	BlackScreen.ZIndex = 99999
+	BlackScreen.Parent = ScreenGui
 
-        task.wait(1)
+	local BanCard = Instance.new("Frame")
+	BanCard.AnchorPoint = Vector2.new(0.5, 0.5)
+	BanCard.Position = UDim2.fromScale(0.5, 0.5)
+	BanCard.Size = UDim2.new(0.82, 0, 0, 210)
+	BanCard.BackgroundColor3 = Color3.fromRGB(14, 7, 10)
+	BanCard.BorderSizePixel = 0
+	BanCard.ZIndex = 100000
+	BanCard.Parent = BlackScreen
 
-        Background:Destroy()
+	local BanCardCorner = Instance.new("UICorner")
+	BanCardCorner.CornerRadius = UDim.new(0, 18)
+	BanCardCorner.Parent = BanCard
 
-        WelcomeBanner.Position = UDim2.new(0.5, 0, 0, -90)
-        TweenService:Create(
-            WelcomeBanner,
-            TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
-            { Position = UDim2.new(0.5, 0, 0, 25) }
-        ):Play()
+	local BanStroke = Instance.new("UIStroke")
+	BanStroke.Color = Color3.fromRGB(255, 30, 50)
+	BanStroke.Thickness = 2
+	BanStroke.Parent = BanCard
 
-        LoadMainScript()
+	local KickMessage = Instance.new("TextLabel")
+	KickMessage.Size = UDim2.new(0.9, 0, 0.8, 0)
+	KickMessage.AnchorPoint = Vector2.new(0.5, 0.5)
+	KickMessage.Position = UDim2.fromScale(0.5, 0.5)
+	KickMessage.BackgroundTransparency = 1
+	KickMessage.TextColor3 = Color3.fromRGB(255, 55, 75)
+	KickMessage.TextSize = 22
+	KickMessage.Font = Enum.Font.GothamBold
+	KickMessage.Text = "لقد تجاوزت الحد المسموح للأخطاء (3 مرات).\nتم طردك من السكربت والماب!"
+	KickMessage.TextWrapped = true
+	KickMessage.ZIndex = 100001
+	KickMessage.Parent = BanCard
 
-        task.wait(5)
-        TweenService:Create(
-            WelcomeBanner,
-            TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.In),
-            { Position = UDim2.new(0.5, 0, 0, -90) }
-        ):Play()
-    else
-        failedAttempts = failedAttempts + 1
-        KeyInput.Text = ""
+	task.delay(5, function()
+		pcall(function()
+			if activeBanSound then
+				activeBanSound:Stop()
+				activeBanSound:Destroy()
+			end
+		end)
+		pcall(function()
+			_L:Kick("تم طردك بسبب إدخال الكีย์ خطأ 3 مرات!")
+		end)
+	end)
+end
 
-        local remaining = 3 - failedAttempts
-        if remaining > 0 then
-            Status.Text = "✕ INVALID KEY! Remaining attempts: " .. remaining
-            Status.TextColor3 = Color3.fromRGB(255, 40, 40)
-            KeyStroke.Color = Color3.fromRGB(255, 0, 0)
+function VerifyKey()
+	if isVerifying then return end
 
-            local oldPosition = Main.Position
-            for i = 1, 4 do
-                Main.Position = oldPosition + UDim2.fromOffset(math.random(-5, 5), 0)
-                task.wait(0.04)
-            end
-            Main.Position = oldPosition
-        else
-            Status.Text = "✕ INVALID KEY! Banned."
-            Status.TextColor3 = Color3.fromRGB(255, 0, 0)
-            KeyStroke.Color = Color3.fromRGB(255, 0, 0)
+	local raw = KeyInput.Text
+	local entered = string.match(raw, "^%s*(.-)%s*$") or ""
 
-            pcall(function()
-                local eggSong = Instance.new("Sound")
-                eggSong.SoundId = "rbxassetid://1845705355"
-                eggSong.Volume = 3
-                eggSong.Looped = true
-                eggSong.Parent = SoundService
-                eggSong:Play()
-            end)
+	if entered == "" then
+		Status.Text = "! PLEASE ENTER A KEY FIRST"
+		Status.TextColor3 = Color3.fromRGB(255, 130, 70)
+		tween(KeyStroke, TweenInfo.new(0.15), { Color = Color3.fromRGB(255, 130, 70) })
+		shakeWindow()
+		return
+	end
 
-            local BlackScreen = Instance.new("Frame")
-            BlackScreen.Size = UDim2.fromScale(1, 1)
-            BlackScreen.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-            BlackScreen.BorderSizePixel = 0
-            BlackScreen.ZIndex = 99999
-            BlackScreen.Parent = ScreenGui
+	if entered == EXPECTED_KEY then
+		isVerifying = true
+		LockIcon.Text = "🔓"
+		Status.Text = "✓ ACCESS GRANTED  •  LOADING SCRIPT..."
+		Status.TextColor3 = Color3.fromRGB(55, 255, 135)
+		StrikeText.Text = "VERIFIED"
+		StrikeDot.BackgroundColor3 = Color3.fromRGB(55, 255, 135)
+		StrikeStroke.Color = Color3.fromRGB(55, 255, 135)
 
-            local KickMessage = Instance.new("TextLabel")
-            KickMessage.Size = UDim2.new(0, 600, 0, 150)
-            KickMessage.AnchorPoint = Vector2.new(0.5, 0.5)
-            KickMessage.Position = UDim2.fromScale(0.5, 0.5)
-            KickMessage.BackgroundTransparency = 1
-            KickMessage.TextColor3 = Color3.fromRGB(255, 0, 0)
-            KickMessage.TextSize = 26
-            KickMessage.Font = Enum.Font.GothamBold
-            KickMessage.Text = "لقد تجاوزت الحد المسموح للأخطاء (3 مرات).\nتم طردك من السكربت والماب!"
-            KickMessage.TextWrapped = true
-            KickMessage.ZIndex = 100000
-            KickMessage.Parent = BlackScreen
+		tween(KeyStroke, TweenInfo.new(0.22), { Color = Color3.fromRGB(55, 255, 135), Thickness = 2 })
+		tween(Verify, TweenInfo.new(0.22), { BackgroundColor3 = Color3.fromRGB(24, 175, 85) })
+		tween(ProgressFill, TweenInfo.new(0.35), { Size = UDim2.new(1, 0, 1, 0), BackgroundColor3 = Color3.fromRGB(55, 255, 135) })
 
-            task.spawn(function()
-                task.wait(5)
-                _L:Kick("تم طردك بسبب إدخال الكีย์ خطأ 3 مرات!")
-            end)
-        end
-    end
+		task.wait(0.85)
+
+		local fadeOut = tween(Main, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+			Size = UDim2.fromOffset(570, 360),
+			Position = UDim2.fromScale(0.5, 0.46)
+		})
+		tween(Background, TweenInfo.new(0.25), { BackgroundTransparency = 1 })
+		fadeOut.Completed:Wait()
+
+		Background:Destroy()
+
+		WelcomeBanner.Position = UDim2.new(0.5, 0, 0, -90)
+		TweenService:Create(
+			WelcomeBanner,
+			TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
+			{ Position = UDim2.new(0.5, 0, 0, 25) }
+		):Play()
+
+		LoadMainScript()
+
+		task.wait(5)
+		TweenService:Create(
+			WelcomeBanner,
+			TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.In),
+			{ Position = UDim2.new(0.5, 0, 0, -90) }
+		):Play()
+	else
+		failedAttempts += 1
+		KeyInput.Text = ""
+
+		local remaining = MAX_ATTEMPTS - failedAttempts
+		if remaining > 0 then
+			Status.Text = "✕ INVALID KEY  •  REMAINING ATTEMPTS: " .. remaining
+			Status.TextColor3 = Color3.fromRGB(255, 65, 85)
+			StrikeText.Text = "ATTEMPTS: " .. remaining .. " / " .. MAX_ATTEMPTS
+
+			local failRatio = math.clamp(failedAttempts / MAX_ATTEMPTS, 0.15, 0.9)
+			tween(ProgressFill, TweenInfo.new(0.25), { Size = UDim2.new(failRatio, 0, 1, 0), BackgroundColor3 = Color3.fromRGB(255, 55, 75) })
+			tween(KeyStroke, TweenInfo.new(0.15), { Color = Color3.fromRGB(255, 40, 60) })
+
+			shakeWindow()
+
+			task.delay(0.6, function()
+				if not isVerifying and KeyStroke and KeyStroke.Parent then
+					tween(KeyStroke, TweenInfo.new(0.25), { Color = Color3.fromRGB(220, 30, 45) })
+				end
+			end)
+		else
+			triggerBanSequence()
+		end
+	end
 end
 
 Verify.MouseButton1Click:Connect(VerifyKey)
 
 KeyInput.FocusLost:Connect(function(enterPressed)
-    if enterPressed then
-        VerifyKey()
-    end
+	if enterPressed then
+		VerifyKey()
+	end
+end)
+
+--==================================================
+-- LOADER SEQUENCE & TRANSITION TO KEY MENU
+--==================================================
+
+local loaderDone = false
+
+local function ShowKeySystemAfterLoader()
+	if loaderDone then return end
+	loaderDone = true
+
+	local fadeInfo = TweenInfo.new(0.45, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+	tweenLoader(LoaderFrame, fadeInfo, { BackgroundTransparency = 1 })
+	for _, child in ipairs(LoaderFrame:GetDescendants()) do
+		if child:IsA("TextLabel") or child:IsA("TextButton") then
+			tweenLoader(child, fadeInfo, { TextTransparency = 1 })
+		elseif child:IsA("ImageLabel") then
+			tweenLoader(child, fadeInfo, { ImageTransparency = 1 })
+		elseif child:IsA("Frame") then
+			tweenLoader(child, fadeInfo, { BackgroundTransparency = 1 })
+		elseif child:IsA("UIStroke") then
+			tweenLoader(child, fadeInfo, { Transparency = 1 })
+		end
+	end
+
+	task.wait(0.48)
+	if LoaderFrame and LoaderFrame.Parent then
+		LoaderFrame:Destroy()
+	end
+
+	Background.Visible = true
+	Main.Size = UDim2.fromOffset(550, 355)
+	Main.Position = UDim2.fromScale(0.5, 0.53)
+	tween(Main, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+		Size = UDim2.fromOffset(620, 410),
+		Position = UDim2.fromScale(0.5, 0.5)
+	})
+	tween(ProgressFill, TweenInfo.new(0.6, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+		Size = UDim2.new(0.25, 0, 1, 0)
+	})
+end
+
+SkipButton.MouseButton1Click:Connect(function()
+	ShowKeySystemAfterLoader()
+end)
+
+task.spawn(function()
+	while not loaderDone and LoaderBgImage.Parent do
+		tweenLoader(LoaderBgImage, TweenInfo.new(3.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+			Size = UDim2.fromScale(1.13, 1.13),
+			Rotation = 1.2
+		})
+		tweenLoader(CrimsonAura, TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+			Size = UDim2.fromOffset(500, 250),
+			BackgroundTransparency = 0.84
+		})
+		task.wait(1.2)
+		if loaderDone or not CrimsonAura.Parent then break end
+		tweenLoader(CrimsonAura, TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+			Size = UDim2.fromOffset(420, 210),
+			BackgroundTransparency = 0.91
+		})
+		task.wait(2.0)
+		if loaderDone or not LoaderBgImage.Parent then break end
+		tweenLoader(LoaderBgImage, TweenInfo.new(3.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+			Size = UDim2.fromScale(1.08, 1.08),
+			Rotation = 0
+		})
+		task.wait(3.2)
+	end
+end)
+
+task.spawn(function()
+	while not loaderDone and BarShimmer.Parent do
+		BarShimmer.Position = UDim2.new(-0.35, 0, 0, 0)
+		tweenLoader(BarShimmer, TweenInfo.new(0.85, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+			Position = UDim2.new(1.15, 0, 0, 0)
+		})
+		task.wait(1.05)
+	end
+end)
+
+task.spawn(function()
+	typeLoaderText(SubHeader, LOADER_SUBHEADER, 0.045, function() return loaderDone end)
+	if loaderDone then return end
+
+	tweenLoader(StageLabel, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		TextTransparency = 0.15
+	})
+
+	task.wait(0.2)
+	tweenLoader(TitleLabel, TweenInfo.new(0.42, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+		Position = UDim2.new(0.5, 0, 0.4, 30),
+		TextTransparency = 0
+	})
+	tweenLoader(RightCrown, TweenInfo.new(0.36, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+		TextTransparency = 0,
+		Position = UDim2.new(0.5, 132, 0.4, 24),
+		Rotation = 16
+	})
+	tweenLoader(LeftCrown, TweenInfo.new(0.36, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+		TextTransparency = 0,
+		Position = UDim2.new(0.5, -132, 0.4, 24),
+		Rotation = -16
+	})
+	ShakeScreen()
+
+	task.wait(0.35)
+	if loaderDone then return end
+	tweenLoader(UnderLine, TweenInfo.new(0.45, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+		Size = UDim2.fromOffset(304, 3),
+		Position = UDim2.new(0.5, 0, 0.4, 76)
+	})
+
+	task.wait(0.25)
+
+	for i = 1, 100 do
+		if loaderDone then return end
+		PercentLabel.Text = "Loading: " .. i .. "%"
+		FillBar.Size = UDim2.fromScale(i / 100, 1)
+
+		if i < 35 then
+			StageLabel.Text = "INITIALIZING NHYQ CORE"
+		elseif i < 75 then
+			StageLabel.Text = "SYNCING MODULES & ASSETS"
+		else
+			StageLabel.Text = "READY TO LAUNCH"
+		end
+
+		if i == SKIP_UNLOCK_PERCENT then
+			SkipButton.Visible = true
+		end
+
+		task.wait(0.022)
+	end
+
+	task.wait(0.35)
+	ShowKeySystemAfterLoader()
 end)
 
 --==================================================
@@ -3083,35 +3774,35 @@ local dragStart
 local startPos
 
 local function updateDrag(input)
-    local delta = input.Position - dragStart
-    Main.Position = UDim2.new(
-        startPos.X.Scale,
-        startPos.X.Offset + delta.X,
-        startPos.Y.Scale,
-        startPos.Y.Offset + delta.Y
-    )
+	local delta = input.Position - dragStart
+	Main.Position = UDim2.new(
+		startPos.X.Scale,
+		startPos.X.Offset + delta.X,
+		startPos.Y.Scale,
+		startPos.Y.Offset + delta.Y
+	)
 end
 
 Main.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1
-        or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        dragStart = input.Position
-        startPos = Main.Position
+	if input.UserInputType == Enum.UserInputType.MouseButton1
+		or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = Main.Position
 
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
-        end)
-    end
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
 end)
 
 _U.InputChanged:Connect(function(input)
-    if dragging and (
-        input.UserInputType == Enum.UserInputType.MouseMovement
-        or input.UserInputType == Enum.UserInputType.Touch
-    ) then
-        updateDrag(input)
-    end
+	if dragging and (
+		input.UserInputType == Enum.UserInputType.MouseMovement
+		or input.UserInputType == Enum.UserInputType.Touch
+	) then
+		updateDrag(input)
+	end
 end)
