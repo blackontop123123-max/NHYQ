@@ -1,5 +1,5 @@
 --==================================================
--- NHYQ SCRIPT (Intro + APEX Vault Key System + Horizon Crimson UI + Security Webhook + Live Script Users Counter)
+-- NHYQ SCRIPT (Intro + New Free Loader + APEX Vault Key System + Horizon Crimson UI + Security Webhook + Live Script Users Counter)
 --==================================================
 
 local _P = game:GetService("Players")
@@ -743,6 +743,352 @@ local function SendNotification(text)
         task.wait(0.3)
         NotifGui:Destroy()
     end)
+end
+
+--==================================================
+-- NHYQ FREE-FLOATING LOADER SCREEN (No Card / Dynamic Typewriter & Motion)
+--==================================================
+
+local LOADER_BG_IMAGE = "rbxassetid://112640050525501"
+local LOADER_TITLE = "NHYQ"
+local LOADER_SUBHEADER = "منور السكربت"
+local LOADER_CREDITS = "by گلر shs09qp23"
+local SKIP_UNLOCK_PERCENT = 30
+
+local function createLoaderObj(class, props, parent)
+	local obj = Instance.new(class)
+	for k, v in pairs(props) do
+		obj[k] = v
+	end
+	obj.Parent = parent
+	return obj
+end
+
+local function tweenLoader(obj, info, props)
+	local anim = TweenService:Create(obj, info, props)
+	anim:Play()
+	return anim
+end
+
+local LoaderFrame = createLoaderObj("Frame", {
+	Name = "LoaderFrame",
+	Size = UDim2.fromScale(1, 1),
+	BackgroundColor3 = Color3.fromRGB(4, 4, 7),
+	BackgroundTransparency = 0,
+	BorderSizePixel = 0,
+	ClipsDescendants = true,
+	ZIndex = 1000
+}, ScreenGui)
+
+local LoaderBgImage = createLoaderObj("ImageLabel", {
+	Name = "LoaderBgImage",
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Size = UDim2.fromScale(1.08, 1.08),
+	Position = UDim2.fromScale(0.5, 0.5),
+	BackgroundTransparency = 1,
+	Image = LOADER_BG_IMAGE,
+	ImageTransparency = 0.14,
+	ScaleType = Enum.ScaleType.Stretch,
+	ZIndex = 1000
+}, LoaderFrame)
+
+local DarkVignette = createLoaderObj("Frame", {
+	Name = "DarkVignette",
+	Size = UDim2.fromScale(1, 1),
+	BackgroundColor3 = Color3.fromRGB(6, 5, 9),
+	BackgroundTransparency = 0.38,
+	BorderSizePixel = 0,
+	ZIndex = 1001
+}, LoaderFrame)
+
+createLoaderObj("UIGradient", {
+	Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(18, 4, 8)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(6, 6, 10)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(32, 4, 12))
+	}),
+	Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.22),
+		NumberSequenceKeypoint.new(0.5, 0.44),
+		NumberSequenceKeypoint.new(1, 0.18)
+	}),
+	Rotation = 90
+}, DarkVignette)
+
+local CrimsonAura = createLoaderObj("Frame", {
+	Name = "CrimsonAura",
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Position = UDim2.fromScale(0.5, 0.44),
+	Size = UDim2.fromOffset(440, 220),
+	BackgroundColor3 = Color3.fromRGB(225, 22, 44),
+	BackgroundTransparency = 0.89,
+	BorderSizePixel = 0,
+	ZIndex = 1001
+}, LoaderFrame)
+
+createLoaderObj("UICorner", { CornerRadius = UDim.new(1, 0) }, CrimsonAura)
+
+local ShakeHolder = createLoaderObj("Frame", {
+	Name = "ShakeHolder",
+	Size = UDim2.fromScale(1, 1),
+	BackgroundTransparency = 1,
+	ZIndex = 1002
+}, LoaderFrame)
+
+local SubHeader = createLoaderObj("TextLabel", {
+	Name = "SubHeader",
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Size = UDim2.new(0, 440, 0, 38),
+	Position = UDim2.new(0.5, 0, 0.35, -52),
+	BackgroundTransparency = 1,
+	TextColor3 = Color3.fromRGB(242, 242, 248),
+	TextTransparency = 0,
+	TextSize = 23,
+	Font = Enum.Font.GothamBold,
+	Text = "",
+	ZIndex = 1003
+}, ShakeHolder)
+
+createLoaderObj("UIStroke", {
+	Color = Color3.fromRGB(0, 0, 0),
+	Thickness = 1.6,
+	Transparency = 0.25
+}, SubHeader)
+
+local RightCrown = createLoaderObj("TextLabel", {
+	Name = "RightCrown",
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Size = UDim2.fromOffset(52, 52),
+	Position = UDim2.new(0.5, 165, 0.4, 24),
+	Rotation = 20,
+	BackgroundTransparency = 1,
+	Text = "👑",
+	TextSize = 36,
+	TextTransparency = 1,
+	ZIndex = 1003
+}, ShakeHolder)
+
+local LeftCrown = createLoaderObj("TextLabel", {
+	Name = "LeftCrown",
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Size = UDim2.fromOffset(52, 52),
+	Position = UDim2.new(0.5, -165, 0.4, 24),
+	Rotation = -20,
+	BackgroundTransparency = 1,
+	Text = "👑",
+	TextSize = 36,
+	TextTransparency = 1,
+	ZIndex = 1003
+}, ShakeHolder)
+
+local TitleLabel = createLoaderObj("TextLabel", {
+	Name = "TitleLabel",
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Size = UDim2.new(0, 440, 0, 92),
+	Position = UDim2.new(0.5, 0, 0.37, 30),
+	BackgroundTransparency = 1,
+	TextColor3 = Color3.fromRGB(255, 255, 255),
+	TextTransparency = 1,
+	TextSize = 64,
+	Font = Enum.Font.GothamBlack,
+	Text = LOADER_TITLE,
+	ZIndex = 1004
+}, ShakeHolder)
+
+createLoaderObj("UIGradient", {
+	Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 95, 110)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 16, 38)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(160, 0, 20))
+	}),
+	Rotation = 90
+}, TitleLabel)
+
+createLoaderObj("UIStroke", {
+	Color = Color3.fromRGB(10, 0, 4),
+	Thickness = 2.6,
+	Transparency = 0.2
+}, TitleLabel)
+
+local UnderLine = createLoaderObj("Frame", {
+	Name = "UnderLine",
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Size = UDim2.fromOffset(0, 3),
+	Position = UDim2.new(0.5, 0, 0.4, 76),
+	BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+	BorderSizePixel = 0,
+	ZIndex = 1003
+}, ShakeHolder)
+
+createLoaderObj("UIGradient", {
+	Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 45, 65)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 255, 255)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 45, 65))
+	})
+}, UnderLine)
+
+local StageLabel = createLoaderObj("TextLabel", {
+	Name = "StageLabel",
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Size = UDim2.new(0, 380, 0, 22),
+	Position = UDim2.new(0.5, 0, 0.5, 22),
+	BackgroundTransparency = 1,
+	TextColor3 = Color3.fromRGB(195, 195, 212),
+	TextTransparency = 1,
+	TextSize = 12,
+	Font = Enum.Font.GothamBold,
+	Text = "INITIALIZING ENGINE",
+	ZIndex = 1003
+}, ShakeHolder)
+
+createLoaderObj("UIStroke", {
+	Color = Color3.fromRGB(0, 0, 0),
+	Thickness = 1.2,
+	Transparency = 0.35
+}, StageLabel)
+
+local PercentLabel = createLoaderObj("TextLabel", {
+	Name = "PercentLabel",
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Size = UDim2.new(0, 240, 0, 30),
+	Position = UDim2.new(0.5, 0, 0.5, 50),
+	BackgroundTransparency = 1,
+	TextColor3 = Color3.fromRGB(242, 242, 248),
+	TextSize = 16,
+	Font = Enum.Font.GothamBold,
+	Text = "Loading: 0%",
+	ZIndex = 1003
+}, ShakeHolder)
+
+createLoaderObj("UIStroke", {
+	Color = Color3.fromRGB(0, 0, 0),
+	Thickness = 1.2,
+	Transparency = 0.35
+}, PercentLabel)
+
+local BarBackground = createLoaderObj("Frame", {
+	Name = "BarBackground",
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Size = UDim2.fromOffset(356, 8),
+	Position = UDim2.new(0.5, 0, 0.5, 85),
+	BackgroundColor3 = Color3.fromRGB(18, 18, 24),
+	BorderSizePixel = 0,
+	ClipsDescendants = true,
+	ZIndex = 1003
+}, ShakeHolder)
+
+createLoaderObj("UICorner", { CornerRadius = UDim.new(1, 0) }, BarBackground)
+createLoaderObj("UIStroke", {
+	Color = Color3.fromRGB(255, 60, 80),
+	Thickness = 1,
+	Transparency = 0.65
+}, BarBackground)
+
+local FillBar = createLoaderObj("Frame", {
+	Name = "FillBar",
+	Size = UDim2.new(0, 0, 1, 0),
+	BackgroundColor3 = Color3.fromRGB(255, 35, 55),
+	BorderSizePixel = 0,
+	ClipsDescendants = true,
+	ZIndex = 1004
+}, BarBackground)
+
+createLoaderObj("UICorner", { CornerRadius = UDim.new(1, 0) }, FillBar)
+createLoaderObj("UIGradient", {
+	Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(175, 10, 25)),
+		ColorSequenceKeypoint.new(0.6, Color3.fromRGB(255, 35, 55)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 120, 135))
+	})
+}, FillBar)
+
+local BarShimmer = createLoaderObj("Frame", {
+	Name = "BarShimmer",
+	Size = UDim2.new(0.35, 0, 1, 0),
+	Position = UDim2.new(-0.35, 0, 0, 0),
+	BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+	BackgroundTransparency = 0.45,
+	BorderSizePixel = 0,
+	ZIndex = 1005
+}, FillBar)
+
+local Credits = createLoaderObj("TextLabel", {
+	Name = "Credits",
+	Size = UDim2.new(0, 260, 0, 30),
+	Position = UDim2.new(0, 20, 1, -40),
+	BackgroundTransparency = 1,
+	TextColor3 = Color3.fromRGB(170, 170, 188),
+	TextSize = 14,
+	Font = Enum.Font.GothamBold,
+	TextXAlignment = Enum.TextXAlignment.Left,
+	Text = LOADER_CREDITS,
+	ZIndex = 1003
+}, LoaderFrame)
+
+local SkipButton = createLoaderObj("TextButton", {
+	Name = "SkipButton",
+	Size = UDim2.fromOffset(152, 44),
+	Position = UDim2.new(0, 20, 1, -96),
+	BackgroundColor3 = Color3.fromRGB(20, 12, 16),
+	TextColor3 = Color3.fromRGB(255, 255, 255),
+	Text = "  ⏭ تخطي",
+	TextSize = 15,
+	Font = Enum.Font.GothamBold,
+	AutoButtonColor = false,
+	Visible = false,
+	ZIndex = 1004
+}, LoaderFrame)
+
+createLoaderObj("UICorner", { CornerRadius = UDim.new(0, 12) }, SkipButton)
+local skipStroke = createLoaderObj("UIStroke", {
+	Color = Color3.fromRGB(255, 45, 65),
+	Thickness = 1.5,
+	Transparency = 0.25
+}, SkipButton)
+
+SkipButton.MouseEnter:Connect(function()
+	tweenLoader(SkipButton, TweenInfo.new(0.16), { BackgroundColor3 = Color3.fromRGB(190, 20, 38) })
+	tweenLoader(skipStroke, TweenInfo.new(0.16), { Transparency = 0, Thickness = 2 })
+end)
+
+SkipButton.MouseLeave:Connect(function()
+	tweenLoader(SkipButton, TweenInfo.new(0.16), { BackgroundColor3 = Color3.fromRGB(20, 12, 16) })
+	tweenLoader(skipStroke, TweenInfo.new(0.16), { Transparency = 0.25, Thickness = 1.5 })
+end)
+
+local function ShakeScreen()
+	local duration = 0.14
+	local elapsed = 0
+	local conn
+	conn = RunService.RenderStepped:Connect(function(dt)
+		elapsed += dt
+		if elapsed >= duration then
+			ShakeHolder.Position = UDim2.fromOffset(0, 0)
+			conn:Disconnect()
+		else
+			local strength = 3.8 * (1 - (elapsed / duration))
+			ShakeHolder.Position = UDim2.fromOffset(
+				math.round(math.random(-strength, strength)),
+				math.round(math.random(-strength, strength))
+			)
+		end
+	end)
+end
+
+local function typeLoaderText(label, fullText, delayPerChar, isDoneFn)
+	local chars = {}
+	for _, code in utf8.codes(fullText) do
+		table.insert(chars, utf8.char(code))
+	end
+	for i = 1, #chars do
+		if isDoneFn() then return end
+		label.Text = table.concat(chars, "", 1, i) .. "▌"
+		task.wait(delayPerChar)
+	end
+	if not isDoneFn() then
+		label.Text = fullText
+	end
 end
 
 --==================================================
@@ -2538,7 +2884,7 @@ Background.Size = UDim2.fromScale(1, 1)
 Background.BackgroundColor3 = Color3.fromRGB(3, 3, 5)
 Background.BackgroundTransparency = 0.28
 Background.BorderSizePixel = 0
-Background.Visible = true
+Background.Visible = false
 Background.ZIndex = 100
 Background.Parent = ScreenGui
 
@@ -3280,15 +3626,148 @@ KeyInput.FocusLost:Connect(function(enterPressed)
 	end
 end)
 
-Main.Size = UDim2.fromOffset(550, 355)
-Main.Position = UDim2.fromScale(0.5, 0.53)
-tween(Main, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-	Size = UDim2.fromOffset(620, 410),
-	Position = UDim2.fromScale(0.5, 0.5)
-})
-tween(ProgressFill, TweenInfo.new(0.6, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-	Size = UDim2.new(0.25, 0, 1, 0)
-})
+--==================================================
+-- LOADER SEQUENCE & TRANSITION TO KEY MENU
+--==================================================
+
+local loaderDone = false
+
+local function ShowKeySystemAfterLoader()
+	if loaderDone then return end
+	loaderDone = true
+
+	local fadeInfo = TweenInfo.new(0.45, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+	tweenLoader(LoaderFrame, fadeInfo, { BackgroundTransparency = 1 })
+	for _, child in ipairs(LoaderFrame:GetDescendants()) do
+		if child:IsA("TextLabel") or child:IsA("TextButton") then
+			tweenLoader(child, fadeInfo, { TextTransparency = 1 })
+		elseif child:IsA("ImageLabel") then
+			tweenLoader(child, fadeInfo, { ImageTransparency = 1 })
+		elseif child:IsA("Frame") then
+			tweenLoader(child, fadeInfo, { BackgroundTransparency = 1 })
+		elseif child:IsA("UIStroke") then
+			tweenLoader(child, fadeInfo, { Transparency = 1 })
+		end
+	end
+
+	task.wait(0.48)
+	if LoaderFrame and LoaderFrame.Parent then
+		LoaderFrame:Destroy()
+	end
+
+	Background.Visible = true
+	Main.Size = UDim2.fromOffset(550, 355)
+	Main.Position = UDim2.fromScale(0.5, 0.53)
+	tween(Main, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+		Size = UDim2.fromOffset(620, 410),
+		Position = UDim2.fromScale(0.5, 0.5)
+	})
+	tween(ProgressFill, TweenInfo.new(0.6, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+		Size = UDim2.new(0.25, 0, 1, 0)
+	})
+end
+
+SkipButton.MouseButton1Click:Connect(function()
+	ShowKeySystemAfterLoader()
+end)
+
+task.spawn(function()
+	while not loaderDone and LoaderBgImage.Parent do
+		tweenLoader(LoaderBgImage, TweenInfo.new(3.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+			Size = UDim2.fromScale(1.13, 1.13),
+			Rotation = 1.2
+		})
+		tweenLoader(CrimsonAura, TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+			Size = UDim2.fromOffset(500, 250),
+			BackgroundTransparency = 0.84
+		})
+		task.wait(1.2)
+		if loaderDone or not CrimsonAura.Parent then break end
+		tweenLoader(CrimsonAura, TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+			Size = UDim2.fromOffset(420, 210),
+			BackgroundTransparency = 0.91
+		})
+		task.wait(2.0)
+		if loaderDone or not LoaderBgImage.Parent then break end
+		tweenLoader(LoaderBgImage, TweenInfo.new(3.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+			Size = UDim2.fromScale(1.08, 1.08),
+			Rotation = 0
+		})
+		task.wait(3.2)
+	end
+end)
+
+task.spawn(function()
+	while not loaderDone and BarShimmer.Parent do
+		BarShimmer.Position = UDim2.new(-0.35, 0, 0, 0)
+		tweenLoader(BarShimmer, TweenInfo.new(0.85, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+			Position = UDim2.new(1.15, 0, 0, 0)
+		})
+		task.wait(1.05)
+	end
+end)
+
+task.spawn(function()
+	typeLoaderText(SubHeader, LOADER_SUBHEADER, 0.045, function() return loaderDone end)
+	if loaderDone then return end
+
+	tweenLoader(StageLabel, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		TextTransparency = 0.15
+	})
+
+	task.wait(0.2)
+	tweenLoader(TitleLabel, TweenInfo.new(0.42, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+		Position = UDim2.new(0.5, 0, 0.4, 30),
+		TextTransparency = 0
+	})
+	tweenLoader(RightCrown, TweenInfo.new(0.36, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+		TextTransparency = 0,
+		Position = UDim2.new(0.5, 132, 0.4, 24),
+		Rotation = 16
+	})
+	tweenLoader(LeftCrown, TweenInfo.new(0.36, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+		TextTransparency = 0,
+		Position = UDim2.new(0.5, -132, 0.4, 24),
+		Rotation = -16
+	})
+	ShakeScreen()
+
+	task.wait(0.35)
+	if loaderDone then return end
+	tweenLoader(UnderLine, TweenInfo.new(0.45, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+		Size = UDim2.fromOffset(304, 3),
+		Position = UDim2.new(0.5, 0, 0.4, 76)
+	})
+
+	task.wait(0.25)
+
+	for i = 1, 100 do
+		if loaderDone then return end
+		PercentLabel.Text = "Loading: " .. i .. "%"
+		FillBar.Size = UDim2.fromScale(i / 100, 1)
+
+		if i < 35 then
+			StageLabel.Text = "INITIALIZING NHYQ CORE"
+		elseif i < 75 then
+			StageLabel.Text = "SYNCING MODULES & ASSETS"
+		else
+			StageLabel.Text = "READY TO LAUNCH"
+		end
+
+		if i == SKIP_UNLOCK_PERCENT then
+			SkipButton.Visible = true
+		end
+
+		task.wait(0.022)
+	end
+
+	task.wait(0.35)
+	ShowKeySystemAfterLoader()
+end)
+
+--==================================================
+-- DRAG SYSTEM FOR KEY WINDOW
+--==================================================
 
 local dragging = false
 local dragStart
