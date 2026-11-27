@@ -454,7 +454,6 @@ local Whitelist = {
     "3AW_111",
     "tariq191188",
     "L3_yasser",
-    "t16_e36",
 }
 
 local isAllowed = false
@@ -1170,37 +1169,37 @@ local function BindClick(button, callback)
 end
 
 --==================================================
--- HORIZON CRIMSON HUB UI SYSTEM (Multi-Red Gradient + 5s Sheen + Top Tabs + Single-Tap EXECUTE + Independent Persistent AUTO EXECUTE)
+-- HORIZON CRIMSON HUB UI SYSTEM (Dark Mystery Menu Gradient + 5s Sheen + Top Tabs + Single-Tap EXECUTE + Independent Persistent AUTO EXECUTE)
 --==================================================
 
 local RED_SPECTRUM_THEME = {
-	Void = Color3.fromRGB(14, 4, 8),
-	RedScarlet = Color3.fromRGB(224, 24, 52),
-	RedCrimson = Color3.fromRGB(168, 14, 38),
-	RedEmber = Color3.fromRGB(242, 68, 48),
-	RedWine = Color3.fromRGB(88, 8, 22),
-	SubSurface = Color3.fromRGB(24, 5, 11),
-	CardOff = Color3.fromRGB(42, 8, 17),
-	CardPulse = Color3.fromRGB(218, 26, 56),
-	ExecIdle = Color3.fromRGB(64, 12, 24),
-	ExecFlash = Color3.fromRGB(255, 42, 78),
-	AutoIdle = Color3.fromRGB(32, 7, 14),
+	Void = Color3.fromRGB(7, 2, 4),
+	RedScarlet = Color3.fromRGB(115, 10, 24),
+	RedCrimson = Color3.fromRGB(78, 6, 16),
+	RedEmber = Color3.fromRGB(132, 22, 18),
+	RedWine = Color3.fromRGB(28, 3, 9),
+	SubSurface = Color3.fromRGB(13, 3, 6),
+	CardOff = Color3.fromRGB(24, 5, 10),
+	CardPulse = Color3.fromRGB(110, 12, 26),
+	ExecIdle = Color3.fromRGB(48, 8, 18),
+	ExecFlash = Color3.fromRGB(190, 24, 48),
+	AutoIdle = Color3.fromRGB(22, 4, 10),
 	AutoActive = Color3.fromRGB(255, 198, 72),
 	GoldAccent = Color3.fromRGB(255, 198, 72),
-	WhiteSheen = Color3.fromRGB(255, 255, 255),
-	TextPrimary = Color3.fromRGB(255, 252, 254),
-	TextSecondary = Color3.fromRGB(248, 206, 214),
-	BorderGlow = Color3.fromRGB(255, 86, 112),
-	BorderSubtle = Color3.fromRGB(148, 26, 46),
-	StatusOk = Color3.fromRGB(54, 232, 144),
-	StatusWarn = Color3.fromRGB(255, 198, 68)
+	WhiteSheen = Color3.fromRGB(255, 235, 240),
+	TextPrimary = Color3.fromRGB(242, 235, 238),
+	TextSecondary = Color3.fromRGB(190, 155, 165),
+	BorderGlow = Color3.fromRGB(165, 24, 42),
+	BorderSubtle = Color3.fromRGB(68, 12, 22),
+	StatusOk = Color3.fromRGB(45, 195, 120),
+	StatusWarn = Color3.fromRGB(225, 155, 45)
 }
 
 local Configs_HUB = { 
-  Cor_Hub = Color3.fromRGB(14, 4, 8), 
-  Cor_Options = Color3.fromRGB(42, 8, 17), 
-  Cor_Stroke = Color3.fromRGB(255, 86, 112), 
-  Cor_Text = Color3.fromRGB(255, 252, 254), 
+  Cor_Hub = Color3.fromRGB(7, 2, 4), 
+  Cor_Options = Color3.fromRGB(24, 5, 10), 
+  Cor_Stroke = Color3.fromRGB(165, 24, 42), 
+  Cor_Text = Color3.fromRGB(242, 235, 238), 
   Corner_Radius = UDim.new(0, 12), 
   Text_Font = Enum.Font.FredokaOne 
 }
@@ -1236,8 +1235,8 @@ local function Stroke(parent, props)
   local new = Create("UIStroke", parent)
   new.Color = RED_SPECTRUM_THEME.BorderGlow
   new.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-  new.Thickness = 1.6
-  new.Transparency = 0.14
+  new.Thickness = 1.5
+  new.Transparency = 0.25
   if props then SetProps(new, props) end
   return new
 end
@@ -1278,6 +1277,7 @@ local ToggleButton = Create("ImageButton", ScreenGui, {
   BackgroundColor3 = RED_SPECTRUM_THEME.Void,
   AutoButtonColor = false,
   Image = CUSTOM_IMAGE,
+  ImageColor3 = Color3.fromRGB(220, 200, 205),
   ScaleType = Enum.ScaleType.Crop,
   Active = true,
   Visible = false,
@@ -1286,12 +1286,12 @@ local ToggleButton = Create("ImageButton", ScreenGui, {
 Corner(ToggleButton, {CornerRadius = UDim.new(0, 13)})
 Create("UIStroke", ToggleButton, {
     Color = RED_SPECTRUM_THEME.BorderGlow,
-    Thickness = 2.2,
-    Transparency = 0.1
+    Thickness = 1.8,
+    Transparency = 0.25
 })
 MakeDraggableCustom(ToggleButton)
 
--- نافذة الهب الرئيسية بتدرج ألوان أحمر حي ولمعة بيضاء كل 5 ثواني
+-- نافذة الهب الرئيسية بنفس لون القائمة الغامقة الغامضة
 local Menu = Create("Frame", ScreenGui, {
     Name = "NHYQ_MainHub",
     BackgroundColor3 = Color3.new(1, 1, 1),
@@ -1303,7 +1303,11 @@ local Menu = Create("Frame", ScreenGui, {
     ZIndex = 3000
 })
 Corner(Menu, {CornerRadius = UDim.new(0, 20)})
-Stroke(Menu)
+Stroke(Menu, {
+    Color = RED_SPECTRUM_THEME.BorderGlow,
+    Thickness = 1.5,
+    Transparency = 0.3
+})
 MakeDraggableCustom(Menu)
 
 local mainGrad = Instance.new("UIGradient")
@@ -1316,14 +1320,24 @@ mainGrad.Color = ColorSequence.new({
 mainGrad.Rotation = 135
 mainGrad.Parent = Menu
 
--- طبقة اللمعة البيضاء القطرية (فورية عند الفتح ثم كل 5 ثواني)
+-- طبقة تعتيم خفيفة لزيادة الغموض
+Create("Frame", Menu, {
+	Name = "MysteryShadowLayer",
+	Size = UDim2.fromScale(1, 1),
+	BackgroundColor3 = RED_SPECTRUM_THEME.Void,
+	BackgroundTransparency = 0.32,
+	BorderSizePixel = 0,
+	ZIndex = 3001
+})
+
+-- طبقة اللمعة القطرية (فورية عند الفتح ثم كل 5 ثواني)
 local sheenOverlay = Instance.new("Frame")
 sheenOverlay.Name = "DiagonalWhiteSheen"
-sheenOverlay.Size = UDim2.new(0, 145, 2.4, 0)
+sheenOverlay.Size = UDim2.new(0, 135, 2.4, 0)
 sheenOverlay.Position = UDim2.new(-0.35, 0, -0.7, 0)
 sheenOverlay.Rotation = 35
 sheenOverlay.BackgroundColor3 = RED_SPECTRUM_THEME.WhiteSheen
-sheenOverlay.BackgroundTransparency = 0.7
+sheenOverlay.BackgroundTransparency = 0.86
 sheenOverlay.BorderSizePixel = 0
 sheenOverlay.ZIndex = 4500
 sheenOverlay.Parent = Menu
@@ -1331,9 +1345,9 @@ sheenOverlay.Parent = Menu
 local sheenGrad = Instance.new("UIGradient")
 sheenGrad.Transparency = NumberSequence.new({
 	NumberSequenceKeypoint.new(0, 1),
-	NumberSequenceKeypoint.new(0.35, 0.32),
-	NumberSequenceKeypoint.new(0.5, 0.06),
-	NumberSequenceKeypoint.new(0.65, 0.32),
+	NumberSequenceKeypoint.new(0.35, 0.55),
+	NumberSequenceKeypoint.new(0.5, 0.28),
+	NumberSequenceKeypoint.new(0.65, 0.55),
 	NumberSequenceKeypoint.new(1, 1)
 })
 sheenGrad.Rotation = 90
@@ -1344,7 +1358,7 @@ local function triggerWhiteSheen()
 	sheenOverlay.Position = UDim2.new(-0.35, 0, -0.7, 0)
 	local sweep = TweenService:Create(
 		sheenOverlay,
-		TweenInfo.new(0.9, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
+		TweenInfo.new(1.05, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
 		{ Position = UDim2.new(1.25, 0, 0.35, 0) }
 	)
 	sweep:Play()
@@ -1373,7 +1387,7 @@ end)
 -- الهيدر العلوي
 local TopBar = Create("Frame", Menu, {
     BackgroundColor3 = RED_SPECTRUM_THEME.SubSurface,
-    BackgroundTransparency = 0.24,
+    BackgroundTransparency = 0.35,
     Position = UDim2.new(0, 10, 0, 10),
     Size = UDim2.new(1, -20, 0, 44),
     BorderSizePixel = 0,
@@ -1383,8 +1397,8 @@ local TopBar = Create("Frame", Menu, {
 Corner(TopBar, {CornerRadius = UDim.new(0, 12)})
 Create("UIStroke", TopBar, {
     Color = RED_SPECTRUM_THEME.BorderSubtle,
-    Thickness = 1.15,
-    Transparency = 0.22
+    Thickness = 1.1,
+    Transparency = 0.35
 })
 
 Create("TextLabel", TopBar, {
@@ -1416,7 +1430,7 @@ local fpsFrames = 0
 RunService.RenderStepped:Connect(function(dt)
 	fpsElapsed += dt
 	fpsFrames += 1
-	mainGrad.Rotation = 135 + math.sin(os.clock() * 0.9) * 24
+	mainGrad.Rotation = 135 + math.sin(os.clock() * 0.75) * 20
 
 	if fpsElapsed >= 0.45 then
 		local currentFps = math.round(fpsFrames / fpsElapsed)
@@ -1467,7 +1481,7 @@ local ScrollBar = Create("ScrollingFrame", Menu, {
     ScrollingDirection = Enum.ScrollingDirection.X,
     AutomaticCanvasSize = Enum.AutomaticSize.X,
     BackgroundColor3 = RED_SPECTRUM_THEME.SubSurface,
-    BackgroundTransparency = 0.26,
+    BackgroundTransparency = 0.35,
     ScrollBarThickness = 2,
     ScrollBarImageColor3 = RED_SPECTRUM_THEME.BorderGlow,
     ZIndex = 3003
@@ -1476,7 +1490,7 @@ Corner(ScrollBar, {CornerRadius = UDim.new(0, 12)})
 Create("UIStroke", ScrollBar, {
     Color = RED_SPECTRUM_THEME.BorderSubtle,
     Thickness = 1.15,
-    Transparency = 0.22
+    Transparency = 0.35
 })
 Create("UIPadding", ScrollBar, {
     PaddingLeft = UDim.new(0, 8),
@@ -1495,14 +1509,14 @@ local Containers = Create("Frame", Menu, {
     Size = UDim2.new(1, -20, 1, -118),
     Position = UDim2.new(0, 10, 0, 108),
     BackgroundColor3 = RED_SPECTRUM_THEME.SubSurface,
-    BackgroundTransparency = 0.28,
+    BackgroundTransparency = 0.4,
     ZIndex = 3003
 })
 Corner(Containers, {CornerRadius = UDim.new(0, 14)})
 Create("UIStroke", Containers, {
     Color = RED_SPECTRUM_THEME.BorderSubtle,
     Thickness = 1.15,
-    Transparency = 0.22
+    Transparency = 0.4
 })
 
 local firstVisible = true
