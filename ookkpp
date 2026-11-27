@@ -454,6 +454,7 @@ local Whitelist = {
     "3AW_111",
     "tariq191188",
     "L3_yasser",
+    "t16_e36",
 }
 
 local isAllowed = false
