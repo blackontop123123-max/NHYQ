@@ -1,5 +1,5 @@
 --==================================================
--- NHYQ SCRIPT (Intro + Loader + Key System + Modern UI + Security Webhook + Live Script Users Counter)
+-- NHYQ SCRIPT (Intro + Loader + Key System + Horizon Crimson UI + Security Webhook + Live Script Users Counter)
 --==================================================
 
 local _P = game:GetService("Players")
@@ -9,6 +9,7 @@ local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local SoundService = game:GetService("SoundService")
 local MarketService = game:GetService("MarketplaceService")
+local Stats = game:GetService("Stats")
 local _L = _P.LocalPlayer
 local Camera = workspace.CurrentCamera
 
@@ -607,7 +608,7 @@ end
 _P.PlayerAdded:Connect(ApplyOwnerTag)
 
 --==================================================
--- GUI SETUP
+-- GUI SETUP & PERSISTENT AUTO EXEC STORAGE
 --==================================================
 
 local CoreGui = game:GetService("CoreGui")
@@ -633,6 +634,63 @@ pcall(function() ScreenGui.Parent = CoreGui end)
 if not ScreenGui.Parent then
     ScreenGui.Parent = _L:WaitForChild("PlayerGui")
 end
+
+local CUSTOM_IMAGE = "rbxassetid://116615195554191"
+local SHEEN_INTERVAL_SECONDS = 5
+local CONFIG_FILE_NAME = "HorizonMonolith_AutoExec.json"
+
+local envRoot = (typeof(getgenv) == "function" and getgenv()) or shared
+envRoot.HorizonMonolithSavedAuto = envRoot.HorizonMonolithSavedAuto or {}
+
+local function loadSavedAutoMap()
+	local result = {}
+	for k, v in pairs(envRoot.HorizonMonolithSavedAuto) do
+		if v == true then
+			result[k] = true
+		end
+	end
+
+	if typeof(isfile) == "function" and typeof(readfile) == "function" then
+		local ok, exists = pcall(isfile, CONFIG_FILE_NAME)
+		if ok and exists then
+			local readOk, raw = pcall(readfile, CONFIG_FILE_NAME)
+			if readOk and type(raw) == "string" and raw ~= "" then
+				local decOk, decoded = pcall(function()
+					return _H:JSONDecode(raw)
+				end)
+				if decOk and type(decoded) == "table" then
+					for modName, flag in pairs(decoded) do
+						if flag == true then
+							result[modName] = true
+						end
+					end
+				end
+			end
+		end
+	end
+
+	return result
+end
+
+local savedAutoMap = loadSavedAutoMap()
+
+local function saveAutoMap()
+	envRoot.HorizonMonolithSavedAuto = {}
+	for modName, flag in pairs(savedAutoMap) do
+		if flag == true then
+			envRoot.HorizonMonolithSavedAuto[modName] = true
+		end
+	end
+
+	if typeof(writefile) == "function" then
+		pcall(function()
+			local encoded = _H:JSONEncode(envRoot.HorizonMonolithSavedAuto)
+			writefile(CONFIG_FILE_NAME, encoded)
+		end)
+	end
+end
+
+local startupAutoRunners = {}
 
 --==================================================
 -- NOTIFICATION SYSTEM
@@ -1246,14 +1304,37 @@ local function BindClick(button, callback)
 end
 
 --==================================================
--- NHYQ HUB UI SYSTEM (Custom Modern Design)
+-- HORIZON CRIMSON HUB UI SYSTEM (Multi-Red Gradient + 5s Sheen + Top Tabs + Single-Tap EXECUTE + Independent Persistent AUTO EXECUTE)
 --==================================================
 
+local RED_SPECTRUM_THEME = {
+	Void = Color3.fromRGB(14, 4, 8),
+	RedScarlet = Color3.fromRGB(224, 24, 52),
+	RedCrimson = Color3.fromRGB(168, 14, 38),
+	RedEmber = Color3.fromRGB(242, 68, 48),
+	RedWine = Color3.fromRGB(88, 8, 22),
+	SubSurface = Color3.fromRGB(24, 5, 11),
+	CardOff = Color3.fromRGB(42, 8, 17),
+	CardPulse = Color3.fromRGB(218, 26, 56),
+	ExecIdle = Color3.fromRGB(64, 12, 24),
+	ExecFlash = Color3.fromRGB(255, 42, 78),
+	AutoIdle = Color3.fromRGB(32, 7, 14),
+	AutoActive = Color3.fromRGB(255, 198, 72),
+	GoldAccent = Color3.fromRGB(255, 198, 72),
+	WhiteSheen = Color3.fromRGB(255, 255, 255),
+	TextPrimary = Color3.fromRGB(255, 252, 254),
+	TextSecondary = Color3.fromRGB(248, 206, 214),
+	BorderGlow = Color3.fromRGB(255, 86, 112),
+	BorderSubtle = Color3.fromRGB(148, 26, 46),
+	StatusOk = Color3.fromRGB(54, 232, 144),
+	StatusWarn = Color3.fromRGB(255, 198, 68)
+}
+
 local Configs_HUB = { 
-  Cor_Hub = Color3.fromRGB(0, 0, 0), 
-  Cor_Options = Color3.fromRGB(20, 20, 20), 
-  Cor_Stroke = Color3.fromRGB(255, 50, 50), 
-  Cor_Text = Color3.fromRGB(255, 255, 255), 
+  Cor_Hub = Color3.fromRGB(14, 4, 8), 
+  Cor_Options = Color3.fromRGB(42, 8, 17), 
+  Cor_Stroke = Color3.fromRGB(255, 86, 112), 
+  Cor_Text = Color3.fromRGB(255, 252, 254), 
   Corner_Radius = UDim.new(0, 12), 
   Text_Font = Enum.Font.FredokaOne 
 }
@@ -1287,26 +1368,10 @@ end
 
 local function Stroke(parent, props)
   local new = Create("UIStroke", parent)
-  new.Color = Configs_HUB.Cor_Stroke
+  new.Color = RED_SPECTRUM_THEME.BorderGlow
   new.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-  new.Thickness = 2
-  
-  local gradient = Instance.new("UIGradient")
-  gradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 50, 50)),
-    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(180, 20, 20)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 50, 50))
-  }
-  gradient.Rotation = 0
-  gradient.Parent = new
-  
-  coroutine.wrap(function()
-    while new.Parent do
-      gradient.Rotation = (gradient.Rotation + 2) % 360
-      RunService.RenderStepped:Wait()
-    end
-  end)()
-  
+  new.Thickness = 1.6
+  new.Transparency = 0.14
   if props then SetProps(new, props) end
   return new
 end
@@ -1339,70 +1404,181 @@ local function MakeDraggableCustom(gui)
   end)
 end
 
--- زر الفتح والإغلاق العائم المضيء
+-- زر الفتح والإغلاق العلوي المربع بالصورة المخصصة
 local ToggleButton = Create("ImageButton", ScreenGui, {
   Name = "NHYQ_ToggleButton",
   Size = UDim2.new(0, 56, 0, 56),
-  Position = UDim2.new(0.08, 0, 0.18, 0),
-  BackgroundTransparency = 1,
-  Image = "rbxthumb://type=Asset&id=113113708193604&w=150&h=150",
+  Position = UDim2.new(0, 14, 0, 62),
+  BackgroundColor3 = RED_SPECTRUM_THEME.Void,
+  AutoButtonColor = false,
+  Image = CUSTOM_IMAGE,
+  ScaleType = Enum.ScaleType.Crop,
   Active = true,
   Visible = false,
   ZIndex = 5000
 })
-Corner(ToggleButton, {CornerRadius = UDim.new(0, 16)})
-
-local ToggleGlow = Create("UIStroke", ToggleButton, {
-    Color = Color3.fromRGB(255, 30, 30),
-    Thickness = 3,
-    Transparency = 0.2
+Corner(ToggleButton, {CornerRadius = UDim.new(0, 13)})
+Create("UIStroke", ToggleButton, {
+    Color = RED_SPECTRUM_THEME.BorderGlow,
+    Thickness = 2.2,
+    Transparency = 0.1
 })
-
-local ToggleGradient = Instance.new("UIGradient")
-ToggleGradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 30, 30)),
-    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(100, 0, 0)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 30, 30))
-}
-ToggleGradient.Rotation = 45
-ToggleGradient.Parent = ToggleGlow
-
-coroutine.wrap(function()
-    while ToggleButton.Parent do
-        ToggleGradient.Rotation = (ToggleGradient.Rotation + 3) % 360
-        RunService.RenderStepped:Wait()
-    end
-end)()
-
 MakeDraggableCustom(ToggleButton)
 
--- نافذة الهب الرئيسية الشفافة الفخمة
+-- نافذة الهب الرئيسية بتدرج ألوان أحمر حي ولمعة بيضاء كل 5 ثواني
 local Menu = Create("Frame", ScreenGui, {
     Name = "NHYQ_MainHub",
-    BackgroundColor3 = Configs_HUB.Cor_Hub,
-    Position = UDim2.new(0.5, -250, 0.5, -135),
+    BackgroundColor3 = Color3.new(1, 1, 1),
+    Position = UDim2.new(0.5, -300, 0.5, -180),
     Active = true,
     ClipsDescendants = true,
     Visible = false,
-    Size = UDim2.new(0, 500, 0, 270),
+    Size = UDim2.new(0, 600, 0, 360),
     ZIndex = 3000
 })
-Corner(Menu)
+Corner(Menu, {CornerRadius = UDim.new(0, 20)})
 Stroke(Menu)
 MakeDraggableCustom(Menu)
 
--- صورة الخلفية داخل القائمة
-local MenuBackground = Create("ImageLabel", Menu, {
-    Name = "MenuBackground",
-    Size = UDim2.new(1, 0, 1, 0),
-    Position = UDim2.new(0, 0, 0, 0),
-    BackgroundTransparency = 1,
-    Image = "rbxassetid://122714751450519",
-    ImageTransparency = 0.35,
-    ScaleType = Enum.ScaleType.Crop,
-    ZIndex = 3001
+local mainGrad = Instance.new("UIGradient")
+mainGrad.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, RED_SPECTRUM_THEME.RedScarlet),
+	ColorSequenceKeypoint.new(0.35, RED_SPECTRUM_THEME.RedEmber),
+	ColorSequenceKeypoint.new(0.7, RED_SPECTRUM_THEME.RedCrimson),
+	ColorSequenceKeypoint.new(1, RED_SPECTRUM_THEME.RedWine)
 })
-Corner(MenuBackground)
+mainGrad.Rotation = 135
+mainGrad.Parent = Menu
+
+-- طبقة اللمعة البيضاء القطرية (فورية عند الفتح ثم كل 5 ثواني)
+local sheenOverlay = Instance.new("Frame")
+sheenOverlay.Name = "DiagonalWhiteSheen"
+sheenOverlay.Size = UDim2.new(0, 145, 2.4, 0)
+sheenOverlay.Position = UDim2.new(-0.35, 0, -0.7, 0)
+sheenOverlay.Rotation = 35
+sheenOverlay.BackgroundColor3 = RED_SPECTRUM_THEME.WhiteSheen
+sheenOverlay.BackgroundTransparency = 0.7
+sheenOverlay.BorderSizePixel = 0
+sheenOverlay.ZIndex = 4500
+sheenOverlay.Parent = Menu
+
+local sheenGrad = Instance.new("UIGradient")
+sheenGrad.Transparency = NumberSequence.new({
+	NumberSequenceKeypoint.new(0, 1),
+	NumberSequenceKeypoint.new(0.35, 0.32),
+	NumberSequenceKeypoint.new(0.5, 0.06),
+	NumberSequenceKeypoint.new(0.65, 0.32),
+	NumberSequenceKeypoint.new(1, 1)
+})
+sheenGrad.Rotation = 90
+sheenGrad.Parent = sheenOverlay
+
+local function triggerWhiteSheen()
+	if not Menu.Visible then return end
+	sheenOverlay.Position = UDim2.new(-0.35, 0, -0.7, 0)
+	local sweep = TweenService:Create(
+		sheenOverlay,
+		TweenInfo.new(0.9, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
+		{ Position = UDim2.new(1.25, 0, 0.35, 0) }
+	)
+	sweep:Play()
+end
+
+task.spawn(function()
+	while ScreenGui.Parent do
+		while (not Menu.Visible) and ScreenGui.Parent do
+			task.wait(0.05)
+		end
+		if not ScreenGui.Parent then return end
+		task.wait(0.15)
+		triggerWhiteSheen()
+		local elapsedSheen = 0
+		while Menu.Visible and ScreenGui.Parent do
+			task.wait(0.1)
+			elapsedSheen += 0.1
+			if elapsedSheen >= SHEEN_INTERVAL_SECONDS then
+				elapsedSheen = 0
+				triggerWhiteSheen()
+			end
+		end
+	end
+end)
+
+-- الهيدر العلوي
+local TopBar = Create("Frame", Menu, {
+    BackgroundColor3 = RED_SPECTRUM_THEME.SubSurface,
+    BackgroundTransparency = 0.24,
+    Position = UDim2.new(0, 10, 0, 10),
+    Size = UDim2.new(1, -20, 0, 44),
+    BorderSizePixel = 0,
+    Visible = true,
+    ZIndex = 3003
+})
+Corner(TopBar, {CornerRadius = UDim.new(0, 12)})
+Create("UIStroke", TopBar, {
+    Color = RED_SPECTRUM_THEME.BorderSubtle,
+    Thickness = 1.15,
+    Transparency = 0.22
+})
+
+Create("TextLabel", TopBar, {
+    Size = UDim2.new(0.58, 0, 0, 20),
+    Position = UDim2.new(0, 12, 0, 4),
+    TextColor3 = Configs_HUB.Cor_Text,
+    Font = Configs_HUB.Text_Font,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    Text = "سكربت كلان NHYQ",
+    TextSize = 15,
+    BackgroundTransparency = 1,
+    ZIndex = 3004
+})
+
+local statsLabel = Create("TextLabel", TopBar, {
+    Size = UDim2.new(0.58, 0, 0, 16),
+    Position = UDim2.new(0, 12, 0, 24),
+    TextColor3 = RED_SPECTRUM_THEME.StatusOk,
+    Font = Enum.Font.Code,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    Text = "FPS: 60 | PING: 0ms",
+    TextSize = 10,
+    BackgroundTransparency = 1,
+    ZIndex = 3004
+})
+
+local fpsElapsed = 0
+local fpsFrames = 0
+RunService.RenderStepped:Connect(function(dt)
+	fpsElapsed += dt
+	fpsFrames += 1
+	mainGrad.Rotation = 135 + math.sin(os.clock() * 0.9) * 24
+
+	if fpsElapsed >= 0.45 then
+		local currentFps = math.round(fpsFrames / fpsElapsed)
+		fpsFrames = 0
+		fpsElapsed = 0
+
+		local pingStat = Stats.Network.ServerStatsItem:FindFirstChild("Data Ping")
+		local ping = pingStat and math.round(pingStat:GetValue()) or 0
+		statsLabel.Text = string.format("FPS: %d | PING: %dms", currentFps, ping)
+		statsLabel.TextColor3 = (ping > 180 or currentFps < 30) and RED_SPECTRUM_THEME.StatusWarn or RED_SPECTRUM_THEME.StatusOk
+	end
+end)
+
+-- زر إغلاق القائمة (X)
+local CloseHubBtn = Create("TextButton", TopBar, {
+    Size = UDim2.new(0, 30, 0, 30),
+    Position = UDim2.new(1, -38, 0.5, -15),
+    BackgroundColor3 = RED_SPECTRUM_THEME.CardOff,
+    Text = "×",
+    TextColor3 = RED_SPECTRUM_THEME.TextPrimary,
+    TextSize = 18,
+    Font = Enum.Font.GothamBold,
+    ZIndex = 3005
+})
+Corner(CloseHubBtn, {CornerRadius = UDim.new(0, 9)})
+local cbStroke = Create("UIStroke", CloseHubBtn)
+cbStroke.Color = RED_SPECTRUM_THEME.BorderGlow
+cbStroke.Thickness = 1.15
 
 local IsMenuOpen = true
 BindClick(ToggleButton, function()
@@ -1411,103 +1587,73 @@ BindClick(ToggleButton, function()
     Menu.Visible = IsMenuOpen
 end)
 
-local TopBar = Create("Frame", Menu, {
-    BackgroundTransparency = 1,
-    Size = UDim2.new(1, 0, 0, 25),
-    Visible = true,
-    ZIndex = 3003
-})
-
-Create("TextLabel", TopBar, {
-    Size = UDim2.new(1, -40, 1, 0),
-    Position = UDim2.new(0, 10, 0, 0),
-    TextColor3 = Configs_HUB.Cor_Text,
-    Font = Configs_HUB.Text_Font,
-    TextXAlignment = Enum.TextXAlignment.Left,
-    Text = "سكربت كلان NHYQ",
-    TextSize = 16,
-    BackgroundTransparency = 1,
-    ZIndex = 3004
-})
-
--- زر إغلاق القائمة (X)
-local CloseHubBtn = Create("TextButton", TopBar, {
-    Size = UDim2.new(0, 24, 0, 24),
-    Position = UDim2.new(1, -28, 0, 1),
-    BackgroundColor3 = Color3.fromRGB(20, 20, 20),
-    Text = "×",
-    TextColor3 = Color3.fromRGB(255, 50, 50),
-    TextSize = 18,
-    Font = Enum.Font.GothamBold,
-    ZIndex = 3005
-})
-Corner(CloseHubBtn, {CornerRadius = UDim.new(1, 0)})
-local cbStroke = Create("UIStroke", CloseHubBtn)
-cbStroke.Color = Color3.fromRGB(255, 50, 50)
-cbStroke.Thickness = 1
-
 BindClick(CloseHubBtn, function()
     ClickSound:Play()
     IsMenuOpen = false
     Menu.Visible = false
 end)
 
-local line_Containers = Create("Frame", Menu, {
-    BackgroundTransparency = 1,
-    Size = UDim2.new(1, 0, 1, 0),
+-- شريط التبويبات العلوي داخل القائمة
+local ScrollBar = Create("ScrollingFrame", Menu, {
+    Size = UDim2.new(1, -20, 0, 42),
+    Position = UDim2.new(0, 10, 0, 60),
+    CanvasSize = UDim2.new(),
+    ScrollingDirection = Enum.ScrollingDirection.X,
+    AutomaticCanvasSize = Enum.AutomaticSize.X,
+    BackgroundColor3 = RED_SPECTRUM_THEME.SubSurface,
+    BackgroundTransparency = 0.26,
+    ScrollBarThickness = 2,
+    ScrollBarImageColor3 = RED_SPECTRUM_THEME.BorderGlow,
     ZIndex = 3003
 })
-
-local ScrollBar = Create("ScrollingFrame", Menu, {
-    Size = UDim2.new(0, 140, 1, -(TopBar.Size.Y.Offset + 2)),
-    Position = UDim2.new(0, 0, 1, 0),
-    AnchorPoint = Vector2.new(0, 1),
-    CanvasSize = UDim2.new(),
-    ScrollingDirection = Enum.ScrollingDirection.Y,
-    AutomaticCanvasSize = Enum.AutomaticSize.Y,
-    BackgroundTransparency = 1,
-    ScrollBarThickness = 2,
-    ZIndex = 3003
+Corner(ScrollBar, {CornerRadius = UDim.new(0, 12)})
+Create("UIStroke", ScrollBar, {
+    Color = RED_SPECTRUM_THEME.BorderSubtle,
+    Thickness = 1.15,
+    Transparency = 0.22
 })
 Create("UIPadding", ScrollBar, {
-    PaddingLeft = UDim.new(0, 10),
-    PaddingRight = UDim.new(0, 10),
-    PaddingTop = UDim.new(0, 10),
-    PaddingBottom = UDim.new(0, 10)
+    PaddingLeft = UDim.new(0, 8),
+    PaddingRight = UDim.new(0, 8),
+    PaddingTop = UDim.new(0, 5),
+    PaddingBottom = UDim.new(0, 5)
 })
 Create("UIListLayout", ScrollBar, {
-    Padding = UDim.new(0, 5)
+    FillDirection = Enum.FillDirection.Horizontal,
+    Padding = UDim.new(0, 7),
+    VerticalAlignment = Enum.VerticalAlignment.Center
 })
 
+-- منطقة المحتوى أسفل التبويبات العلوية
 local Containers = Create("Frame", Menu, {
-    Size = UDim2.new(1, -(ScrollBar.Size.X.Offset + 2), 1, -(TopBar.Size.Y.Offset + 2)),
-    AnchorPoint = Vector2.new(1, 1),
-    Position = UDim2.new(1, 0, 1, 0),
-    BackgroundTransparency = 1,
+    Size = UDim2.new(1, -20, 1, -118),
+    Position = UDim2.new(0, 10, 0, 108),
+    BackgroundColor3 = RED_SPECTRUM_THEME.SubSurface,
+    BackgroundTransparency = 0.28,
     ZIndex = 3003
 })
-Corner(Containers)
-
-local function Add_Line(props)
-    local line = Create("Frame", line_Containers, props)
-    line.BackgroundColor3 = Configs_HUB.Cor_Stroke
-    line.BorderSizePixel = 0
-    line.ZIndex = 3003
-end
-
-Add_Line({Size = UDim2.new(1, 0, 0, 1), Position = UDim2.new(0, 0, 0, TopBar.Size.Y.Offset)})
-Add_Line({Size = UDim2.new(0, 1, 1, -(TopBar.Size.Y.Offset + 1)), Position = UDim2.new(0, ScrollBar.Size.X.Offset, 0, TopBar.Size.Y.Offset)})
+Corner(Containers, {CornerRadius = UDim.new(0, 14)})
+Create("UIStroke", Containers, {
+    Color = RED_SPECTRUM_THEME.BorderSubtle,
+    Thickness = 1.15,
+    Transparency = 0.22
+})
 
 local firstVisible = true
+local tabButtonsList = {}
 
 local function MakeTab(TabName)
     local Frame = Create("Frame", ScrollBar, {
-        Size = UDim2.new(1, 0, 0, 30),
-        BackgroundTransparency = 1,
+        Size = UDim2.new(0, 126, 0, 30),
+        BackgroundColor3 = firstVisible and RED_SPECTRUM_THEME.CardPulse or RED_SPECTRUM_THEME.CardOff,
         ZIndex = 3004
     })
-    Corner(Frame)
-    Stroke(Frame)
+    Corner(Frame, {CornerRadius = UDim.new(0, 9)})
+    local tabStroke = Create("UIStroke", Frame, {
+        Color = RED_SPECTRUM_THEME.BorderGlow,
+        Thickness = 1.1,
+        Transparency = 0.25
+    })
     
     local TextButton = Create("TextButton", Frame, {
         Size = UDim2.new(1, 0, 1, 0),
@@ -1517,15 +1663,17 @@ local function MakeTab(TabName)
         ZIndex = 3005
     })
     
-    Create("TextLabel", Frame, {
-        Size = UDim2.new(1, -10, 1, 0),
-        Position = UDim2.new(0, 5, 0, 0),
+    local tabLbl = Create("TextLabel", Frame, {
+        Size = UDim2.new(1, -8, 1, 0),
+        Position = UDim2.new(0, 4, 0, 0),
         BackgroundTransparency = 1,
         Font = Configs_HUB.Text_Font,
         TextColor3 = Configs_HUB.Cor_Text,
-        TextSize = 12,
+        TextSize = 11,
         Text = TabName,
-        TextXAlignment = Enum.TextXAlignment.Left,
+        TextScaled = false,
+        TextWrapped = true,
+        TextXAlignment = Enum.TextXAlignment.Center,
         ZIndex = 3005
     })
     
@@ -1535,7 +1683,8 @@ local function MakeTab(TabName)
         AutomaticCanvasSize = Enum.AutomaticSize.Y,
         CanvasSize = UDim2.new(),
         BackgroundTransparency = 1,
-        ScrollBarThickness = 2,
+        ScrollBarThickness = 3,
+        ScrollBarImageColor3 = RED_SPECTRUM_THEME.BorderGlow,
         Visible = firstVisible,
         ZIndex = 3004
     })
@@ -1548,49 +1697,198 @@ local function MakeTab(TabName)
     })
     
     Create("UIListLayout", Container, {
-        Padding = UDim.new(0, 6)
+        Padding = UDim.new(0, 8)
     })
+
+    table.insert(tabButtonsList, { frame = Frame, container = Container, stroke = tabStroke })
     
     BindClick(TextButton, function()
       ClickSound:Play()
-      for _, container in pairs(Containers:GetChildren()) do
-        if container:IsA("ScrollingFrame") then
-          container.Visible = false
-        end
+      for _, entry in ipairs(tabButtonsList) do
+        entry.container.Visible = (entry.container == Container)
+        TweenService:Create(entry.frame, TweenInfo.new(0.18), {
+            BackgroundColor3 = (entry.container == Container) and RED_SPECTRUM_THEME.CardPulse or RED_SPECTRUM_THEME.CardOff
+        }):Play()
       end
-      Container.Visible = true
     end)
     
     firstVisible = false
     return Container
 end
 
+-- زر بطاقة سكربت بصورة مربعة كبيرة + EXECUTE بضغطة وحدة + AUTO EXECUTE مستقل ومحفوظ
 local function AddButtonToTab(tabContainer, buttonText, callback)
     local btnContainer = Create("Frame", tabContainer, {
-        Size = UDim2.new(1, 0, 0, 35),
-        BackgroundColor3 = Configs_HUB.Cor_Options,
-        BackgroundTransparency = 0.3,
+        Size = UDim2.new(1, 0, 0, 68),
+        BackgroundColor3 = RED_SPECTRUM_THEME.CardOff,
+        BackgroundTransparency = 0.15,
         ZIndex = 3005
     })
-    Corner(btnContainer, {CornerRadius = UDim.new(0, 8)})
-    local stroke = Create("UIStroke", btnContainer)
-    stroke.Color = Configs_HUB.Cor_Stroke
-    stroke.Thickness = 1
+    Corner(btnContainer, {CornerRadius = UDim.new(0, 12)})
+    local rStroke = Create("UIStroke", btnContainer)
+    rStroke.Color = RED_SPECTRUM_THEME.BorderSubtle
+    rStroke.Thickness = 1.15
+    rStroke.Transparency = 0.22
+
+    local iconBox = Create("ImageLabel", btnContainer, {
+        Size = UDim2.new(0, 52, 0, 52),
+        Position = UDim2.new(0, 8, 0.5, -26),
+        BackgroundColor3 = RED_SPECTRUM_THEME.Void,
+        BorderSizePixel = 0,
+        Image = CUSTOM_IMAGE,
+        ScaleType = Enum.ScaleType.Crop,
+        ZIndex = 3006
+    })
+    Corner(iconBox, {CornerRadius = UDim.new(0, 10)})
+    local iconStroke = Create("UIStroke", iconBox, {
+        Color = RED_SPECTRUM_THEME.BorderSubtle,
+        Thickness = 1.35,
+        Transparency = 0.2
+    })
     
-    local textBtn = Create("TextButton", btnContainer, {
-        Size = UDim2.new(1, 0, 1, 0),
+    local textLbl = Create("TextLabel", btnContainer, {
+        Size = UDim2.new(1, -186, 1, -12),
+        Position = UDim2.new(0, 68, 0, 6),
         BackgroundTransparency = 1,
-        Text = "  " .. buttonText,
+        Text = buttonText,
         Font = Configs_HUB.Text_Font,
         TextColor3 = Configs_HUB.Cor_Text,
         TextSize = 12,
+        TextWrapped = true,
         TextXAlignment = Enum.TextXAlignment.Left,
         ZIndex = 3006
     })
-    
-    BindClick(textBtn, function()
+
+    local execBtn = Create("TextButton", btnContainer, {
+        Size = UDim2.new(0, 106, 0, 26),
+        Position = UDim2.new(1, -114, 0, 8),
+        BackgroundColor3 = RED_SPECTRUM_THEME.ExecIdle,
+        AutoButtonColor = false,
+        Text = "EXECUTE",
+        Font = Enum.Font.GothamBlack,
+        TextSize = 10,
+        TextColor3 = RED_SPECTRUM_THEME.TextPrimary,
+        ZIndex = 3006
+    })
+    Corner(execBtn, {CornerRadius = UDim.new(0, 8)})
+    local execStroke = Create("UIStroke", execBtn, {
+        Color = RED_SPECTRUM_THEME.BorderGlow,
+        Thickness = 1.1,
+        Transparency = 0.25
+    })
+
+    local autoExecBtn = Create("TextButton", btnContainer, {
+        Size = UDim2.new(0, 106, 0, 22),
+        Position = UDim2.new(1, -114, 0, 38),
+        BackgroundColor3 = RED_SPECTRUM_THEME.AutoIdle,
+        AutoButtonColor = false,
+        Text = "AUTO EXECUTE",
+        Font = Enum.Font.GothamBold,
+        TextSize = 9,
+        TextColor3 = RED_SPECTRUM_THEME.TextSecondary,
+        ZIndex = 3006
+    })
+    Corner(autoExecBtn, {CornerRadius = UDim.new(0, 7)})
+    local autoStroke = Create("UIStroke", autoExecBtn, {
+        Color = RED_SPECTRUM_THEME.BorderSubtle,
+        Thickness = 1,
+        Transparency = 0.3
+    })
+
+    local autoEnabled = (savedAutoMap[buttonText] == true)
+    local pulseToken = 0
+
+    local function pulseExecutionFeedback()
+        pulseToken += 1
+        local currentToken = pulseToken
+        execBtn.Text = "EXECUTED"
+
+        TweenService:Create(btnContainer, TweenInfo.new(0.14), {
+            BackgroundColor3 = RED_SPECTRUM_THEME.CardPulse
+        }):Play()
+        TweenService:Create(rStroke, TweenInfo.new(0.14), {
+            Color = RED_SPECTRUM_THEME.WhiteSheen,
+            Thickness = 1.75,
+            Transparency = 0.1
+        }):Play()
+        TweenService:Create(iconStroke, TweenInfo.new(0.14), {
+            Color = RED_SPECTRUM_THEME.WhiteSheen,
+            Thickness = 2
+        }):Play()
+        TweenService:Create(execBtn, TweenInfo.new(0.14), {
+            BackgroundColor3 = RED_SPECTRUM_THEME.ExecFlash,
+            TextColor3 = RED_SPECTRUM_THEME.TextPrimary
+        }):Play()
+        TweenService:Create(execStroke, TweenInfo.new(0.14), {
+            Color = RED_SPECTRUM_THEME.WhiteSheen
+        }):Play()
+
+        task.delay(0.45, function()
+            if currentToken ~= pulseToken then return end
+            execBtn.Text = "EXECUTE"
+            TweenService:Create(btnContainer, TweenInfo.new(0.22), {
+                BackgroundColor3 = RED_SPECTRUM_THEME.CardOff
+            }):Play()
+            TweenService:Create(rStroke, TweenInfo.new(0.22), {
+                Color = RED_SPECTRUM_THEME.BorderSubtle,
+                Thickness = 1.15,
+                Transparency = 0.22
+            }):Play()
+            TweenService:Create(iconStroke, TweenInfo.new(0.22), {
+                Color = RED_SPECTRUM_THEME.BorderSubtle,
+                Thickness = 1.35
+            }):Play()
+            TweenService:Create(execBtn, TweenInfo.new(0.22), {
+                BackgroundColor3 = RED_SPECTRUM_THEME.ExecIdle,
+                TextColor3 = RED_SPECTRUM_THEME.TextPrimary
+            }):Play()
+            TweenService:Create(execStroke, TweenInfo.new(0.22), {
+                Color = RED_SPECTRUM_THEME.BorderGlow
+            }):Play()
+        end)
+    end
+
+    local function refreshAutoVisuals()
+        TweenService:Create(autoExecBtn, TweenInfo.new(0.2), {
+            BackgroundColor3 = autoEnabled and RED_SPECTRUM_THEME.AutoActive or RED_SPECTRUM_THEME.AutoIdle,
+            TextColor3 = autoEnabled and RED_SPECTRUM_THEME.Void or RED_SPECTRUM_THEME.TextSecondary
+        }):Play()
+        TweenService:Create(autoStroke, TweenInfo.new(0.2), {
+            Color = autoEnabled and RED_SPECTRUM_THEME.GoldAccent or RED_SPECTRUM_THEME.BorderSubtle
+        }):Play()
+        autoExecBtn.Text = autoEnabled and "AUTO EXEC: ON" or "AUTO EXECUTE"
+    end
+
+    local function runModuleOnce()
         ClickSound:Play()
-        pcall(callback)
+        task.spawn(function()
+            pcall(callback)
+        end)
+        pulseExecutionFeedback()
+    end
+
+    BindClick(execBtn, function()
+        runModuleOnce()
+    end)
+
+    BindClick(autoExecBtn, function()
+        ClickSound:Play()
+        autoEnabled = not autoEnabled
+        savedAutoMap[buttonText] = autoEnabled and true or nil
+        saveAutoMap()
+        refreshAutoVisuals()
+    end)
+
+    refreshAutoVisuals()
+
+    table.insert(startupAutoRunners, function()
+        if savedAutoMap[buttonText] == true then
+            autoEnabled = true
+            refreshAutoVisuals()
+            task.spawn(function()
+                pcall(callback)
+            end)
+        end
     end)
 end
 
@@ -1601,12 +1899,13 @@ end
 local function LoadMainScript()
     ToggleButton.Visible = true
     Menu.Visible = true
+    IsMenuOpen = true
 
     -- 0. تبويب القائمة الرئيسية (الأول) مع إضافة عمر الحساب ونوع الجهاز
     local TabHome = MakeTab("القائمة الرئيسية")
 
     local HomeCard = Create("Frame", TabHome, {
-        Size = UDim2.new(1, 0, 0, 160),
+        Size = UDim2.new(1, 0, 0, 165),
         BackgroundColor3 = Configs_HUB.Cor_Options,
         BackgroundTransparency = 0.2,
         ZIndex = 3005
@@ -1635,7 +1934,7 @@ local function LoadMainScript()
         Position = UDim2.new(0, 8, 0, 4),
         BackgroundTransparency = 1,
         Font = Configs_HUB.Text_Font,
-        TextSize = 10,
+        TextSize = 11,
         TextColor3 = Configs_HUB.Cor_Text,
         TextXAlignment = Enum.TextXAlignment.Right,
         TextYAlignment = Enum.TextYAlignment.Center,
@@ -1705,7 +2004,6 @@ local function LoadMainScript()
                         end)
                     end)
 
-                    -- إرسال إشارة المغادرة عند خروج اللاعب أو إغلاق السكربت لتخفيض العداد فوراً
                     game:GetService("CoreGui").ChildRemoved:Connect(function(child)
                         if child == ScreenGui then
                             pcall(function()
@@ -1793,10 +2091,10 @@ local function LoadMainScript()
         loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/woww'))()
     end)
     AddButtonToTab(TabCopy, "سبام قوي", function()
-     loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/omggggg'))()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/omggggg'))()
     end)
     AddButtonToTab(TabCopy, "ماب نسخ", function()
-    loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/chat'))()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/chat'))()
     end)
 
     -- تبويب سبام شات
@@ -1805,7 +2103,7 @@ local function LoadMainScript()
         loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/chatspam'))()
     end)
 
-    -- 2. تبويب حماية
+    -- 2. تبويب حماية (ترتيب شكل الأسماء فقط مع الإبقاء على نفس الاسم)
     local TabProtect = MakeTab("حماية")
     AddButtonToTab(TabProtect, "حماية و حظر اشعارات الادمن", function()
         loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/Aprodict'))()
@@ -1819,10 +2117,10 @@ local function LoadMainScript()
     AddButtonToTab(TabProtect, "حماية فلنق", function()
         loadstring(game:HttpGet("https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_bn"))()
     end)
-    AddButtonToTab(TabProtect, "حمايةice", function()
+    AddButtonToTab(TabProtect, "حماية ice", function()
         loadstring(game:HttpGet("https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_jh"))()
     end)
-    AddButtonToTab(TabProtect, "حمايةchar,title,dog", function()
+    AddButtonToTab(TabProtect, "حماية char, title, dog", function()
         loadstring(game:HttpGet("https://apexhubeditor.vercel.app/api/raw?name=eBouZz2H5bhaXtQUbh4lpYAMNQE2_sh"))()
     end)
     AddButtonToTab(TabProtect, "حماية re", function()
@@ -2652,6 +2950,14 @@ local function LoadMainScript()
     local TabSecondScript = MakeTab("سكربت الثاني للكلان")
     AddButtonToTab(TabSecondScript, "تشغيل السكربت الثاني", function()
         loadstring(game:HttpGet('https://raw.githubusercontent.com/blackontop123123-max/NHYQ/refs/heads/main/aaaaa'))()
+    end)
+
+    -- تشغيل الميزات المحفوظة على AUTO EXECUTE مباشرة عند تشغيل السكربت
+    task.spawn(function()
+        task.wait(0.05)
+        for _, runFn in ipairs(startupAutoRunners) do
+            task.spawn(runFn)
+        end
     end)
 end
 
